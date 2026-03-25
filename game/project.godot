@@ -21,6 +21,7 @@ RelicDB="*res://scripts/autoload/relic_db.gd"
 EvolutionDB="*res://scripts/autoload/evolution_db.gd"
 MultiplayerManager="*res://scripts/autoload/multiplayer_manager.gd"
 SynergySystem="*res://scripts/autoload/synergy_system.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 ScreenEffects="*res://scripts/effects/screen_effects.gd"
 ParticleFactory="*res://scripts/effects/particle_factory.gd"
 
