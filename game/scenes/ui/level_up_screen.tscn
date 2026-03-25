@@ -57,3 +57,8 @@ text = "Opcao 3"
 layout_mode = 2
 custom_minimum_size = Vector2(0, 35)
 text = "Reroll (1)"
+
+[node name="BanishButton" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 35)
+text = "Banish (0)"

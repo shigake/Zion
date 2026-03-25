@@ -10,9 +10,11 @@ signal choice_made()
 @onready var option3_btn: Button = $Panel/VBox/Options/Option3
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var reroll_btn: Button = $Panel/VBox/RerollButton
+@onready var banish_btn: Button = $Panel/VBox/BanishButton
 
 var options: Array = []
 var pending_levels: int = 0
+var banish_mode: bool = false
 
 func _ready() -> void:
 	panel.visible = false
@@ -20,6 +22,7 @@ func _ready() -> void:
 	option1_btn.pressed.connect(func(): _choose(0))
 	option2_btn.pressed.connect(func(): _choose(1))
 	reroll_btn.pressed.connect(_on_reroll)
+	banish_btn.pressed.connect(_on_banish)
 	option3_btn.pressed.connect(func(): _choose(2))
 
 func _on_level_up(_new_level: int) -> void:
@@ -50,12 +53,24 @@ func _show_choices() -> void:
 	else:
 		reroll_btn.visible = false
 
+	# Banish button
+	if GameManager.banishes > 0:
+		banish_btn.visible = true
+		banish_btn.text = "Banish (%d)" % GameManager.banishes
+	else:
+		banish_btn.visible = false
+
+	banish_mode = false
 	panel.visible = true
 	GameManager.paused = true
 	get_tree().paused = true
 
 func _choose(index: int) -> void:
 	if index >= options.size():
+		return
+
+	if banish_mode:
+		_banish_option(index)
 		return
 
 	var opt = options[index]
@@ -132,6 +147,9 @@ func _generate_options() -> Array:
 					"weight": 8,
 				})
 
+	# Filter banished options
+	pool = pool.filter(func(opt): return opt["id"] not in GameManager.banished_options)
+
 	# Shuffle e pega 3
 	pool.shuffle()
 	return pool.slice(0, 3)
@@ -140,4 +158,18 @@ func _on_reroll() -> void:
 	if GameManager.rerolls <= 0:
 		return
 	GameManager.rerolls -= 1
+	_show_choices()
+
+func _on_banish() -> void:
+	if GameManager.banishes <= 0:
+		return
+	banish_mode = true
+	title_label.text = "BANISH: Escolha uma opcao para remover"
+	banish_btn.visible = false
+
+func _banish_option(index: int) -> void:
+	var opt = options[index]
+	GameManager.banished_options.append(opt["id"])
+	GameManager.banishes -= 1
+	banish_mode = false
 	_show_choices()

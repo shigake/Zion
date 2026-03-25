@@ -1,8 +1,9 @@
 extends CharacterBody3D
 
-## Jogador 3D top-down. Movimento, dash, vida.
+## Jogador 3D top-down. Movimento, dash, vida. Suporta multiplayer.
 
 @export var base_speed: float = 8.0
+@export var player_id: int = 1  # peer_id no multiplayer
 @export var dash_speed: float = 24.0
 @export var dash_duration: float = 0.15
 @export var dash_cooldown: float = 3.0
@@ -20,8 +21,10 @@ var move_direction: Vector3 = Vector3.ZERO
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hurt_flash_timer: float = 0.0
 var original_color: Color = Color(0.2, 0.85, 0.3)
+var is_local: bool = true  # Se este jogador e controlado localmente
 
 func _ready() -> void:
+	is_local = not MultiplayerManager.is_online or (player_id == MultiplayerManager.local_player_id)
 	# Arma inicial e configurada pelo stage_cemetery.gd
 	# Se nenhuma arma foi setada (fallback), usa katana
 	if GameManager.player_weapons.is_empty():
@@ -30,6 +33,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over or GameManager.paused:
+		return
+
+	# Jogador remoto: so recebe sync
+	if not is_local:
 		return
 
 	# Hurt cooldown
@@ -73,6 +80,15 @@ func _physics_process(delta: float) -> void:
 			dash_direction = move_direction.normalized()
 
 	move_and_slide()
+
+	# Sync posicao no multiplayer
+	if MultiplayerManager.is_online:
+		_sync_position.rpc(global_position)
+
+@rpc("any_peer", "unreliable")
+func _sync_position(pos: Vector3) -> void:
+	if not is_local:
+		global_position = global_position.lerp(pos, 0.3)
 
 func take_damage(amount: int) -> void:
 	if not can_be_hurt or is_dashing:

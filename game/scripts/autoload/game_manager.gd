@@ -28,6 +28,7 @@ var crystals_this_run: int = 0
 
 # Selecao pre-run
 var selected_character: String = "ronin"
+var selected_stage: String = "cemetery"
 var selected_relic: String = ""
 
 # Bonuses permanentes da loja

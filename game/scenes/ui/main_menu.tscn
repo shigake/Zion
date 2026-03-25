@@ -51,7 +51,12 @@ theme_override_constants/separation = 10
 [node name="PlayButton" type="Button" parent="VBox/Buttons"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 45)
-text = "JOGAR"
+text = "JOGAR SOLO"
+
+[node name="MultiButton" type="Button" parent="VBox/Buttons"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 45)
+text = "MULTIPLAYER"
 
 [node name="ShopButton" type="Button" parent="VBox/Buttons"]
 layout_mode = 2

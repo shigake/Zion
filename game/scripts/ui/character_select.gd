@@ -44,7 +44,7 @@ func _select_character(char_id: String, data: Dictionary) -> void:
 func _on_start() -> void:
 	# Salva selecao no GameManager
 	GameManager.selected_character = selected_character
-	get_tree().change_scene_to_file("res://scenes/ui/relic_select.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
