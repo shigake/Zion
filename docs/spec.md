@@ -12,6 +12,8 @@ Especificacao tecnica e funcional do jogo.
 
 **Diferencial:** Tematicas variadas e absurdas (de cemiterio a mundo doce), sistema de evolucao de armas por combinacao, e eventos aleatorios que mudam cada run.
 
+**Stack:** Godot 4 + GDScript + GodotSteam + Steam Networking Sockets
+
 ---
 
 ## 2. Core Loop
@@ -26,17 +28,20 @@ Especificacao tecnica e funcional do jogo.
 - Seleciona fase desbloqueada
 - Seleciona modo de jogo
 - Ve achievements e colecao
+- **Online:** Cria ou entra em lobby Steam (ate 4 jogadores)
 
 ### 2.2 Selecao Pre-Run
 - Escolhe 1 Reliquia (modificador da run)
+- **Online:** Host confirma inicio quando todos estao prontos
 - Confirma e inicia
 
 ### 2.3 Gameplay (Run)
 - Duracao: 30 minutos (modo normal)
-- Camera: top-down
+- Camera: top-down 3D (~45-60 graus)
 - Movimento: WASD ou analog stick
 - Ataque: automatico (armas atacam sozinhas)
 - Jogador foca em: posicionamento, coleta de XP/itens, escolha de upgrades
+- **Online:** Cada jogador faz suas proprias escolhas de upgrade independentemente
 
 ### 2.4 Resultado
 - Tela de stats: tempo sobrevivido, inimigos mortos, dano dealt, itens coletados
@@ -55,7 +60,7 @@ Inimigo morre → dropa gema de XP → jogador coleta → barra de XP enche → 
 ```
 
 **Ao dar level up:**
-- Jogo pausa
+- Jogo pausa **apenas para o jogador que levelou** (online: outros continuam jogando)
 - 3 opcoes aparecem (arma nova, upgrade de arma existente, ou item passivo)
 - Jogador escolhe 1
 - Pode usar Reroll (se tiver) pra trocar as 3 opcoes
@@ -65,6 +70,8 @@ Inimigo morre → dropa gema de XP → jogador coleta → barra de XP enche → 
 - Level 1-10: rapido (30-60s por level)
 - Level 11-20: medio (60-90s por level)
 - Level 21+: lento (90-120s por level)
+
+**Online:** XP e individual. Cada jogador coleta suas proprias gems. Gems sao atraidas ao jogador mais proximo.
 
 ### 3.2 Sistema de Armas
 
@@ -93,6 +100,7 @@ Inimigo morre → dropa gema de XP → jogador coleta → barra de XP enche → 
 - Inimigos spawnam fora da tela em direcao ao jogador
 - Quantidade e velocidade aumentam com o tempo
 - Tipos de inimigos mudam conforme o minuto
+- **Online:** Spawn deterministico (seed compartilhada). Host e autoridade de spawn. Clients recebem posicoes via sync.
 
 **Tabela de Spawn (exemplo fase generica):**
 
@@ -120,6 +128,7 @@ Inimigo morre → dropa gema de XP → jogador coleta → barra de XP enche → 
 - Barra de vida visivel
 - 1 por fase
 - Dropa bau raro
+- **Online:** HP escala com numero de jogadores (1.5x por jogador extra)
 
 **Boss Final:**
 - Aparece no minuto 25
@@ -127,6 +136,7 @@ Inimigo morre → dropa gema de XP → jogador coleta → barra de XP enche → 
 - Padroes de ataque em fases (muda comportamento a cada 25% HP)
 - Horda continua spawning durante a luta
 - Derrotar = vitoria da run
+- **Online:** HP escala com numero de jogadores. Ataques targetam jogadores diferentes.
 
 ### 3.6 Sistema de Dano
 
@@ -154,6 +164,32 @@ Dano Final = (Dano Base da Arma * Level Multiplier * Upgrade Permanente) * Siner
 - Evento avisa com popup antes de comecar (3s de aviso)
 - Eventos duram 15-30 segundos
 - Drop/recompensa ao final do evento
+- **Online:** Eventos sao sincronizados pelo host. Todos os jogadores participam.
+
+### 3.8 Sistema de Networking (Online Co-op)
+
+**Arquitetura:**
+- Host-client (listen server)
+- Host e autoridade para: spawn de inimigos, dano, drops, eventos, boss HP
+- Clients enviam: inputs de movimento, escolhas de upgrade
+- Sincronizacao: posicoes (unreliable), eventos criticos (reliable)
+
+**Steam Integration:**
+- GodotSteam GDExtension
+- Steam Lobby para matchmaking (criar/listar/entrar em salas)
+- Steam Networking Sockets para comunicacao (P2P com relay fallback)
+- Steam Rich Presence (mostrar status no perfil)
+
+**Fluxo de conexao:**
+```
+Host cria lobby Steam → Amigos veem e entram → Host inicia partida
+→ Todos carregam fase → Host spawna jogadores → Jogo comeca sincronizado
+```
+
+**Tratamento de desconexao:**
+- Se client desconecta: jogador dele desaparece, inimigos nao escalam mais pra ele
+- Se host desconecta: host migration (proximo client vira host) OU run termina
+- Reconnect: client pode reconectar ao lobby se run ainda estiver ativa
 
 ---
 
@@ -194,6 +230,11 @@ Dano Final = (Dano Base da Arma * Level Multiplier * Upgrade Permanente) * Siner
 
 [Kill Count: 1234]    [Cristais: 567]
 ```
+
+**Online adicional:**
+- HP bars dos outros jogadores (compactas, no canto)
+- Indicadores de direcao dos aliados quando fora da tela
+- Ping/latencia no canto
 
 ### Tela de Level Up
 ```
@@ -238,6 +279,14 @@ Dano Final = (Dano Base da Arma * Level Multiplier * Upgrade Permanente) * Siner
 | Tipos de Inimigo | 2 | 5 | 8 | Todos |
 | Elites | Nao | Nao | Sim | Sim (frequente) |
 
+**Online scaling:**
+| Jogadores | HP Inimigos | Spawn Rate | Boss HP |
+|---|---|---|---|
+| 1 | 1x | 1x | 1x |
+| 2 | 1.3x | 1.2x | 1.5x |
+| 3 | 1.6x | 1.4x | 2x |
+| 4 | 2x | 1.6x | 2.5x |
+
 ---
 
 ## 7. Audio
@@ -264,8 +313,14 @@ Dano Final = (Dano Base da Arma * Level Multiplier * Upgrade Permanente) * Siner
 
 ### Performance Target
 - 60 FPS constante com 1000+ inimigos na tela
-- Otimizacao de rendering pra sprites em massa
+- Otimizacao de rendering pra sprites/modelos em massa
 - Object pooling pra projeteis e inimigos
+- MultiMeshInstance3D para rendering de hordas
+
+### Networking Target
+- Latencia aceitavel ate 150ms
+- Tick rate: 20 updates/s para posicoes, 60 para inputs
+- Bandwidth: <50KB/s por jogador
 
 ### Plataforma
 - Steam (Windows)
@@ -281,37 +336,46 @@ Dano Final = (Dano Base da Arma * Level Multiplier * Upgrade Permanente) * Siner
 
 ## 9. Milestones
 
-### M1 - Prototipo Jogavel
-- [ ] Personagem se move e ataca
-- [ ] 1 arma funcional
-- [ ] Inimigos spawnam e morrem
-- [ ] Sistema de XP e level up basico
-- [ ] 1 fase (cemiterio)
+### M1 - Prototipo Jogavel (Solo)
+- [ ] Movimento 3D top-down com cel-shader basico
+- [ ] 2 armas funcionais (1 melee, 1 ranged)
+- [ ] Inimigos spawnam e morrem (object pooling)
+- [ ] Sistema de XP e level up com 3 choices
+- [ ] 1 fase (Cemiterio) com ambiente 3D
+- [ ] HUD basico
+- [ ] Dash/Dodge
 
-### M2 - Core Loop Completo
-- [ ] 3 armas funcionais
+### M2 - Online Co-op + Core Loop
+- [ ] Steam Lobby (criar/entrar sala)
+- [ ] Multiplayer funcional 2-4 jogadores
+- [ ] Sincronizacao de inimigos e drops
+- [ ] Loja entre runs (3-4 upgrades permanentes)
+- [ ] 3 armas adicionais
 - [ ] 3 itens passivos
-- [ ] Sistema de evolucao
-- [ ] Loja entre runs
 - [ ] 1 boss funcional
 
 ### M3 - Conteudo Base
-- [ ] Todos os personagens
-- [ ] Todas as armas e evolucoes
-- [ ] 5 fases completas
-- [ ] Todos os itens passivos
-- [ ] Sistema de eventos
+- [ ] 3 personagens jogaveis (Ronin, Soldado, Mago)
+- [ ] 8 armas totais com evolucoes
+- [ ] 3 fases completas (Cemiterio, Floresta, Fazenda)
+- [ ] 8 itens passivos
+- [ ] 3 reliquias
+- [ ] Sistema de eventos (3 eventos)
+- [ ] Tela de resultado com stats
 
-### M4 - Polish
-- [ ] Todas as 10 fases
-- [ ] Balanceamento
-- [ ] Audio completo
+### M4 - Polish + Early Access
+- [ ] Balanceamento (solo e multiplayer)
+- [ ] Audio (musica + SFX)
 - [ ] UI final
-- [ ] Achievements
-- [ ] Steam integration
+- [ ] Tutorial / onboarding
+- [ ] Steam page
+- [ ] Achievements basicos
+- [ ] Modo Endless
 
-### M5 - Release
-- [ ] QA e bug fixing
-- [ ] Performance optimization
-- [ ] Steam page e marketing
-- [ ] Launch
+### M5 - Full Release
+- [ ] Fases 4-10
+- [ ] Todos os personagens e armas
+- [ ] Todos os itens e evolucoes
+- [ ] Daily Challenge (backend)
+- [ ] Workshop support
+- [ ] QA e optimization final
