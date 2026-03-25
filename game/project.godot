@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; but it can also be edited via text in some cases.
+
+[application]
+
+config/name="Zion"
+config/description="Survivors roguelite with online co-op"
+run/main_scene="res://scenes/stages/stage_cemetery.tscn"
+config/features=PackedStringArray("4.3", "Forward Plus")
+
+[autoload]
+
+GameManager="*res://scripts/autoload/game_manager.gd"
+WeaponDB="*res://scripts/autoload/weapon_db.gd"
+ItemDB="*res://scripts/autoload/item_db.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[layer_names]
+
+3d_physics/layer_1="Players"
+3d_physics/layer_2="Enemies"
+3d_physics/layer_3="Pickups"
+3d_physics/layer_4="PlayerAttacks"
+3d_physics/layer_5="EnemyAttacks"
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+environment/defaults/default_clear_color=Color(0.05, 0.06, 0.04, 1)
