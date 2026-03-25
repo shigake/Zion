@@ -19,6 +19,7 @@ ShopDB="*res://scripts/autoload/shop_db.gd"
 CharacterDB="*res://scripts/autoload/character_db.gd"
 RelicDB="*res://scripts/autoload/relic_db.gd"
 EvolutionDB="*res://scripts/autoload/evolution_db.gd"
+SynergySystem="*res://scripts/autoload/synergy_system.gd"
 ScreenEffects="*res://scripts/effects/screen_effects.gd"
 ParticleFactory="*res://scripts/effects/particle_factory.gd"
 

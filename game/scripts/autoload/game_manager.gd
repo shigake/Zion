@@ -45,8 +45,13 @@ var run_time_limit: float = 1800.0  # 30 min default
 # Weapons e items do jogador
 var player_weapons: Array[Dictionary] = []  # {id, level}
 var player_items: Array[Dictionary] = []    # {id, level}
-const MAX_WEAPONS := 6
+var MAX_WEAPONS: int = 4  # Base 4, upgradeable to 6
 const MAX_ITEMS := 6
+
+# Revive e Banish
+var revives_remaining: int = 0
+var banishes: int = 0
+var banished_options: Array[String] = []  # IDs banidos desta run
 
 # Modificadores dos itens passivos (recalculados)
 var speed_mult: float = 1.0
@@ -150,7 +155,14 @@ func take_damage(amount: int) -> void:
 		var reflected = int(reduced * thorns_mult)
 		# Thorns dano e aplicado ao inimigo pelo player script
 	player_hp -= reduced
+	# Lifesteal tracking (applied by weapons on hit, not here)
 	if player_hp <= 0:
+		# Revive check
+		if revives_remaining > 0:
+			revives_remaining -= 1
+			player_hp = get_effective_max_hp() / 2
+			ScreenEffects.shake(0.3)
+			return
 		player_hp = 0
 		is_game_over = true
 		player_died.emit()
@@ -328,6 +340,10 @@ func reset() -> void:
 	fire_ground_active = false
 	weapon_level_bonus = 0
 	accuracy_mult = 1.0
+	revives_remaining = 0
+	banishes = 0
+	banished_options.clear()
+	MAX_WEAPONS = 4
 	_apply_permanent_upgrades()
 	_apply_character_bonuses()
 	_apply_relic()
@@ -351,6 +367,24 @@ func _apply_permanent_upgrades() -> void:
 
 	var mag_lvl = SaveManager.get_upgrade_level("magnetism")
 	magnet_mult += mag_lvl * 0.20
+
+	var cd_lvl = SaveManager.get_upgrade_level("cooldown_reduction")
+	cooldown_mult = maxf(0.3, cooldown_mult - cd_lvl * 0.03)
+
+	var luck_lvl = SaveManager.get_upgrade_level("luck")
+	luck_mult += luck_lvl * 0.10
+
+	var revive_lvl = SaveManager.get_upgrade_level("revive")
+	revives_remaining = revive_lvl
+
+	var slots_lvl = SaveManager.get_upgrade_level("weapon_slots")
+	MAX_WEAPONS = 4 + slots_lvl
+
+	var reroll_lvl = SaveManager.get_upgrade_level("reroll_shop")
+	rerolls += reroll_lvl
+
+	var banish_lvl = SaveManager.get_upgrade_level("banish_shop")
+	banishes = banish_lvl
 
 func _apply_character_bonuses() -> void:
 	var char_data = CharacterDB.get_character(selected_character)
