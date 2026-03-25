@@ -4,7 +4,7 @@ extends Area3D
 
 @export var xp_value: int = 1
 @export var attract_speed: float = 15.0
-@export var attract_range: float = 4.0
+@export var base_attract_range: float = 4.0
 
 var being_attracted: bool = false
 var attract_target: Node3D = null
@@ -25,7 +25,8 @@ func _physics_process(delta: float) -> void:
 	if not being_attracted:
 		var players = get_tree().get_nodes_in_group("players")
 		for p in players:
-			if is_instance_valid(p) and global_position.distance_to(p.global_position) < attract_range:
+			var range = base_attract_range * GameManager.magnet_mult
+			if is_instance_valid(p) and global_position.distance_to(p.global_position) < range:
 				being_attracted = true
 				attract_target = p
 				break

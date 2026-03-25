@@ -1,26 +1,30 @@
 extends Node
 
-## Estado global do jogo: XP, level, dificuldade, pause.
+## Estado global do jogo: XP, level, dificuldade, pause, stats.
 
 signal player_leveled_up(new_level: int)
 signal enemy_killed(position: Vector3, xp_value: int)
 signal player_died()
 signal game_over()
+signal weapon_added(weapon_id: String)
+signal weapon_upgraded(weapon_id: String, new_level: int)
 
 # Tempo e dificuldade
 var game_time: float = 0.0
 var enemies_alive: int = 0
 var max_enemies: int = 500
 var total_kills: int = 0
+var total_damage_dealt: int = 0
 var paused: bool = false
 var is_game_over: bool = false
 
-# Player stats
+# Player stats base
 var player_level: int = 1
 var player_xp: int = 0
 var player_xp_to_next: int = 5
 var player_max_hp: int = 100
 var player_hp: int = 100
+var crystals_this_run: int = 0
 
 # Weapons e items do jogador
 var player_weapons: Array[Dictionary] = []  # {id, level}
@@ -28,10 +32,13 @@ var player_items: Array[Dictionary] = []    # {id, level}
 const MAX_WEAPONS := 6
 const MAX_ITEMS := 6
 
-# Modificadores dos itens passivos
+# Modificadores dos itens passivos (recalculados)
 var speed_mult: float = 1.0
 var attack_speed_mult: float = 1.0
 var max_hp_mult: float = 1.0
+var area_mult: float = 1.0
+var magnet_mult: float = 1.0
+var cooldown_mult: float = 1.0
 
 func _ready() -> void:
 	_register_input_actions()
@@ -46,6 +53,7 @@ func _register_input_actions() -> void:
 	_add_key_action("move_left", KEY_A)
 	_add_key_action("move_right", KEY_D)
 	_add_key_action("dash", KEY_SPACE)
+	_add_key_action("interact", KEY_E)
 
 func _add_key_action(action_name: String, key: Key) -> void:
 	if not InputMap.has_action(action_name):
@@ -65,7 +73,6 @@ func add_xp(amount: int) -> void:
 		player_leveled_up.emit(player_level)
 
 func get_difficulty_multiplier() -> float:
-	# Dificuldade escala com o tempo
 	return 1.0 + (game_time / 60.0) * 0.5
 
 func take_damage(amount: int) -> void:
@@ -79,9 +86,13 @@ func take_damage(amount: int) -> void:
 		game_over.emit()
 
 func heal(amount: int) -> void:
-	var effective_max = int(player_max_hp * max_hp_mult)
+	var effective_max = get_effective_max_hp()
 	player_hp = mini(player_hp + amount, effective_max)
 
+func get_effective_max_hp() -> int:
+	return int(player_max_hp * max_hp_mult)
+
+# ---- Weapons ----
 func has_weapon(weapon_id: String) -> bool:
 	for w in player_weapons:
 		if w["id"] == weapon_id:
@@ -100,15 +111,18 @@ func add_weapon(weapon_id: String) -> bool:
 	if player_weapons.size() >= MAX_WEAPONS:
 		return false
 	player_weapons.append({"id": weapon_id, "level": 1})
+	weapon_added.emit(weapon_id)
 	return true
 
 func upgrade_weapon(weapon_id: String) -> bool:
 	for w in player_weapons:
 		if w["id"] == weapon_id and w["level"] < 8:
 			w["level"] += 1
+			weapon_upgraded.emit(weapon_id, w["level"])
 			return true
 	return false
 
+# ---- Items ----
 func has_item(item_id: String) -> bool:
 	for it in player_items:
 		if it["id"] == item_id:
@@ -142,25 +156,38 @@ func _recalculate_item_bonuses() -> void:
 	speed_mult = 1.0
 	attack_speed_mult = 1.0
 	max_hp_mult = 1.0
+	area_mult = 1.0
+	magnet_mult = 1.0
+	cooldown_mult = 1.0
+
 	for it in player_items:
 		var data = ItemDB.get_item(it["id"])
 		if data.is_empty():
 			continue
 		var level = it["level"]
-		match it["id"]:
-			"boots":
-				speed_mult += 0.15 * level
-			"glove":
-				attack_speed_mult += 0.20 * level
-			"heart":
-				max_hp_mult += 0.20 * level
-				var new_max = int(player_max_hp * max_hp_mult)
-				player_hp = mini(player_hp + int(player_max_hp * 0.20), new_max)
+		var value = data["value_per_level"] * level
+		match data["stat"]:
+			"speed":
+				speed_mult += value
+			"attack_speed":
+				attack_speed_mult += value
+			"max_hp":
+				max_hp_mult += value
+				# Cura proporcional ao ganho
+				var new_max = get_effective_max_hp()
+				player_hp = mini(player_hp + int(player_max_hp * data["value_per_level"]), new_max)
+			"area":
+				area_mult += value
+			"magnet":
+				magnet_mult += value
+			"cooldown":
+				cooldown_mult = maxf(0.3, cooldown_mult - value)
 
 func reset() -> void:
 	game_time = 0.0
 	enemies_alive = 0
 	total_kills = 0
+	total_damage_dealt = 0
 	paused = false
 	is_game_over = false
 	player_level = 1
@@ -168,8 +195,12 @@ func reset() -> void:
 	player_xp_to_next = 5
 	player_max_hp = 100
 	player_hp = 100
+	crystals_this_run = 0
 	player_weapons.clear()
 	player_items.clear()
 	speed_mult = 1.0
 	attack_speed_mult = 1.0
 	max_hp_mult = 1.0
+	area_mult = 1.0
+	magnet_mult = 1.0
+	cooldown_mult = 1.0

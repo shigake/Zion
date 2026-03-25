@@ -87,16 +87,19 @@ func _set_color(color: Color) -> void:
 	if mat is StandardMaterial3D:
 		mat.albedo_color = color
 
+var weapon_scenes: Dictionary = {
+	"katana": preload("res://scenes/weapons/katana.tscn"),
+	"staff": preload("res://scenes/weapons/staff.tscn"),
+	"scythe": preload("res://scenes/weapons/scythe.tscn"),
+	"machinegun": preload("res://scenes/weapons/machinegun.tscn"),
+	"bazooka": preload("res://scenes/weapons/bazooka.tscn"),
+	"necro": preload("res://scenes/weapons/necro.tscn"),
+}
+
 func _spawn_weapon(weapon_id: String) -> void:
-	var weapon_scene: PackedScene
-	match weapon_id:
-		"katana":
-			weapon_scene = preload("res://scenes/weapons/katana.tscn")
-		"staff":
-			weapon_scene = preload("res://scenes/weapons/staff.tscn")
-		_:
-			return
-	var weapon = weapon_scene.instantiate()
+	if weapon_id not in weapon_scenes:
+		return
+	var weapon = weapon_scenes[weapon_id].instantiate()
 	weapon_pivot.add_child(weapon)
 
 func add_weapon_node(weapon_id: String) -> void:
