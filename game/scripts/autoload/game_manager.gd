@@ -36,6 +36,11 @@ var perm_speed_mult: float = 1.0
 var perm_armor: int = 0
 var xp_mult: float = 1.0
 var rerolls: int = 1
+var veteran_relic_active: bool = false
+
+# Modo de jogo
+var game_mode: String = "normal"  # "normal" ou "endless"
+var run_time_limit: float = 1800.0  # 30 min default
 
 # Weapons e items do jogador
 var player_weapons: Array[Dictionary] = []  # {id, level}
@@ -50,6 +55,17 @@ var max_hp_mult: float = 1.0
 var area_mult: float = 1.0
 var magnet_mult: float = 1.0
 var cooldown_mult: float = 1.0
+var dodge_chance: float = 0.0
+var lifesteal: float = 0.0
+var thorns_mult: float = 0.0
+var luck_mult: float = 1.0
+var extra_projectiles: int = 0
+var summon_damage_mult: float = 1.0
+var attack_size_mult: float = 1.0
+var explosion_damage_mult: float = 1.0
+var fire_ground_active: bool = false
+var weapon_level_bonus: int = 0
+var accuracy_mult: float = 1.0
 
 func _ready() -> void:
 	_register_input_actions()
@@ -65,12 +81,42 @@ func _register_input_actions() -> void:
 	_add_key_action("move_right", KEY_D)
 	_add_key_action("dash", KEY_SPACE)
 	_add_key_action("interact", KEY_E)
+	# Gamepad
+	_add_joypad_actions()
 
 func _add_key_action(action_name: String, key: Key) -> void:
 	if not InputMap.has_action(action_name):
 		InputMap.add_action(action_name)
 	var event = InputEventKey.new()
 	event.physical_keycode = key
+	InputMap.action_add_event(action_name, event)
+
+func _add_joypad_actions() -> void:
+	# Left stick movement
+	_add_joy_axis("move_left", JOY_AXIS_LEFT_X, -1.0)
+	_add_joy_axis("move_right", JOY_AXIS_LEFT_X, 1.0)
+	_add_joy_axis("move_up", JOY_AXIS_LEFT_Y, -1.0)
+	_add_joy_axis("move_down", JOY_AXIS_LEFT_Y, 1.0)
+	# A/X = Dash
+	_add_joy_button("dash", JOY_BUTTON_A)
+	# B/Circle = Interact
+	_add_joy_button("interact", JOY_BUTTON_B)
+	# Start = Pause
+	_add_joy_button("pause", JOY_BUTTON_START)
+
+func _add_joy_axis(action_name: String, axis: int, axis_value: float) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	var event = InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = axis_value
+	InputMap.action_add_event(action_name, event)
+
+func _add_joy_button(action_name: String, button: int) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	var event = InputEventJoypadButton.new()
+	event.button_index = button
 	InputMap.action_add_event(action_name, event)
 
 func add_xp(amount: int) -> void:
@@ -94,7 +140,14 @@ func get_difficulty_multiplier() -> float:
 func take_damage(amount: int) -> void:
 	if is_game_over:
 		return
+	# Dodge check
+	if dodge_chance > 0.0 and randf() < dodge_chance:
+		return  # Dodged!
 	var reduced = maxi(1, amount - perm_armor)
+	# Thorns
+	if thorns_mult > 0.0:
+		var reflected = int(reduced * thorns_mult)
+		# Thorns dano e aplicado ao inimigo pelo player script
 	player_hp -= reduced
 	if player_hp <= 0:
 		player_hp = 0
@@ -176,6 +229,17 @@ func _recalculate_item_bonuses() -> void:
 	area_mult = 1.0
 	magnet_mult = 1.0
 	cooldown_mult = 1.0
+	dodge_chance = 0.0
+	lifesteal = 0.0
+	thorns_mult = 0.0
+	luck_mult = 1.0
+	extra_projectiles = 0
+	summon_damage_mult = 1.0
+	attack_size_mult = 1.0
+	explosion_damage_mult = 1.0
+	fire_ground_active = false
+	weapon_level_bonus = 0
+	accuracy_mult = 1.0
 
 	for it in player_items:
 		var data = ItemDB.get_item(it["id"])
@@ -190,7 +254,6 @@ func _recalculate_item_bonuses() -> void:
 				attack_speed_mult += value
 			"max_hp":
 				max_hp_mult += value
-				# Cura proporcional ao ganho
 				var new_max = get_effective_max_hp()
 				player_hp = mini(player_hp + int(player_max_hp * data["value_per_level"]), new_max)
 			"area":
@@ -199,6 +262,32 @@ func _recalculate_item_bonuses() -> void:
 				magnet_mult += value
 			"cooldown":
 				cooldown_mult = maxf(0.3, cooldown_mult - value)
+			"dodge":
+				dodge_chance = minf(0.7, dodge_chance + value)
+			"xp_bonus":
+				xp_mult += value
+			"explosion_damage":
+				explosion_damage_mult += value
+			"lifesteal":
+				lifesteal += value
+			"thorns":
+				thorns_mult += value
+			"luck":
+				luck_mult += value
+			"extra_projectiles":
+				extra_projectiles += int(value)
+			"summon_damage":
+				summon_damage_mult += value
+			"attack_size":
+				attack_size_mult += value
+			"fire_ground":
+				fire_ground_active = level > 0
+			"weapon_level_bonus":
+				weapon_level_bonus = int(value)
+			"accuracy":
+				accuracy_mult += value
+			"electric_damage":
+				pass  # Futuro: sinergias elementais
 
 func reset() -> void:
 	game_time = 0.0
@@ -226,6 +315,18 @@ func reset() -> void:
 	perm_armor = 0
 	xp_mult = 1.0
 	rerolls = 1
+	veteran_relic_active = false
+	dodge_chance = 0.0
+	lifesteal = 0.0
+	thorns_mult = 0.0
+	luck_mult = 1.0
+	extra_projectiles = 0
+	summon_damage_mult = 1.0
+	attack_size_mult = 1.0
+	explosion_damage_mult = 1.0
+	fire_ground_active = false
+	weapon_level_bonus = 0
+	accuracy_mult = 1.0
 	_apply_permanent_upgrades()
 	_apply_character_bonuses()
 	_apply_relic()
@@ -273,6 +374,22 @@ func _apply_relic() -> void:
 			player_hp = player_max_hp
 		"extra_reroll":
 			rerolls += 1
+		"extra_weapon":
+			# Pick a random weapon that isn't the starting weapon
+			var all_ids = WeaponDB.get_all_weapon_ids()
+			var starting_weapon = ""
+			if not player_weapons.is_empty():
+				starting_weapon = player_weapons[0]["id"]
+			var candidates: Array = []
+			for wid in all_ids:
+				if wid != starting_weapon:
+					candidates.append(wid)
+			if not candidates.is_empty():
+				var pick = candidates[randi() % candidates.size()]
+				add_weapon(pick)
+		"veteran":
+			xp_mult += 0.20
+			veteran_relic_active = true
 
 func end_run() -> void:
 	# Cristais = kills / 5 (minimo)

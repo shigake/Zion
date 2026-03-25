@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/bomber.gd" id="1"]
+
+[sub_resource type="SphereMesh" id="1"]
+radius = 0.25
+height = 0.5
+
+[sub_resource type="SphereShape3D" id="2"]
+radius = 0.25
+
+[sub_resource type="SphereShape3D" id="3"]
+radius = 0.3
+
+[node name="Bomber" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1")
+speed = 7.0
+max_hp = 10
+damage = 25
+xp_drop = 3
+enemy_color = Color(1.0, 0.3, 0.1, 1)
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("2")
+
+[node name="Hitbox" type="Area3D" parent="."]
+collision_layer = 2
+collision_mask = 1
+
+[node name="HitboxShape" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("3")

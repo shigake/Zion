@@ -37,8 +37,23 @@ func _select_relic(relic_id: String, data: Dictionary) -> void:
 	selected_relic = relic_id
 	info_label.text = "%s — %s" % [data["name"], data["description"]]
 
+var selected_mode: String = "normal"
+
+func _on_mode_normal() -> void:
+	selected_mode = "normal"
+	info_label.text = "Modo Normal — 30 min, boss no final"
+
+func _on_mode_endless() -> void:
+	selected_mode = "endless"
+	info_label.text = "Modo Endless — Sem limite, sobreviva o maximo"
+
 func _on_start() -> void:
 	GameManager.selected_relic = selected_relic
+	GameManager.game_mode = selected_mode
+	if selected_mode == "endless":
+		GameManager.run_time_limit = 999999.0
+	else:
+		GameManager.run_time_limit = 1800.0
 	get_tree().change_scene_to_file("res://scenes/stages/stage_cemetery.tscn")
 
 func _on_back() -> void:
