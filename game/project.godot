@@ -18,6 +18,7 @@ SaveManager="*res://scripts/autoload/save_manager.gd"
 ShopDB="*res://scripts/autoload/shop_db.gd"
 CharacterDB="*res://scripts/autoload/character_db.gd"
 RelicDB="*res://scripts/autoload/relic_db.gd"
+EvolutionDB="*res://scripts/autoload/evolution_db.gd"
 
 [display]
 
