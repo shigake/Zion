@@ -40,6 +40,7 @@ func _physics_process(delta: float) -> void:
 			_collect()
 
 func _collect() -> void:
+	ParticleFactory.spawn_collect_particles(global_position, Color(0.2, 0.6, 1.0))
 	GameManager.add_xp(xp_value)
 	queue_free()
 

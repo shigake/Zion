@@ -82,6 +82,11 @@ func add_xp(amount: int) -> void:
 		player_level += 1
 		player_xp_to_next = int(player_xp_to_next * 1.3) + 2
 		player_leveled_up.emit(player_level)
+		# Level up particles
+		var players = get_tree().get_nodes_in_group("players")
+		if not players.is_empty():
+			ParticleFactory.spawn_level_up_particles(players[0].global_position)
+			ScreenEffects.shake(0.1)
 
 func get_difficulty_multiplier() -> float:
 	return 1.0 + (game_time / 60.0) * 0.5

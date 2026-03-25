@@ -18,7 +18,7 @@ collision_mask = 1
 script = ExtResource("1")
 speed = 2.5
 max_hp = 12
-damage = 15
+damage = 10
 xp_drop = 3
 enemy_color = Color(0.7, 0.7, 0.9, 0.6)
 
