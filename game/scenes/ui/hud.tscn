@@ -67,3 +67,18 @@ offset_right = 50.0
 layout_mode = 2
 horizontal_alignment = 1
 text = "[SPACE] Dash"
+
+[node name="EventNotification" type="MarginContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 80.0
+offset_right = 200.0
+offset_bottom = 120.0
+
+[node name="EventLabel" type="Label" parent="EventNotification"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "EVENTO!"
