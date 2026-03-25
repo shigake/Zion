@@ -126,7 +126,7 @@ func add_xp(amount: int) -> void:
 	while player_xp >= player_xp_to_next:
 		player_xp -= player_xp_to_next
 		player_level += 1
-		player_xp_to_next = int(player_xp_to_next * 1.3) + 2
+		player_xp_to_next = int(player_xp_to_next * 1.15) + 3
 		player_leveled_up.emit(player_level)
 		# Level up particles
 		var players = get_tree().get_nodes_in_group("players")
@@ -135,7 +135,8 @@ func add_xp(amount: int) -> void:
 			ScreenEffects.shake(0.1)
 
 func get_difficulty_multiplier() -> float:
-	return 1.0 + (game_time / 60.0) * 0.5
+	# Cresce mais devagar, cap em 8x
+	return minf(8.0, 1.0 + (game_time / 60.0) * 0.35)
 
 func take_damage(amount: int) -> void:
 	if is_game_over:

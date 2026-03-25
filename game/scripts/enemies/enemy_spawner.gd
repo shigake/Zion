@@ -16,6 +16,10 @@ var bat_scene: PackedScene = preload("res://scenes/enemies/bat.tscn")
 var skeleton_scene: PackedScene = preload("res://scenes/enemies/skeleton.tscn")
 var zombie_scene: PackedScene = preload("res://scenes/enemies/zombie_runner.tscn")
 var ghost_scene: PackedScene = preload("res://scenes/enemies/ghost.tscn")
+var slime_big_scene: PackedScene = preload("res://scenes/enemies/slime_big.tscn")
+var archer_scene: PackedScene = preload("res://scenes/enemies/skeleton_archer.tscn")
+var bomber_scene: PackedScene = preload("res://scenes/enemies/bomber.tscn")
+var tank_scene: PackedScene = preload("res://scenes/enemies/tank.tscn")
 
 # Boss
 var boss_spawned: bool = false
@@ -91,26 +95,38 @@ func _pick_enemy(minute: float) -> Node3D:
 		else:
 			return bat_scene.instantiate()
 	elif minute < 8.0:
-		# Skeletons + Bats + Slimes
-		if roll < 0.4:
+		# Skeletons + Bats + Slimes Grandes
+		if roll < 0.3:
 			return slime_scene.instantiate()
-		elif roll < 0.7:
-			return bat_scene.instantiate()
-		else:
-			return skeleton_scene.instantiate()
-	elif minute < 12.0:
-		# Skeleton + Zombies + Ghosts
-		if roll < 0.25:
-			return skeleton_scene.instantiate()
 		elif roll < 0.5:
-			return zombie_scene.instantiate()
-		elif roll < 0.75:
 			return bat_scene.instantiate()
+		elif roll < 0.75:
+			return skeleton_scene.instantiate()
 		else:
+			return slime_big_scene.instantiate()
+	elif minute < 12.0:
+		# Archers + Zombies + Ghosts + Bombers
+		if roll < 0.2:
+			return archer_scene.instantiate()
+		elif roll < 0.4:
+			return zombie_scene.instantiate()
+		elif roll < 0.6:
 			return ghost_scene.instantiate()
+		elif roll < 0.8:
+			return bomber_scene.instantiate()
+		else:
+			return skeleton_scene.instantiate()
+	elif minute < 20.0:
+		# Mix de tudo + Tanks
+		var scenes = [slime_scene, bat_scene, skeleton_scene, zombie_scene, ghost_scene,
+			slime_big_scene, archer_scene, bomber_scene]
+		if roll < 0.08:
+			return tank_scene.instantiate()
+		return scenes[rng.randi() % scenes.size()].instantiate()
 	else:
-		# Mix de tudo
-		var scenes = [slime_scene, bat_scene, skeleton_scene, zombie_scene, ghost_scene]
+		# Endgame: tudo, mais tanks e bombers
+		var scenes = [skeleton_scene, zombie_scene, ghost_scene, bomber_scene,
+			slime_big_scene, archer_scene, tank_scene]
 		return scenes[rng.randi() % scenes.size()].instantiate()
 
 func _make_elite(enemy: Node3D) -> void:
@@ -146,23 +162,19 @@ func _spawn_miniboss() -> void:
 	GameManager.enemies_alive += 1
 
 func _spawn_boss() -> void:
+	# No endless mode, no boss
+	if GameManager.game_mode == "endless":
+		return
+
 	var players = get_tree().get_nodes_in_group("players")
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
 	var spawn_pos = pos + Vector3(0, 0, -15)
 
-	# Boss: Necromancer King (usa skeleton como base visual)
-	var boss = skeleton_scene.instantiate()
-	if boss is EnemyBase3D:
-		boss.max_hp = 2000
-		boss.hp = 2000
-		boss.damage = 35
-		boss.speed = 2.0
-		boss.xp_drop = 200
-		boss.enemy_color = Color(0.2, 0.0, 0.3)
-		boss.scale = Vector3(3.5, 3.5, 3.5)
+	# Boss: Necromancer King (cena propria com comportamento de fases)
+	var boss_scene = preload("res://scenes/enemies/boss_necromancer.tscn")
+	var boss = boss_scene.instantiate()
 	boss.global_position = spawn_pos
-	boss.add_to_group("boss")
 	add_child(boss)
 	GameManager.enemies_alive += 1
