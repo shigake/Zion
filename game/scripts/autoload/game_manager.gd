@@ -26,6 +26,17 @@ var player_max_hp: int = 100
 var player_hp: int = 100
 var crystals_this_run: int = 0
 
+# Selecao pre-run
+var selected_character: String = "ronin"
+var selected_relic: String = ""
+
+# Bonuses permanentes da loja
+var perm_damage_mult: float = 1.0
+var perm_speed_mult: float = 1.0
+var perm_armor: int = 0
+var xp_mult: float = 1.0
+var rerolls: int = 1
+
 # Weapons e items do jogador
 var player_weapons: Array[Dictionary] = []  # {id, level}
 var player_items: Array[Dictionary] = []    # {id, level}
@@ -65,7 +76,7 @@ func _add_key_action(action_name: String, key: Key) -> void:
 func add_xp(amount: int) -> void:
 	if is_game_over:
 		return
-	player_xp += amount
+	player_xp += int(amount * xp_mult)
 	while player_xp >= player_xp_to_next:
 		player_xp -= player_xp_to_next
 		player_level += 1
@@ -78,7 +89,8 @@ func get_difficulty_multiplier() -> float:
 func take_damage(amount: int) -> void:
 	if is_game_over:
 		return
-	player_hp -= amount
+	var reduced = maxi(1, amount - perm_armor)
+	player_hp -= reduced
 	if player_hp <= 0:
 		player_hp = 0
 		is_game_over = true
@@ -204,3 +216,60 @@ func reset() -> void:
 	area_mult = 1.0
 	magnet_mult = 1.0
 	cooldown_mult = 1.0
+	perm_damage_mult = 1.0
+	perm_speed_mult = 1.0
+	perm_armor = 0
+	xp_mult = 1.0
+	rerolls = 1
+	_apply_permanent_upgrades()
+	_apply_character_bonuses()
+	_apply_relic()
+
+func _apply_permanent_upgrades() -> void:
+	var hp_lvl = SaveManager.get_upgrade_level("max_hp")
+	player_max_hp += hp_lvl * 10
+	player_hp = player_max_hp
+
+	var speed_lvl = SaveManager.get_upgrade_level("speed")
+	perm_speed_mult = 1.0 + speed_lvl * 0.05
+
+	var dmg_lvl = SaveManager.get_upgrade_level("damage")
+	perm_damage_mult = 1.0 + dmg_lvl * 0.05
+
+	var armor_lvl = SaveManager.get_upgrade_level("armor")
+	perm_armor = armor_lvl * 2
+
+	var xp_lvl = SaveManager.get_upgrade_level("xp_bonus")
+	xp_mult = 1.0 + xp_lvl * 0.10
+
+	var mag_lvl = SaveManager.get_upgrade_level("magnetism")
+	magnet_mult += mag_lvl * 0.20
+
+func _apply_character_bonuses() -> void:
+	var char_data = CharacterDB.get_character(selected_character)
+	if char_data.is_empty():
+		return
+	if "speed_bonus" in char_data:
+		perm_speed_mult += char_data["speed_bonus"]
+	if "attack_speed_bonus" in char_data:
+		attack_speed_mult += char_data["attack_speed_bonus"]
+	if "area_bonus" in char_data:
+		area_mult += char_data["area_bonus"]
+
+func _apply_relic() -> void:
+	if selected_relic.is_empty():
+		return
+	var relic = RelicDB.get_relic(selected_relic)
+	if relic.is_empty():
+		return
+	match relic["effect"]:
+		"bonus_hp":
+			player_max_hp = int(player_max_hp * 1.5)
+			player_hp = player_max_hp
+		"extra_reroll":
+			rerolls += 1
+
+func end_run() -> void:
+	# Cristais = kills / 5 (minimo)
+	crystals_this_run = maxi(total_kills / 5, 10)
+	SaveManager.end_run(crystals_this_run, game_time, total_kills)

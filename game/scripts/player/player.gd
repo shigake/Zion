@@ -22,9 +22,11 @@ var move_direction: Vector3 = Vector3.ZERO
 var original_color: Color = Color(0.2, 0.85, 0.3)
 
 func _ready() -> void:
-	# Arma inicial: katana
-	GameManager.add_weapon("katana")
-	_spawn_weapon("katana")
+	# Arma inicial e configurada pelo stage_cemetery.gd
+	# Se nenhuma arma foi setada (fallback), usa katana
+	if GameManager.player_weapons.is_empty():
+		GameManager.add_weapon("katana")
+		_spawn_weapon("katana")
 
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over or GameManager.paused:

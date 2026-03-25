@@ -6,7 +6,7 @@
 
 config/name="Zion"
 config/description="Survivors roguelite with online co-op"
-run/main_scene="res://scenes/stages/stage_cemetery.tscn"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 
 [autoload]
@@ -14,6 +14,10 @@ config/features=PackedStringArray("4.3", "Forward Plus")
 GameManager="*res://scripts/autoload/game_manager.gd"
 WeaponDB="*res://scripts/autoload/weapon_db.gd"
 ItemDB="*res://scripts/autoload/item_db.gd"
+SaveManager="*res://scripts/autoload/save_manager.gd"
+ShopDB="*res://scripts/autoload/shop_db.gd"
+CharacterDB="*res://scripts/autoload/character_db.gd"
+RelicDB="*res://scripts/autoload/relic_db.gd"
 
 [display]
 

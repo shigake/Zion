@@ -1,0 +1,45 @@
+extends Control
+
+## Tela de selecao de reliquia antes da run.
+
+@onready var relic_container: HBoxContainer = $VBox/Relics
+@onready var info_label: Label = $VBox/InfoLabel
+@onready var start_btn: Button = $VBox/StartButton
+@onready var back_btn: Button = $VBox/BackButton
+
+var selected_relic: String = ""
+
+func _ready() -> void:
+	start_btn.pressed.connect(_on_start)
+	back_btn.pressed.connect(_on_back)
+	_build_relic_list()
+
+func _build_relic_list() -> void:
+	for child in relic_container.get_children():
+		child.queue_free()
+
+	# Opcao sem reliquia
+	var none_btn = Button.new()
+	none_btn.custom_minimum_size = Vector2(150, 80)
+	none_btn.text = "Nenhuma\nSem bonus"
+	none_btn.pressed.connect(func(): _select_relic("", {"name": "Nenhuma", "description": "Sem bonus"}))
+	relic_container.add_child(none_btn)
+
+	for relic_id in RelicDB.get_all_relic_ids():
+		var data = RelicDB.get_relic(relic_id)
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(150, 80)
+		btn.text = "%s\n%s" % [data["name"], data["description"]]
+		btn.pressed.connect(func(): _select_relic(relic_id, data))
+		relic_container.add_child(btn)
+
+func _select_relic(relic_id: String, data: Dictionary) -> void:
+	selected_relic = relic_id
+	info_label.text = "%s — %s" % [data["name"], data["description"]]
+
+func _on_start() -> void:
+	GameManager.selected_relic = selected_relic
+	get_tree().change_scene_to_file("res://scenes/stages/stage_cemetery.tscn")
+
+func _on_back() -> void:
+	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
