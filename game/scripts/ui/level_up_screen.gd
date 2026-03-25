@@ -9,8 +9,9 @@ signal choice_made()
 @onready var option2_btn: Button = $Panel/VBox/Options/Option2
 @onready var option3_btn: Button = $Panel/VBox/Options/Option3
 @onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var reroll_btn: Button = $Panel/VBox/RerollButton
 
-var options: Array = []  # [{type: "weapon"/"item", id: "katana", label: "..."}]
+var options: Array = []
 var pending_levels: int = 0
 
 func _ready() -> void:
@@ -18,6 +19,7 @@ func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
 	option1_btn.pressed.connect(func(): _choose(0))
 	option2_btn.pressed.connect(func(): _choose(1))
+	reroll_btn.pressed.connect(_on_reroll)
 	option3_btn.pressed.connect(func(): _choose(2))
 
 func _on_level_up(_new_level: int) -> void:
@@ -40,6 +42,13 @@ func _show_choices() -> void:
 			buttons[i].text = options[i]["label"]
 		else:
 			buttons[i].visible = false
+
+	# Reroll button
+	if GameManager.rerolls > 0:
+		reroll_btn.visible = true
+		reroll_btn.text = "Reroll (%d)" % GameManager.rerolls
+	else:
+		reroll_btn.visible = false
 
 	panel.visible = true
 	GameManager.paused = true
@@ -126,3 +135,9 @@ func _generate_options() -> Array:
 	# Shuffle e pega 3
 	pool.shuffle()
 	return pool.slice(0, 3)
+
+func _on_reroll() -> void:
+	if GameManager.rerolls <= 0:
+		return
+	GameManager.rerolls -= 1
+	_show_choices()

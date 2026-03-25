@@ -33,7 +33,7 @@ func _update_time() -> void:
 	time_label.text = "%02d:%02d" % [t / 60, t % 60]
 
 func _update_kills() -> void:
-	kill_label.text = "Kills: %d" % GameManager.total_kills
+	kill_label.text = "Kills: %d | Cristais: %d" % [GameManager.total_kills, GameManager.crystals_this_run]
 
 func _on_level_up(_new_level: int) -> void:
 	level_label.text = "Lv. %d" % _new_level

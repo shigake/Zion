@@ -74,6 +74,7 @@ func _die() -> void:
 	GameManager.total_kills += 1
 	GameManager.enemy_killed.emit(global_position, xp_drop)
 	_spawn_xp_gem()
+	_spawn_crystal()
 	queue_free()
 
 func _spawn_xp_gem() -> void:
@@ -82,6 +83,16 @@ func _spawn_xp_gem() -> void:
 	gem.global_position = global_position + Vector3(0, 0.3, 0)
 	gem.xp_value = xp_drop
 	get_tree().current_scene.call_deferred("add_child", gem)
+
+func _spawn_crystal() -> void:
+	# 30% chance de dropar cristal
+	if randf() > 0.3:
+		return
+	var crystal_scene = preload("res://scenes/crystal_pickup.tscn")
+	var crystal = crystal_scene.instantiate()
+	crystal.global_position = global_position + Vector3(0.3, 0.3, 0.3)
+	crystal.crystal_value = maxi(1, xp_drop)
+	get_tree().current_scene.call_deferred("add_child", crystal)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and body.has_method("take_damage"):
