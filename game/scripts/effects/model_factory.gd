@@ -222,6 +222,218 @@ func create_ninja_model() -> Node3D:
 
 	return root
 
+func _create_necro_model() -> Node3D:
+	## Necro: corpo encapuzado + manto longo + orbe flutuante
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.22
+	body.mesh.height = 0.75
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.18
+	head.mesh.height = 0.36
+	root.add_child(head)
+	# Capuz pontudo
+	var hood = _mesh(CylinderMesh.new(), Vector3(0, 1.3, -0.05))
+	hood.mesh.top_radius = 0.02
+	hood.mesh.bottom_radius = 0.2
+	hood.mesh.height = 0.3
+	root.add_child(hood)
+	# Manto longo
+	var cloak = _mesh(CylinderMesh.new(), Vector3(0, 0.2, 0))
+	cloak.mesh.top_radius = 0.22
+	cloak.mesh.bottom_radius = 0.35
+	cloak.mesh.height = 0.5
+	root.add_child(cloak)
+	# Orbe flutuante
+	var orb = _mesh(SphereMesh.new(), Vector3(0.3, 1.0, 0.15))
+	orb.mesh.radius = 0.08
+	orb.mesh.height = 0.16
+	orb.set_meta("accent", true)
+	root.add_child(orb)
+	return root
+
+func _create_pirata_model() -> Node3D:
+	## Pirata: corpo robusto + chapeu tricorne + gancho
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.24
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.18
+	head.mesh.height = 0.36
+	root.add_child(head)
+	# Chapeu tricorne
+	var hat_brim = _mesh(CylinderMesh.new(), Vector3(0, 1.3, 0))
+	hat_brim.mesh.top_radius = 0.28
+	hat_brim.mesh.bottom_radius = 0.28
+	hat_brim.mesh.height = 0.04
+	root.add_child(hat_brim)
+	var hat_top = _mesh(CylinderMesh.new(), Vector3(0, 1.4, 0))
+	hat_top.mesh.top_radius = 0.12
+	hat_top.mesh.bottom_radius = 0.18
+	hat_top.mesh.height = 0.15
+	root.add_child(hat_top)
+	# Gancho na mao
+	var hook = _mesh(CylinderMesh.new(), Vector3(-0.3, 0.6, 0.1))
+	hook.mesh.top_radius = 0.02
+	hook.mesh.bottom_radius = 0.01
+	hook.mesh.height = 0.15
+	hook.set_meta("accent", true)
+	root.add_child(hook)
+	return root
+
+func _create_engenheiro_model() -> Node3D:
+	## Engenheiro: corpo com colete + capacete + drone nas costas
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.22
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.17
+	head.mesh.height = 0.34
+	root.add_child(head)
+	# Capacete/goggle
+	var helmet = _mesh(CylinderMesh.new(), Vector3(0, 1.2, 0))
+	helmet.mesh.top_radius = 0.14
+	helmet.mesh.bottom_radius = 0.18
+	helmet.mesh.height = 0.12
+	root.add_child(helmet)
+	# Mochila
+	var pack = _mesh(BoxMesh.new(), Vector3(0, 0.65, -0.2))
+	pack.mesh.size = Vector3(0.25, 0.3, 0.15)
+	root.add_child(pack)
+	# Drone flutuante
+	var drone = _mesh(BoxMesh.new(), Vector3(0.25, 1.4, 0))
+	drone.mesh.size = Vector3(0.15, 0.06, 0.15)
+	drone.set_meta("accent", true)
+	root.add_child(drone)
+	return root
+
+func _create_vampiro_model() -> Node3D:
+	## Vampiro: corpo elegante + capa + gola alta
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.2
+	body.mesh.height = 0.75
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.15, 0))
+	head.mesh.radius = 0.17
+	head.mesh.height = 0.34
+	root.add_child(head)
+	# Gola alta da capa
+	var collar = _mesh(CylinderMesh.new(), Vector3(0, 1.0, -0.08))
+	collar.mesh.top_radius = 0.22
+	collar.mesh.bottom_radius = 0.18
+	collar.mesh.height = 0.15
+	root.add_child(collar)
+	# Capa longa
+	var cape = _mesh(BoxMesh.new(), Vector3(0, 0.5, -0.18))
+	cape.mesh.size = Vector3(0.5, 0.8, 0.06)
+	root.add_child(cape)
+	# Olhos vermelhos
+	var eye_l = _mesh(SphereMesh.new(), Vector3(0.07, 1.18, 0.14))
+	eye_l.mesh.radius = 0.03
+	eye_l.mesh.height = 0.06
+	eye_l.set_meta("accent", true)
+	root.add_child(eye_l)
+	var eye_r = _mesh(SphereMesh.new(), Vector3(-0.07, 1.18, 0.14))
+	eye_r.mesh.radius = 0.03
+	eye_r.mesh.height = 0.06
+	eye_r.set_meta("accent", true)
+	root.add_child(eye_r)
+	return root
+
+func _create_gladiador_model() -> Node3D:
+	## Gladiador: corpo musculoso + elmo + escudo + lanca
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.28
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.19
+	head.mesh.height = 0.38
+	root.add_child(head)
+	# Elmo com crista
+	var helm = _mesh(CylinderMesh.new(), Vector3(0, 1.25, 0))
+	helm.mesh.top_radius = 0.1
+	helm.mesh.bottom_radius = 0.2
+	helm.mesh.height = 0.15
+	root.add_child(helm)
+	var crest = _mesh(BoxMesh.new(), Vector3(0, 1.35, 0))
+	crest.mesh.size = Vector3(0.04, 0.15, 0.25)
+	root.add_child(crest)
+	# Escudo
+	var shield = _mesh(CylinderMesh.new(), Vector3(-0.35, 0.6, 0.1))
+	shield.mesh.top_radius = 0.2
+	shield.mesh.bottom_radius = 0.2
+	shield.mesh.height = 0.04
+	root.add_child(shield)
+	# Ombreira
+	var pauldron = _mesh(SphereMesh.new(), Vector3(0.28, 0.9, 0))
+	pauldron.mesh.radius = 0.1
+	pauldron.mesh.height = 0.15
+	root.add_child(pauldron)
+	return root
+
+func _create_chef_model() -> Node3D:
+	## Chef: corpo roliço + chapeu de chef + avental
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.55, 0))
+	body.mesh.radius = 0.26
+	body.mesh.height = 0.65
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.05, 0))
+	head.mesh.radius = 0.18
+	head.mesh.height = 0.36
+	root.add_child(head)
+	# Chapeu de chef (toque)
+	var hat = _mesh(CylinderMesh.new(), Vector3(0, 1.35, 0))
+	hat.mesh.top_radius = 0.16
+	hat.mesh.bottom_radius = 0.14
+	hat.mesh.height = 0.3
+	root.add_child(hat)
+	# Avental
+	var apron = _mesh(BoxMesh.new(), Vector3(0, 0.45, 0.15))
+	apron.mesh.size = Vector3(0.35, 0.45, 0.04)
+	root.add_child(apron)
+	# Frigideira
+	var pan = _mesh(CylinderMesh.new(), Vector3(0.3, 0.7, 0.1))
+	pan.mesh.top_radius = 0.12
+	pan.mesh.bottom_radius = 0.12
+	pan.mesh.height = 0.03
+	pan.set_meta("accent", true)
+	root.add_child(pan)
+	return root
+
+func _create_mystery_model() -> Node3D:
+	## Mystery: silhueta obscura + ponto de interrogacao
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.22
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.18
+	head.mesh.height = 0.36
+	root.add_child(head)
+	# Manto misterioso
+	var cloak = _mesh(CylinderMesh.new(), Vector3(0, 0.4, 0))
+	cloak.mesh.top_radius = 0.22
+	cloak.mesh.bottom_radius = 0.32
+	cloak.mesh.height = 0.8
+	root.add_child(cloak)
+	# Capuz
+	var hood = _mesh(CylinderMesh.new(), Vector3(0, 1.25, -0.03))
+	hood.mesh.top_radius = 0.05
+	hood.mesh.bottom_radius = 0.2
+	hood.mesh.height = 0.2
+	root.add_child(hood)
+	return root
+
 # ===================== ENEMY MODELS =====================
 
 func create_slime_model() -> Node3D:
@@ -797,6 +1009,13 @@ func get_model_for_character(char_id: String) -> Node3D:
 		"mago": return create_mago_model()
 		"berserker": return create_berserker_model()
 		"ninja": return create_ninja_model()
+		"necro": return _create_necro_model()
+		"pirata": return _create_pirata_model()
+		"engenheiro": return _create_engenheiro_model()
+		"vampiro": return _create_vampiro_model()
+		"gladiador": return _create_gladiador_model()
+		"chef": return _create_chef_model()
+		"mystery": return _create_mystery_model()
 	return create_ronin_model()
 
 func get_model_for_enemy(enemy_name: String) -> Node3D:
