@@ -76,6 +76,9 @@ func _spawn_wave(mult: float) -> void:
 		var angle = rng.randf() * TAU
 		var spawn_pos = target_pos + Vector3(cos(angle), 0, sin(angle)) * spawn_distance
 
+		# Apply stage-specific skin (color + name)
+		_apply_stage_skin(enemy)
+
 		# Elite enemies after minute 15
 		if minute >= 15.0 and rng.randf() < 0.1:
 			_make_elite(enemy)
@@ -89,51 +92,153 @@ func _pick_enemy(minute: float) -> Node3D:
 
 	if minute < 2.0:
 		# So slimes
-		return slime_scene.instantiate()
+		return ObjectPool.get_instance(slime_scene)
 	elif minute < 5.0:
 		# Slimes + Bats
 		if roll < 0.7:
-			return slime_scene.instantiate()
+			return ObjectPool.get_instance(slime_scene)
 		else:
-			return bat_scene.instantiate()
+			return ObjectPool.get_instance(bat_scene)
 	elif minute < 8.0:
 		# Skeletons + Bats + Slimes Grandes
 		if roll < 0.3:
-			return slime_scene.instantiate()
+			return ObjectPool.get_instance(slime_scene)
 		elif roll < 0.5:
-			return bat_scene.instantiate()
+			return ObjectPool.get_instance(bat_scene)
 		elif roll < 0.75:
-			return skeleton_scene.instantiate()
+			return ObjectPool.get_instance(skeleton_scene)
 		else:
-			return slime_big_scene.instantiate()
+			return ObjectPool.get_instance(slime_big_scene)
 	elif minute < 12.0:
 		# Archers + Zombies + Ghosts + Bombers
 		if roll < 0.2:
-			return archer_scene.instantiate()
+			return ObjectPool.get_instance(archer_scene)
 		elif roll < 0.4:
-			return zombie_scene.instantiate()
+			return ObjectPool.get_instance(zombie_scene)
 		elif roll < 0.6:
-			return ghost_scene.instantiate()
+			return ObjectPool.get_instance(ghost_scene)
 		elif roll < 0.8:
-			return bomber_scene.instantiate()
+			return ObjectPool.get_instance(bomber_scene)
 		else:
-			return skeleton_scene.instantiate()
+			return ObjectPool.get_instance(skeleton_scene)
 	elif minute < 20.0:
 		# Mix de tudo + Tanks + Swarms
 		if roll < 0.06:
-			return tank_scene.instantiate()
+			return ObjectPool.get_instance(tank_scene)
 		elif roll < 0.10:
-			return swarm_scene.instantiate()
+			return ObjectPool.get_instance(swarm_scene)
 		elif roll < 0.13:
-			return mimic_scene.instantiate()
+			return ObjectPool.get_instance(mimic_scene)
 		var scenes = [slime_scene, bat_scene, skeleton_scene, zombie_scene, ghost_scene,
 			slime_big_scene, archer_scene, bomber_scene]
-		return scenes[rng.randi() % scenes.size()].instantiate()
+		return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])
 	else:
 		# Endgame: tudo, mais tanks, bombers, swarms
 		var scenes = [skeleton_scene, zombie_scene, ghost_scene, bomber_scene,
 			slime_big_scene, archer_scene, tank_scene, swarm_scene, mimic_scene]
-		return scenes[rng.randi() % scenes.size()].instantiate()
+		return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])
+
+## Stage skin data: { stage_name: { "colors": [Color, ...], "names": { NodeName: ThemedName } } }
+var _stage_skins: Dictionary = {
+	"forest": {
+		"colors": [Color(0.2, 0.6, 0.2), Color(0.3, 0.7, 0.3), Color(0.4, 0.2, 0.5), Color(0.15, 0.5, 0.15), Color(0.5, 0.3, 0.6)],
+		"names": {
+			"Slime": "Mushroom Slime", "Bat": "Evil Pixie", "Skeleton": "Treant",
+			"ZombieRunner": "Corrupted Unicorn", "Ghost": "Will-o-Wisp", "SlimeBig": "Giant Mushroom",
+			"SkeletonArcher": "Elf Archer", "Bomber": "Spore Bomber", "Tank": "Ancient Treant",
+			"Swarm": "Fairy Swarm", "Mimic": "Treasure Mushroom",
+		},
+	},
+	"farm": {
+		"colors": [Color(0.6, 0.4, 0.2), Color(0.7, 0.6, 0.2), Color(0.5, 0.35, 0.15), Color(0.8, 0.7, 0.3), Color(0.55, 0.45, 0.2)],
+		"names": {
+			"Slime": "Cow Slime", "Bat": "Killer Chicken", "Skeleton": "Scarecrow",
+			"ZombieRunner": "Zombie Cow", "Ghost": "Phantom Crow", "SlimeBig": "Mud Blob",
+			"SkeletonArcher": "Pitchfork Thrower", "Bomber": "Exploding Pumpkin", "Tank": "Bull",
+			"Swarm": "Locust Swarm", "Mimic": "Hay Bale Mimic",
+		},
+	},
+	"tokyo": {
+		"colors": [Color(0.0, 0.9, 0.9), Color(0.9, 0.2, 0.9), Color(0.2, 0.8, 1.0), Color(0.0, 1.0, 0.5), Color(0.8, 0.0, 1.0)],
+		"names": {
+			"Slime": "Nano Slime", "Bat": "Drone", "Skeleton": "Robot Samurai",
+			"ZombieRunner": "Android", "Ghost": "Hologram", "SlimeBig": "Mecha Slime",
+			"SkeletonArcher": "Sniper Bot", "Bomber": "Grenade Drone", "Tank": "Mech Walker",
+			"Swarm": "Nano Swarm", "Mimic": "Vending Machine",
+		},
+	},
+	"volcano": {
+		"colors": [Color(0.9, 0.2, 0.0), Color(1.0, 0.5, 0.0), Color(0.8, 0.1, 0.1), Color(1.0, 0.3, 0.1), Color(0.7, 0.15, 0.0)],
+		"names": {
+			"Slime": "Magma Slime", "Bat": "Fire Imp", "Skeleton": "Lava Golem",
+			"ZombieRunner": "Demon", "Ghost": "Ash Wraith", "SlimeBig": "Magma Blob",
+			"SkeletonArcher": "Flame Archer", "Bomber": "Lava Bomber", "Tank": "Obsidian Giant",
+			"Swarm": "Ember Swarm", "Mimic": "Volcanic Rock Mimic",
+		},
+	},
+	"ocean": {
+		"colors": [Color(0.1, 0.4, 0.8), Color(0.0, 0.7, 0.7), Color(0.2, 0.5, 0.9), Color(0.0, 0.6, 0.5), Color(0.15, 0.3, 0.7)],
+		"names": {
+			"Slime": "Jellyfish", "Bat": "Flying Fish", "Skeleton": "Crab",
+			"ZombieRunner": "Zombie Shark", "Ghost": "Ghost Ship", "SlimeBig": "Giant Jellyfish",
+			"SkeletonArcher": "Harpoon Fisher", "Bomber": "Pufferfish", "Tank": "Hermit Crab",
+			"Swarm": "Piranha School", "Mimic": "Treasure Chest",
+		},
+	},
+	"arena": {
+		"colors": [Color(0.8, 0.65, 0.2), Color(0.7, 0.5, 0.15), Color(0.9, 0.75, 0.3), Color(0.6, 0.4, 0.1), Color(0.85, 0.6, 0.25)],
+		"names": {
+			"Slime": "Slime Gladiator", "Bat": "Eagle", "Skeleton": "Centurion",
+			"ZombieRunner": "Lion", "Ghost": "Arena Spirit", "SlimeBig": "War Elephant",
+			"SkeletonArcher": "Bowman", "Bomber": "Fire Juggler", "Tank": "Champion",
+			"Swarm": "Chariot Charge", "Mimic": "Trophy Mimic",
+		},
+	},
+	"space": {
+		"colors": [Color(0.5, 0.2, 0.8), Color(0.2, 0.8, 0.3), Color(0.6, 0.1, 0.9), Color(0.3, 0.9, 0.4), Color(0.4, 0.3, 0.7)],
+		"names": {
+			"Slime": "Alien Parasite", "Bat": "Space Drone", "Skeleton": "Xenomorph",
+			"ZombieRunner": "Mutant", "Ghost": "Void Phantom", "SlimeBig": "Cosmic Blob",
+			"SkeletonArcher": "Laser Turret", "Bomber": "Plasma Mine", "Tank": "Mech Titan",
+			"Swarm": "Zerg Swarm", "Mimic": "Pod Mimic",
+		},
+	},
+	"castle": {
+		"colors": [Color(0.5, 0.05, 0.1), Color(0.15, 0.05, 0.1), Color(0.6, 0.0, 0.15), Color(0.1, 0.1, 0.1), Color(0.4, 0.0, 0.2)],
+		"names": {
+			"Slime": "Blood Slime", "Bat": "Vampire Bat", "Skeleton": "Armor",
+			"ZombieRunner": "Gargoyle", "Ghost": "Banshee", "SlimeBig": "Dark Ooze",
+			"SkeletonArcher": "Crossbow Knight", "Bomber": "Alchemist", "Tank": "Iron Golem",
+			"Swarm": "Rat Swarm", "Mimic": "Cursed Chest",
+		},
+	},
+	"candy": {
+		"colors": [Color(1.0, 0.5, 0.7), Color(0.7, 0.9, 1.0), Color(0.9, 0.7, 1.0), Color(1.0, 0.8, 0.4), Color(0.6, 1.0, 0.7)],
+		"names": {
+			"Slime": "Gummy Bear", "Bat": "Candy Bat", "Skeleton": "Cookie Ninja",
+			"ZombieRunner": "Cupcake", "Ghost": "Cotton Candy Ghost", "SlimeBig": "Jawbreaker",
+			"SkeletonArcher": "Candy Cane Archer", "Bomber": "Popcorn Bomber", "Tank": "Chocolate Golem",
+			"Swarm": "Sprinkle Swarm", "Mimic": "Candy Box Mimic",
+		},
+	},
+}
+
+func _apply_stage_skin(enemy: Node3D) -> void:
+	var stage: String = GameManager.selected_stage
+	if stage == "cemetery" or stage == "":
+		return  # Cemetery uses default skins
+	if not _stage_skins.has(stage):
+		return
+	var skin_data: Dictionary = _stage_skins[stage]
+	# Apply themed color
+	if enemy is EnemyBase3D:
+		var colors: Array = skin_data["colors"]
+		enemy.enemy_color = colors[rng.randi() % colors.size()]
+	# Apply themed name (affects ModelFactory.get_model_for_enemy)
+	var names: Dictionary = skin_data["names"]
+	var base_name: String = enemy.name
+	if names.has(base_name):
+		enemy.name = names[base_name]
 
 func _make_elite(enemy: Node3D) -> void:
 	if enemy is EnemyBase3D:
@@ -188,6 +293,7 @@ func _spawn_miniboss() -> void:
 			mb_config = {"hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)}
 
 	boss = zombie_scene.instantiate()
+	_apply_stage_skin(boss)
 	if boss is EnemyBase3D:
 		boss.max_hp = mb_config["hp"]
 		boss.hp = mb_config["hp"]

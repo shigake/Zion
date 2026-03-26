@@ -17,6 +17,7 @@ var target: Node3D = null
 var is_dead: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 var _animator: Node = null
+var _hit_count: int = 0
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
@@ -106,6 +107,8 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult))
 	hp -= final_damage
 	GameManager.total_damage_dealt += final_damage
+	AchievementManager.on_attack()
+	_hit_count += 1
 
 	# Damage number - color by type
 	var dmg_color: Color = _get_damage_color(damage_type)
@@ -176,6 +179,9 @@ func _die() -> void:
 		return
 	is_dead = true
 	AudioManager.play_sfx("kill")
+	# One Punch achievement: boss killed in 1 hit
+	if is_in_group("boss") and _hit_count <= 1:
+		AchievementManager.on_boss_killed_one_hit()
 	GameManager.enemies_alive -= 1
 	GameManager.total_kills += 1
 	var pos = global_position if is_inside_tree() else Vector3.ZERO
@@ -215,7 +221,9 @@ func _spawn_crystal() -> void:
 	get_tree().current_scene.call_deferred("add_child", crystal)
 
 func _spawn_fire_ground(pos: Vector3) -> void:
+	var fire_scene = preload("res://scripts/effects/fire_ground_effect.gd")
 	var fire = Area3D.new()
+	fire.set_script(fire_scene)
 	fire.collision_layer = 0
 	fire.collision_mask = 2  # Enemies
 	var col = CollisionShape3D.new()
@@ -241,13 +249,6 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	fire.global_position = pos
 	fire.monitoring = true
 	get_tree().current_scene.call_deferred("add_child", fire)
-	# Damage tick + cleanup
-	var timer := 0.0
-	var lifetime := 3.0
-	fire.set_meta("timer", timer)
-	fire.set_meta("lifetime", lifetime)
-	fire.set_meta("tick", 0.0)
-	fire.set_script(preload("res://scripts/effects/fire_ground_effect.gd"))
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and body.has_method("take_damage"):

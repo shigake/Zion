@@ -1,7 +1,8 @@
 extends Node
 
 ## Gerenciador de audio global: musica e efeitos sonoros.
-## Usa logs placeholder ate que arquivos de audio reais sejam adicionados.
+## Tenta carregar arquivos de audio reais de res://assets/audio/.
+## Se os arquivos nao existirem, imprime log e continua sem crash.
 
 # Volume properties (0.0 - 1.0)
 var music_volume: float = 1.0
@@ -11,7 +12,10 @@ var master_volume: float = 1.0
 # Audio players (created in _ready)
 var _music_player: AudioStreamPlayer
 var _music_player_fade: AudioStreamPlayer  # For crossfade
-var _sfx_player: AudioStreamPlayer
+
+# SFX player pool for simultaneous sounds
+var _sfx_players: Array[AudioStreamPlayer] = []
+const SFX_POOL_SIZE: int = 5
 
 # Known SFX names
 var _valid_sfx: Array[String] = [
@@ -21,7 +25,8 @@ var _valid_sfx: Array[String] = [
 
 # Known music names
 var _valid_music: Array[String] = [
-	"menu", "cemetery", "forest", "farm", "boss"
+	"menu", "cemetery", "forest", "farm", "boss",
+	"tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"
 ]
 
 # Current music track
@@ -31,6 +36,13 @@ var _current_music: String = ""
 var _crossfade_duration: float = 1.0
 var _crossfading: bool = false
 var _crossfade_time: float = 0.0
+
+# SFX cooldown tracking: sfx_name -> last play time (msec)
+var _sfx_last_played: Dictionary = {}
+const SFX_COOLDOWN_MS: int = 50  # 0.05 seconds minimum between same SFX
+
+# Audio file cache to avoid repeated load attempts
+var _audio_cache: Dictionary = {}  # path -> AudioStream or null
 
 func _ready() -> void:
 	_music_player = AudioStreamPlayer.new()
@@ -43,10 +55,13 @@ func _ready() -> void:
 	_music_player_fade.bus = "Master"
 	add_child(_music_player_fade)
 
-	_sfx_player = AudioStreamPlayer.new()
-	_sfx_player.name = "SFXPlayer"
-	_sfx_player.bus = "Master"
-	add_child(_sfx_player)
+	# Create SFX player pool
+	for i in range(SFX_POOL_SIZE):
+		var player = AudioStreamPlayer.new()
+		player.name = "SFXPlayer_%d" % i
+		player.bus = "Master"
+		add_child(player)
+		_sfx_players.append(player)
 
 	_apply_volumes()
 
@@ -54,11 +69,13 @@ func _process(delta: float) -> void:
 	if _crossfading:
 		_crossfade_time += delta
 		var t = clampf(_crossfade_time / _crossfade_duration, 0.0, 1.0)
-		_music_player_fade.volume_db = linear_to_db((1.0 - t) * music_volume * master_volume)
-		_music_player.volume_db = linear_to_db(t * music_volume * master_volume)
+		var vol = music_volume * master_volume
+		_music_player_fade.volume_db = linear_to_db(maxf((1.0 - t) * vol, 0.0001))
+		_music_player.volume_db = linear_to_db(maxf(t * vol, 0.0001))
 		if t >= 1.0:
 			_crossfading = false
 			_music_player_fade.stop()
+			_music_player_fade.stream = null
 
 func play_music(stream_name: String) -> void:
 	if stream_name == _current_music:
@@ -67,32 +84,37 @@ func play_music(stream_name: String) -> void:
 		print("[AudioManager] Unknown music: " + stream_name)
 		return
 
-	print("[AudioManager] Music: " + stream_name)
+	# Try to load the audio file
+	var stream = _load_audio("res://assets/audio/music/" + stream_name, [".ogg", ".mp3", ".wav"])
+	if stream == null:
+		print("[AudioManager] Music (no file): " + stream_name)
+		_current_music = stream_name
+		return
 
-	# Crossfade: move current to fade player, start new on main
-	if _current_music != "":
-		# Swap players for crossfade
+	# Crossfade: move current stream to fade player, start new on main
+	if _music_player.playing:
+		_music_player_fade.stream = _music_player.stream
 		_music_player_fade.volume_db = _music_player.volume_db
-		# In a real implementation, we'd assign the stream here:
-		# _music_player_fade.stream = _music_player.stream
-		# _music_player_fade.play(_music_player.get_playback_position())
+		_music_player_fade.play(_music_player.get_playback_position())
 		_music_player.stop()
 		_crossfading = true
 		_crossfade_time = 0.0
+		_music_player.volume_db = linear_to_db(0.0001)
+	else:
+		_music_player.volume_db = linear_to_db(music_volume * master_volume)
 
 	_current_music = stream_name
-
-	# Placeholder: In real implementation, load and play the stream:
-	# var path = "res://assets/audio/music/" + stream_name + ".ogg"
-	# _music_player.stream = load(path)
-	# _music_player.play()
-	_music_player.volume_db = linear_to_db(music_volume * master_volume)
+	_music_player.stream = stream
+	_music_player.play()
+	print("[AudioManager] Music: " + stream_name)
 
 func stop_music() -> void:
 	print("[AudioManager] Music stopped")
 	_current_music = ""
 	_music_player.stop()
+	_music_player.stream = null
 	_music_player_fade.stop()
+	_music_player_fade.stream = null
 	_crossfading = false
 
 func play_sfx(sfx_name: String) -> void:
@@ -100,12 +122,28 @@ func play_sfx(sfx_name: String) -> void:
 		print("[AudioManager] Unknown SFX: " + sfx_name)
 		return
 
-	print("[AudioManager] SFX: " + sfx_name)
+	# Cooldown check: prevent same SFX spamming
+	var now_ms = Time.get_ticks_msec()
+	if sfx_name in _sfx_last_played:
+		var elapsed = now_ms - _sfx_last_played[sfx_name]
+		if elapsed < SFX_COOLDOWN_MS:
+			return
+	_sfx_last_played[sfx_name] = now_ms
 
-	# Placeholder: In real implementation, load and play one-shot:
-	# var path = "res://assets/audio/sfx/" + sfx_name + ".wav"
-	# _sfx_player.stream = load(path)
-	# _sfx_player.play()
+	# Try to load the audio file
+	var stream = _load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
+	if stream == null:
+		print("[AudioManager] SFX (no file): " + sfx_name)
+		return
+
+	# Find an available SFX player from the pool
+	var player = _get_available_sfx_player()
+	if player == null:
+		return  # All players busy, skip this SFX
+
+	player.stream = stream
+	player.volume_db = linear_to_db(maxf(sfx_volume * master_volume, 0.0001))
+	player.play()
 
 func set_music_volume(vol: float) -> void:
 	music_volume = clampf(vol, 0.0, 1.0)
@@ -120,12 +158,41 @@ func set_master_volume(vol: float) -> void:
 	_apply_volumes()
 
 func _apply_volumes() -> void:
-	if _music_player:
-		_music_player.volume_db = linear_to_db(music_volume * master_volume)
-	if _music_player_fade:
-		_music_player_fade.volume_db = linear_to_db(music_volume * master_volume)
-	if _sfx_player:
-		_sfx_player.volume_db = linear_to_db(sfx_volume * master_volume)
+	var mvol = maxf(music_volume * master_volume, 0.0001)
+	if _music_player and not _crossfading:
+		_music_player.volume_db = linear_to_db(mvol)
+	if _music_player_fade and not _crossfading:
+		_music_player_fade.volume_db = linear_to_db(mvol)
+	var svol = maxf(sfx_volume * master_volume, 0.0001)
+	for player in _sfx_players:
+		if player:
+			player.volume_db = linear_to_db(svol)
+
+func _get_available_sfx_player() -> AudioStreamPlayer:
+	# Find a player that is not currently playing
+	for player in _sfx_players:
+		if not player.playing:
+			return player
+	# All busy - return the first one (will interrupt oldest sound)
+	return _sfx_players[0]
+
+func _load_audio(base_path: String, extensions: Array) -> AudioStream:
+	# Check cache first
+	if base_path in _audio_cache:
+		return _audio_cache[base_path]
+
+	# Try each extension
+	for ext in extensions:
+		var path = base_path + ext
+		if ResourceLoader.exists(path):
+			var stream = load(path)
+			if stream is AudioStream:
+				_audio_cache[base_path] = stream
+				return stream
+
+	# No file found - cache null to avoid repeated lookups
+	_audio_cache[base_path] = null
+	return null
 
 # ---- Integration points ----
 # Call AudioManager.play_sfx("hit") when an enemy is hit

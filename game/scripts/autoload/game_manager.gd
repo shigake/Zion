@@ -476,7 +476,7 @@ func _apply_relic() -> void:
 		"show_event_direction":
 			pass  # Compass visual handled by HUD
 		"double_chest":
-			pass  # Handled in evolution_chest.gd
+			xp_mult += 1.0  # 2x XP from all sources
 
 func get_effective_damage_mult() -> float:
 	var mult = perm_damage_mult
