@@ -114,6 +114,11 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Clamp position to map boundaries
+	var half = GameManager.map_half_size
+	global_position.x = clampf(global_position.x, -half, half)
+	global_position.z = clampf(global_position.z, -half, half)
+
 	# Right stick aiming
 	var aim_input = Vector2(
 		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),

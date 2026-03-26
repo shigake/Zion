@@ -77,6 +77,9 @@ var low_hp_damage_bonus: float = 0.0
 var player_hidden: bool = false
 var electric_damage_mult: float = 1.0
 
+# Map boundary (half-size, stages are 200x200 so default ±95 with margin)
+var map_half_size: float = 95.0
+
 # Manual aiming (right stick)
 var manual_aim: bool = false
 var aim_direction: Vector3 = Vector3.ZERO

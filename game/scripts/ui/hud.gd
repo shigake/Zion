@@ -27,6 +27,12 @@ var _prev_item_hash: String = ""
 var ally_hp_container: VBoxContainer = null
 var ping_label: Label = null
 
+# Minimap
+var minimap: Control = null
+
+# Ally direction arrows
+var ally_arrows: Dictionary = {}
+
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
 	GameManager.game_over.connect(_on_game_over)
@@ -103,6 +109,20 @@ func _ready() -> void:
 	# Event notification styling
 	event_label.add_theme_font_size_override("font_size", 28)
 	event_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+
+	# Minimap (bottom-right, hexagonal)
+	var minimap_script = preload("res://scripts/ui/minimap.gd")
+	minimap = Control.new()
+	minimap.set_script(minimap_script)
+	minimap.anchor_left = 1.0
+	minimap.anchor_top = 1.0
+	minimap.anchor_right = 1.0
+	minimap.anchor_bottom = 1.0
+	minimap.offset_left = -165.0
+	minimap.offset_top = -165.0
+	minimap.offset_right = -10.0
+	minimap.offset_bottom = -10.0
+	add_child(minimap)
 
 	# Multiplayer ally HP bars (top-left, below main HP bar)
 	if MultiplayerManager.is_online:
