@@ -9,7 +9,6 @@ extends Control
 @onready var quit_btn: Button = $VBox/Buttons/QuitButton
 @onready var version_label: Label = $BottomRight/VersionLabel
 @onready var credits_btn: Button = $BottomRight/CreditsButton
-@onready var credits_popup: PanelContainer = $CreditsPopup
 
 func _ready() -> void:
 	play_btn.pressed.connect(_on_play)
@@ -37,7 +36,6 @@ func _ready() -> void:
 	$VBox/Buttons.move_child(quit_btn, btn_count - 1)  # Sair last
 	$VBox/Buttons.move_child(options_btn, btn_count - 2)  # Opcoes before Sair
 	credits_btn.pressed.connect(_on_credits)
-	credits_popup.get_node("VBox/CloseButton").pressed.connect(_on_credits_close)
 	_update_crystals()
 	_update_version()
 	AudioManager.play_music("menu")
@@ -89,11 +87,7 @@ func _on_shop() -> void:
 
 func _on_credits() -> void:
 	AudioManager.play_sfx("menu_click")
-	credits_popup.visible = true
-
-func _on_credits_close() -> void:
-	AudioManager.play_sfx("menu_click")
-	credits_popup.visible = false
+	get_tree().change_scene_to_file("res://scenes/ui/credits_screen.tscn")
 
 func _on_quit() -> void:
 	AudioManager.play_sfx("menu_click")
