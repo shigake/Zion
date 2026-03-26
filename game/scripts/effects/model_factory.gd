@@ -979,21 +979,23 @@ const ENEMY_SCALE := Vector3(1.0, 1.0, 1.0)
 const BOSS_SCALE := Vector3(2.0, 2.0, 2.0)
 
 func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
-	## Tenta carregar modelo .glb. Retorna null se nao encontrar.
-	if not ResourceLoader.exists(path):
-		return null
-	var scene = load(path) as PackedScene
-	if scene == null:
-		return null
-	var instance = scene.instantiate()
-	if instance == null:
-		return null
-	# Wrap in Node3D root for compatibility with existing code
-	var root = Node3D.new()
-	root.set_meta("glb_model", true)
-	instance.scale = model_scale
-	root.add_child(instance)
-	return root
+	## Tenta carregar modelo 3D (.glb, .fbx, .gltf). Retorna null se nao encontrar.
+	for ext in [".glb", ".fbx", ".gltf"]:
+		var try_path = path.get_basename() + ext
+		if not ResourceLoader.exists(try_path):
+			continue
+		var scene = load(try_path) as PackedScene
+		if scene == null:
+			continue
+		var instance = scene.instantiate()
+		if instance == null:
+			continue
+		var root = Node3D.new()
+		root.set_meta("glb_model", true)
+		instance.scale = model_scale
+		root.add_child(instance)
+		return root
+	return null
 
 func load_prop(file_name: String, source: String = "nature") -> Node3D:
 	## Carrega um modelo de prop dos assets baixados.

@@ -15,6 +15,7 @@ var _model_node: Node3D = null
 func _ready() -> void:
 	_setup_3d_background()
 	_style_title()
+	_scale_buttons()
 	play_btn.pressed.connect(_on_play)
 	multi_btn.pressed.connect(_on_multiplayer)
 	shop_btn.pressed.connect(_on_shop)
@@ -24,6 +25,12 @@ func _ready() -> void:
 	multi_btn.text = LocaleManager.tr_key("menu_multiplayer")
 	shop_btn.text = LocaleManager.tr_key("menu_shop")
 	quit_btn.text = LocaleManager.tr_key("menu_quit")
+
+	# Em mobile, desabilita multiplayer
+	if PlatformHelper.is_mobile():
+		multi_btn.disabled = true
+		multi_btn.modulate.a = 0.5  # Fade visual
+
 	# Leaderboard button (added programmatically)
 	var leaderboard_btn = Button.new()
 	leaderboard_btn.text = LocaleManager.tr_key("menu_leaderboard")
@@ -135,12 +142,23 @@ func _setup_3d_background() -> void:
 		_model_node.position = Vector3(0, 0, 0)
 		world.add_child(_model_node)
 
+func _scale_buttons() -> void:
+	var scale = PlatformHelper.get_ui_scale()
+	var base_size = 45.0
+	var scaled_size = int(base_size * scale)
+
+	for btn in $VBox/Buttons.get_children():
+		if btn is Button:
+			btn.custom_minimum_size.y = scaled_size
+			btn.add_theme_font_size_override("font_size", int(16 * scale))
+
 func _style_title() -> void:
+	var scale = PlatformHelper.get_ui_scale()
 	var title = $VBox/Title
-	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_size_override("font_size", int(48 * scale))
 	title.add_theme_color_override("font_color", Color(0.9, 0.85, 0.4))
 	var subtitle = $VBox/Subtitle
-	subtitle.add_theme_font_size_override("font_size", 14)
+	subtitle.add_theme_font_size_override("font_size", int(14 * scale))
 	subtitle.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
 
 func _process(delta: float) -> void:
