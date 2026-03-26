@@ -160,9 +160,7 @@ func _flash_white() -> void:
 		var tween = create_tween()
 		tween.tween_callback(func():
 			if is_instance_valid(proc_model):
-				for child in proc_model.get_children():
-					if child is MeshInstance3D and child.material_override is ShaderMaterial:
-						child.material_override.set_shader_parameter("albedo_color", enemy_color)
+				ModelFactory.apply_model_materials(proc_model, enemy_color)
 		).set_delay(0.15)
 	else:
 		var mat = mesh.material_override

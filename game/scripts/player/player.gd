@@ -140,6 +140,15 @@ func take_damage(amount: int) -> void:
 	hurt_flash_timer = 0.12
 
 func _set_color(color: Color) -> void:
+	var proc_model = get_node_or_null("ProceduralModel")
+	if proc_model:
+		if color.is_equal_approx(original_color):
+			ModelFactory.apply_model_materials(proc_model, original_color)
+			return
+		for child in proc_model.get_children():
+			if child is MeshInstance3D and child.material_override is ShaderMaterial:
+				child.material_override.set_shader_parameter("albedo_color", color)
+		return
 	var mat = mesh.material_override
 	if mat is ShaderMaterial:
 		mat.set_shader_parameter("albedo_color", color)

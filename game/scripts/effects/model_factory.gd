@@ -7,38 +7,284 @@ extends Node
 # ===================== PLAYER MODELS =====================
 
 func create_ronin_model() -> Node3D:
-	## Ronin: corpo esbelto + cabeca + hakama (saia) + katana nas costas
+	## Ronin: silhueta heroica anime/JRPG com hakama em camadas,
+	## headband esvoacante e katana ornamentada.
 	var root = Node3D.new()
+	var outfit_color = Color(0.18, 0.48, 0.62)
+	var cloth_shadow = Color(0.05, 0.14, 0.22)
+	var cream_color = Color(0.84, 0.88, 0.79)
+	var sash_color = Color(0.72, 0.22, 0.22)
+	var gold_color = Color(0.84, 0.68, 0.25)
+	var skin_color = Color(0.93, 0.81, 0.70)
+	var hair_color = Color(0.08, 0.10, 0.15)
+	var leather_color = Color(0.22, 0.13, 0.09)
+	var spirit_color = Color(0.33, 0.88, 0.97)
 
-	# Corpo
-	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
-	body.mesh.radius = 0.22
-	body.mesh.height = 0.7
+	var body = _styled(_mesh(CapsuleMesh.new(), Vector3(0, 0.68, 0)), {
+		"base_color": outfit_color,
+		"shadow_color": cloth_shadow,
+		"rim_color": Color(0.82, 0.95, 1.0, 0.65),
+		"toon_steps": 4.0,
+		"outline_width": 0.03,
+	})
+	body.mesh.radius = 0.21
+	body.mesh.height = 0.78
 	root.add_child(body)
 
-	# Cabeca
-	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	var chest_panel = _styled(_mesh(BoxMesh.new(), Vector3(0, 0.76, 0.13)), {
+		"base_color": cream_color,
+		"shadow_color": Color(0.30, 0.32, 0.30),
+		"rim_color": Color(0.98, 0.96, 0.90, 0.30),
+		"outline_width": 0.024,
+	})
+	chest_panel.mesh.size = Vector3(0.32, 0.30, 0.09)
+	root.add_child(chest_panel)
+
+	var collar = _styled(_mesh(BoxMesh.new(), Vector3(0, 0.94, 0.06)), {
+		"base_color": cream_color,
+		"shadow_color": Color(0.32, 0.34, 0.31),
+		"outline_width": 0.020,
+	})
+	collar.mesh.size = Vector3(0.24, 0.08, 0.12)
+	root.add_child(collar)
+
+	var shoulder_guard = _styled(_mesh(BoxMesh.new(), Vector3(-0.26, 0.90, 0.02), Vector3(0, 0, deg_to_rad(16))), {
+		"base_color": gold_color,
+		"shadow_color": Color(0.36, 0.24, 0.06),
+		"rim_color": Color(1.0, 0.92, 0.65, 0.35),
+		"outline_width": 0.026,
+	})
+	shoulder_guard.mesh.size = Vector3(0.18, 0.11, 0.24)
+	root.add_child(shoulder_guard)
+
+	var sleeve_l = _styled(_mesh(CylinderMesh.new(), Vector3(0.25, 0.66, 0.02), Vector3(0, 0, deg_to_rad(-24))), {
+		"base_color": outfit_color,
+		"shadow_color": cloth_shadow,
+		"outline_width": 0.024,
+	})
+	sleeve_l.mesh.top_radius = 0.07
+	sleeve_l.mesh.bottom_radius = 0.06
+	sleeve_l.mesh.height = 0.34
+	root.add_child(sleeve_l)
+
+	var sleeve_r = _styled(_mesh(CylinderMesh.new(), Vector3(-0.28, 0.66, 0.02), Vector3(0, 0, deg_to_rad(20))), {
+		"base_color": outfit_color.darkened(0.08),
+		"shadow_color": cloth_shadow.darkened(0.10),
+		"outline_width": 0.024,
+	})
+	sleeve_r.mesh.top_radius = 0.07
+	sleeve_r.mesh.bottom_radius = 0.06
+	sleeve_r.mesh.height = 0.34
+	root.add_child(sleeve_r)
+
+	var bracer_l = _styled(_mesh(BoxMesh.new(), Vector3(0.33, 0.55, 0.08), Vector3(0, 0, deg_to_rad(-18))), {
+		"base_color": leather_color,
+		"shadow_color": Color(0.08, 0.05, 0.04),
+		"outline_width": 0.022,
+	})
+	bracer_l.mesh.size = Vector3(0.09, 0.20, 0.10)
+	root.add_child(bracer_l)
+
+	var bracer_r = _styled(_mesh(BoxMesh.new(), Vector3(-0.34, 0.56, 0.08), Vector3(0, 0, deg_to_rad(14))), {
+		"base_color": leather_color,
+		"shadow_color": Color(0.08, 0.05, 0.04),
+		"outline_width": 0.022,
+	})
+	bracer_r.mesh.size = Vector3(0.09, 0.20, 0.10)
+	root.add_child(bracer_r)
+
+	var sash = _styled(_mesh(CylinderMesh.new(), Vector3(0, 0.38, 0)), {
+		"base_color": sash_color,
+		"shadow_color": Color(0.18, 0.03, 0.03),
+		"rim_color": Color(1.0, 0.72, 0.62, 0.25),
+		"outline_width": 0.024,
+	})
+	sash.mesh.top_radius = 0.25
+	sash.mesh.bottom_radius = 0.27
+	sash.mesh.height = 0.12
+	root.add_child(sash)
+
+	var sash_knot = _styled(_mesh(BoxMesh.new(), Vector3(0.14, 0.38, 0.18), Vector3(0, 0, deg_to_rad(10))), {
+		"base_color": sash_color.lightened(0.08),
+		"shadow_color": Color(0.22, 0.04, 0.04),
+		"outline_width": 0.022,
+	})
+	sash_knot.mesh.size = Vector3(0.12, 0.09, 0.10)
+	root.add_child(sash_knot)
+
+	var hakama = _styled(_mesh(CylinderMesh.new(), Vector3(0, 0.22, 0)), {
+		"base_color": outfit_color.darkened(0.04),
+		"shadow_color": cloth_shadow,
+		"rim_color": Color(0.78, 0.91, 1.0, 0.38),
+		"outline_width": 0.028,
+	})
+	hakama.mesh.top_radius = 0.24
+	hakama.mesh.bottom_radius = 0.38
+	hakama.mesh.height = 0.46
+	root.add_child(hakama)
+
+	var front_flap = _styled(_mesh(BoxMesh.new(), Vector3(0, 0.23, 0.18), Vector3(deg_to_rad(8), 0, 0)), {
+		"base_color": cream_color,
+		"shadow_color": Color(0.33, 0.34, 0.31),
+		"outline_width": 0.022,
+	})
+	front_flap.mesh.size = Vector3(0.18, 0.40, 0.05)
+	root.add_child(front_flap)
+
+	var back_flap = _styled(_mesh(BoxMesh.new(), Vector3(0, 0.22, -0.16), Vector3(deg_to_rad(-6), 0, 0)), {
+		"base_color": outfit_color.darkened(0.10),
+		"shadow_color": cloth_shadow.darkened(0.10),
+		"outline_width": 0.022,
+	})
+	back_flap.mesh.size = Vector3(0.22, 0.42, 0.06)
+	root.add_child(back_flap)
+
+	var side_flap_l = _styled(_mesh(BoxMesh.new(), Vector3(0.18, 0.20, 0.04), Vector3(0, 0, deg_to_rad(-10))), {
+		"base_color": outfit_color.lightened(0.06),
+		"shadow_color": cloth_shadow,
+		"outline_width": 0.022,
+	})
+	side_flap_l.mesh.size = Vector3(0.10, 0.36, 0.08)
+	root.add_child(side_flap_l)
+
+	var side_flap_r = _styled(_mesh(BoxMesh.new(), Vector3(-0.18, 0.20, 0.04), Vector3(0, 0, deg_to_rad(10))), {
+		"base_color": outfit_color.lightened(0.02),
+		"shadow_color": cloth_shadow,
+		"outline_width": 0.022,
+	})
+	side_flap_r.mesh.size = Vector3(0.10, 0.36, 0.08)
+	root.add_child(side_flap_r)
+
+	var boot_l = _styled(_mesh(CylinderMesh.new(), Vector3(0.12, 0.01, 0.02)), {
+		"base_color": leather_color,
+		"shadow_color": Color(0.08, 0.05, 0.04),
+		"outline_width": 0.022,
+	})
+	boot_l.mesh.top_radius = 0.07
+	boot_l.mesh.bottom_radius = 0.08
+	boot_l.mesh.height = 0.22
+	root.add_child(boot_l)
+
+	var boot_r = _styled(_mesh(CylinderMesh.new(), Vector3(-0.12, 0.01, 0.02)), {
+		"base_color": leather_color,
+		"shadow_color": Color(0.08, 0.05, 0.04),
+		"outline_width": 0.022,
+	})
+	boot_r.mesh.top_radius = 0.07
+	boot_r.mesh.bottom_radius = 0.08
+	boot_r.mesh.height = 0.22
+	root.add_child(boot_r)
+
+	var head = _styled(_mesh(SphereMesh.new(), Vector3(0, 1.12, 0.01)), {
+		"base_color": skin_color,
+		"shadow_color": Color(0.42, 0.28, 0.20),
+		"rim_color": Color(1.0, 0.95, 0.80, 0.18),
+		"outline_width": 0.022,
+	})
 	head.mesh.radius = 0.18
 	head.mesh.height = 0.36
 	root.add_child(head)
 
-	# Hakama (saia samurai) - cone invertido
-	var hakama = _mesh(CylinderMesh.new(), Vector3(0, 0.15, 0))
-	hakama.mesh.top_radius = 0.22
-	hakama.mesh.bottom_radius = 0.35
-	hakama.mesh.height = 0.35
-	root.add_child(hakama)
+	var hair_back = _styled(_mesh(SphereMesh.new(), Vector3(0, 1.14, -0.05), Vector3.ZERO, Vector3(1.0, 1.0, 0.85)), {
+		"base_color": hair_color,
+		"shadow_color": Color(0.02, 0.03, 0.05),
+		"rim_color": Color(0.28, 0.33, 0.42, 0.12),
+		"outline_width": 0.022,
+	})
+	hair_back.mesh.radius = 0.19
+	hair_back.mesh.height = 0.36
+	root.add_child(hair_back)
 
-	# Katana nas costas
-	var katana = _mesh(BoxMesh.new(), Vector3(-0.15, 0.7, -0.12))
-	katana.mesh.size = Vector3(0.04, 0.55, 0.04)
-	katana.rotation.z = deg_to_rad(15)
-	root.add_child(katana)
+	var bangs = _styled(_mesh(BoxMesh.new(), Vector3(0, 1.15, 0.15), Vector3(deg_to_rad(8), 0, 0)), {
+		"base_color": hair_color,
+		"shadow_color": Color(0.02, 0.03, 0.05),
+		"outline_width": 0.018,
+	})
+	bangs.mesh.size = Vector3(0.26, 0.11, 0.07)
+	root.add_child(bangs)
 
-	# Faixa na cabeca (headband)
-	var band = _mesh(BoxMesh.new(), Vector3(0, 1.15, 0))
-	band.mesh.size = Vector3(0.4, 0.04, 0.4)
+	var topknot = _styled(_mesh(CylinderMesh.new(), Vector3(0, 1.38, -0.02)), {
+		"base_color": hair_color,
+		"shadow_color": Color(0.02, 0.03, 0.05),
+		"outline_width": 0.018,
+	})
+	topknot.mesh.top_radius = 0.05
+	topknot.mesh.bottom_radius = 0.06
+	topknot.mesh.height = 0.22
+	root.add_child(topknot)
+
+	var hair_bun = _styled(_mesh(SphereMesh.new(), Vector3(0, 1.48, -0.02), Vector3.ZERO, Vector3(1.0, 0.85, 1.0)), {
+		"base_color": hair_color,
+		"shadow_color": Color(0.02, 0.03, 0.05),
+		"outline_width": 0.018,
+	})
+	hair_bun.mesh.radius = 0.08
+	hair_bun.mesh.height = 0.12
+	root.add_child(hair_bun)
+
+	var band = _styled(_mesh(BoxMesh.new(), Vector3(0, 1.18, 0.02)), {
+		"base_color": sash_color,
+		"shadow_color": Color(0.20, 0.04, 0.04),
+		"outline_width": 0.016,
+	})
+	band.mesh.size = Vector3(0.38, 0.04, 0.34)
 	root.add_child(band)
+
+	var band_tail_a = _styled(_mesh(BoxMesh.new(), Vector3(0.18, 1.10, -0.18), Vector3(deg_to_rad(8), deg_to_rad(14), deg_to_rad(-32))), {
+		"base_color": sash_color,
+		"shadow_color": Color(0.20, 0.04, 0.04),
+		"outline_width": 0.016,
+	})
+	band_tail_a.mesh.size = Vector3(0.05, 0.30, 0.04)
+	root.add_child(band_tail_a)
+
+	var band_tail_b = _styled(_mesh(BoxMesh.new(), Vector3(0.24, 0.94, -0.26), Vector3(deg_to_rad(16), deg_to_rad(18), deg_to_rad(-20))), {
+		"base_color": sash_color.lightened(0.06),
+		"shadow_color": Color(0.20, 0.04, 0.04),
+		"outline_width": 0.016,
+	})
+	band_tail_b.mesh.size = Vector3(0.04, 0.24, 0.03)
+	root.add_child(band_tail_b)
+
+	var shoulder_cloak = _styled(_mesh(BoxMesh.new(), Vector3(0.16, 0.74, -0.12), Vector3(deg_to_rad(10), 0, deg_to_rad(-18))), {
+		"base_color": outfit_color.darkened(0.14),
+		"shadow_color": cloth_shadow.darkened(0.12),
+		"outline_width": 0.020,
+	})
+	shoulder_cloak.mesh.size = Vector3(0.08, 0.48, 0.26)
+	root.add_child(shoulder_cloak)
+
+	var sheath = _styled(_mesh(BoxMesh.new(), Vector3(-0.20, 0.78, -0.14), Vector3(deg_to_rad(4), deg_to_rad(10), deg_to_rad(24))), {
+		"base_color": leather_color,
+		"shadow_color": Color(0.07, 0.04, 0.03),
+		"outline_width": 0.020,
+	})
+	sheath.mesh.size = Vector3(0.08, 0.78, 0.09)
+	root.add_child(sheath)
+
+	var handle = _styled(_mesh(BoxMesh.new(), Vector3(-0.02, 1.05, -0.02), Vector3(deg_to_rad(4), deg_to_rad(10), deg_to_rad(24))), {
+		"base_color": cream_color.darkened(0.16),
+		"shadow_color": Color(0.18, 0.16, 0.14),
+		"outline_width": 0.018,
+	})
+	handle.mesh.size = Vector3(0.06, 0.26, 0.05)
+	root.add_child(handle)
+
+	var guard = _styled(_mesh(CylinderMesh.new(), Vector3(-0.06, 0.93, -0.06), Vector3(deg_to_rad(90), 0, deg_to_rad(24))), {
+		"base_color": gold_color,
+		"shadow_color": Color(0.36, 0.24, 0.06),
+		"outline_width": 0.018,
+	})
+	guard.mesh.top_radius = 0.08
+	guard.mesh.bottom_radius = 0.08
+	guard.mesh.height = 0.03
+	root.add_child(guard)
+
+	var charm = _mesh(SphereMesh.new(), Vector3(0.22, 0.34, 0.20), Vector3.ZERO, Vector3(1.0, 0.85, 1.0))
+	charm.mesh.radius = 0.05
+	charm.mesh.height = 0.08
+	root.add_child(charm)
+	_mark_as_accent(charm, spirit_color, 2.6)
 
 	return root
 
@@ -513,30 +759,47 @@ func create_bomber_model() -> Node3D:
 
 # ===================== HELPERS =====================
 
-func _mesh(mesh_res: Mesh, pos: Vector3) -> MeshInstance3D:
+func _mesh(mesh_res: Mesh, pos: Vector3, rot: Vector3 = Vector3.ZERO, scl: Vector3 = Vector3.ONE) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()
 	mi.mesh = mesh_res
 	mi.position = pos
+	mi.rotation = rot
+	mi.scale = scl
 	return mi
 
-func _mark_as_accent(mi: MeshInstance3D) -> void:
+func _styled(mi: MeshInstance3D, style: Dictionary) -> MeshInstance3D:
+	mi.set_meta("style", style)
+	return mi
+
+func _mark_as_accent(mi: MeshInstance3D, color: Color = Color.WHITE, intensity: float = 3.0) -> void:
 	## Marca mesh como "accent" — recebe material de glow em vez de cel-shader
-	mi.set_meta("accent", true)
+	_styled(mi, {
+		"glow": true,
+		"glow_color": color,
+		"glow_intensity": intensity,
+	})
 
 func apply_model_materials(root: Node3D, base_color: Color) -> void:
 	## Aplica cel-shader a todos os meshes do modelo, glow nos accents
 	for child in root.get_children():
 		if child is MeshInstance3D:
-			if child.has_meta("accent"):
+			var style: Dictionary = child.get_meta("style", {})
+			if style.get("glow", false):
 				# Accent: olhos, orbes — glow branco/brilhante
 				var mat = StandardMaterial3D.new()
-				mat.albedo_color = Color.WHITE
+				var glow_color: Color = style.get("glow_color", Color.WHITE)
+				mat.albedo_color = glow_color
 				mat.emission_enabled = true
-				mat.emission = Color.WHITE
-				mat.emission_energy_multiplier = 3.0
+				mat.emission = glow_color
+				mat.emission_energy_multiplier = style.get("glow_intensity", 3.0)
 				child.material_override = mat
 			else:
-				VisualSetup.apply_cel_shader_to_mesh(child, base_color)
+				var mesh_color: Color = style.get("base_color", base_color)
+				var settings := {}
+				for key in ["rim_color", "rim_amount", "toon_steps", "shadow_color", "outline_color", "outline_width"]:
+					if style.has(key):
+						settings[key] = style[key]
+				VisualSetup.apply_cel_shader_to_mesh(child, mesh_color, settings)
 
 func get_model_for_character(char_id: String) -> Node3D:
 	match char_id:

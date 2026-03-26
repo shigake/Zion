@@ -7,7 +7,7 @@ var characters: Dictionary = {
 		"name": "Ronin",
 		"starting_weapon": "katana",
 		"passive": "+20% critical hit",
-		"color": Color(0.2, 0.85, 0.3),
+		"color": Color(0.18, 0.48, 0.62),
 		"speed_bonus": 0.0,
 		"damage_bonus": 0.0,
 	},
