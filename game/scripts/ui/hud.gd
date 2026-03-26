@@ -58,6 +58,7 @@ func _ready() -> void:
 	if em:
 		em.event_started.connect(_on_event_started)
 		em.event_ended.connect(_on_event_ended)
+		em.event_warning.connect(_on_event_warning)
 
 	# Miniboss name display
 	GameManager.miniboss_spawned.connect(_on_miniboss_spawned)
@@ -238,6 +239,10 @@ func _on_event_started(event_name: String) -> void:
 	if text == locale_key:
 		var display_names = {
 			"golden_horde": "Horda dourada!",
+			"elite_horde": "Horda elite!",
+			"massive_horde": "Horda massiva!",
+			"miniboss": "Mini-boss!",
+			"miniboss_strong": "Mega mini-boss!",
 			"treasure_goblin": "Treasure goblin!",
 			"merchant": "Mercador apareceu!",
 			"roulette": "Roda da fortuna!",
@@ -245,15 +250,59 @@ func _on_event_started(event_name: String) -> void:
 			"meteor_shower": "Chuva de meteoros!",
 			"angel_challenge": "Desafio do anjo!",
 			"portal_dimensional": "Portal dimensional!",
-			"chest_mimic": "Baú mimic!",
+			"chest_mimic": "Bau mimic!",
 			"fever_mode": "Fever mode!",
 		}
 		text = display_names.get(event_name, event_name.capitalize())
+
+	# Cores especiais por tipo de evento
+	var event_colors = {
+		"elite_horde": Color(1.0, 0.85, 0.2),
+		"massive_horde": Color(1.0, 0.3, 0.3),
+		"miniboss": Color(1.0, 0.3, 0.3),
+		"miniboss_strong": Color(0.8, 0.1, 0.1),
+		"golden_horde": Color(1.0, 0.85, 0.2),
+		"eclipse": Color(0.5, 0.3, 0.8),
+		"meteor_shower": Color(1.0, 0.5, 0.0),
+		"portal_dimensional": Color(0.6, 0.3, 1.0),
+	}
+	var color = event_colors.get(event_name, Color(1.0, 0.85, 0.2))
+
 	event_label.text = text
 	event_label.visible = true
+	event_label.modulate = color
+	event_label.scale = Vector2(1.5, 1.5)
+	var tween = create_tween()
+	tween.tween_property(event_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 
 func _on_event_ended(_event_name: String) -> void:
 	event_label.visible = false
+
+func _on_event_warning(event_name: String, seconds_left: float) -> void:
+	# Mostra aviso "INCOMING" antes do evento
+	var warning_names = {
+		"golden_horde": "Horda dourada",
+		"elite_horde": "Horda elite",
+		"massive_horde": "Horda massiva",
+		"miniboss": "Mini-boss",
+		"miniboss_strong": "Mega mini-boss",
+		"eclipse": "Eclipse",
+		"meteor_shower": "Chuva de meteoros",
+		"roulette": "Roda da fortuna",
+		"portal_dimensional": "Portal dimensional",
+	}
+	var name = warning_names.get(event_name, event_name.capitalize())
+	event_label.text = "⚠ %s em %ds!" % [name, int(seconds_left)]
+	event_label.visible = true
+	event_label.modulate = Color(1.0, 1.0, 0.5, 0.8)
+	event_label.scale = Vector2(1.2, 1.2)
+	var tween = create_tween()
+	tween.tween_property(event_label, "scale", Vector2.ONE, 0.3)
+	# Pisca o aviso
+	tween.tween_property(event_label, "modulate:a", 0.4, 0.5)
+	tween.tween_property(event_label, "modulate:a", 0.9, 0.5)
+	tween.tween_property(event_label, "modulate:a", 0.4, 0.5)
+	tween.tween_callback(func(): event_label.visible = false)
 
 func _on_miniboss_spawned(boss_name: String) -> void:
 	event_label.text = "MINIBOSS: %s" % boss_name

@@ -1,12 +1,14 @@
 extends Node3D
 
-## Gerencia eventos especiais durante a run.
-## Eventos: Horda Dourada (min 5), Eclipse (min 8), Roulette (min 10),
-## Meteor Shower (min 12), Angel Challenge (min 15),
-## Treasure Goblin (aleatorio), Merchant (aleatorio), Fever Mode (kill streak)
+## Gerencia eventos especiais durante a run (estilo Vampire Survivors).
+## Eventos a cada ~3-5 minutos, alternando hordas e mini-bosses.
+## Timeline: Horda Dourada (3), Elite Rush (5), Eclipse (8), Mini-boss (10),
+## Meteoros (12), Horda Massiva (15), Roda da Fortuna (18), Mini-boss 2 (20),
+## Portal (22), Boss Final (25 via spawner).
 
 signal event_started(event_name: String)
 signal event_ended(event_name: String)
+signal event_warning(event_name: String, seconds_left: float)
 
 var active_event: String = ""
 var event_timer: float = 0.0
@@ -41,20 +43,28 @@ var _portal_enemies_remaining: int = 0
 var _portal_original_pos: Vector3 = Vector3.ZERO
 var _portal_active: bool = false
 
-# Eventos fixos por tempo
+# Warning state
+var _warned_events: Array = []  # events already warned about
+const WARNING_TIME: float = 10.0  # warn 10 seconds before
+
+# Eventos fixos por tempo — estilo Vampire Survivors (a cada ~3-5 min)
 var timed_events: Dictionary = {
-	300.0: "golden_horde",       # Min 5
-	480.0: "eclipse",            # Min 8
-	600.0: "roulette",           # Min 10
-	720.0: "meteor_shower",      # Min 12
-	900.0: "angel_challenge",    # Min 15
-	1200.0: "portal_dimensional", # Min 20
+	180.0: "golden_horde",       # Min 3 — warmup horde
+	300.0: "elite_horde",        # Min 5 — elite rush
+	480.0: "eclipse",            # Min 8 — darkness
+	600.0: "miniboss",           # Min 10 — mini-boss
+	720.0: "meteor_shower",      # Min 12 — chaos
+	900.0: "massive_horde",      # Min 15 — massive horde + elites
+	1080.0: "roulette",          # Min 18 — roda da fortuna
+	1200.0: "miniboss_strong",   # Min 20 — mini-boss forte
+	1320.0: "portal_dimensional", # Min 22 — portal
+	# Min 25 (1500s) — Boss final (handled by enemy_spawner)
 }
 var triggered_timed: Array = []
 
 func _ready() -> void:
 	rng.randomize()
-	next_random_event_time = rng.randf_range(180, 300)  # Primeiro evento aleatorio entre 3-5 min
+	next_random_event_time = rng.randf_range(120, 240)  # Primeiro evento aleatorio entre 2-4 min
 	GameManager.enemy_killed.connect(_on_enemy_killed)
 
 func _process(delta: float) -> void:
@@ -92,6 +102,13 @@ func _process(delta: float) -> void:
 			_end_event()
 		return
 
+	# Check warnings for upcoming timed events (10s before)
+	for time in timed_events:
+		if time not in _warned_events and time not in triggered_timed:
+			if GameManager.game_time >= time - WARNING_TIME and GameManager.game_time < time:
+				_warned_events.append(time)
+				event_warning.emit(timed_events[time], time - GameManager.game_time)
+
 	# Check timed events
 	for time in timed_events:
 		if GameManager.game_time >= time and time not in triggered_timed:
@@ -99,12 +116,12 @@ func _process(delta: float) -> void:
 			_start_event(timed_events[time])
 			return
 
-	# Check random events
+	# Check random events (between timed events)
 	if GameManager.game_time >= next_random_event_time:
 		var random_events = ["treasure_goblin", "merchant", "chest_mimic"]
 		var event = random_events[rng.randi() % random_events.size()]
 		_start_event(event)
-		next_random_event_time = GameManager.game_time + rng.randf_range(120, 240)
+		next_random_event_time = GameManager.game_time + rng.randf_range(90, 180)
 
 func _on_enemy_killed(position: Vector3, xp_value: int) -> void:
 	_recent_kills.append(GameManager.game_time)
@@ -114,10 +131,27 @@ func _start_event(event_name: String) -> void:
 	GameManager.events_triggered.append(event_name)
 	event_started.emit(event_name)
 
+	# Screen shake + flash for major events
+	var is_major = event_name in ["elite_horde", "massive_horde", "miniboss", "miniboss_strong"]
+	if is_major:
+		ScreenEffects.shake(0.2)
+
 	match event_name:
 		"golden_horde":
 			event_timer = 20.0
 			_spawn_golden_horde()
+		"elite_horde":
+			event_timer = 25.0
+			_spawn_elite_horde()
+		"massive_horde":
+			event_timer = 30.0
+			_spawn_massive_horde()
+		"miniboss":
+			event_timer = 1.0  # Instant spawn, boss stays until killed
+			_spawn_event_miniboss(false)
+		"miniboss_strong":
+			event_timer = 1.0  # Instant spawn, boss stays until killed
+			_spawn_event_miniboss(true)
 		"treasure_goblin":
 			event_timer = 30.0
 			_spawn_treasure_goblin()
@@ -177,6 +211,177 @@ func _spawn_golden_horde() -> void:
 		get_parent().add_child(enemy)
 		enemy.global_position = pos
 		GameManager.enemies_alive += 1
+
+# ---- Elite Horde (min 5) ----
+# Spawna 20 inimigos elite (dourados, 3x HP, 1.5x dmg) de todos os lados
+func _spawn_elite_horde() -> void:
+	var players = get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var center = players[0].global_position
+
+	var enemy_scenes = [
+		preload("res://scenes/enemies/skeleton.tscn"),
+		preload("res://scenes/enemies/bat.tscn"),
+		preload("res://scenes/enemies/zombie_runner.tscn"),
+		preload("res://scenes/enemies/ghost.tscn"),
+	]
+
+	for i in range(20):
+		var angle = (float(i) / 20.0) * TAU + rng.randf_range(-0.1, 0.1)
+		var dist = rng.randf_range(18, 28)
+		var pos = center + Vector3(cos(angle), 0, sin(angle)) * dist
+		var enemy = enemy_scenes[rng.randi() % enemy_scenes.size()].instantiate()
+		if enemy is EnemyBase3D:
+			enemy.max_hp = int(enemy.max_hp * 3.0)
+			enemy.hp = enemy.max_hp
+			enemy.damage = int(enemy.damage * 1.5)
+			enemy.speed *= 1.2
+			enemy.xp_drop = enemy.xp_drop * 5
+			enemy.enemy_color = Color(1.0, 0.85, 0.2)  # Dourado
+			enemy.scale = Vector3(1.3, 1.3, 1.3)
+		get_parent().add_child(enemy)
+		enemy.global_position = pos
+		GameManager.enemies_alive += 1
+
+# ---- Massive Horde (min 15) ----
+# Horda massiva: 50 inimigos normais + 10 elites de todos os tipos
+func _spawn_massive_horde() -> void:
+	var players = get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var center = players[0].global_position
+
+	var basic_scenes = [
+		preload("res://scenes/enemies/slime.tscn"),
+		preload("res://scenes/enemies/bat.tscn"),
+		preload("res://scenes/enemies/skeleton.tscn"),
+		preload("res://scenes/enemies/zombie_runner.tscn"),
+		preload("res://scenes/enemies/ghost.tscn"),
+		preload("res://scenes/enemies/slime_big.tscn"),
+	]
+	var elite_scenes = [
+		preload("res://scenes/enemies/skeleton.tscn"),
+		preload("res://scenes/enemies/zombie_runner.tscn"),
+		preload("res://scenes/enemies/bomber.tscn"),
+		preload("res://scenes/enemies/tank.tscn"),
+		preload("res://scenes/enemies/skeleton_archer.tscn"),
+	]
+
+	# Spawn 50 normais em ondas circulares
+	for i in range(50):
+		if GameManager.enemies_alive >= GameManager.max_enemies:
+			break
+		var angle = rng.randf() * TAU
+		var dist = rng.randf_range(15, 30)
+		var pos = center + Vector3(cos(angle), 0, sin(angle)) * dist
+		var enemy = basic_scenes[rng.randi() % basic_scenes.size()].instantiate()
+		get_parent().add_child(enemy)
+		enemy.global_position = pos
+		GameManager.enemies_alive += 1
+
+	# Spawn 10 elites (mais fortes, dourados)
+	for i in range(10):
+		if GameManager.enemies_alive >= GameManager.max_enemies:
+			break
+		var angle = (float(i) / 10.0) * TAU
+		var dist = rng.randf_range(12, 20)
+		var pos = center + Vector3(cos(angle), 0, sin(angle)) * dist
+		var enemy = elite_scenes[rng.randi() % elite_scenes.size()].instantiate()
+		if enemy is EnemyBase3D:
+			enemy.max_hp = int(enemy.max_hp * 3.0)
+			enemy.hp = enemy.max_hp
+			enemy.damage = int(enemy.damage * 1.5)
+			enemy.speed *= 1.2
+			enemy.xp_drop = enemy.xp_drop * 5
+			enemy.enemy_color = Color(1.0, 0.85, 0.2)
+			enemy.scale = Vector3(1.3, 1.3, 1.3)
+		get_parent().add_child(enemy)
+		enemy.global_position = pos
+		GameManager.enemies_alive += 1
+
+# ---- Mini-boss Event (min 10, min 20) ----
+# Spawna mini-boss via evento (ao inves de via spawner)
+# strong=false: mini-boss normal (min 10), strong=true: mini-boss forte (min 20)
+func _spawn_event_miniboss(strong: bool) -> void:
+	var players = get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var pos = players[0].global_position
+	var angle = rng.randf() * TAU
+	var spawn_pos = pos + Vector3(cos(angle), 0, sin(angle)) * 15.0
+
+	var stage = GameManager.selected_stage
+	var mb_config: Dictionary
+
+	# Configuracao por stage
+	match stage:
+		"forest":
+			mb_config = {"hp": 600, "dmg": 30, "spd": 6.0, "color": Color(0.1, 0.0, 0.2), "name": "Shadow Treant"}
+		"farm":
+			mb_config = {"hp": 800, "dmg": 35, "spd": 8.0, "color": Color(0.5, 0.5, 0.5), "name": "Mad Bull"}
+		"tokyo":
+			mb_config = {"hp": 700, "dmg": 30, "spd": 7.0, "color": Color(0.2, 0.2, 0.3), "name": "Mecha Ninja"}
+		"volcano":
+			mb_config = {"hp": 1000, "dmg": 40, "spd": 3.0, "color": Color(0.6, 0.1, 0.0), "name": "Cerberus"}
+		"ocean":
+			mb_config = {"hp": 800, "dmg": 35, "spd": 4.0, "color": Color(0.1, 0.3, 0.5), "name": "Baby Kraken"}
+		"arena":
+			mb_config = {"hp": 900, "dmg": 45, "spd": 5.0, "color": Color(0.7, 0.5, 0.1), "name": "Champion Gladiator"}
+		"space":
+			mb_config = {"hp": 850, "dmg": 30, "spd": 3.5, "color": Color(0.3, 0.6, 0.2), "name": "Alien Queen"}
+		"castle":
+			mb_config = {"hp": 700, "dmg": 35, "spd": 6.0, "color": Color(0.5, 0.0, 0.2), "name": "Vampiress"}
+		"candy":
+			mb_config = {"hp": 1200, "dmg": 25, "spd": 2.0, "color": Color(0.9, 0.6, 0.7), "name": "Triple Layer Cake"}
+		_:
+			mb_config = {"hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15), "name": "Giant Zombie"}
+
+	# Mini-boss forte (min 20): 2x HP, 1.5x damage, mais rapido, maior
+	var hp_mult := 2.0 if strong else 1.0
+	var dmg_mult := 1.5 if strong else 1.0
+	var spd_mult := 1.3 if strong else 1.0
+	var scale_val := 3.0 if strong else 2.5
+	var boss_name: String = mb_config["name"]
+	if strong:
+		boss_name = "Mega " + boss_name
+
+	var zombie_scene = preload("res://scenes/enemies/zombie_runner.tscn")
+	var boss = zombie_scene.instantiate()
+	if boss is EnemyBase3D:
+		boss.max_hp = int(mb_config["hp"] * hp_mult)
+		boss.hp = boss.max_hp
+		boss.damage = int(mb_config["dmg"] * dmg_mult)
+		boss.speed = mb_config["spd"] * spd_mult
+		boss.xp_drop = 50 if not strong else 100
+		boss.enemy_color = mb_config["color"]
+		boss.scale = Vector3(scale_val, scale_val, scale_val)
+	get_parent().add_child(boss)
+	boss.global_position = spawn_pos
+	GameManager.enemies_alive += 1
+	GameManager.miniboss_spawned.emit(boss_name)
+
+	AudioManager.play_sfx("boss_appear")
+
+	# Tambem spawna escoltas com o mini-boss forte
+	if strong:
+		for i in range(5):
+			var escort_angle = (float(i) / 5.0) * TAU
+			var escort_pos = spawn_pos + Vector3(cos(escort_angle), 0, sin(escort_angle)) * 5.0
+			var escort_scenes = [
+				preload("res://scenes/enemies/skeleton.tscn"),
+				preload("res://scenes/enemies/bomber.tscn"),
+			]
+			var escort = escort_scenes[rng.randi() % escort_scenes.size()].instantiate()
+			if escort is EnemyBase3D:
+				escort.max_hp = int(escort.max_hp * 2.0)
+				escort.hp = escort.max_hp
+				escort.damage = int(escort.damage * 1.3)
+				escort.enemy_color = mb_config["color"].lightened(0.3)
+				escort.scale = Vector3(1.5, 1.5, 1.5)
+			get_parent().add_child(escort)
+			escort.global_position = escort_pos
+			GameManager.enemies_alive += 1
 
 func _spawn_treasure_goblin() -> void:
 	var players = get_tree().get_nodes_in_group("players")
