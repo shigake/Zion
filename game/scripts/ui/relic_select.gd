@@ -27,6 +27,7 @@ func _ready() -> void:
 	right_arrow.pressed.connect(_next_page)
 	_load_items()
 	_show_page(0)
+	_create_mode_buttons()
 
 func _load_items() -> void:
 	all_items.clear()
@@ -88,6 +89,27 @@ func _select_relic(relic_id: String, data: Dictionary) -> void:
 	selected_relic = relic_id
 	info_label.text = "%s — %s" % [data["name"], data["description"]]
 
+func _create_mode_buttons() -> void:
+	var mode_hbox = HBoxContainer.new()
+	mode_hbox.add_theme_constant_override("separation", 8)
+	mode_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	var modes = [
+		{"id": "normal", "label": "Normal", "method": "_on_mode_normal"},
+		{"id": "endless", "label": "Endless", "method": "_on_mode_endless"},
+		{"id": "boss_rush", "label": "Boss Rush", "method": "_on_mode_boss_rush"},
+		{"id": "hyper", "label": "Hyper", "method": "_on_mode_hyper"},
+	]
+	for mode in modes:
+		var btn = Button.new()
+		btn.text = mode["label"]
+		btn.custom_minimum_size = Vector2(100, 35)
+		btn.pressed.connect(Callable(self, mode["method"]))
+		mode_hbox.add_child(btn)
+	# Insert before start button
+	var vbox = start_btn.get_parent()
+	vbox.add_child(mode_hbox)
+	vbox.move_child(mode_hbox, start_btn.get_index())
+
 func _on_mode_normal() -> void:
 	selected_mode = "normal"
 	info_label.text = "Modo Normal — 30 min, boss no final"
@@ -96,13 +118,26 @@ func _on_mode_endless() -> void:
 	selected_mode = "endless"
 	info_label.text = "Modo Endless — Sem limite, sobreviva o maximo"
 
+func _on_mode_boss_rush() -> void:
+	selected_mode = "boss_rush"
+	info_label.text = "Boss Rush — 10 bosses em sequencia!"
+
+func _on_mode_hyper() -> void:
+	selected_mode = "hyper"
+	info_label.text = "Hyper Mode — 2x velocidade, 2x spawns, 2x rewards"
+
 func _on_start() -> void:
 	GameManager.selected_relic = selected_relic
 	GameManager.game_mode = selected_mode
-	if selected_mode == "endless":
-		GameManager.run_time_limit = 999999.0
-	else:
-		GameManager.run_time_limit = 1800.0
+	match selected_mode:
+		"endless":
+			GameManager.run_time_limit = 999999.0
+		"boss_rush":
+			GameManager.run_time_limit = 999999.0
+		"hyper":
+			GameManager.run_time_limit = 1800.0
+		_:
+			GameManager.run_time_limit = 1800.0
 	var stage_scenes = {
 		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
 		"forest": "res://scenes/stages/stage_forest.tscn",

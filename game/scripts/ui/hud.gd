@@ -7,7 +7,8 @@ extends CanvasLayer
 @onready var level_label: Label = $MarginContainer/VBox/LevelLabel
 @onready var time_label: Label = $TopRight/TimeLabel
 @onready var kill_label: Label = $TopRight/KillLabel
-@onready var dash_label: Label = $BottomCenter/DashLabel
+@onready var dash_label: Label = $BottomCenter/DashVBox/DashLabel
+@onready var dash_cooldown_bar: ProgressBar = $BottomCenter/DashVBox/DashCooldownBar
 @onready var event_label: Label = $EventNotification/EventLabel
 
 var event_display_timer: float = 0.0
@@ -24,6 +25,7 @@ var _prev_item_hash: String = ""
 
 # Multiplayer ally HP bars
 var ally_hp_container: VBoxContainer = null
+var ping_label: Label = null
 
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
@@ -85,6 +87,19 @@ func _ready() -> void:
 	boss_bg.border_color = Color(0.4, 0.1, 0.1)
 	boss_hp_bar.add_theme_stylebox_override("background", boss_bg)
 
+	# Dash cooldown bar styling (cyan, pequena)
+	dash_cooldown_bar.visible = false
+	var dash_fill = StyleBoxFlat.new()
+	dash_fill.bg_color = Color(0.2, 0.85, 1.0)
+	dash_fill.set_corner_radius_all(3)
+	dash_cooldown_bar.add_theme_stylebox_override("fill", dash_fill)
+	var dash_bg = StyleBoxFlat.new()
+	dash_bg.bg_color = Color(0.1, 0.1, 0.15)
+	dash_bg.set_corner_radius_all(3)
+	dash_bg.set_border_width_all(1)
+	dash_bg.border_color = Color(0.2, 0.3, 0.4)
+	dash_cooldown_bar.add_theme_stylebox_override("background", dash_bg)
+
 	# Event notification styling
 	event_label.add_theme_font_size_override("font_size", 28)
 	event_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
@@ -94,6 +109,12 @@ func _ready() -> void:
 		ally_hp_container = VBoxContainer.new()
 		ally_hp_container.position = Vector2(20, 120)
 		add_child(ally_hp_container)
+		# Ping display
+		ping_label = Label.new()
+		ping_label.add_theme_font_size_override("font_size", 12)
+		ping_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		ping_label.position = Vector2(get_viewport().get_visible_rect().size.x - 100, 10)
+		add_child(ping_label)
 
 func _process(delta: float) -> void:
 	_update_hp()
@@ -105,6 +126,8 @@ func _process(delta: float) -> void:
 	_update_boss_hp()
 	_update_dash()
 	_update_ally_hp()
+	_update_ping()
+	_update_ally_arrows()
 	# Check achievements every 10s
 	achievement_check_timer += delta
 	if achievement_check_timer >= 10.0:
@@ -284,11 +307,17 @@ func _update_dash() -> void:
 	if not "dash_cooldown_timer" in p or not "dash_cooldown" in p:
 		return
 	if p.dash_cooldown_timer > 0:
-		dash_label.text = "[SPACE] Dash (%.1fs)" % p.dash_cooldown_timer
+		dash_label.text = "[SPACE] Dash"
 		dash_label.modulate = Color(0.5, 0.5, 0.5)
+		# Barra carrega de 0 ate 1 conforme o cooldown passa
+		var progress = 1.0 - (p.dash_cooldown_timer / p.dash_cooldown)
+		dash_cooldown_bar.value = clampf(progress, 0.0, 1.0)
+		dash_cooldown_bar.visible = true
 	else:
 		dash_label.text = "[SPACE] Dash"
 		dash_label.modulate = Color.WHITE
+		dash_cooldown_bar.value = 1.0
+		dash_cooldown_bar.visible = false
 
 func _update_ally_hp() -> void:
 	if not ally_hp_container or not MultiplayerManager.is_online:
@@ -322,3 +351,66 @@ func _update_ally_hp() -> void:
 		bar.add_theme_stylebox_override("fill", fill)
 		hbox.add_child(bar)
 		ally_hp_container.add_child(hbox)
+
+func _update_ping() -> void:
+	if not ping_label or not MultiplayerManager.is_online:
+		return
+	# Get approximate round-trip time
+	var peer = multiplayer.multiplayer_peer
+	if peer and not multiplayer.is_server():
+		# ENet peer has get_peer method
+		var rtt = 0
+		if peer.has_method("get_peer"):
+			var enet_peer = peer.get_peer(1)
+			if enet_peer:
+				rtt = enet_peer.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME)
+		ping_label.text = "Ping: %dms" % rtt
+	else:
+		ping_label.text = "Host"
+
+func _update_ally_arrows() -> void:
+	if not MultiplayerManager.is_online:
+		return
+	var camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	var viewport_size = get_viewport().get_visible_rect().size
+	var local_player = get_tree().get_first_node_in_group("players")
+	if not local_player or not is_instance_valid(local_player):
+		return
+	var players = get_tree().get_nodes_in_group("players")
+	var colors = MultiplayerManager.get_player_colors()
+	for p in players:
+		if not is_instance_valid(p) or p == local_player:
+			continue
+		var pid = p.player_id if "player_id" in p else 0
+		# Check if ally is off-screen
+		var screen_pos = camera.unproject_position(p.global_position)
+		var margin = 40.0
+		var is_offscreen = screen_pos.x < margin or screen_pos.x > viewport_size.x - margin or screen_pos.y < margin or screen_pos.y > viewport_size.y - margin
+		if not is_offscreen:
+			if pid in ally_arrows and is_instance_valid(ally_arrows[pid]):
+				ally_arrows[pid].visible = false
+			continue
+		# Create or reuse arrow label
+		if pid not in ally_arrows or not is_instance_valid(ally_arrows[pid]):
+			var arrow = Label.new()
+			arrow.add_theme_font_size_override("font_size", 24)
+			arrow.add_theme_color_override("font_color", colors.get(pid, Color.GREEN))
+			add_child(arrow)
+			ally_arrows[pid] = arrow
+		var arrow: Label = ally_arrows[pid]
+		arrow.visible = true
+		# Clamp position to screen edges
+		var clamped = Vector2(
+			clampf(screen_pos.x, margin, viewport_size.x - margin),
+			clampf(screen_pos.y, margin, viewport_size.y - margin)
+		)
+		arrow.position = clamped
+		# Direction arrow character
+		var dir = (screen_pos - viewport_size / 2).normalized()
+		if absf(dir.x) > absf(dir.y):
+			arrow.text = ">" if dir.x > 0 else "<"
+		else:
+			arrow.text = "v" if dir.y > 0 else "^"
+		arrow.text += " P%d" % pid

@@ -41,7 +41,7 @@ var rerolls: int = 1
 var veteran_relic_active: bool = false
 
 # Modo de jogo
-var game_mode: String = "normal"  # "normal" ou "endless"
+var game_mode: String = "normal"  # "normal", "endless", "boss_rush", "hyper"
 var run_time_limit: float = 1800.0  # 30 min default
 
 # Weapons e items do jogador
@@ -132,7 +132,10 @@ func _add_joy_button(action_name: String, button: int) -> void:
 func add_xp(amount: int) -> void:
 	if is_game_over:
 		return
-	player_xp += int(amount * xp_mult)
+	var final_mult = xp_mult
+	if game_mode == "hyper":
+		final_mult *= 2.0
+	player_xp += int(amount * final_mult)
 	while player_xp >= player_xp_to_next:
 		player_xp -= player_xp_to_next
 		player_level += 1

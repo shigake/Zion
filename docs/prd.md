@@ -293,8 +293,8 @@
 
 **HUD Online**
 - [x] HP bars dos aliados (compactas)
-- [ ] Setas indicando direcao dos aliados fora da tela
-- [ ] Ping/latencia
+- [x] Setas indicando direcao dos aliados fora da tela
+- [x] Ping/latencia
 
 **Desconexao**
 - [x] Client desconecta: personagem some, scaling ajusta
@@ -453,7 +453,7 @@
 **Performance**
 - [x] Object pooling para inimigos (11 tipos via ObjectPool)
 - [x] Object pooling para projeteis (bullets, rockets, arrows)
-- [ ] MultiMeshInstance3D para renderizar hordas
+- [x] MultiMeshInstance3D para renderizar hordas (MultiMeshManager autoload)
 - [x] 60 FPS target
 
 **Steam Integration**
@@ -509,8 +509,8 @@
 
 ### Pendente
 - [ ] Daily Challenge (requer backend + leaderboard online)
-- [ ] Boss Rush mode
-- [ ] Hyper Mode
+- [x] Boss Rush mode (10 bosses sequenciais)
+- [x] Hyper Mode (2x velocidade, 2x spawns, 2x XP)
 - [ ] Host migration no multiplayer
 - [ ] Reconnect ao multiplayer
 - [ ] Workshop da Steam (mods)

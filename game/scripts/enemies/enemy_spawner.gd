@@ -27,6 +27,12 @@ var mimic_scene: PackedScene = preload("res://scenes/enemies/mimic.tscn")
 var boss_spawned: bool = false
 var miniboss_spawned: bool = false
 
+# Boss Rush mode
+var _boss_rush_stages: Array = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+var _boss_rush_index: int = 0
+var _boss_rush_cooldown: float = 0.0
+var _boss_rush_active_boss: bool = false
+
 func _ready() -> void:
 	rng.randomize()
 
@@ -35,7 +41,15 @@ func _process(delta: float) -> void:
 		return
 
 	var mult = GameManager.get_difficulty_multiplier()
+	# Hyper mode: 2x spawn rate
+	if GameManager.game_mode == "hyper":
+		mult *= 2.0
 	var interval = maxf(0.15, base_spawn_interval / mult)
+
+	# Boss Rush: spawn bosses sequentially instead of normal enemies
+	if GameManager.game_mode == "boss_rush":
+		_process_boss_rush(delta)
+		return
 
 	spawn_timer += delta
 	if spawn_timer >= interval:
@@ -239,6 +253,74 @@ func _apply_stage_skin(enemy: Node3D) -> void:
 	var base_name: String = enemy.name
 	if names.has(base_name):
 		enemy.name = names[base_name]
+
+func _process_boss_rush(delta: float) -> void:
+	if _boss_rush_index >= _boss_rush_stages.size():
+		# All 10 bosses defeated!
+		GameManager.is_victory = true
+		GameManager.is_game_over = true
+		GameManager.game_over.emit()
+		return
+
+	# Cooldown between bosses
+	if _boss_rush_cooldown > 0:
+		_boss_rush_cooldown -= delta
+		return
+
+	# Spawn some filler enemies to keep it interesting
+	spawn_timer += delta
+	if spawn_timer >= 1.5:
+		spawn_timer = 0.0
+		var mult = 1.0 + _boss_rush_index * 0.3
+		_spawn_wave(mult)
+
+	# Check if current boss is dead
+	if _boss_rush_active_boss:
+		var bosses = get_tree().get_nodes_in_group("boss")
+		if bosses.is_empty():
+			_boss_rush_active_boss = false
+			_boss_rush_index += 1
+			_boss_rush_cooldown = 3.0  # 3s break between bosses
+			# Heal player between bosses
+			GameManager.heal(GameManager.get_effective_max_hp() / 2)
+			GameManager.add_xp(20)
+		return
+
+	# Spawn next boss
+	var players = get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var pos = players[0].global_position
+	var spawn_pos = pos + Vector3(0, 0, -15)
+
+	# Temporarily set selected_stage to get the right boss
+	var original_stage = GameManager.selected_stage
+	GameManager.selected_stage = _boss_rush_stages[_boss_rush_index]
+
+	AudioManager.play_sfx("boss_appear")
+	AudioManager.play_music("boss")
+
+	var boss_paths = {
+		"cemetery": "res://scenes/enemies/boss_necromancer.tscn",
+		"forest": "res://scenes/enemies/boss_fairy_queen.tscn",
+		"farm": "res://scenes/enemies/boss_alien_cow.tscn",
+		"tokyo": "res://scenes/enemies/boss_ai_overlord.tscn",
+		"volcano": "res://scenes/enemies/boss_demon_lord.tscn",
+		"ocean": "res://scenes/enemies/boss_leviathan.tscn",
+		"arena": "res://scenes/enemies/boss_emperor.tscn",
+		"space": "res://scenes/enemies/boss_singularity.tscn",
+		"castle": "res://scenes/enemies/boss_dracula.tscn",
+		"candy": "res://scenes/enemies/boss_sugar_king.tscn",
+	}
+	var path = boss_paths.get(_boss_rush_stages[_boss_rush_index], "res://scenes/enemies/boss_necromancer.tscn")
+	var boss = load(path).instantiate()
+	add_child(boss)
+	boss.global_position = spawn_pos
+	GameManager.enemies_alive += 1
+	_boss_rush_active_boss = true
+
+	# Restore original stage
+	GameManager.selected_stage = original_stage
 
 func _make_elite(enemy: Node3D) -> void:
 	if enemy is EnemyBase3D:

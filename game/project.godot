@@ -32,6 +32,7 @@ VisualSetup="*res://scripts/effects/visual_setup.gd"
 ModelFactory="*res://scripts/effects/model_factory.gd"
 SteamManager="*res://scripts/autoload/steam_manager.gd"
 AchievementManager="*res://scripts/autoload/achievement_manager.gd"
+MultiMeshManager="*res://scripts/autoload/multimesh_manager.gd"
 
 [display]
 

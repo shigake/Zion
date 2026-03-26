@@ -3,11 +3,13 @@ extends CanvasLayer
 ## Pause menu — ESC para pausar/despausar.
 
 @onready var panel: PanelContainer = $Panel
+@onready var overlay: ColorRect = $Overlay
 @onready var resume_btn: Button = $Panel/VBox/ResumeButton
 @onready var menu_btn: Button = $Panel/VBox/MenuButton
 
 func _ready() -> void:
 	panel.visible = false
+	overlay.visible = false
 	resume_btn.pressed.connect(_on_resume)
 	menu_btn.pressed.connect(_on_menu)
 
@@ -17,13 +19,20 @@ func _ready() -> void:
 		event.physical_keycode = KEY_ESCAPE
 		InputMap.action_add_event("pause", event)
 
-	# Options button (added programmatically between Resume and Quit)
+	# Options button
 	var options_btn = Button.new()
 	options_btn.text = "Opcoes"
 	options_btn.custom_minimum_size = Vector2(0, 40)
 	options_btn.pressed.connect(_on_options)
 	$Panel/VBox.add_child(options_btn)
 	$Panel/VBox.move_child(options_btn, 2)  # After Resume, before Menu
+
+	# Quit button (fecha a aplicação)
+	var quit_btn = Button.new()
+	quit_btn.text = "Sair do Jogo"
+	quit_btn.custom_minimum_size = Vector2(0, 40)
+	quit_btn.pressed.connect(_on_quit)
+	$Panel/VBox.add_child(quit_btn)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and not GameManager.is_game_over:
@@ -34,11 +43,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _pause() -> void:
 	panel.visible = true
+	overlay.visible = true
 	GameManager.paused = true
 	get_tree().paused = true
 
 func _on_resume() -> void:
 	panel.visible = false
+	overlay.visible = false
 	GameManager.paused = false
 	get_tree().paused = false
 
@@ -108,3 +119,6 @@ func _on_menu() -> void:
 	get_tree().paused = false
 	GameManager.paused = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+func _on_quit() -> void:
+	get_tree().quit()
