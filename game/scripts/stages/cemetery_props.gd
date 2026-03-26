@@ -4,7 +4,7 @@ extends Node3D
 
 @export var num_tombstones: int = 60
 @export var num_trees: int = 25
-@export var num_lights: int = 8
+@export var num_lights: int = 12
 @export var area_size: float = 80.0
 
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -86,9 +86,9 @@ func _generate_ambient_lights() -> void:
 		var x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
 		var z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
 		light.position = Vector3(x, 1.5, z)
-		light.light_color = Color(0.5, 0.65, 0.9)
-		light.light_energy = 0.7
-		light.omni_range = 12.0
+		light.light_color = Color(0.6, 0.75, 0.95)
+		light.light_energy = 1.2
+		light.omni_range = 16.0
 		light.omni_attenuation = 2.0
 		add_child(light)
 

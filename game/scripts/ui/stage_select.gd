@@ -134,6 +134,8 @@ func _setup_grid_focus() -> void:
 	if not buttons.is_empty():
 		next_btn.focus_neighbor_top = buttons[mini(buttons.size() - 1, buttons.size() - 1)].get_path()
 		back_btn.focus_neighbor_bottom = buttons[0].get_path()
+		# Garante foco no primeiro botao apos o frame de layout
+		buttons[0].call_deferred("grab_focus")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

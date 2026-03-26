@@ -114,7 +114,8 @@ func _setup_grid_focus() -> void:
 	if not buttons.is_empty():
 		start_btn.focus_neighbor_top = buttons[buttons.size() - 1].get_path()
 		back_btn.focus_neighbor_bottom = buttons[0].get_path()
-		buttons[0].grab_focus()
+		# Garante foco no primeiro botao apos o frame de layout
+		buttons[0].call_deferred("grab_focus")
 
 func _select_relic(relic_id: String, data: Dictionary, btn: Button = null) -> void:
 	selected_relic = relic_id

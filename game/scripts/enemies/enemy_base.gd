@@ -52,6 +52,11 @@ func _apply_procedural_model() -> void:
 		# Fallback: cel-shader na mesh original
 		VisualSetup.apply_cel_shader_to_mesh(mesh, enemy_color)
 
+## Separacao entre inimigos — raio e forca de repulsao
+const SEPARATION_RADIUS := 1.5
+const SEPARATION_FORCE := 3.0
+const MAX_NEIGHBORS_CHECK := 8
+
 func _physics_process(delta: float) -> void:
 	if is_dead or GameManager.paused:
 		return
@@ -71,13 +76,34 @@ func _physics_process(delta: float) -> void:
 		# Veteran relic: enemies 15% faster
 		if GameManager.veteran_relic_active:
 			effective_speed *= 1.15
-		velocity = direction * effective_speed
+		# Separacao: repulsao de inimigos proximos
+		var separation = _get_separation_vector()
+		var final_dir = (direction * effective_speed + separation).normalized()
+		velocity = final_dir * effective_speed
 		move_and_slide()
 		if _animator:
 			_animator.set_walking(true)
 	else:
 		if _animator:
 			_animator.set_walking(false)
+
+func _get_separation_vector() -> Vector3:
+	var sep := Vector3.ZERO
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	var checked := 0
+	for enemy in enemies:
+		if enemy == self or not is_instance_valid(enemy) or enemy.is_dead:
+			continue
+		var diff = global_position - enemy.global_position
+		diff.y = 0
+		var dist = diff.length()
+		if dist < SEPARATION_RADIUS and dist > 0.01:
+			# Quanto mais perto, mais forte a repulsao
+			sep += diff.normalized() * (SEPARATION_RADIUS - dist) / SEPARATION_RADIUS * SEPARATION_FORCE
+			checked += 1
+			if checked >= MAX_NEIGHBORS_CHECK:
+				break
+	return sep
 
 func _find_target() -> void:
 	var players = get_tree().get_nodes_in_group("players")
