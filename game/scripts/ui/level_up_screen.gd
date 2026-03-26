@@ -151,9 +151,23 @@ func _generate_options() -> Array:
 	# Filter banished options
 	pool = pool.filter(func(opt): return opt["id"] not in GameManager.banished_options)
 
-	# Shuffle e pega 3
-	pool.shuffle()
-	return pool.slice(0, 3)
+	# Weighted random selection (luck_mult increases rare weapon chance)
+	var selected: Array = []
+	for _i in range(3):
+		if pool.is_empty():
+			break
+		var total_weight = 0.0
+		for opt in pool:
+			total_weight += opt["weight"] * GameManager.luck_mult
+		var roll = randf() * total_weight
+		var cumulative = 0.0
+		for j in range(pool.size()):
+			cumulative += pool[j]["weight"] * GameManager.luck_mult
+			if roll <= cumulative:
+				selected.append(pool[j])
+				pool.remove_at(j)
+				break
+	return selected
 
 func _on_reroll() -> void:
 	if GameManager.rerolls <= 0:

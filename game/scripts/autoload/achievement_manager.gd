@@ -77,9 +77,21 @@ func check_achievements() -> void:
 	if "pacifist" not in unlocked and GameManager.game_time >= 180.0 and _run_attacks == 0:
 		_unlock("pacifist")
 
-	# Lucky Day: 5 legendary items
+	# Lucky Day: 5 legendary items (level 5 items count as legendary)
 	if "lucky_day" not in unlocked and _run_legendary_items >= 5:
 		_unlock("lucky_day")
+
+	# I Am The Storm: 3 electric-type evolved weapons
+	if "storm" not in unlocked:
+		var electric_evos = 0
+		for evo_id in EvolutionDB.evolved_weapons:
+			var evo = EvolutionDB.get_evolution(evo_id)
+			var weapon_id = evo.get("weapon_required", "")
+			var weapon_data = WeaponDB.get_weapon(weapon_id)
+			if weapon_data.get("damage_type", "") == "electric":
+				electric_evos += 1
+		if electric_evos >= 3:
+			_unlock("storm")
 
 func _unlock(id: String) -> void:
 	var unlocked = SaveManager.data.get("achievements", [])
@@ -109,6 +121,9 @@ func reset_run() -> void:
 
 func on_cow_damage() -> void:
 	_run_no_cow_damage = false
+
+func on_legendary_item() -> void:
+	_run_legendary_items += 1
 
 func is_unlocked(id: String) -> bool:
 	return id in SaveManager.data.get("achievements", [])

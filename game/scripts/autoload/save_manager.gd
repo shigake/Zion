@@ -19,6 +19,24 @@ var data: Dictionary = {
 
 func _ready() -> void:
 	load_game()
+	_restore_settings()
+
+func _restore_settings() -> void:
+	# Restore window mode
+	var wm = data.get("window_mode", -1)
+	if wm == 1:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	elif wm == 2:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+	# Restore resolution
+	var res_idx = data.get("resolution", -1)
+	if res_idx >= 0:
+		var resolutions = [Vector2i(1280, 720), Vector2i(1920, 1080), Vector2i(2560, 1440), Vector2i(3840, 2160)]
+		if res_idx < resolutions.size():
+			DisplayServer.window_set_size(resolutions[res_idx])
+	# Restore audio volumes (applied after AudioManager is ready)
+	call_deferred("_restore_audio")
 
 func save_game() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -40,6 +58,14 @@ func load_game() -> void:
 				for key in loaded:
 					data[key] = loaded[key]
 		file.close()
+
+func _restore_audio() -> void:
+	var master = data.get("volume_master", 1.0)
+	var music = data.get("volume_music", 0.8)
+	var sfx = data.get("volume_sfx", 1.0)
+	AudioManager.set_master_volume(master)
+	AudioManager.set_music_volume(music)
+	AudioManager.set_sfx_volume(sfx)
 
 func add_crystals(amount: int) -> void:
 	data["crystals"] += amount

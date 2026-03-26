@@ -31,6 +31,7 @@ func _ready() -> void:
 	_setup_scroll_style()
 	_setup_check_button_style()
 	_setup_option_button_style()
+	_setup_slider_style()
 
 	# Apply to all future UI
 	get_tree().root.theme = theme
@@ -134,3 +135,48 @@ func _setup_option_button_style() -> void:
 	normal.set_content_margin_all(8)
 	theme.set_stylebox("normal", "OptionButton", normal)
 	theme.set_color("font_color", "OptionButton", TEXT_PRIMARY)
+
+func _setup_slider_style() -> void:
+	# Track (slider background)
+	var slider_bg = StyleBoxFlat.new()
+	slider_bg.bg_color = Color(0.1, 0.1, 0.15)
+	slider_bg.set_corner_radius_all(4)
+	slider_bg.set_content_margin_all(0)
+	slider_bg.content_margin_top = 2
+	slider_bg.content_margin_bottom = 2
+	theme.set_stylebox("slider", "HSlider", slider_bg)
+
+	# Grabber area (filled portion)
+	var grabber_area = StyleBoxFlat.new()
+	grabber_area.bg_color = ACCENT_BLUE
+	grabber_area.set_corner_radius_all(4)
+	grabber_area.set_content_margin_all(0)
+	grabber_area.content_margin_top = 2
+	grabber_area.content_margin_bottom = 2
+	theme.set_stylebox("grabber_area", "HSlider", grabber_area)
+
+	# Grabber area highlight (when hovered/dragged)
+	var grabber_area_hl = grabber_area.duplicate()
+	grabber_area_hl.bg_color = ACCENT_BLUE.lightened(0.15)
+	theme.set_stylebox("grabber_area_highlight", "HSlider", grabber_area_hl)
+
+	# Grabber (the handle)
+	var grabber = StyleBoxFlat.new()
+	grabber.bg_color = TEXT_PRIMARY
+	grabber.set_corner_radius_all(10)
+	grabber.set_content_margin_all(0)
+	theme.set_stylebox("grabber", "HSlider", grabber)
+
+	# Grabber highlight
+	var grabber_hl = grabber.duplicate()
+	grabber_hl.bg_color = ACCENT_BLUE
+	theme.set_stylebox("grabber_highlight", "HSlider", grabber_hl)
+
+	# Grabber disabled
+	var grabber_dis = grabber.duplicate()
+	grabber_dis.bg_color = TEXT_DISABLED
+	theme.set_stylebox("grabber_disabled", "HSlider", grabber_dis)
+
+	# Sizes
+	theme.set_constant("grabber_offset", "HSlider", 1)
+	theme.set_constant("center_grabber", "HSlider", 1)

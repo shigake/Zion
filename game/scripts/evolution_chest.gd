@@ -31,6 +31,10 @@ func _process(_delta: float) -> void:
 
 func _evolve() -> void:
 	AudioManager.play_sfx("evolve")
+	# Show evolution tutorial on first evolution
+	var tutorial = get_tree().current_scene.get_node_or_null("TutorialOverlay")
+	if tutorial and tutorial.has_method("show_evolution_step"):
+		tutorial.show_evolution_step()
 	EvolutionDB.evolve_weapon(evolution_id)
 	var evo = EvolutionDB.get_evolution(evolution_id)
 

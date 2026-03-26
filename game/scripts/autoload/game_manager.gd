@@ -255,6 +255,8 @@ func upgrade_item(item_id: String) -> bool:
 	for it in player_items:
 		if it["id"] == item_id and it["level"] < 5:
 			it["level"] += 1
+			if it["level"] >= 5:
+				AchievementManager.on_legendary_item()
 			_recalculate_item_bonuses()
 			return true
 	return false

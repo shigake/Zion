@@ -511,6 +511,65 @@ func create_bomber_model() -> Node3D:
 
 	return root
 
+func create_swarm_model() -> Node3D:
+	## Swarm: cluster of 5 tiny spheres arranged in a group, insect-like
+	var root = Node3D.new()
+
+	var offsets = [
+		Vector3(0, 0.3, 0),
+		Vector3(0.12, 0.35, 0.05),
+		Vector3(-0.1, 0.28, -0.05),
+		Vector3(0.05, 0.4, -0.08),
+		Vector3(-0.07, 0.22, 0.07),
+	]
+
+	for offset in offsets:
+		var bug = _mesh(SphereMesh.new(), offset)
+		bug.mesh.radius = 0.1
+		bug.mesh.height = 0.2
+		root.add_child(bug)
+
+	return root
+
+func create_mimic_model() -> Node3D:
+	## Mimic: chest-like shape (box body + slightly open lid on top)
+	var root = Node3D.new()
+
+	# Chest body
+	var body = _mesh(BoxMesh.new(), Vector3(0, 0.2, 0))
+	body.mesh.size = Vector3(0.5, 0.35, 0.35)
+	root.add_child(body)
+
+	# Lid (slightly open, rotated back)
+	var lid = _mesh(BoxMesh.new(), Vector3(0, 0.42, -0.08))
+	lid.mesh.size = Vector3(0.52, 0.08, 0.37)
+	lid.rotation.x = deg_to_rad(-20)
+	root.add_child(lid)
+
+	# Teeth (accent glow for menacing look)
+	var tooth_l = _mesh(CylinderMesh.new(), Vector3(0.12, 0.38, 0.15))
+	tooth_l.mesh.top_radius = 0.0
+	tooth_l.mesh.bottom_radius = 0.03
+	tooth_l.mesh.height = 0.1
+	root.add_child(tooth_l)
+	_mark_as_accent(tooth_l)
+
+	var tooth_r = _mesh(CylinderMesh.new(), Vector3(-0.12, 0.38, 0.15))
+	tooth_r.mesh.top_radius = 0.0
+	tooth_r.mesh.bottom_radius = 0.03
+	tooth_r.mesh.height = 0.1
+	root.add_child(tooth_r)
+	_mark_as_accent(tooth_r)
+
+	# Eye peering from inside
+	var eye = _mesh(SphereMesh.new(), Vector3(0, 0.32, 0.12))
+	eye.mesh.radius = 0.06
+	eye.mesh.height = 0.12
+	root.add_child(eye)
+	_mark_as_accent(eye)
+
+	return root
+
 # ===================== HELPERS =====================
 
 func _mesh(mesh_res: Mesh, pos: Vector3) -> MeshInstance3D:
@@ -557,4 +616,6 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		"Tank": return create_tank_model()
 		"Bomber": return create_bomber_model()
 		"BossNecromancer": return create_boss_model()
+		"Swarm": return create_swarm_model()
+		"Mimic": return create_mimic_model()
 	return create_slime_model()

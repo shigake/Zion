@@ -256,3 +256,8 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and body.has_method("take_damage"):
 		body.take_damage(damage)
+		# Track cow damage for achievement
+		if GameManager.selected_stage == "farm":
+			var cow_names = ["Zombie Cow", "Cow Slime", "Bull", "Mud Blob"]
+			if name in cow_names:
+				AchievementManager.on_cow_damage()

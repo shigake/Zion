@@ -78,9 +78,14 @@ func _update_player_list() -> void:
 func _on_start() -> void:
 	if not MultiplayerManager.is_host():
 		return
-	# Carrega a fase selecionada
+	# Carrega a fase selecionada em todos os peers
 	var stage_path = "res://scenes/stages/stage_%s.tscn" % GameManager.selected_stage
-	get_tree().change_scene_to_file(stage_path)
+	_load_game_scene.rpc(stage_path)
+	_load_game_scene(stage_path)
+
+@rpc("authority", "reliable")
+func _load_game_scene(scene_path: String) -> void:
+	get_tree().change_scene_to_file(scene_path)
 
 func _on_back() -> void:
 	MultiplayerManager.disconnect_from_game()
