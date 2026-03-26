@@ -23,21 +23,46 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -300.0
-offset_top = -150.0
-offset_right = 300.0
-offset_bottom = 150.0
-theme_override_constants/separation = 16
+offset_left = -350.0
+offset_top = -250.0
+offset_right = 350.0
+offset_bottom = 250.0
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="VBox"]
 layout_mode = 2
 text = "ESCOLHA UMA FASE"
 horizontal_alignment = 1
 
-[node name="Stages" type="HBoxContainer" parent="VBox"]
+[node name="GridRow" type="HBoxContainer" parent="VBox"]
 layout_mode = 2
+size_flags_vertical = 3
 alignment = 1
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
+
+[node name="LeftArrow" type="Button" parent="VBox/GridRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+size_flags_vertical = 4
+text = "<"
+
+[node name="GridContainer" type="GridContainer" parent="VBox/GridRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+columns = 4
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="RightArrow" type="Button" parent="VBox/GridRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+size_flags_vertical = 4
+text = ">"
+
+[node name="PageLabel" type="Label" parent="VBox"]
+layout_mode = 2
+horizontal_alignment = 1
 
 [node name="InfoLabel" type="Label" parent="VBox"]
 layout_mode = 2

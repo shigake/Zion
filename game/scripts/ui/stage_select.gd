@@ -1,13 +1,22 @@
 extends Control
 
-## Tela de selecao de fase.
+## Tela de selecao de fase — grid 4x3 com paginacao.
 
-@onready var stage_container: HBoxContainer = $VBox/Stages
+const COLUMNS := 4
+const ROWS := 3
+const PER_PAGE := COLUMNS * ROWS
+
+@onready var grid: GridContainer = $VBox/GridRow/GridContainer
+@onready var left_arrow: Button = $VBox/GridRow/LeftArrow
+@onready var right_arrow: Button = $VBox/GridRow/RightArrow
+@onready var page_label: Label = $VBox/PageLabel
 @onready var info_label: Label = $VBox/InfoLabel
 @onready var next_btn: Button = $VBox/NextButton
 @onready var back_btn: Button = $VBox/BackButton
 
 var selected_stage: String = "cemetery"
+var current_page: int = 0
+var total_pages: int = 1
 
 # Stage definitions
 var stages: Array[Dictionary] = [
@@ -26,21 +35,25 @@ var stages: Array[Dictionary] = [
 func _ready() -> void:
 	next_btn.pressed.connect(_on_next)
 	back_btn.pressed.connect(_on_back)
-	_build_stage_list()
+	left_arrow.pressed.connect(_prev_page)
+	right_arrow.pressed.connect(_next_page)
+	total_pages = maxi(1, ceili(float(stages.size()) / PER_PAGE))
+	_show_page(0)
+	_select_stage(stages[0])
 
-func _build_stage_list() -> void:
-	for child in stage_container.get_children():
+func _show_page(page: int) -> void:
+	current_page = clampi(page, 0, total_pages - 1)
+
+	for child in grid.get_children():
 		child.queue_free()
 
-	# Use GridContainer to fit 10 stages without overflowing
-	var grid = GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 6)
+	var start_idx = current_page * PER_PAGE
+	var end_idx = mini(start_idx + PER_PAGE, stages.size())
 
-	for stage in stages:
+	for i in range(start_idx, end_idx):
+		var stage = stages[i]
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(140, 60)
+		btn.custom_minimum_size = Vector2(140, 70)
 
 		var unlocked = SaveManager.is_stage_unlocked(stage["id"])
 		if unlocked:
@@ -52,10 +65,31 @@ func _build_stage_list() -> void:
 		btn.pressed.connect(func(): _select_stage(stage))
 		grid.add_child(btn)
 
-	stage_container.add_child(grid)
+	# Preenche slots vazios para manter layout 4x3
+	var filled = end_idx - start_idx
+	for i in range(filled, PER_PAGE):
+		var spacer = Control.new()
+		spacer.custom_minimum_size = Vector2(140, 70)
+		grid.add_child(spacer)
 
-	# Select first stage by default
-	_select_stage(stages[0])
+	_update_arrows()
+
+func _update_arrows() -> void:
+	left_arrow.visible = total_pages > 1
+	right_arrow.visible = total_pages > 1
+	left_arrow.disabled = current_page <= 0
+	right_arrow.disabled = current_page >= total_pages - 1
+	if total_pages > 1:
+		page_label.text = "%d / %d" % [current_page + 1, total_pages]
+		page_label.visible = true
+	else:
+		page_label.visible = false
+
+func _prev_page() -> void:
+	_show_page(current_page - 1)
+
+func _next_page() -> void:
+	_show_page(current_page + 1)
 
 func _select_stage(stage: Dictionary) -> void:
 	selected_stage = stage["id"]
