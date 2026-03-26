@@ -23,10 +23,20 @@ var boss_hp_bar: ProgressBar
 var _prev_weapon_hash: String = ""
 var _prev_item_hash: String = ""
 
+# Synergy display
+var synergy_container: VBoxContainer = null
+var _synergy_update_timer: float = 0.0
+var _prev_synergy_hash: String = ""
+
+# Separate achievement label
+var achievement_label: Label = null
+
 # Multiplayer ally HP bars
 var ally_hp_container: VBoxContainer = null
 var ping_label: Label = null
 var ally_arrows: Dictionary = {}  # peer_id -> Label
+var _prev_ally_hash: String = ""
+var _ally_bars: Dictionary = {}  # peer_id -> ProgressBar
 
 # Minimap
 var minimap: Control = null
@@ -108,6 +118,33 @@ func _ready() -> void:
 	event_label.add_theme_font_size_override("font_size", 28)
 	event_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 
+	# Separate achievement label (below event label)
+	achievement_label = Label.new()
+	achievement_label.name = "AchievementLabel"
+	achievement_label.visible = false
+	achievement_label.add_theme_font_size_override("font_size", 24)
+	achievement_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	achievement_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	achievement_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	achievement_label.offset_top = 80  # Below event label
+	achievement_label.offset_left = -300
+	achievement_label.offset_right = 300
+	add_child(achievement_label)
+
+	# Synergy indicator area (bottom-left, below weapon icons)
+	synergy_container = VBoxContainer.new()
+	synergy_container.name = "SynergyContainer"
+	synergy_container.anchor_left = 0.0
+	synergy_container.anchor_top = 1.0
+	synergy_container.anchor_right = 0.0
+	synergy_container.anchor_bottom = 1.0
+	synergy_container.offset_left = 10.0
+	synergy_container.offset_top = -120.0
+	synergy_container.offset_right = 200.0
+	synergy_container.offset_bottom = -10.0
+	synergy_container.add_theme_constant_override("separation", 2)
+	add_child(synergy_container)
+
 	# Minimap (bottom-right, hexagonal)
 	var minimap_script = preload("res://scripts/ui/minimap.gd")
 	minimap = Control.new()
@@ -146,6 +183,7 @@ func _process(delta: float) -> void:
 	_update_ally_hp()
 	_update_ping()
 	_update_ally_arrows()
+	_update_synergies(delta)
 	# Check achievements every 10s
 	achievement_check_timer += delta
 	if achievement_check_timer >= 10.0:
@@ -181,14 +219,14 @@ func _on_game_over() -> void:
 	pass
 
 func _on_achievement_unlocked(_id: String, name: String) -> void:
-	event_label.text = LocaleManager.tr_key("achievement_label") % name
-	event_label.visible = true
-	event_label.modulate = Color(1.0, 0.85, 0.2)
-	event_label.scale = Vector2(1.5, 1.5)
+	achievement_label.text = LocaleManager.tr_key("achievement_label") % name
+	achievement_label.visible = true
+	achievement_label.modulate = Color(1.0, 0.85, 0.2)
+	achievement_label.scale = Vector2(1.5, 1.5)
 	var tween = create_tween()
-	tween.tween_property(event_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(achievement_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 	tween.tween_interval(3.0)
-	tween.tween_callback(func(): event_label.visible = false)
+	tween.tween_callback(func(): achievement_label.visible = false)
 
 func _on_event_started(event_name: String) -> void:
 	var locale_key = "event_" + event_name
@@ -343,32 +381,57 @@ func _update_ally_hp() -> void:
 	var players = get_tree().get_nodes_in_group("players")
 	if players.size() <= 1:
 		return
-	# Rebuild ally HP bars (cheap, only runs in multiplayer)
-	for child in ally_hp_container.get_children():
-		child.queue_free()
-	var colors = MultiplayerManager.get_player_colors()
+
+	# Build a hash of ally player IDs to detect structural changes
+	var ally_hash := ""
 	for p in players:
 		if not is_instance_valid(p) or not "player_id" in p:
 			continue
 		if p.is_local:
-			continue  # Skip local player (shown in main HP bar)
-		var hbox = HBoxContainer.new()
-		var name_lbl = Label.new()
-		name_lbl.text = "P%d" % p.player_id
-		name_lbl.add_theme_font_size_override("font_size", 12)
-		name_lbl.custom_minimum_size = Vector2(30, 0)
-		hbox.add_child(name_lbl)
-		var bar = ProgressBar.new()
-		bar.custom_minimum_size = Vector2(100, 12)
-		bar.max_value = GameManager.get_effective_max_hp()
-		bar.value = GameManager.player_hp  # In full multiplayer, each player would have own HP
-		bar.show_percentage = false
-		var fill = StyleBoxFlat.new()
-		fill.bg_color = colors.get(p.player_id, Color.GREEN)
-		fill.set_corner_radius_all(2)
-		bar.add_theme_stylebox_override("fill", fill)
-		hbox.add_child(bar)
-		ally_hp_container.add_child(hbox)
+			continue
+		ally_hash += str(p.player_id) + ","
+
+	# Only rebuild nodes if the set of players changed
+	if ally_hash != _prev_ally_hash:
+		_prev_ally_hash = ally_hash
+		_ally_bars.clear()
+		for child in ally_hp_container.get_children():
+			child.queue_free()
+
+		var colors = MultiplayerManager.get_player_colors()
+		for p in players:
+			if not is_instance_valid(p) or not "player_id" in p:
+				continue
+			if p.is_local:
+				continue
+			var hbox = HBoxContainer.new()
+			var name_lbl = Label.new()
+			name_lbl.text = "P%d" % p.player_id
+			name_lbl.add_theme_font_size_override("font_size", 12)
+			name_lbl.custom_minimum_size = Vector2(30, 0)
+			hbox.add_child(name_lbl)
+			var bar = ProgressBar.new()
+			bar.custom_minimum_size = Vector2(100, 12)
+			bar.max_value = GameManager.get_effective_max_hp()
+			bar.value = GameManager.player_hp
+			bar.show_percentage = false
+			var fill = StyleBoxFlat.new()
+			fill.bg_color = colors.get(p.player_id, Color.GREEN)
+			fill.set_corner_radius_all(2)
+			bar.add_theme_stylebox_override("fill", fill)
+			hbox.add_child(bar)
+			ally_hp_container.add_child(hbox)
+			_ally_bars[p.player_id] = bar
+	else:
+		# Just update bar values without rebuilding
+		for p in players:
+			if not is_instance_valid(p) or not "player_id" in p:
+				continue
+			if p.is_local:
+				continue
+			if p.player_id in _ally_bars and is_instance_valid(_ally_bars[p.player_id]):
+				_ally_bars[p.player_id].max_value = GameManager.get_effective_max_hp()
+				_ally_bars[p.player_id].value = GameManager.player_hp
 
 func _update_ping() -> void:
 	if not ping_label or not MultiplayerManager.is_online:
@@ -432,3 +495,40 @@ func _update_ally_arrows() -> void:
 		else:
 			arrow.text = "v" if dir.y > 0 else "^"
 		arrow.text += " P%d" % pid
+
+# --------------- Synergy Display ---------------
+
+func _update_synergies(delta: float) -> void:
+	_synergy_update_timer += delta
+	if _synergy_update_timer < 2.0:
+		return
+	_synergy_update_timer = 0.0
+
+	var synergies = SynergySystem.active_synergies
+	var hash := ",".join(synergies)
+	if hash == _prev_synergy_hash:
+		return
+	_prev_synergy_hash = hash
+
+	# Clear old labels
+	for child in synergy_container.get_children():
+		child.queue_free()
+
+	var synergy_display := {
+		"fire_fire": {"name": "Explosion", "color": Color(1.0, 0.6, 0.1)},
+		"ice_ice": {"name": "Shatter", "color": Color(0.4, 0.9, 1.0)},
+		"electric_electric": {"name": "Chain", "color": Color(1.0, 1.0, 0.3)},
+		"dark_dark": {"name": "Darkness", "color": Color(0.7, 0.3, 0.9)},
+		"fire_ice": {"name": "Steam", "color": Color.WHITE},
+		"electric_ice": {"name": "Conductor", "color": Color(0.3, 0.5, 1.0)},
+	}
+
+	for syn_id in synergies:
+		var info = synergy_display.get(syn_id, null)
+		if info == null:
+			continue
+		var lbl = Label.new()
+		lbl.text = info["name"]
+		lbl.add_theme_font_size_override("font_size", 14)
+		lbl.add_theme_color_override("font_color", info["color"])
+		synergy_container.add_child(lbl)

@@ -68,11 +68,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_pause()
 
+var stats_panel: PanelContainer = null
+
 func _pause() -> void:
 	panel.visible = true
 	overlay.visible = true
 	GameManager.paused = true
 	get_tree().paused = true
+	# Show run stats
+	_show_stats()
 	# Gamepad: foco no Resume
 	_setup_pause_focus()
 	GamepadUI.notify_menu_opened()
@@ -98,10 +102,109 @@ func _on_resume() -> void:
 	if options_panel and is_instance_valid(options_panel):
 		options_panel.queue_free()
 		options_panel = null
+	if stats_panel and is_instance_valid(stats_panel):
+		stats_panel.queue_free()
+		stats_panel = null
 	panel.visible = false
 	overlay.visible = false
 	GameManager.paused = false
 	get_tree().paused = false
+
+func _show_stats() -> void:
+	if stats_panel and is_instance_valid(stats_panel):
+		stats_panel.queue_free()
+		stats_panel = null
+
+	stats_panel = PanelContainer.new()
+	stats_panel.name = "StatsPanel"
+	stats_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	stats_panel.offset_left = -280
+	stats_panel.offset_top = -200
+	stats_panel.offset_right = -20
+	stats_panel.offset_bottom = 200
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	stats_panel.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	margin.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "Run Stats"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	vbox.add_child(title)
+
+	vbox.add_child(HSeparator.new())
+
+	# DPS
+	var dps = GameManager.total_damage_dealt / maxf(1.0, GameManager.game_time)
+	_add_stat_line(vbox, "DPS", "%.1f" % dps)
+
+	# Total kills
+	_add_stat_line(vbox, "Kills", str(GameManager.total_kills))
+
+	# Game time
+	var t = int(GameManager.game_time)
+	_add_stat_line(vbox, "Time", "%02d:%02d" % [t / 60, t % 60])
+
+	# Total damage
+	_add_stat_line(vbox, "Total DMG", str(GameManager.total_damage_dealt))
+
+	vbox.add_child(HSeparator.new())
+
+	# Current weapons and levels
+	var weapons_title = Label.new()
+	weapons_title.text = "Weapons"
+	weapons_title.add_theme_font_size_override("font_size", 16)
+	weapons_title.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
+	vbox.add_child(weapons_title)
+
+	for w in GameManager.player_weapons:
+		var data = WeaponDB.weapons.get(w.id, {})
+		var wname = data.get("name", w.id.capitalize())
+		_add_stat_line(vbox, wname, "Lv.%d" % w.level)
+
+	# Active synergies
+	var synergies = SynergySystem.active_synergies
+	if not synergies.is_empty():
+		vbox.add_child(HSeparator.new())
+		var syn_title = Label.new()
+		syn_title.text = "Synergies"
+		syn_title.add_theme_font_size_override("font_size", 16)
+		syn_title.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
+		vbox.add_child(syn_title)
+
+		for syn_id in synergies:
+			var desc = SynergySystem.get_synergy_description(syn_id)
+			if desc != "":
+				var syn_lbl = Label.new()
+				syn_lbl.text = desc
+				syn_lbl.add_theme_font_size_override("font_size", 12)
+				syn_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+				vbox.add_child(syn_lbl)
+
+	add_child(stats_panel)
+
+func _add_stat_line(parent: Control, label_text: String, value_text: String) -> void:
+	var hbox = HBoxContainer.new()
+	var lbl = Label.new()
+	lbl.text = label_text
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_font_size_override("font_size", 14)
+	hbox.add_child(lbl)
+	var val = Label.new()
+	val.text = value_text
+	val.add_theme_font_size_override("font_size", 14)
+	val.add_theme_color_override("font_color", Color(0.9, 0.9, 0.5))
+	hbox.add_child(val)
+	parent.add_child(hbox)
 
 func _on_options() -> void:
 	if options_panel and is_instance_valid(options_panel):
@@ -328,6 +431,9 @@ func _on_menu() -> void:
 	if options_panel and is_instance_valid(options_panel):
 		options_panel.queue_free()
 		options_panel = null
+	if stats_panel and is_instance_valid(stats_panel):
+		stats_panel.queue_free()
+		stats_panel = null
 	get_tree().paused = false
 	GameManager.paused = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

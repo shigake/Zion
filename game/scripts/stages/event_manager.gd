@@ -27,6 +27,10 @@ var _recent_kills: Array[float] = []  # timestamps of recent kills
 var _fever_active: bool = false
 var _fever_prev_damage_mult: float = 1.0
 var _fever_prev_speed_mult: float = 1.0
+var _fever_canvas: CanvasLayer = null
+var _fever_overlay: ColorRect = null
+var _fever_pulse_tween: Tween = null
+var _fever_shake_timer: float = 0.0
 
 # Merchant state
 var _merchant_node: Node3D = null
@@ -73,6 +77,13 @@ func _process(delta: float) -> void:
 	# Check fever mode trigger (20+ kills in 5 seconds)
 	if not _fever_active and _recent_kills.size() >= 20:
 		_start_fever_mode()
+
+	# Fever mode screen shake pulse every 2 seconds
+	if _fever_active:
+		_fever_shake_timer += delta
+		if _fever_shake_timer >= 2.0:
+			_fever_shake_timer = 0.0
+			ScreenEffects.shake(0.06)
 
 	# Evento ativo
 	if active_event != "":
@@ -487,6 +498,25 @@ func _start_fever_mode() -> void:
 
 	# Clear recent kills to prevent re-triggering immediately
 	_recent_kills.clear()
+	_fever_shake_timer = 0.0
+
+	# Create warm-colored overlay
+	_fever_canvas = CanvasLayer.new()
+	_fever_canvas.name = "FeverCanvas"
+	_fever_canvas.layer = 10
+	_fever_overlay = ColorRect.new()
+	_fever_overlay.name = "FeverOverlay"
+	_fever_overlay.color = Color(1.0, 0.7, 0.1, 0.1)
+	_fever_overlay.anchors_preset = Control.PRESET_FULL_RECT
+	_fever_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fever_canvas.add_child(_fever_overlay)
+	add_child(_fever_canvas)
+
+	# Pulse overlay alpha using a looping tween (sine wave between 0.05 and 0.15)
+	_fever_pulse_tween = create_tween()
+	_fever_pulse_tween.set_loops()
+	_fever_pulse_tween.tween_property(_fever_overlay, "color:a", 0.15, 0.8).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_fever_pulse_tween.tween_property(_fever_overlay, "color:a", 0.05, 0.8).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 	# Timer to end fever mode after 10 seconds
 	var timer = get_tree().create_timer(10.0)
@@ -498,6 +528,16 @@ func _end_fever_mode() -> void:
 	_fever_active = false
 	GameManager.perm_damage_mult = _fever_prev_damage_mult
 	GameManager.speed_mult = _fever_prev_speed_mult
+
+	# Remove fever overlay
+	if _fever_pulse_tween and _fever_pulse_tween.is_valid():
+		_fever_pulse_tween.kill()
+		_fever_pulse_tween = null
+	if is_instance_valid(_fever_canvas):
+		_fever_canvas.queue_free()
+		_fever_canvas = null
+	_fever_overlay = null
+
 	event_ended.emit("fever_mode")
 
 # ---- Portal Dimensional (min 20) ----
