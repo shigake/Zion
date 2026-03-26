@@ -475,8 +475,10 @@ func _update_ally_hp() -> void:
 			hbox.add_child(name_lbl)
 			var bar = ProgressBar.new()
 			bar.custom_minimum_size = Vector2(100, 12)
-			bar.max_value = GameManager.get_effective_max_hp()
-			bar.value = GameManager.player_hp
+			var ally_max_hp = MultiplayerManager.get_player_max_hp(p.player_id)
+			var ally_hp = MultiplayerManager.get_player_hp(p.player_id)
+			bar.max_value = ally_max_hp
+			bar.value = ally_hp
 			bar.show_percentage = false
 			var fill = StyleBoxFlat.new()
 			fill.bg_color = colors.get(p.player_id, Color.GREEN)
@@ -493,8 +495,10 @@ func _update_ally_hp() -> void:
 			if p.is_local:
 				continue
 			if p.player_id in _ally_bars and is_instance_valid(_ally_bars[p.player_id]):
-				_ally_bars[p.player_id].max_value = GameManager.get_effective_max_hp()
-				_ally_bars[p.player_id].value = GameManager.player_hp
+				var ally_max_hp = MultiplayerManager.get_player_max_hp(p.player_id)
+				var ally_hp = MultiplayerManager.get_player_hp(p.player_id)
+				_ally_bars[p.player_id].max_value = ally_max_hp
+				_ally_bars[p.player_id].value = ally_hp
 
 func _update_ping() -> void:
 	if not ping_label or not MultiplayerManager.is_online:

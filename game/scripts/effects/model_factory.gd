@@ -982,7 +982,9 @@ func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 	## Tenta carregar modelo 3D (.glb, .fbx, .gltf). Retorna null se nao encontrar.
 	for ext in [".glb", ".fbx", ".gltf"]:
 		var try_path = path.get_basename() + ext
-		if not ResourceLoader.exists(try_path):
+		var exists = ResourceLoader.exists(try_path)
+		print("[ModelFactory] Trying: %s -> exists=%s" % [try_path, exists])
+		if not exists:
 			continue
 		var scene = load(try_path) as PackedScene
 		if scene == null:

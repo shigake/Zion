@@ -3,6 +3,7 @@ extends Node
 ## Gerencia multiplayer online: lobby, conexões, spawn de jogadores.
 ## Arquitetura: Host-Client (listen server) via ENet (fallback sem Steam).
 ## Para Steam: substituir ENet por Steam Networking Sockets via GodotSteam.
+## Host Migration: quando host desconecta, próximo peer assume.
 
 signal player_connected(peer_id: int)
 signal player_disconnected(peer_id: int)
@@ -10,17 +11,20 @@ signal server_created()
 signal connection_failed()
 signal connection_succeeded()
 signal all_players_loaded()
+signal host_migrated(new_host_id: int)
+signal player_hp_updated(peer_id: int, hp: int, max_hp: int)
 
 const DEFAULT_PORT := 7777
 const MAX_PLAYERS := 4
 
 enum NetworkBackend { ENET, STEAM }
 
-# peer_id -> {name, character, ready, loaded}
+# peer_id -> {name, character, ready, loaded, hp, max_hp}
 var players: Dictionary = {}
 var local_player_id: int = 0
 var is_online: bool = false
 var backend: int = NetworkBackend.ENET
+var current_host_id: int = 1  # Track who is the current host
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -121,11 +125,18 @@ func _on_peer_connected(id: int) -> void:
 	player_connected.emit(id)
 	# Send our info to the new peer
 	register_player_info.rpc_id(id, local_player_id, GameManager.selected_character)
+	# Se somos o server, enviar HP do host
+	if multiplayer.is_server():
+		sync_player_hp.rpc_id(id, local_player_id, GameManager.player_hp, GameManager.get_effective_max_hp())
 
 func _on_peer_disconnected(id: int) -> void:
 	LogManager.info("MP", "Peer disconnected: %d" % id)
 	players.erase(id)
 	player_disconnected.emit(id)
+
+	# Host migration: se o host desconectou, promover próximo peer
+	if id == current_host_id:
+		_trigger_host_migration()
 
 func _on_connected_to_server() -> void:
 	local_player_id = multiplayer.get_unique_id()
@@ -133,6 +144,8 @@ func _on_connected_to_server() -> void:
 	_register_player(local_player_id, GameManager.selected_character)
 	# Tell everyone about us
 	register_player_info.rpc(local_player_id, GameManager.selected_character)
+	# Sync initial HP
+	sync_player_hp.rpc(local_player_id, GameManager.player_hp, GameManager.get_effective_max_hp())
 	connection_succeeded.emit()
 	LogManager.info("MP", "Connected as %d" % local_player_id)
 
@@ -146,7 +159,64 @@ func _register_player(id: int, character_id: String) -> void:
 		"character": character_id,
 		"ready": false,
 		"loaded": false,
+		"hp": 100,
+		"max_hp": 100,
 	}
+
+# ---- Host Migration ----
+
+func _trigger_host_migration() -> void:
+	if not is_online:
+		return
+
+	# Se somos o server, não fazer nada
+	if multiplayer.is_server():
+		LogManager.info("MP", "Host still alive, no migration needed")
+		return
+
+	# Client: procura o próximo peer para promover
+	var remaining_peers = players.keys()
+	if remaining_peers.is_empty():
+		LogManager.error("MP", "No peers remaining, game disconnected")
+		return
+
+	# Primeiro peer restante se torna o novo host
+	remaining_peers.sort()
+	var new_host = remaining_peers[0]
+
+	LogManager.info("MP", "Host migration: %d is new host" % new_host)
+	_announce_new_host.rpc(new_host)
+
+@rpc("any_peer", "reliable")
+func _announce_new_host(new_host_id: int) -> void:
+	current_host_id = new_host_id
+	host_migrated.emit(new_host_id)
+	LogManager.info("MP", "New host announced: %d" % new_host_id)
+
+# ---- HP Sync ----
+
+@rpc("any_peer", "unreliable")
+func sync_player_hp(peer_id: int, hp: int, max_hp: int) -> void:
+	if peer_id in players:
+		players[peer_id]["hp"] = hp
+		players[peer_id]["max_hp"] = max_hp
+		player_hp_updated.emit(peer_id, hp, max_hp)
+
+# Chamado quando o jogador local toma dano
+func notify_damage(hp: int, max_hp: int) -> void:
+	if is_online:
+		sync_player_hp.rpc(local_player_id, hp, max_hp)
+
+# Obter HP de um aliado remoto
+func get_player_hp(peer_id: int) -> int:
+	if peer_id in players:
+		return players[peer_id].get("hp", 100)
+	return 100
+
+func get_player_max_hp(peer_id: int) -> int:
+	if peer_id in players:
+		return players[peer_id].get("max_hp", 100)
+	return 100
 
 # ---- Helpers ----
 func is_host() -> bool:

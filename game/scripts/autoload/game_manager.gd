@@ -219,6 +219,8 @@ func take_damage(amount: int) -> void:
 				if nearest:
 					nearest.call_deferred("take_damage", reflected, "physical")
 	player_hp -= reduced
+	# Sync HP com aliados no multiplayer
+	MultiplayerManager.notify_damage(player_hp, get_effective_max_hp())
 	# Lifesteal tracking (applied by weapons on hit, not here)
 	if player_hp <= 0:
 		# One-shot kill detection (possible balance issue or bug)
@@ -242,6 +244,8 @@ func heal(amount: int) -> void:
 		heal_amount *= 2
 	var effective_max = get_effective_max_hp()
 	player_hp = mini(player_hp + heal_amount, effective_max)
+	# Sync HP com aliados no multiplayer
+	MultiplayerManager.notify_damage(player_hp, effective_max)
 
 func get_effective_max_hp() -> int:
 	return int(player_max_hp * max_hp_mult)
