@@ -74,17 +74,17 @@ var translations: Dictionary = {
 	"buy": {"pt": "Comprar (%d)", "en": "Buy (%d)"},
 	"max_level": {"pt": "Max", "en": "Max"},
 
-	# ---- Events (gameplay — mantém uppercase por ser anúncio dramático) ----
-	"event_golden_horde": {"pt": "HORDA DOURADA!", "en": "GOLDEN HORDE!"},
-	"event_treasure_goblin": {"pt": "TREASURE GOBLIN!", "en": "TREASURE GOBLIN!"},
-	"event_merchant": {"pt": "MERCADOR APARECEU!", "en": "MERCHANT APPEARED!"},
-	"event_roulette": {"pt": "RODA DA FORTUNA!", "en": "WHEEL OF FORTUNE!"},
-	"event_eclipse": {"pt": "ECLIPSE!", "en": "ECLIPSE!"},
-	"event_meteor_shower": {"pt": "CHUVA DE METEOROS!", "en": "METEOR SHOWER!"},
-	"event_angel_challenge": {"pt": "DESAFIO DO ANJO!", "en": "ANGEL CHALLENGE!"},
-	"event_portal_dimensional": {"pt": "PORTAL DIMENSIONAL!", "en": "DIMENSIONAL PORTAL!"},
-	"event_chest_mimic": {"pt": "BAÚ MIMIC!", "en": "MIMIC CHEST!"},
-	"event_fever_mode": {"pt": "FEVER MODE!", "en": "FEVER MODE!"},
+	# ---- Events (gameplay) ----
+	"event_golden_horde": {"pt": "Horda dourada!", "en": "Golden horde!"},
+	"event_treasure_goblin": {"pt": "Treasure goblin!", "en": "Treasure goblin!"},
+	"event_merchant": {"pt": "Mercador apareceu!", "en": "Merchant appeared!"},
+	"event_roulette": {"pt": "Roda da fortuna!", "en": "Wheel of fortune!"},
+	"event_eclipse": {"pt": "Eclipse!", "en": "Eclipse!"},
+	"event_meteor_shower": {"pt": "Chuva de meteoros!", "en": "Meteor shower!"},
+	"event_angel_challenge": {"pt": "Desafio do anjo!", "en": "Angel challenge!"},
+	"event_portal_dimensional": {"pt": "Portal dimensional!", "en": "Dimensional portal!"},
+	"event_chest_mimic": {"pt": "Baú mimic!", "en": "Mimic chest!"},
+	"event_fever_mode": {"pt": "Fever mode!", "en": "Fever mode!"},
 
 	# ---- Tutorial ----
 	"tutorial_move": {"pt": "WASD para mover, SPACE para dash", "en": "WASD to move, SPACE to dash"},
@@ -112,12 +112,12 @@ var translations: Dictionary = {
 	"controls_title": {"pt": "Controles", "en": "Controls"},
 
 	# ---- Merchant ----
-	"merchant_title": {"pt": "Mercador - Compre com cristais", "en": "Merchant - Buy with crystals"},
+	"merchant_title": {"pt": "Mercador - compre com cristais", "en": "Merchant - buy with crystals"},
 	"merchant_bought": {"pt": "Comprado!", "en": "Bought!"},
 	"merchant_close": {"pt": "Fechar", "en": "Close"},
 
 	# ---- Leaderboard ----
-	"leaderboard_title": {"pt": "Leaderboard - Modo endless", "en": "Leaderboard - Endless mode"},
+	"leaderboard_title": {"pt": "Leaderboard - modo endless", "en": "Leaderboard - endless mode"},
 	"leaderboard_empty": {"pt": "Nenhuma run registrada ainda!", "en": "No runs recorded yet!"},
 	"leaderboard_header": {"pt": "  #   | Tempo      | Kills  | Personagem | Data", "en": "  #   | Time       | Kills  | Character  | Date"},
 
@@ -170,7 +170,7 @@ var translations: Dictionary = {
 	"mode_boss_rush": {"pt": "Boss rush", "en": "Boss rush"},
 	"mode_hyper": {"pt": "Hyper", "en": "Hyper"},
 	"mode_normal_desc": {"pt": "Modo normal — 30 min, boss no final", "en": "Normal mode — 30 min, boss at the end"},
-	"mode_endless_desc": {"pt": "Modo endless — Sem limite, sobreviva o máximo", "en": "Endless mode — No limit, survive as long as you can"},
+	"mode_endless_desc": {"pt": "Modo endless — sem limite, sobreviva o máximo", "en": "Endless mode — no limit, survive as long as you can"},
 	"mode_boss_rush_desc": {"pt": "Boss rush — 10 bosses em sequência!", "en": "Boss rush — 10 bosses in sequence!"},
 	"mode_hyper_desc": {"pt": "Modo hyper — 2x velocidade, 2x spawns, 2x rewards", "en": "Hyper mode — 2x speed, 2x spawns, 2x rewards"},
 

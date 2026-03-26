@@ -7,14 +7,14 @@ extends CanvasLayer
 @onready var label: Label = $CenterContainer/PanelContainer/Label
 
 var tutorial_steps: Array[Dictionary] = [
-	{"id": "move", "text": "WASD para mover, SPACE para dash", "duration": 5.0},
-	{"id": "dash_tip", "text": "Dash te deixa invulneravel! Use para esquivar", "duration": 4.0},
-	{"id": "xp", "text": "Inimigos dropam XP! Colete para subir de nivel", "duration": 5.0},
-	{"id": "levelup", "text": "Escolha um upgrade! Armas ou itens passivos", "duration": 5.0},
-	{"id": "crystals", "text": "Cristais dropam dos inimigos. Gaste na loja entre runs!", "duration": 5.0},
-	{"id": "events", "text": "Eventos especiais acontecem durante a run!", "duration": 4.0},
-	{"id": "synergy", "text": "2 armas do mesmo elemento = sinergia bonus!", "duration": 5.0},
-	{"id": "evolution", "text": "Arma max + Item max = Evolucao! Aperte E", "duration": 5.0},
+	{"id": "move", "locale_key": "tutorial_move", "duration": 5.0},
+	{"id": "dash_tip", "locale_key": "tutorial_dash", "duration": 4.0},
+	{"id": "xp", "locale_key": "tutorial_xp", "duration": 5.0},
+	{"id": "levelup", "locale_key": "tutorial_levelup", "duration": 5.0},
+	{"id": "crystals", "locale_key": "tutorial_crystals", "duration": 5.0},
+	{"id": "events", "locale_key": "tutorial_events", "duration": 4.0},
+	{"id": "synergy", "locale_key": "tutorial_synergy", "duration": 5.0},
+	{"id": "evolution", "locale_key": "tutorial_evolution", "duration": 5.0},
 ]
 
 var shown_steps: Dictionary = {}  # step_id -> true
@@ -91,7 +91,7 @@ func _show_step(step_id: String) -> void:
 	if step.is_empty():
 		return
 
-	label.text = step["text"]
+	label.text = LocaleManager.tr_key(step["locale_key"])
 	center.visible = true
 
 	# Create hide timer

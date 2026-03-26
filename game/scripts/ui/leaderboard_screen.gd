@@ -8,8 +8,10 @@ extends Control
 
 func _ready() -> void:
 	back_btn.pressed.connect(_on_back)
-	title_label.text = "LEADERBOARD - Modo Endless"
+	back_btn.focus_mode = Control.FOCUS_ALL
+	title_label.text = LocaleManager.tr_key("leaderboard_title")
 	_build_leaderboard()
+	GamepadUI.notify_menu_opened()
 
 func _build_leaderboard() -> void:
 	for child in list_container.get_children():
@@ -18,14 +20,14 @@ func _build_leaderboard() -> void:
 	var entries = SaveManager.get_leaderboard()
 	if entries.is_empty():
 		var empty_label = Label.new()
-		empty_label.text = "Nenhuma run registrada ainda!"
+		empty_label.text = LocaleManager.tr_key("leaderboard_empty")
 		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		list_container.add_child(empty_label)
 		return
 
 	# Header
 	var header = Label.new()
-	header.text = "  #   | Tempo      | Kills  | Personagem | Data"
+	header.text = LocaleManager.tr_key("leaderboard_header")
 	header.add_theme_font_size_override("font_size", 16)
 	list_container.add_child(header)
 

@@ -212,7 +212,7 @@ func _spawn_merchant() -> void:
 
 	# Label
 	var label = Label3D.new()
-	label.text = "MERCADOR"
+	label.text = "Mercador"
 	label.font_size = 32
 	label.outline_size = 4
 	label.modulate = Color(0.2, 0.5, 0.9)
@@ -276,18 +276,18 @@ func _show_merchant_ui() -> void:
 	panel.add_child(vbox)
 
 	var title = Label.new()
-	title.text = "MERCADOR - Compre com Cristais"
+	title.text = LocaleManager.tr_key("merchant_title")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	for item in _merchant_items:
 		var btn = Button.new()
-		btn.text = "%s - %d Cristais" % [item["name"], item["cost"]]
+		btn.text = "%s - %d cristais" % [item["name"], item["cost"]]
 		btn.pressed.connect(_buy_merchant_item.bind(item, btn))
 		vbox.add_child(btn)
 
 	var close_btn = Button.new()
-	close_btn.text = "Fechar"
+	close_btn.text = LocaleManager.tr_key("merchant_close")
 	close_btn.pressed.connect(func():
 		canvas.queue_free()
 		GameManager.paused = false
@@ -303,7 +303,7 @@ func _buy_merchant_item(item: Dictionary, btn: Button) -> void:
 	if GameManager.crystals_this_run >= item["cost"]:
 		GameManager.crystals_this_run -= item["cost"]
 		GameManager.add_item(item["id"])
-		btn.text = item["name"] + " - COMPRADO!"
+		btn.text = item["name"] + " - " + LocaleManager.tr_key("merchant_bought")
 		btn.disabled = true
 
 func _cleanup_merchant() -> void:

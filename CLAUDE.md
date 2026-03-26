@@ -128,6 +128,10 @@ O label de versão aparece no canto inferior direito do menu principal.
 Se a tarefa for grande (feature nova), incrementar a **minor** (ex: 1.1.0 → 1.2.0).
 Se for fix/ajuste pequeno, incrementar o **patch** (ex: 1.1.0 → 1.1.1).
 
+## Text Style
+
+All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Proper nouns keep their capitalization.
+
 ## Current Phase
 
 Fases 0-2 do PRD substancialmente implementadas. Fases 3-6 parcialmente (conteudo das 10 fases existe, multiplayer basico existe, mas falta polish).

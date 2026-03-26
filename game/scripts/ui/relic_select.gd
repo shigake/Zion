@@ -34,7 +34,7 @@ func _ready() -> void:
 func _load_items() -> void:
 	all_items.clear()
 	# Opcao sem reliquia
-	all_items.append({"id": "", "data": {"name": "Nenhuma", "description": "Sem bonus"}})
+	all_items.append({"id": "", "data": {"name": LocaleManager.tr_key("no_relic"), "description": LocaleManager.tr_key("no_relic_desc")}})
 	for relic_id in RelicDB.get_all_relic_ids():
 		var data = RelicDB.get_relic(relic_id)
 		all_items.append({"id": relic_id, "data": data})
@@ -137,10 +137,10 @@ func _create_mode_buttons() -> void:
 	mode_hbox.add_theme_constant_override("separation", 8)
 	mode_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	var modes = [
-		{"id": "normal", "label": "Normal", "method": "_on_mode_normal"},
-		{"id": "endless", "label": "Endless", "method": "_on_mode_endless"},
-		{"id": "boss_rush", "label": "Boss Rush", "method": "_on_mode_boss_rush"},
-		{"id": "hyper", "label": "Hyper", "method": "_on_mode_hyper"},
+		{"id": "normal", "label": LocaleManager.tr_key("mode_normal"), "method": "_on_mode_normal"},
+		{"id": "endless", "label": LocaleManager.tr_key("mode_endless"), "method": "_on_mode_endless"},
+		{"id": "boss_rush", "label": LocaleManager.tr_key("mode_boss_rush"), "method": "_on_mode_boss_rush"},
+		{"id": "hyper", "label": LocaleManager.tr_key("mode_hyper"), "method": "_on_mode_hyper"},
 	]
 	for mode in modes:
 		var btn = Button.new()
@@ -155,19 +155,19 @@ func _create_mode_buttons() -> void:
 
 func _on_mode_normal() -> void:
 	selected_mode = "normal"
-	info_label.text = "Modo Normal — 30 min, boss no final"
+	info_label.text = LocaleManager.tr_key("mode_normal_desc")
 
 func _on_mode_endless() -> void:
 	selected_mode = "endless"
-	info_label.text = "Modo Endless — Sem limite, sobreviva o maximo"
+	info_label.text = LocaleManager.tr_key("mode_endless_desc")
 
 func _on_mode_boss_rush() -> void:
 	selected_mode = "boss_rush"
-	info_label.text = "Boss Rush — 10 bosses em sequencia!"
+	info_label.text = LocaleManager.tr_key("mode_boss_rush_desc")
 
 func _on_mode_hyper() -> void:
 	selected_mode = "hyper"
-	info_label.text = "Hyper Mode — 2x velocidade, 2x spawns, 2x rewards"
+	info_label.text = LocaleManager.tr_key("mode_hyper_desc")
 
 func _on_start() -> void:
 	GameManager.selected_relic = selected_relic

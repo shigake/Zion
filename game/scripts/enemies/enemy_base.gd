@@ -130,17 +130,23 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		return
 	# Apply resistance multiplier (minimum 1 damage)
 	var resist_mult: float = resistances.get(damage_type, 1.0)
-	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult))
+	var is_crit = GameManager.crit_chance > 0.0 and randf() < GameManager.crit_chance
+	var crit_mult = GameManager.crit_multiplier if is_crit else 1.0
+	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult * crit_mult))
 	hp -= final_damage
 	GameManager.total_damage_dealt += final_damage
 	AchievementManager.on_attack()
 	_hit_count += 1
 
-	# Damage number - color by type
-	var dmg_color: Color = _get_damage_color(damage_type)
+	# Damage number - color by type (crits are yellow and larger)
+	var dmg_color: Color
+	if is_crit:
+		dmg_color = Color(1.0, 0.9, 0.2)
+	else:
+		dmg_color = _get_damage_color(damage_type)
 	var dmg_label = Label3D.new()
-	dmg_label.text = str(final_damage)
-	dmg_label.font_size = 28
+	dmg_label.text = str(final_damage) + ("!" if is_crit else "")
+	dmg_label.font_size = 40 if is_crit else 28
 	dmg_label.outline_size = 6
 	dmg_label.modulate = dmg_color
 	dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

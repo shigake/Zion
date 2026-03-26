@@ -181,6 +181,8 @@ func _die() -> void:
 	if is_dead:
 		return
 	# Boss death: slow motion + massive particles
+	ScreenEffects.hit_freeze(0.15)
+	ScreenEffects.shake(0.5)
 	ScreenEffects.slow_motion(1.0, 0.2)
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 30)
 	ParticleFactory.spawn_explosion_particles(global_position, 5.0)

@@ -11,6 +11,7 @@ config/features=PackedStringArray("4.3", "Forward Plus")
 
 [autoload]
 
+LogManager="*res://scripts/autoload/log_manager.gd"
 GameManager="*res://scripts/autoload/game_manager.gd"
 WeaponDB="*res://scripts/autoload/weapon_db.gd"
 ItemDB="*res://scripts/autoload/item_db.gd"

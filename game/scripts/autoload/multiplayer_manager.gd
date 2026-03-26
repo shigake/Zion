@@ -58,14 +58,14 @@ func create_server(port: int = DEFAULT_PORT) -> Error:
 	var peer = result[0]
 	var error = result[1]
 	if error != OK:
-		push_error("Failed to create server: %s" % error)
+		LogManager.error("MP", "Failed to create server: %s" % error)
 		return error
 	multiplayer.multiplayer_peer = peer
 	local_player_id = 1
 	is_online = true
 	_register_player(1, GameManager.selected_character)
 	server_created.emit()
-	print("[MP] Server created on port %d" % port)
+	LogManager.info("MP", "Server created on port %d" % port)
 	return OK
 
 # ---- Client ----
@@ -74,11 +74,11 @@ func join_server(address: String = "127.0.0.1", port: int = DEFAULT_PORT) -> Err
 	var peer = result[0]
 	var error = result[1]
 	if error != OK:
-		push_error("Failed to connect: %s" % error)
+		LogManager.error("MP", "Failed to connect: %s" % error)
 		return error
 	multiplayer.multiplayer_peer = peer
 	is_online = true
-	print("[MP] Connecting to %s:%d..." % [address, port])
+	LogManager.info("MP", "Connecting to %s:%d..." % [address, port])
 	return OK
 
 func disconnect_from_game() -> void:
@@ -117,13 +117,13 @@ func player_loaded(peer_id: int) -> void:
 
 # ---- Callbacks ----
 func _on_peer_connected(id: int) -> void:
-	print("[MP] Peer connected: %d" % id)
+	LogManager.info("MP", "Peer connected: %d" % id)
 	player_connected.emit(id)
 	# Send our info to the new peer
 	register_player_info.rpc_id(id, local_player_id, GameManager.selected_character)
 
 func _on_peer_disconnected(id: int) -> void:
-	print("[MP] Peer disconnected: %d" % id)
+	LogManager.info("MP", "Peer disconnected: %d" % id)
 	players.erase(id)
 	player_disconnected.emit(id)
 
@@ -134,10 +134,10 @@ func _on_connected_to_server() -> void:
 	# Tell everyone about us
 	register_player_info.rpc(local_player_id, GameManager.selected_character)
 	connection_succeeded.emit()
-	print("[MP] Connected as %d" % local_player_id)
+	LogManager.info("MP", "Connected as %d" % local_player_id)
 
 func _on_connection_failed() -> void:
-	push_error("[MP] Connection failed!")
+	LogManager.error("MP", "Connection failed!")
 	is_online = false
 	connection_failed.emit()
 

@@ -103,7 +103,7 @@ func _unlock(id: String) -> void:
 	SaveManager.save_game()
 	var ach = achievements.get(id, {})
 	achievement_unlocked.emit(id, ach.get("name", id))
-	print("[Achievement] Unlocked: %s" % ach.get("name", id))
+	LogManager.info("Achievement", "Unlocked: %s" % ach.get("name", id))
 
 func on_attack() -> void:
 	_run_attacks += 1

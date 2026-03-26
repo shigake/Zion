@@ -40,8 +40,8 @@ func _show() -> void:
 			if absf(leaderboard[i].get("time", 0) - GameManager.game_time) < 1.0:
 				crystals_label.text += "\n" + LocaleManager.tr_key("leaderboard_rank") % (i + 1)
 				break
-	# Stage completion check
-	if GameManager.game_mode == "normal":
+	# Stage completion check (only on victory)
+	if GameManager.game_mode == "normal" and GameManager.is_victory:
 		var stage_key = "stage_" + GameManager.selected_stage
 		var stage_name = LocaleManager.tr_key(stage_key)
 		crystals_label.text += "\n" + LocaleManager.tr_key("stage_complete") % stage_name

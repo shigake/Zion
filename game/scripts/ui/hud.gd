@@ -166,7 +166,7 @@ func _update_time() -> void:
 	time_label.text = "%02d:%02d" % [t / 60, t % 60]
 
 func _update_kills() -> void:
-	kill_label.text = "Kills: %d | Cristais: %d" % [GameManager.total_kills, GameManager.crystals_this_run]
+	kill_label.text = LocaleManager.tr_key("kills") % [GameManager.total_kills, GameManager.crystals_this_run]
 
 func _on_level_up(_new_level: int) -> void:
 	level_label.text = "Lv. %d" % _new_level
@@ -181,7 +181,7 @@ func _on_game_over() -> void:
 	pass
 
 func _on_achievement_unlocked(_id: String, name: String) -> void:
-	event_label.text = "ACHIEVEMENT: %s" % name
+	event_label.text = LocaleManager.tr_key("achievement_label") % name
 	event_label.visible = true
 	event_label.modulate = Color(1.0, 0.85, 0.2)
 	event_label.scale = Vector2(1.5, 1.5)
@@ -196,18 +196,18 @@ func _on_event_started(event_name: String) -> void:
 	# Fallback to hardcoded if locale key not found
 	if text == locale_key:
 		var display_names = {
-			"golden_horde": "HORDA DOURADA!",
-			"treasure_goblin": "TREASURE GOBLIN!",
-			"merchant": "MERCADOR APARECEU!",
-			"roulette": "RODA DA FORTUNA!",
-			"eclipse": "ECLIPSE!",
-			"meteor_shower": "CHUVA DE METEOROS!",
-			"angel_challenge": "DESAFIO DO ANJO!",
-			"portal_dimensional": "PORTAL DIMENSIONAL!",
-			"chest_mimic": "BAU MIMIC!",
-			"fever_mode": "FEVER MODE!",
+			"golden_horde": "Horda dourada!",
+			"treasure_goblin": "Treasure goblin!",
+			"merchant": "Mercador apareceu!",
+			"roulette": "Roda da fortuna!",
+			"eclipse": "Eclipse!",
+			"meteor_shower": "Chuva de meteoros!",
+			"angel_challenge": "Desafio do anjo!",
+			"portal_dimensional": "Portal dimensional!",
+			"chest_mimic": "Baú mimic!",
+			"fever_mode": "Fever mode!",
 		}
-		text = display_names.get(event_name, event_name.to_upper())
+		text = display_names.get(event_name, event_name.capitalize())
 	event_label.text = text
 	event_label.visible = true
 

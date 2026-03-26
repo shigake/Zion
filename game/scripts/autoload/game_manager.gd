@@ -76,6 +76,8 @@ var accuracy_mult: float = 1.0
 var low_hp_damage_bonus: float = 0.0
 var player_hidden: bool = false
 var electric_damage_mult: float = 1.0
+var crit_chance: float = 0.0
+var crit_multiplier: float = 2.0
 
 # Map boundary (half-size, stages are 200x200 so default ±95 with margin)
 var map_half_size: float = 95.0
@@ -86,6 +88,7 @@ var aim_direction: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	_register_input_actions()
+	LogManager.info("Game", "GameManager ready")
 
 func _process(delta: float) -> void:
 	if not paused and not is_game_over:
@@ -188,10 +191,24 @@ func take_damage(amount: int) -> void:
 		return  # Dodged!
 	AudioManager.play_sfx("player_hurt")
 	var reduced = maxi(1, amount - perm_armor)
-	# Thorns
+	# Thorns: reflect damage to nearest enemy
 	if thorns_mult > 0.0:
 		var reflected = int(reduced * thorns_mult)
-		# Thorns dano e aplicado ao inimigo pelo player script
+		if reflected > 0:
+			var enemies = get_tree().get_nodes_in_group("enemies")
+			var players = get_tree().get_nodes_in_group("players")
+			if not players.is_empty() and not enemies.is_empty():
+				var player_pos = players[0].global_position
+				var nearest: Node3D = null
+				var min_dist = INF
+				for e in enemies:
+					if is_instance_valid(e) and e.has_method("take_damage"):
+						var d = player_pos.distance_squared_to(e.global_position)
+						if d < min_dist:
+							min_dist = d
+							nearest = e
+				if nearest:
+					nearest.call_deferred("take_damage", reflected, "physical")
 	player_hp -= reduced
 	# Lifesteal tracking (applied by weapons on hit, not here)
 	if player_hp <= 0:
@@ -203,6 +220,7 @@ func take_damage(amount: int) -> void:
 			return
 		player_hp = 0
 		is_game_over = true
+		LogManager.info("Game", "Player died at %.1fs, kills: %d, level: %d" % [game_time, total_kills, player_level])
 		player_died.emit()
 		game_over.emit()
 
@@ -388,6 +406,8 @@ func reset() -> void:
 	low_hp_damage_bonus = 0.0
 	player_hidden = false
 	electric_damage_mult = 1.0
+	crit_chance = 0.0
+	crit_multiplier = 2.0
 	manual_aim = false
 	aim_direction = Vector3.ZERO
 	revives_remaining = 0
@@ -397,6 +417,9 @@ func reset() -> void:
 	_apply_permanent_upgrades()
 	_apply_character_bonuses()
 	_apply_relic()
+	LogManager.info("Game", "Run reset: char=%s, stage=%s, relic=%s, mode=%s" % [
+		selected_character, selected_stage, selected_relic, game_mode
+	])
 
 func _apply_permanent_upgrades() -> void:
 	var hp_lvl = SaveManager.get_upgrade_level("max_hp")
@@ -450,6 +473,15 @@ func _apply_character_bonuses() -> void:
 		dodge_chance += char_data["dodge_bonus"]
 	if "low_hp_damage_bonus" in char_data:
 		low_hp_damage_bonus = char_data["low_hp_damage_bonus"]
+	# Ronin: 20% crit chance
+	if selected_character == "ronin":
+		crit_chance = 0.20
+	# Pirata: +20% crystal drop
+	if selected_character == "pirata":
+		luck_mult += 0.20  # Affects crystal drop rates
+	# Necro: +1 summon (applied via extra_projectiles which summon weapons use)
+	if selected_character == "necro":
+		extra_projectiles += 1
 	# Vampiro: lifesteal natural
 	if selected_character == "vampiro":
 		lifesteal += 0.03
@@ -515,4 +547,7 @@ func get_accuracy_spread() -> float:
 func end_run() -> void:
 	# Cristais = kills / 5 (minimo)
 	crystals_this_run = maxi(total_kills / 5, 10)
+	LogManager.info("Game", "Run ended: %s on %s, time: %.1fs, kills: %d, crystals: %d, victory: %s" % [
+		selected_character, selected_stage, game_time, total_kills, crystals_this_run, str(is_victory)
+	])
 	SaveManager.end_run(crystals_this_run, game_time, total_kills)

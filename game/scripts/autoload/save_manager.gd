@@ -43,9 +43,12 @@ func save_game() -> void:
 	if file:
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
+	else:
+		LogManager.error("Save", "Failed to write save file: %s" % SAVE_PATH)
 
 func load_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
+		LogManager.info("Save", "No save file found, using defaults")
 		return
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file:
@@ -54,10 +57,16 @@ func load_game() -> void:
 		if result == OK:
 			var loaded = json.data
 			if loaded is Dictionary:
-				# Merge para manter campos novos
 				for key in loaded:
 					data[key] = loaded[key]
+				LogManager.info("Save", "Save loaded: %d crystals, %d runs" % [data.get("crystals", 0), data.get("total_runs", 0)])
+			else:
+				LogManager.error("Save", "Save file has invalid format (not a Dictionary)")
+		else:
+			LogManager.error("Save", "Failed to parse save file: %s" % json.get_error_message())
 		file.close()
+	else:
+		LogManager.error("Save", "Failed to open save file: %s" % SAVE_PATH)
 
 func _restore_audio() -> void:
 	var master = data.get("volume_master", 1.0)

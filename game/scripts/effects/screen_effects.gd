@@ -23,6 +23,9 @@ func _ready() -> void:
 	add_child(_vignette_canvas)
 
 func _process(delta: float) -> void:
+	# Re-acquire camera if freed (after scene change)
+	if not camera or not is_instance_valid(camera):
+		camera = get_viewport().get_camera_3d()
 	if shake_amount > 0.01 and camera:
 		camera.h_offset = randf_range(-shake_amount, shake_amount)
 		camera.v_offset = randf_range(-shake_amount, shake_amount)

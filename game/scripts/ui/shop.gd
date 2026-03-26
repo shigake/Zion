@@ -26,7 +26,7 @@ func _build_shop() -> void:
 		var label = Label.new()
 		label.custom_minimum_size = Vector2(300, 0)
 		if maxed:
-			label.text = "%s — Lv.%d (MAX)" % [data["name"], current]
+			label.text = "%s — Lv.%d (%s)" % [data["name"], current, LocaleManager.tr_key("max_level")]
 		else:
 			label.text = "%s — Lv.%d/%d — %s" % [data["name"], current, data["max_level"], data["description"]]
 		hbox.add_child(label)

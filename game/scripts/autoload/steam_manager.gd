@@ -15,11 +15,11 @@ func _ready() -> void:
 			is_available = true
 			steam_id = steam.getSteamID()
 			steam_name = steam.getPersonaName()
-			print("[Steam] Initialized: %s (ID: %d)" % [steam_name, steam_id])
+			LogManager.info("Steam", "Initialized: %s (ID: %d)" % [steam_name, steam_id])
 		else:
-			push_warning("[Steam] Init failed: %s" % init_result)
+			LogManager.warn("Steam", "Init failed: %s" % init_result)
 	else:
-		print("[Steam] GodotSteam not available, using ENet fallback")
+		LogManager.info("Steam", "GodotSteam not available, using ENet fallback")
 
 func _process(_delta: float) -> void:
 	if is_available:

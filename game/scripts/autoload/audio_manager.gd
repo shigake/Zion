@@ -81,13 +81,13 @@ func play_music(stream_name: String) -> void:
 	if stream_name == _current_music:
 		return
 	if stream_name not in _valid_music:
-		print("[AudioManager] Unknown music: " + stream_name)
+		LogManager.warn("Audio", "Unknown music: " + stream_name)
 		return
 
 	# Try to load the audio file
 	var stream = _load_audio("res://assets/audio/music/" + stream_name, [".ogg", ".mp3", ".wav"])
 	if stream == null:
-		print("[AudioManager] Music (no file): " + stream_name)
+		LogManager.debug("Audio", "Music (no file): " + stream_name)
 		_current_music = stream_name
 		return
 
@@ -106,10 +106,10 @@ func play_music(stream_name: String) -> void:
 	_current_music = stream_name
 	_music_player.stream = stream
 	_music_player.play()
-	print("[AudioManager] Music: " + stream_name)
+	LogManager.info("Audio", "Music: " + stream_name)
 
 func stop_music() -> void:
-	print("[AudioManager] Music stopped")
+	LogManager.info("Audio", "Music stopped")
 	_current_music = ""
 	_music_player.stop()
 	_music_player.stream = null
@@ -119,7 +119,7 @@ func stop_music() -> void:
 
 func play_sfx(sfx_name: String) -> void:
 	if sfx_name not in _valid_sfx:
-		print("[AudioManager] Unknown SFX: " + sfx_name)
+		LogManager.warn("Audio", "Unknown SFX: " + sfx_name)
 		return
 
 	# Cooldown check: prevent same SFX spamming
@@ -133,7 +133,7 @@ func play_sfx(sfx_name: String) -> void:
 	# Try to load the audio file
 	var stream = _load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
 	if stream == null:
-		print("[AudioManager] SFX (no file): " + sfx_name)
+		LogManager.debug("Audio", "SFX (no file): " + sfx_name)
 		return
 
 	# Find an available SFX player from the pool
