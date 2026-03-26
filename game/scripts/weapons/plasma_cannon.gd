@@ -114,7 +114,7 @@ func _fire_beam(level: int) -> void:
 	beam_mesh.scale = Vector3(area_scale, 1.0, area_scale)
 
 	# Screen shake and SFX
-	ScreenEffects.shake(0.4, 10.0)
+	ScreenEffects.shake(0.4)
 	AudioManager.play_sfx("hit")
 
 func _on_body_entered(body: Node3D) -> void:

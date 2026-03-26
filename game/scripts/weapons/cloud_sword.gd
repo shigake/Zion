@@ -69,7 +69,7 @@ func _attack(level: int) -> void:
 	slash_mesh.scale = Vector3.ONE * area_scale
 
 	# Screen shake — golpe pesado
-	ScreenEffects.shake(0.4, 10.0)
+	ScreenEffects.shake(0.4)
 	AudioManager.play_sfx("hit")
 
 func _on_body_entered(body: Node3D) -> void:

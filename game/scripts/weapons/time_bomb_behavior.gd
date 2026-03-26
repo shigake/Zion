@@ -50,7 +50,7 @@ func _explode() -> void:
 
 	# Visual feedback
 	ParticleFactory.spawn_hit_particles(global_position, Color(1.0, 0.4, 0.0))
-	ScreenEffects.shake(0.3, 8.0)
+	ScreenEffects.shake(0.3)
 	AudioManager.play_sfx("hit")
 
 	# Damage all enemies in radius

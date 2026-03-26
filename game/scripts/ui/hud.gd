@@ -26,12 +26,10 @@ var _prev_item_hash: String = ""
 # Multiplayer ally HP bars
 var ally_hp_container: VBoxContainer = null
 var ping_label: Label = null
+var ally_arrows: Dictionary = {}  # peer_id -> Label
 
 # Minimap
 var minimap: Control = null
-
-# Ally direction arrows
-var ally_arrows: Dictionary = {}
 
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)

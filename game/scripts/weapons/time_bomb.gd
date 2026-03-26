@@ -123,7 +123,7 @@ func _explode() -> void:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "fire")
 
-	ScreenEffects.shake(0.5, 12.0)
+	ScreenEffects.shake(0.5)
 	AudioManager.play_sfx("hit")
 	ParticleFactory.spawn_hit_particles(pos, Color(1.0, 0.4, 0.0))
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.7, 0.1))

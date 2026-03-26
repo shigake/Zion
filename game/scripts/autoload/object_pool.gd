@@ -17,6 +17,12 @@ func get_instance(scene: PackedScene) -> Node:
 	while not pool.is_empty():
 		var instance = pool.pop_back()
 		if is_instance_valid(instance):
+			# Ensure it's not still in the scene tree
+			if instance.get_parent():
+				instance.get_parent().remove_child(instance)
+			# Reset for reuse if method exists
+			if instance.has_method("_reset_for_reuse"):
+				instance._reset_for_reuse()
 			_active[path] += 1
 			return instance
 
