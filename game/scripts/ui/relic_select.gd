@@ -89,6 +89,33 @@ func _prev_page() -> void:
 func _next_page() -> void:
 	_show_page(current_page + 1)
 
+func _setup_grid_focus() -> void:
+	var buttons: Array[Button] = []
+	for child in grid.get_children():
+		if child is Button and not child.disabled:
+			child.focus_mode = Control.FOCUS_ALL
+			buttons.append(child)
+	for i in range(buttons.size()):
+		var btn = buttons[i]
+		if i % COLUMNS > 0 and i > 0:
+			btn.focus_neighbor_left = buttons[i - 1].get_path()
+		if i % COLUMNS < COLUMNS - 1 and i < buttons.size() - 1:
+			btn.focus_neighbor_right = buttons[i + 1].get_path()
+		if i >= COLUMNS:
+			btn.focus_neighbor_top = buttons[i - COLUMNS].get_path()
+		if i + COLUMNS < buttons.size():
+			btn.focus_neighbor_bottom = buttons[i + COLUMNS].get_path()
+		else:
+			btn.focus_neighbor_bottom = start_btn.get_path()
+	start_btn.focus_mode = Control.FOCUS_ALL
+	back_btn.focus_mode = Control.FOCUS_ALL
+	start_btn.focus_neighbor_bottom = back_btn.get_path()
+	back_btn.focus_neighbor_top = start_btn.get_path()
+	if not buttons.is_empty():
+		start_btn.focus_neighbor_top = buttons[buttons.size() - 1].get_path()
+		back_btn.focus_neighbor_bottom = buttons[0].get_path()
+		buttons[0].grab_focus()
+
 func _select_relic(relic_id: String, data: Dictionary, btn: Button = null) -> void:
 	selected_relic = relic_id
 	info_label.text = "%s — %s" % [data["name"], data["description"]]
