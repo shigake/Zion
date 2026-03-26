@@ -23,6 +23,12 @@ var tank_scene: PackedScene = preload("res://scenes/enemies/tank.tscn")
 var swarm_scene: PackedScene = preload("res://scenes/enemies/swarm.tscn")
 var mimic_scene: PackedScene = preload("res://scenes/enemies/mimic.tscn")
 
+# Ghost variants (cemetery-specific)
+var ghost_white_scene: PackedScene = preload("res://scenes/enemies/ghost_white.tscn")
+var ghost_green_scene: PackedScene = preload("res://scenes/enemies/ghost_green.tscn")
+var ghost_blue_scene: PackedScene = preload("res://scenes/enemies/ghost_blue.tscn")
+var ghost_red_scene: PackedScene = preload("res://scenes/enemies/ghost_red.tscn")
+
 # Boss
 var boss_spawned: bool = false
 var miniboss_spawned: bool = false
@@ -101,21 +107,35 @@ func _spawn_wave(mult: float) -> void:
 		enemy.global_position = spawn_pos
 		GameManager.enemies_alive += 1
 
+func _pick_ghost_variant() -> Node3D:
+	## No cemiterio, retorna um dos 4 fantasminhas coloridos. Fora do cemiterio, ghost normal.
+	if GameManager.selected_stage == "cemetery" or GameManager.selected_stage == "":
+		var ghost_scenes = [ghost_white_scene, ghost_green_scene, ghost_blue_scene, ghost_red_scene]
+		return ObjectPool.get_instance(ghost_scenes[rng.randi() % ghost_scenes.size()])
+	return ObjectPool.get_instance(ghost_scene)
+
 func _pick_enemy(minute: float) -> Node3D:
 	var roll = rng.randf()
+	var is_cemetery = GameManager.selected_stage == "cemetery" or GameManager.selected_stage == ""
 
 	if minute < 2.0:
-		# So slimes
+		# So slimes (+ fantasminhas brancos no cemiterio)
+		if is_cemetery and roll > 0.8:
+			return ObjectPool.get_instance(ghost_white_scene)
 		return ObjectPool.get_instance(slime_scene)
 	elif minute < 5.0:
-		# Slimes + Bats
-		if roll < 0.7:
+		# Slimes + Bats (+ fantasminhas no cemiterio)
+		if is_cemetery and roll < 0.25:
+			return _pick_ghost_variant()
+		elif roll < 0.7:
 			return ObjectPool.get_instance(slime_scene)
 		else:
 			return ObjectPool.get_instance(bat_scene)
 	elif minute < 8.0:
-		# Skeletons + Bats + Slimes Grandes
-		if roll < 0.3:
+		# Skeletons + Bats + Slimes Grandes (+ fantasminhas)
+		if is_cemetery and roll < 0.2:
+			return _pick_ghost_variant()
+		elif roll < 0.3:
 			return ObjectPool.get_instance(slime_scene)
 		elif roll < 0.5:
 			return ObjectPool.get_instance(bat_scene)
@@ -130,7 +150,7 @@ func _pick_enemy(minute: float) -> Node3D:
 		elif roll < 0.4:
 			return ObjectPool.get_instance(zombie_scene)
 		elif roll < 0.6:
-			return ObjectPool.get_instance(ghost_scene)
+			return _pick_ghost_variant()
 		elif roll < 0.8:
 			return ObjectPool.get_instance(bomber_scene)
 		else:
@@ -143,11 +163,21 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(swarm_scene)
 		elif roll < 0.13:
 			return ObjectPool.get_instance(mimic_scene)
+		if is_cemetery:
+			var scenes = [slime_scene, bat_scene, skeleton_scene, zombie_scene,
+				ghost_white_scene, ghost_green_scene, ghost_blue_scene, ghost_red_scene,
+				slime_big_scene, archer_scene, bomber_scene]
+			return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])
 		var scenes = [slime_scene, bat_scene, skeleton_scene, zombie_scene, ghost_scene,
 			slime_big_scene, archer_scene, bomber_scene]
 		return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])
 	else:
 		# Endgame: tudo, mais tanks, bombers, swarms
+		if is_cemetery:
+			var scenes = [skeleton_scene, zombie_scene, ghost_white_scene, ghost_green_scene,
+				ghost_blue_scene, ghost_red_scene, bomber_scene, slime_big_scene,
+				archer_scene, tank_scene, swarm_scene, mimic_scene]
+			return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])
 		var scenes = [skeleton_scene, zombie_scene, ghost_scene, bomber_scene,
 			slime_big_scene, archer_scene, tank_scene, swarm_scene, mimic_scene]
 		return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])

@@ -396,6 +396,191 @@ func create_ghost_model() -> Node3D:
 
 	return root
 
+func create_ghost_white_model() -> Node3D:
+	## Fantasminha Branco: corpo etéreo brilhante, olhos grandes
+	var root = Node3D.new()
+
+	# Corpo (cone invertido suave)
+	var body = _mesh(CylinderMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.top_radius = 0.22
+	body.mesh.bottom_radius = 0.06
+	body.mesh.height = 0.65
+	root.add_child(body)
+
+	# Cabeca arredondada
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.05, 0))
+	head.mesh.radius = 0.24
+	head.mesh.height = 0.44
+	root.add_child(head)
+
+	# Olhos grandes brilhantes
+	var eye_l = _mesh(SphereMesh.new(), Vector3(0.09, 1.05, 0.17))
+	eye_l.mesh.radius = 0.05
+	eye_l.mesh.height = 0.1
+	root.add_child(eye_l)
+	_mark_as_accent(eye_l)
+
+	var eye_r = _mesh(SphereMesh.new(), Vector3(-0.09, 1.05, 0.17))
+	eye_r.mesh.radius = 0.05
+	eye_r.mesh.height = 0.1
+	root.add_child(eye_r)
+	_mark_as_accent(eye_r)
+
+	# Boca oval (accent para brilho)
+	var mouth = _mesh(SphereMesh.new(), Vector3(0, 0.93, 0.18))
+	mouth.mesh.radius = 0.04
+	mouth.mesh.height = 0.06
+	root.add_child(mouth)
+	_mark_as_accent(mouth)
+
+	return root
+
+func create_ghost_green_model() -> Node3D:
+	## Fantasminha Verde: forma ondulada, olhos maliciosos
+	var root = Node3D.new()
+
+	# Corpo ondulado
+	var body = _mesh(CylinderMesh.new(), Vector3(0, 0.55, 0))
+	body.mesh.top_radius = 0.2
+	body.mesh.bottom_radius = 0.08
+	body.mesh.height = 0.6
+	root.add_child(body)
+
+	# Cabeca
+	var head = _mesh(SphereMesh.new(), Vector3(0, 0.98, 0))
+	head.mesh.radius = 0.22
+	head.mesh.height = 0.4
+	root.add_child(head)
+
+	# Olhos finos (maliciosos)
+	var eye_l = _mesh(BoxMesh.new(), Vector3(0.08, 1.0, 0.16))
+	eye_l.mesh.size = Vector3(0.08, 0.03, 0.04)
+	root.add_child(eye_l)
+	_mark_as_accent(eye_l)
+
+	var eye_r = _mesh(BoxMesh.new(), Vector3(-0.08, 1.0, 0.16))
+	eye_r.mesh.size = Vector3(0.08, 0.03, 0.04)
+	root.add_child(eye_r)
+	_mark_as_accent(eye_r)
+
+	# Cauda ondulada extra
+	var tail = _mesh(CylinderMesh.new(), Vector3(0, 0.2, 0))
+	tail.mesh.top_radius = 0.08
+	tail.mesh.bottom_radius = 0.0
+	tail.mesh.height = 0.25
+	root.add_child(tail)
+
+	return root
+
+func create_ghost_blue_model() -> Node3D:
+	## Fantasminha Azul: forma robusta, olhos tristes
+	var root = Node3D.new()
+
+	# Corpo mais largo
+	var body = _mesh(CylinderMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.top_radius = 0.25
+	body.mesh.bottom_radius = 0.1
+	body.mesh.height = 0.65
+	root.add_child(body)
+
+	# Cabeca grande
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.05, 0))
+	head.mesh.radius = 0.25
+	head.mesh.height = 0.46
+	root.add_child(head)
+
+	# Olhos grandes tristes (posicionados mais embaixo)
+	var eye_l = _mesh(SphereMesh.new(), Vector3(0.1, 1.0, 0.18))
+	eye_l.mesh.radius = 0.05
+	eye_l.mesh.height = 0.1
+	root.add_child(eye_l)
+	_mark_as_accent(eye_l)
+
+	var eye_r = _mesh(SphereMesh.new(), Vector3(-0.1, 1.0, 0.18))
+	eye_r.mesh.radius = 0.05
+	eye_r.mesh.height = 0.1
+	root.add_child(eye_r)
+	_mark_as_accent(eye_r)
+
+	# Bracinhos curtos
+	var arm_l = _mesh(CylinderMesh.new(), Vector3(0.22, 0.75, 0.05))
+	arm_l.mesh.top_radius = 0.03
+	arm_l.mesh.bottom_radius = 0.04
+	arm_l.mesh.height = 0.2
+	arm_l.rotation.z = deg_to_rad(-30)
+	root.add_child(arm_l)
+
+	var arm_r = _mesh(CylinderMesh.new(), Vector3(-0.22, 0.75, 0.05))
+	arm_r.mesh.top_radius = 0.03
+	arm_r.mesh.bottom_radius = 0.04
+	arm_r.mesh.height = 0.2
+	arm_r.rotation.z = deg_to_rad(30)
+	root.add_child(arm_r)
+
+	return root
+
+func create_ghost_red_model() -> Node3D:
+	## Fantasminha Vermelho: mais agressivo, estrela amarela no peito
+	var root = Node3D.new()
+
+	# Corpo (cone invertido)
+	var body = _mesh(CylinderMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.top_radius = 0.23
+	body.mesh.bottom_radius = 0.07
+	body.mesh.height = 0.7
+	root.add_child(body)
+
+	# Cabeca
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.08, 0))
+	head.mesh.radius = 0.23
+	head.mesh.height = 0.42
+	root.add_child(head)
+
+	# Olhos raivosos (accent para glow)
+	var eye_l = _mesh(SphereMesh.new(), Vector3(0.09, 1.08, 0.16))
+	eye_l.mesh.radius = 0.045
+	eye_l.mesh.height = 0.09
+	root.add_child(eye_l)
+	_mark_as_accent(eye_l)
+
+	var eye_r = _mesh(SphereMesh.new(), Vector3(-0.09, 1.08, 0.16))
+	eye_r.mesh.radius = 0.045
+	eye_r.mesh.height = 0.09
+	root.add_child(eye_r)
+	_mark_as_accent(eye_r)
+
+	# Sobrancelhas inclinadas (raivosas)
+	var brow_l = _mesh(BoxMesh.new(), Vector3(0.09, 1.14, 0.17))
+	brow_l.mesh.size = Vector3(0.08, 0.02, 0.02)
+	brow_l.rotation.z = deg_to_rad(15)
+	root.add_child(brow_l)
+
+	var brow_r = _mesh(BoxMesh.new(), Vector3(-0.09, 1.14, 0.17))
+	brow_r.mesh.size = Vector3(0.08, 0.02, 0.02)
+	brow_r.rotation.z = deg_to_rad(-15)
+	root.add_child(brow_r)
+
+	# ★ ESTRELA AMARELA no peito — feita com 2 triangulos (prismas finos cruzados)
+	# Triangulo 1 (apontando pra cima) — prisma achatado
+	var star_up = _mesh(CylinderMesh.new(), Vector3(0, 0.78, 0.18))
+	star_up.mesh.top_radius = 0.0
+	star_up.mesh.bottom_radius = 0.1
+	star_up.mesh.height = 0.12
+	star_up.mesh.radial_segments = 3
+	root.add_child(star_up)
+	star_up.set_meta("star", true)
+
+	# Triangulo 2 (apontando pra baixo) — prisma invertido
+	var star_down = _mesh(CylinderMesh.new(), Vector3(0, 0.78, 0.18))
+	star_down.mesh.top_radius = 0.1
+	star_down.mesh.bottom_radius = 0.0
+	star_down.mesh.height = 0.12
+	star_down.mesh.radial_segments = 3
+	root.add_child(star_down)
+	star_down.set_meta("star", true)
+
+	return root
+
 func create_boss_model() -> Node3D:
 	## Boss Necromancer: corpo grande + capa + coroa + orbe de poder
 	var root = Node3D.new()
@@ -586,7 +771,15 @@ func apply_model_materials(root: Node3D, base_color: Color) -> void:
 	## Aplica cel-shader a todos os meshes do modelo, glow nos accents
 	for child in root.get_children():
 		if child is MeshInstance3D:
-			if child.has_meta("accent"):
+			if child.has_meta("star"):
+				# Estrela amarela brilhante (para GhostRed)
+				var mat = StandardMaterial3D.new()
+				mat.albedo_color = Color(1.0, 0.9, 0.1)
+				mat.emission_enabled = true
+				mat.emission = Color(1.0, 0.85, 0.0)
+				mat.emission_energy_multiplier = 4.0
+				child.material_override = mat
+			elif child.has_meta("accent"):
 				# Accent: olhos, orbes — glow branco/brilhante
 				var mat = StandardMaterial3D.new()
 				mat.albedo_color = Color.WHITE
@@ -613,6 +806,10 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		"Skeleton", "SkeletonArcher": return create_skeleton_model()
 		"ZombieRunner": return create_zombie_model()
 		"Ghost": return create_ghost_model()
+		"GhostWhite": return create_ghost_white_model()
+		"GhostGreen": return create_ghost_green_model()
+		"GhostBlue": return create_ghost_blue_model()
+		"GhostRed": return create_ghost_red_model()
 		"Tank": return create_tank_model()
 		"Bomber": return create_bomber_model()
 		"BossNecromancer": return create_boss_model()
