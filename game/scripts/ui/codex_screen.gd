@@ -250,9 +250,14 @@ func _populate_grid() -> void:
 func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool, type_color: Color, type_icon: String) -> void:
 	AudioManager.play_sfx("menu_click")
 
-	var hint = detail_panel.get_node_or_null("MarginContainer/VBoxContainer/Hint")
-	if hint:
-		hint.visible = false
+	# Esconde hint se existir
+	for child in detail_panel.get_children():
+		if child.name == "MarginContainer":
+			for mc in child.get_children():
+				if mc.name == "VBoxContainer":
+					var hint = mc.get_node_or_null("Hint")
+					if hint:
+						hint.visible = false
 
 	detail_portrait.visible = true
 	var icon_node = detail_portrait.get_node_or_null("PortraitIcon")

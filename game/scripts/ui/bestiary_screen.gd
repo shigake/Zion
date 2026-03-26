@@ -250,10 +250,14 @@ func _populate_grid() -> void:
 func _show_enemy_details(enemy_name: String, data: Dictionary, is_seen: bool, kills: int) -> void:
 	AudioManager.play_sfx("menu_click")
 
-	# Esconde hint
-	var hint = detail_panel.get_node_or_null("MarginContainer/VBoxContainer/Hint")
-	if hint:
-		hint.visible = false
+	# Esconde hint se existir
+	for child in detail_panel.get_children():
+		if child.name == "MarginContainer":
+			for mc in child.get_children():
+				if mc.name == "VBoxContainer":
+					var hint = mc.get_node_or_null("Hint")
+					if hint:
+						hint.visible = false
 
 	# Atualiza portrait
 	detail_portrait.visible = true

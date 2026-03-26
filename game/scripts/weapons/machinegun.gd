@@ -5,6 +5,12 @@ extends Node3D
 var attack_timer: float = 0.0
 var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
+func _ready() -> void:
+	# Adiciona modelo visual da arma
+	var mesh = MeshInstance3D.new()
+	add_child(mesh)
+	ModelFactory.attach_weapon_model(mesh, "machinegun")
+
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return

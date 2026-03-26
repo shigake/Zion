@@ -54,6 +54,10 @@ func _on_level_up(_new_level: int) -> void:
 	pending_levels += 1
 	if not panel.visible:
 		_show_choices()
+	elif panel.visible and GameManager.paused:
+		# Se o painel ja esta visivel mas paused foi true por outro motivo (ex: pause menu),
+		# garante que continua visivel
+		panel.visible = true
 
 func _show_choices() -> void:
 	options = _generate_options()
@@ -90,6 +94,9 @@ func _show_choices() -> void:
 	banish_mode = false
 	panel.visible = true
 	GameManager.paused = true
+	# Garante que a tree nao sera pausada enquanto o levelup estiver aberto
+	# (permite que pause_menu funcione normalmente por cima)
+	get_tree().paused = false
 	# Gamepad: foca na primeira opcao
 	_setup_levelup_focus()
 	GamepadUI.notify_menu_opened()

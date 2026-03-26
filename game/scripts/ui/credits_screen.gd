@@ -34,6 +34,8 @@ func _ready() -> void:
 	# Garante que o botao funciona mesmo se a tree estiver pausada
 	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.pressed.connect(_on_back)
+	# Permitir unhandled input globalmente
+	self.set_process_unhandled_input(true)
 
 	# --- Layout: viewport ocupa a parte inferior (65%) ---
 	viewport_container.anchor_top = 0.35
