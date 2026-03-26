@@ -36,6 +36,10 @@ func _evolve() -> void:
 	if tutorial and tutorial.has_method("show_evolution_step"):
 		tutorial.show_evolution_step()
 	EvolutionDB.evolve_weapon(evolution_id)
+	Telemetry.send_event("evolution", {
+		"id": evolution_id, "time": GameManager.game_time,
+		"stage": GameManager.selected_stage,
+	})
 	var evo = EvolutionDB.get_evolution(evolution_id)
 
 	# Aumenta dano da arma evoluida

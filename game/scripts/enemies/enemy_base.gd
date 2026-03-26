@@ -216,6 +216,13 @@ func _die() -> void:
 	# One Punch achievement: boss killed in 1 hit
 	if is_in_group("boss") and _hit_count <= 1:
 		AchievementManager.on_boss_killed_one_hit()
+	# Telemetry: boss killed event
+	if is_in_group("boss"):
+		Telemetry.send_event("boss_killed", {
+			"boss_name": name,
+			"stage": GameManager.selected_stage,
+			"time": GameManager.game_time,
+		})
 	GameManager.enemies_alive -= 1
 	GameManager.total_kills += 1
 	var pos = global_position if is_inside_tree() else Vector3.ZERO

@@ -144,6 +144,20 @@ func _build_ui() -> void:
 	lang_hbox.add_child(lang_btn)
 	vbox.add_child(lang_hbox)
 
+	# ---- Telemetry ----
+	var tele_hbox = HBoxContainer.new()
+	var tele_label = Label.new()
+	tele_label.text = LocaleManager.tr_key("telemetry_toggle")
+	tele_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tele_hbox.add_child(tele_label)
+	var tele_check = CheckButton.new()
+	tele_check.button_pressed = SaveManager.data.get("telemetry_enabled", true)
+	tele_check.toggled.connect(func(pressed):
+		Telemetry.set_enabled(pressed)
+	)
+	tele_hbox.add_child(tele_check)
+	vbox.add_child(tele_hbox)
+
 	vbox.add_child(HSeparator.new())
 
 	# ---- Keybindings ----

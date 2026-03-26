@@ -108,6 +108,7 @@ var translations: Dictionary = {
 	"window_borderless": {"pt": "Borderless", "en": "Borderless"},
 	"resolution": {"pt": "Resolução", "en": "Resolution"},
 	"language": {"pt": "Idioma", "en": "Language"},
+	"telemetry_toggle": {"pt": "Enviar dados anônimos", "en": "Send anonymous data"},
 	"reset_keybindings": {"pt": "Resetar controles", "en": "Reset controls"},
 	"controls_title": {"pt": "Controles", "en": "Controls"},
 

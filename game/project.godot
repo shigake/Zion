@@ -37,6 +37,7 @@ MultiMeshManager="*res://scripts/autoload/multimesh_manager.gd"
 AutoTester="*res://scripts/autoload/auto_tester.gd"
 GamepadUI="*res://scripts/autoload/gamepad_ui.gd"
 DebugOverlay="*res://scripts/ui/debug_overlay.gd"
+Telemetry="*res://scripts/autoload/telemetry.gd"
 
 [display]
 
