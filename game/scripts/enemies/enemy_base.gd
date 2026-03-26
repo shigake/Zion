@@ -144,16 +144,18 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		dmg_color = Color(1.0, 0.9, 0.2)
 	else:
 		dmg_color = _get_damage_color(damage_type)
-	var dmg_label = Label3D.new()
+	var pos = global_position
+	var dmg_label = ParticleFactory.get_damage_number()
 	dmg_label.text = str(final_damage) + ("!" if is_crit else "")
 	dmg_label.font_size = 40 if is_crit else 28
 	dmg_label.outline_size = 6
 	dmg_label.modulate = dmg_color
 	dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	var pos = global_position
 	dmg_label.global_position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
-	dmg_label.set_script(preload("res://scripts/effects/damage_number.gd"))
-	get_tree().current_scene.call_deferred("add_child", dmg_label)
+	dmg_label.visible = true
+	dmg_label.set_process(true)
+	if not dmg_label.get_parent():
+		get_tree().current_scene.call_deferred("add_child", dmg_label)
 
 	# Hit particles + screen shake
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color.WHITE)

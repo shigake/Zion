@@ -111,6 +111,7 @@ func _on_enemy_killed(position: Vector3, xp_value: int) -> void:
 
 func _start_event(event_name: String) -> void:
 	active_event = event_name
+	GameManager.events_triggered.append(event_name)
 	event_started.emit(event_name)
 
 	match event_name:

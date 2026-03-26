@@ -1,14 +1,20 @@
 extends CanvasLayer
 
-## Tela de Game Over com stats e cristais ganhos.
+## Tela de Game Over com stats detalhados da run.
 
 @onready var panel: PanelContainer = $Panel
-@onready var time_label: Label = $Panel/VBox/TimeLabel
-@onready var kills_label: Label = $Panel/VBox/KillsLabel
-@onready var level_label: Label = $Panel/VBox/LevelLabel
-@onready var crystals_label: Label = $Panel/VBox/CrystalsLabel
-@onready var retry_btn: Button = $Panel/VBox/RetryButton
-@onready var menu_btn: Button = $Panel/VBox/MenuButton
+@onready var time_label: Label = $Panel/ScrollContainer/VBox/TimeLabel
+@onready var kills_label: Label = $Panel/ScrollContainer/VBox/KillsLabel
+@onready var level_label: Label = $Panel/ScrollContainer/VBox/LevelLabel
+@onready var crystals_label: Label = $Panel/ScrollContainer/VBox/CrystalsLabel
+@onready var dps_label: Label = $Panel/ScrollContainer/VBox/DPSLabel
+@onready var peak_enemies_label: Label = $Panel/ScrollContainer/VBox/PeakEnemiesLabel
+@onready var weapons_label: Label = $Panel/ScrollContainer/VBox/WeaponsLabel
+@onready var items_label: Label = $Panel/ScrollContainer/VBox/ItemsLabel
+@onready var evolutions_label: Label = $Panel/ScrollContainer/VBox/EvolutionsLabel
+@onready var events_label: Label = $Panel/ScrollContainer/VBox/EventsLabel
+@onready var retry_btn: Button = $Panel/ScrollContainer/VBox/RetryButton
+@onready var menu_btn: Button = $Panel/ScrollContainer/VBox/MenuButton
 
 @onready var overlay: ColorRect = $Overlay
 
@@ -33,6 +39,64 @@ func _show() -> void:
 	kills_label.text = LocaleManager.tr_key("kills_stat") % GameManager.total_kills
 	level_label.text = LocaleManager.tr_key("level_stat") % GameManager.player_level
 	crystals_label.text = LocaleManager.tr_key("crystals_earned") % GameManager.crystals_this_run
+
+	# DPS
+	var dps: float = 0.0
+	if GameManager.game_time > 0:
+		dps = GameManager.total_damage_dealt / GameManager.game_time
+	dps_label.text = "DPS: %d" % int(dps)
+
+	# Peak enemies
+	peak_enemies_label.text = "Peak Enemies: %d" % GameManager.peak_enemies
+
+	# Weapons obtained with levels
+	var weapon_strs: Array[String] = []
+	for w in GameManager.player_weapons:
+		var data = WeaponDB.weapons.get(w["id"], {})
+		var wname = data.get("name", w["id"])
+		weapon_strs.append("%s Lv.%d" % [wname, w["level"]])
+	if weapon_strs.is_empty():
+		weapons_label.text = "Armas: -"
+	else:
+		weapons_label.text = "Armas: " + ", ".join(weapon_strs)
+
+	# Items obtained with levels
+	var item_strs: Array[String] = []
+	for it in GameManager.player_items:
+		var data = ItemDB.get_item(it["id"])
+		var iname = data.get("name", it["id"])
+		item_strs.append("%s Lv.%d" % [iname, it["level"]])
+	if item_strs.is_empty():
+		items_label.text = "Itens: -"
+	else:
+		items_label.text = "Itens: " + ", ".join(item_strs)
+
+	# Evolutions triggered
+	if EvolutionDB.evolved_weapons.is_empty():
+		evolutions_label.text = ""
+		evolutions_label.visible = false
+	else:
+		var evo_names: Array[String] = []
+		for evo_id in EvolutionDB.evolved_weapons:
+			var evo = EvolutionDB.get_evolution(evo_id)
+			evo_names.append(evo.get("name", evo_id))
+		evolutions_label.text = "Evolucoes: " + ", ".join(evo_names)
+		evolutions_label.visible = true
+
+	# Events that happened
+	if GameManager.events_triggered.is_empty():
+		events_label.text = ""
+		events_label.visible = false
+	else:
+		# Deduplicate and capitalize event names
+		var unique_events: Array[String] = []
+		for ev in GameManager.events_triggered:
+			var display = ev.replace("_", " ").capitalize()
+			if display not in unique_events:
+				unique_events.append(display)
+		events_label.text = "Eventos: " + ", ".join(unique_events)
+		events_label.visible = true
+
 	# Leaderboard rank para endless mode
 	if GameManager.game_mode == "endless":
 		var leaderboard = SaveManager.get_leaderboard()

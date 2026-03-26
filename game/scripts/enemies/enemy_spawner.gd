@@ -376,33 +376,25 @@ func _spawn_miniboss() -> void:
 	var mb_config: Dictionary
 	match stage:
 		"forest":
-			mb_config = {"hp": 600, "dmg": 30, "spd": 6.0, "color": Color(0.1, 0.0, 0.2)}
+			mb_config = {"hp": 600, "dmg": 30, "spd": 6.0, "color": Color(0.1, 0.0, 0.2), "name": "Shadow Treant"}
 		"farm":
-			mb_config = {"hp": 800, "dmg": 35, "spd": 8.0, "color": Color(0.5, 0.5, 0.5)}
+			mb_config = {"hp": 800, "dmg": 35, "spd": 8.0, "color": Color(0.5, 0.5, 0.5), "name": "Mad Bull"}
 		"tokyo":
-			# Mecha Ninja: rapido com dash
-			mb_config = {"hp": 700, "dmg": 30, "spd": 7.0, "color": Color(0.2, 0.2, 0.3)}
+			mb_config = {"hp": 700, "dmg": 30, "spd": 7.0, "color": Color(0.2, 0.2, 0.3), "name": "Mecha Ninja"}
 		"volcano":
-			# Cerberus: 3 cabecas (representado como tanque triplo)
-			mb_config = {"hp": 1000, "dmg": 40, "spd": 3.0, "color": Color(0.6, 0.1, 0.0)}
+			mb_config = {"hp": 1000, "dmg": 40, "spd": 3.0, "color": Color(0.6, 0.1, 0.0), "name": "Cerberus"}
 		"ocean":
-			# Kraken Bebe: tentaculos
-			mb_config = {"hp": 800, "dmg": 35, "spd": 4.0, "color": Color(0.1, 0.3, 0.5)}
+			mb_config = {"hp": 800, "dmg": 35, "spd": 4.0, "color": Color(0.1, 0.3, 0.5), "name": "Baby Kraken"}
 		"arena":
-			# Gladiador Campeao: parry
-			mb_config = {"hp": 900, "dmg": 45, "spd": 5.0, "color": Color(0.7, 0.5, 0.1)}
+			mb_config = {"hp": 900, "dmg": 45, "spd": 5.0, "color": Color(0.7, 0.5, 0.1), "name": "Champion Gladiator"}
 		"space":
-			# Alien Queen: spawna ovos
-			mb_config = {"hp": 850, "dmg": 30, "spd": 3.5, "color": Color(0.3, 0.6, 0.2)}
+			mb_config = {"hp": 850, "dmg": 30, "spd": 3.5, "color": Color(0.3, 0.6, 0.2), "name": "Alien Queen"}
 		"castle":
-			# Vampiresa: charm
-			mb_config = {"hp": 700, "dmg": 35, "spd": 6.0, "color": Color(0.5, 0.0, 0.2)}
+			mb_config = {"hp": 700, "dmg": 35, "spd": 6.0, "color": Color(0.5, 0.0, 0.2), "name": "Vampiress"}
 		"candy":
-			# Bolo de 3 Andares
-			mb_config = {"hp": 1200, "dmg": 25, "spd": 2.0, "color": Color(0.9, 0.6, 0.7)}
+			mb_config = {"hp": 1200, "dmg": 25, "spd": 2.0, "color": Color(0.9, 0.6, 0.7), "name": "Triple Layer Cake"}
 		_:
-			# Zombie Gigante (default/cemetery)
-			mb_config = {"hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)}
+			mb_config = {"hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15), "name": "Giant Zombie"}
 
 	boss = zombie_scene.instantiate()
 	_apply_stage_skin(boss)
@@ -417,6 +409,7 @@ func _spawn_miniboss() -> void:
 	add_child(boss)
 	boss.global_position = spawn_pos
 	GameManager.enemies_alive += 1
+	GameManager.miniboss_spawned.emit(mb_config["name"])
 
 func _spawn_boss() -> void:
 	# No endless mode, no boss

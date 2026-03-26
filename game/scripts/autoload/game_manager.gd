@@ -8,6 +8,7 @@ signal player_died()
 signal game_over()
 signal weapon_added(weapon_id: String)
 signal weapon_upgraded(weapon_id: String, new_level: int)
+signal miniboss_spawned(boss_name: String)
 
 # Tempo e dificuldade
 var game_time: float = 0.0
@@ -15,6 +16,8 @@ var enemies_alive: int = 0
 var max_enemies: int = 500
 var total_kills: int = 0
 var total_damage_dealt: int = 0
+var peak_enemies: int = 0
+var events_triggered: Array[String] = []
 var paused: bool = false
 var is_game_over: bool = false
 var is_victory: bool = false  # true se boss morreu, false se jogador morreu
@@ -93,6 +96,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not paused and not is_game_over:
 		game_time += delta
+		if enemies_alive > peak_enemies:
+			peak_enemies = enemies_alive
 
 func _register_input_actions() -> void:
 	_add_key_action("move_up", KEY_W)
@@ -369,6 +374,8 @@ func reset() -> void:
 	enemies_alive = 0
 	total_kills = 0
 	total_damage_dealt = 0
+	peak_enemies = 0
+	events_triggered.clear()
 	paused = false
 	is_game_over = false
 	is_victory = false

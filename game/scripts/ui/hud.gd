@@ -59,6 +59,9 @@ func _ready() -> void:
 		em.event_started.connect(_on_event_started)
 		em.event_ended.connect(_on_event_ended)
 
+	# Miniboss name display
+	GameManager.miniboss_spawned.connect(_on_miniboss_spawned)
+
 	# Achievement notification
 	AchievementManager.achievement_unlocked.connect(_on_achievement_unlocked)
 
@@ -251,6 +254,17 @@ func _on_event_started(event_name: String) -> void:
 
 func _on_event_ended(_event_name: String) -> void:
 	event_label.visible = false
+
+func _on_miniboss_spawned(boss_name: String) -> void:
+	event_label.text = "MINIBOSS: %s" % boss_name
+	event_label.visible = true
+	event_label.modulate = Color(1.0, 0.3, 0.3)
+	event_label.scale = Vector2(1.5, 1.5)
+	var tween = create_tween()
+	tween.tween_property(event_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	tween.parallel().tween_property(event_label, "modulate", Color(1.0, 0.85, 0.2), 0.5)
+	tween.tween_interval(4.0)
+	tween.tween_callback(func(): event_label.visible = false)
 
 # --------------- Weapon Icons ---------------
 
