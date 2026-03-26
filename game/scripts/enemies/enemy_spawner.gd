@@ -22,6 +22,7 @@ var bomber_scene: PackedScene = preload("res://scenes/enemies/bomber.tscn")
 var tank_scene: PackedScene = preload("res://scenes/enemies/tank.tscn")
 var swarm_scene: PackedScene = preload("res://scenes/enemies/swarm.tscn")
 var mimic_scene: PackedScene = preload("res://scenes/enemies/mimic.tscn")
+var tooth_fairy_scene: PackedScene = preload("res://scenes/enemies/tooth_fairy.tscn")
 
 # Ghost variants (cemetery-specific)
 var ghost_white_scene: PackedScene = preload("res://scenes/enemies/ghost_white.tscn")
@@ -133,6 +134,9 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(bat_scene)
 	elif minute < 8.0:
 		# Skeletons + Bats + Slimes Grandes (+ fantasminhas)
+		# Fada dos Dentes: 3% de chance a partir do minuto 5
+		if roll < 0.03:
+			return ObjectPool.get_instance(tooth_fairy_scene)
 		if is_cemetery and roll < 0.2:
 			return _pick_ghost_variant()
 		elif roll < 0.3:
@@ -145,6 +149,9 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(slime_big_scene)
 	elif minute < 12.0:
 		# Archers + Zombies + Ghosts + Bombers
+		# Fada dos Dentes: 3% de chance
+		if roll < 0.03:
+			return ObjectPool.get_instance(tooth_fairy_scene)
 		if roll < 0.2:
 			return ObjectPool.get_instance(archer_scene)
 		elif roll < 0.4:
@@ -157,6 +164,9 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(skeleton_scene)
 	elif minute < 20.0:
 		# Mix de tudo + Tanks + Swarms
+		# Fada dos Dentes: 3% de chance
+		if roll < 0.03:
+			return ObjectPool.get_instance(tooth_fairy_scene)
 		if roll < 0.06:
 			return ObjectPool.get_instance(tank_scene)
 		elif roll < 0.10:
@@ -173,6 +183,9 @@ func _pick_enemy(minute: float) -> Node3D:
 		return ObjectPool.get_instance(scenes[rng.randi() % scenes.size()])
 	else:
 		# Endgame: tudo, mais tanks, bombers, swarms
+		# Fada dos Dentes: 3% de chance
+		if roll < 0.03:
+			return ObjectPool.get_instance(tooth_fairy_scene)
 		if is_cemetery:
 			var scenes = [skeleton_scene, zombie_scene, ghost_white_scene, ghost_green_scene,
 				ghost_blue_scene, ghost_red_scene, bomber_scene, slime_big_scene,
@@ -190,7 +203,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Mushroom Slime", "Bat": "Evil Pixie", "Skeleton": "Treant",
 			"ZombieRunner": "Corrupted Unicorn", "Ghost": "Will-o-Wisp", "SlimeBig": "Giant Mushroom",
 			"SkeletonArcher": "Elf Archer", "Bomber": "Spore Bomber", "Tank": "Ancient Treant",
-			"Swarm": "Fairy Swarm", "Mimic": "Treasure Mushroom",
+			"Swarm": "Fairy Swarm", "Mimic": "Treasure Mushroom", "ToothFairy": "Forest Sprite",
 		},
 	},
 	"farm": {
@@ -199,7 +212,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Cow Slime", "Bat": "Killer Chicken", "Skeleton": "Scarecrow",
 			"ZombieRunner": "Zombie Cow", "Ghost": "Phantom Crow", "SlimeBig": "Mud Blob",
 			"SkeletonArcher": "Pitchfork Thrower", "Bomber": "Exploding Pumpkin", "Tank": "Bull",
-			"Swarm": "Locust Swarm", "Mimic": "Hay Bale Mimic",
+			"Swarm": "Locust Swarm", "Mimic": "Hay Bale Mimic", "ToothFairy": "Harvest Pixie",
 		},
 	},
 	"tokyo": {
@@ -208,7 +221,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Nano Slime", "Bat": "Drone", "Skeleton": "Robot Samurai",
 			"ZombieRunner": "Android", "Ghost": "Hologram", "SlimeBig": "Mecha Slime",
 			"SkeletonArcher": "Sniper Bot", "Bomber": "Grenade Drone", "Tank": "Mech Walker",
-			"Swarm": "Nano Swarm", "Mimic": "Vending Machine",
+			"Swarm": "Nano Swarm", "Mimic": "Vending Machine", "ToothFairy": "Neon Fairy",
 		},
 	},
 	"volcano": {
@@ -217,7 +230,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Magma Slime", "Bat": "Fire Imp", "Skeleton": "Lava Golem",
 			"ZombieRunner": "Demon", "Ghost": "Ash Wraith", "SlimeBig": "Magma Blob",
 			"SkeletonArcher": "Flame Archer", "Bomber": "Lava Bomber", "Tank": "Obsidian Giant",
-			"Swarm": "Ember Swarm", "Mimic": "Volcanic Rock Mimic",
+			"Swarm": "Ember Swarm", "Mimic": "Volcanic Rock Mimic", "ToothFairy": "Flame Wisp",
 		},
 	},
 	"ocean": {
@@ -226,7 +239,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Jellyfish", "Bat": "Flying Fish", "Skeleton": "Crab",
 			"ZombieRunner": "Zombie Shark", "Ghost": "Ghost Ship", "SlimeBig": "Giant Jellyfish",
 			"SkeletonArcher": "Harpoon Fisher", "Bomber": "Pufferfish", "Tank": "Hermit Crab",
-			"Swarm": "Piranha School", "Mimic": "Treasure Chest",
+			"Swarm": "Piranha School", "Mimic": "Treasure Chest", "ToothFairy": "Sea Sprite",
 		},
 	},
 	"arena": {
@@ -235,7 +248,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Slime Gladiator", "Bat": "Eagle", "Skeleton": "Centurion",
 			"ZombieRunner": "Lion", "Ghost": "Arena Spirit", "SlimeBig": "War Elephant",
 			"SkeletonArcher": "Bowman", "Bomber": "Fire Juggler", "Tank": "Champion",
-			"Swarm": "Chariot Charge", "Mimic": "Trophy Mimic",
+			"Swarm": "Chariot Charge", "Mimic": "Trophy Mimic", "ToothFairy": "Golden Cherub",
 		},
 	},
 	"space": {
@@ -244,7 +257,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Alien Parasite", "Bat": "Space Drone", "Skeleton": "Xenomorph",
 			"ZombieRunner": "Mutant", "Ghost": "Void Phantom", "SlimeBig": "Cosmic Blob",
 			"SkeletonArcher": "Laser Turret", "Bomber": "Plasma Mine", "Tank": "Mech Titan",
-			"Swarm": "Zerg Swarm", "Mimic": "Pod Mimic",
+			"Swarm": "Zerg Swarm", "Mimic": "Pod Mimic", "ToothFairy": "Stardust Fairy",
 		},
 	},
 	"castle": {
@@ -253,7 +266,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Blood Slime", "Bat": "Vampire Bat", "Skeleton": "Armor",
 			"ZombieRunner": "Gargoyle", "Ghost": "Banshee", "SlimeBig": "Dark Ooze",
 			"SkeletonArcher": "Crossbow Knight", "Bomber": "Alchemist", "Tank": "Iron Golem",
-			"Swarm": "Rat Swarm", "Mimic": "Cursed Chest",
+			"Swarm": "Rat Swarm", "Mimic": "Cursed Chest", "ToothFairy": "Blood Pixie",
 		},
 	},
 	"candy": {
@@ -262,7 +275,7 @@ var _stage_skins: Dictionary = {
 			"Slime": "Gummy Bear", "Bat": "Candy Bat", "Skeleton": "Cookie Ninja",
 			"ZombieRunner": "Cupcake", "Ghost": "Cotton Candy Ghost", "SlimeBig": "Jawbreaker",
 			"SkeletonArcher": "Candy Cane Archer", "Bomber": "Popcorn Bomber", "Tank": "Chocolate Golem",
-			"Swarm": "Sprinkle Swarm", "Mimic": "Candy Box Mimic",
+			"Swarm": "Sprinkle Swarm", "Mimic": "Candy Box Mimic", "ToothFairy": "Sugar Fairy",
 		},
 	},
 }
