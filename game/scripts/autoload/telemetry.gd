@@ -17,6 +17,8 @@ func _ready() -> void:
 	GameManager.game_over.connect(_on_game_over)
 	LogManager.crash_reported.connect(_on_crash_reported)
 	AchievementManager.achievement_unlocked.connect(_on_achievement)
+	# Enviar crash reports pendentes de sessoes anteriores (com delay pra nao bloquear startup)
+	get_tree().create_timer(5.0).timeout.connect(_send_pending_crashes)
 
 func _on_game_over() -> void:
 	if not enabled:
@@ -53,14 +55,64 @@ func _send_run_data() -> void:
 func _on_crash_reported(report_path: String) -> void:
 	if not enabled:
 		return
-	# Read the crash report JSON and send it
+	# Read the full crash report JSON and send everything to the server
 	var file = FileAccess.open(report_path, FileAccess.READ)
 	if not file:
 		return
 	var json = JSON.new()
 	if json.parse(file.get_as_text()) == OK:
-		_post("/crash", json.data)
+		var data: Dictionary = json.data
+		# Ensure all fields exist for the server
+		if not data.has("session_id"):
+			data["session_id"] = LogManager._session_id
+		if not data.has("version"):
+			data["version"] = _get_version()
+		_post("/crash", data)
 	file.close()
+
+## Envia crash reports pendentes que nao foram enviados (ex: crash antes de enviar)
+func _send_pending_crashes() -> void:
+	if not enabled:
+		return
+	var dir = DirAccess.open("user://logs/crashes/")
+	if not dir:
+		return
+	var sent_file_path := "user://logs/crashes/.sent"
+	var sent_ids: PackedStringArray = PackedStringArray()
+	var sent_file = FileAccess.open(sent_file_path, FileAccess.READ)
+	if sent_file:
+		while not sent_file.eof_reached():
+			var line = sent_file.get_line().strip_edges()
+			if not line.is_empty():
+				sent_ids.append(line)
+		sent_file.close()
+
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	var new_sent: PackedStringArray = PackedStringArray()
+	while file_name != "":
+		if file_name.ends_with(".json") and not file_name in sent_ids:
+			var full_path = "user://logs/crashes/" + file_name
+			var file = FileAccess.open(full_path, FileAccess.READ)
+			if file:
+				var json = JSON.new()
+				if json.parse(file.get_as_text()) == OK:
+					_post("/crash", json.data)
+					new_sent.append(file_name)
+				file.close()
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+	# Marcar como enviados
+	if not new_sent.is_empty():
+		var append_file = FileAccess.open(sent_file_path, FileAccess.READ_WRITE)
+		if not append_file:
+			append_file = FileAccess.open(sent_file_path, FileAccess.WRITE)
+		if append_file:
+			append_file.seek_end()
+			for name in new_sent:
+				append_file.store_line(name)
+			append_file.close()
 
 func _on_achievement(id: String, achievement_name: String) -> void:
 	if not enabled:

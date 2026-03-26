@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zion Telemetry Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #1a1d27;
+      --bg3: #242836;
+      --border: #2d3348;
+      --text: #e1e4ed;
+      --text2: #8b92a8;
+      --accent: #6c5ce7;
+      --red: #ff4757;
+      --orange: #ffa502;
+      --green: #2ed573;
+      --blue: #3742fa;
+      --cyan: #1e90ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Nav */
+    nav { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 24px; position: sticky; top: 0; z-index: 100; }
+    nav h1 { font-size: 18px; color: var(--accent); font-weight: 700; letter-spacing: -0.5px; }
+    nav h1 span { color: var(--text2); font-weight: 400; font-size: 14px; margin-left: 8px; }
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text2); font-size: 14px; transition: all 0.2s; border: none; background: none; }
+    .nav-tab:hover { color: var(--text); background: var(--bg3); }
+    .nav-tab.active { color: var(--text); background: var(--accent); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .badge { background: var(--red); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .badge.green { background: var(--green); }
+    #auto-refresh { accent-color: var(--accent); }
+
+    /* Layout */
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Cards */
+    .grid { display: grid; gap: 16px; }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .card h3 { font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .card .big { font-size: 32px; font-weight: 700; }
+    .card .sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 12px; font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    tr:hover td { background: var(--bg3); }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .tag-error { background: rgba(255,71,87,0.15); color: var(--red); }
+    .tag-warn { background: rgba(255,165,2,0.15); color: var(--orange); }
+    .tag-ok { background: rgba(46,213,115,0.15); color: var(--green); }
+    .tag-info { background: rgba(30,144,255,0.15); color: var(--cyan); }
+    .tag-resolved { background: rgba(46,213,115,0.15); color: var(--green); }
+    .tag-open { background: rgba(255,71,87,0.15); color: var(--red); }
+
+    /* Crash detail */
+    .crash-detail { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 16px; }
+    .crash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .crash-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .crash-meta-item { background: var(--bg3); padding: 10px 14px; border-radius: 8px; }
+    .crash-meta-item label { display: block; font-size: 11px; color: var(--text2); text-transform: uppercase; margin-bottom: 2px; }
+    .crash-meta-item span { font-size: 14px; font-weight: 600; }
+    .log-viewer { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6; }
+    .log-viewer .log-warn { color: var(--orange); }
+    .log-viewer .log-error { color: var(--red); }
+    .log-viewer .log-fatal { color: #ff6b81; font-weight: 700; }
+    .log-viewer .log-info { color: var(--text); }
+    .log-viewer .log-debug { color: var(--text2); }
+
+    /* Buttons */
+    .btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .btn:hover { background: var(--border); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-green { background: var(--green); border-color: var(--green); color: #000; }
+    .btn-red { background: var(--red); border-color: var(--red); }
+
+    /* Filters */
+    .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .filters input, .filters select { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+    .filters input::placeholder { color: var(--text2); }
+
+    /* Pagination */
+    .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 16px; align-items: center; }
+
+    /* Section */
+    .section { margin-bottom: 24px; }
+    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    /* Bar chart (CSS only) */
+    .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .bar-label { width: 120px; font-size: 13px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 24px; background: var(--bg3); border-radius: 4px; overflow: hidden; position: relative; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; min-width: 30px; }
+    .bar-fill.purple { background: var(--accent); }
+    .bar-fill.blue { background: var(--cyan); }
+    .bar-fill.green { background: var(--green); }
+    .bar-fill.red { background: var(--red); }
+    .bar-fill.orange { background: var(--orange); }
+    .bar-value { font-size: 13px; color: var(--text2); width: 50px; }
+
+    /* Notes textarea */
+    textarea { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 13px; width: 100%; resize: vertical; min-height: 60px; font-family: inherit; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+    .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+
+    /* Scroll */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+    .clickable { cursor: pointer; }
+    .clickable:hover td { background: var(--bg3); }
+    .mono { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; }
+
+    @media (max-width: 768px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      nav { padding: 0 12px; gap: 8px; }
+      .container { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Zion <span>Telemetry</span></h1>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-page="overview">Overview</button>
+      <button class="nav-tab" data-page="crashes">Crashes <span id="crash-badge" class="badge" style="display:none">0</span></button>
+      <button class="nav-tab" data-page="runs">Runs</button>
+      <button class="nav-tab" data-page="balance">Balance</button>
+      <button class="nav-tab" data-page="events">Events</button>
+    </div>
+    <div class="nav-right">
+      <label style="font-size:12px;color:var(--text2)">
+        <input type="checkbox" id="auto-refresh" checked> Auto-refresh 30s
+      </label>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- OVERVIEW -->
+    <div id="page-overview" class="page active">
+      <div class="grid grid-4 section" id="stats-cards"></div>
+      <div class="grid grid-3 section">
+        <div class="card" id="chart-characters"><h3>Personagens populares</h3><div id="bars-characters"></div></div>
+        <div class="card" id="chart-stages"><h3>Fases populares</h3><div id="bars-stages"></div></div>
+        <div class="card" id="chart-os"><h3>Sistemas operacionais</h3><div id="bars-os"></div></div>
+      </div>
+      <div class="grid grid-2 section">
+        <div class="card"><h3>Crashes recentes</h3><div id="recent-crashes"></div></div>
+        <div class="card"><h3>Versoes ativas</h3><div id="version-dist"></div></div>
+      </div>
+    </div>
+
+    <!-- CRASHES -->
+    <div id="page-crashes" class="page">
+      <div class="section-title">Crash reports</div>
+      <div class="filters">
+        <input type="text" id="crash-search" placeholder="Buscar por descricao ou modulo...">
+        <select id="crash-filter-resolved">
+          <option value="">Todos</option>
+          <option value="false" selected>Abertos</option>
+          <option value="true">Resolvidos</option>
+        </select>
+        <select id="crash-filter-version"><option value="">Todas versoes</option></select>
+        <select id="crash-filter-module"><option value="">Todos modulos</option></select>
+        <button class="btn" onclick="loadCrashes()">Filtrar</button>
+      </div>
+      <div id="crashes-table"></div>
+      <div class="pagination" id="crashes-pagination"></div>
+      <div id="crash-detail-container"></div>
+    </div>
+
+    <!-- RUNS -->
+    <div id="page-runs" class="page">
+      <div class="section-title">Runs dos jogadores</div>
+      <div class="filters">
+        <select id="run-filter-character"><option value="">Todos personagens</option></select>
+        <select id="run-filter-stage"><option value="">Todas fases</option></select>
+        <select id="run-filter-victory">
+          <option value="">Vitoria/Derrota</option>
+          <option value="true">Vitorias</option>
+          <option value="false">Derrotas</option>
+        </select>
+        <button class="btn" onclick="loadRuns()">Filtrar</button>
+      </div>
+      <div id="runs-table"></div>
+      <div class="pagination" id="runs-pagination"></div>
+    </div>
+
+    <!-- BALANCE -->
+    <div id="page-balance" class="page">
+      <div class="section-title">Analise de balanceamento</div>
+      <div class="grid grid-3 section" id="balance-content"></div>
+    </div>
+
+    <!-- EVENTS -->
+    <div id="page-events" class="page">
+      <div class="section-title">Eventos</div>
+      <div class="filters">
+        <select id="event-filter-type"><option value="">Todos tipos</option></select>
+        <button class="btn" onclick="loadEvents()">Filtrar</button>
+      </div>
+      <div id="events-table"></div>
+      <div class="pagination" id="events-pagination"></div>
+    </div>
+  </div>
+
+<script>
+const API = window.location.origin;
+let refreshTimer;
+
+// ==== NAV ====
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
+    if (tab.dataset.page === 'crashes') loadCrashes();
+    if (tab.dataset.page === 'runs') loadRuns();
+    if (tab.dataset.page === 'balance') loadBalance();
+    if (tab.dataset.page === 'events') loadEvents();
+  });
+});
+
+document.getElementById('auto-refresh').addEventListener('change', e => {
+  if (e.target.checked) startAutoRefresh();
+  else clearInterval(refreshTimer);
+});
+
+function startAutoRefresh() {
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadOverview, 30000);
+}
+
+// ==== HELPERS ====
+async function api(path) {
+  const r = await fetch(API + path);
+  return r.json();
+}
+
+function formatTime(seconds) {
+  if (!seconds) return '0s';
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  const dt = new Date(d + (d.includes('Z') ? '' : 'Z'));
+  return dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function makeBars(items, labelKey, valueKey, color = 'purple') {
+  if (!items || items.length === 0) return '<div class="empty-state"><p>Sem dados</p></div>';
+  const max = Math.max(...items.map(i => i[valueKey]));
+  return items.map(i => `
+    <div class="bar-row">
+      <span class="bar-label">${i[labelKey]}</span>
+      <div class="bar-track">
+        <div class="bar-fill ${color}" style="width:${Math.max((i[valueKey]/max)*100, 5)}%">${i[valueKey]}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==== OVERVIEW ====
+async function loadOverview() {
+  const stats = await api('/stats');
+
+  document.getElementById('stats-cards').innerHTML = `
+    <div class="card"><h3>Total runs</h3><div class="big">${stats.total_runs}</div><div class="sub">${stats.recent_runs_24h} nas ultimas 24h</div></div>
+    <div class="card"><h3>Crashes</h3><div class="big" style="color:${stats.unresolved_crashes > 0 ? 'var(--red)' : 'var(--green)'}">${stats.total_crashes}</div><div class="sub">${stats.unresolved_crashes} abertos | ${stats.recent_crashes_24h} hoje</div></div>
+    <div class="card"><h3>Win rate</h3><div class="big">${stats.win_rate}%</div><div class="sub">Sobrevivencia media: ${formatTime(stats.avg_survival_seconds)}</div></div>
+    <div class="card"><h3>Performance</h3><div class="big">${stats.avg_fps.toFixed(0)} FPS</div><div class="sub">Nivel medio: ${stats.avg_level.toFixed(1)} | Kills: ${stats.avg_kills.toFixed(0)}</div></div>
+  `;
+
+  // Badge
+  const badge = document.getElementById('crash-badge');
+  if (stats.unresolved_crashes > 0) {
+    badge.style.display = 'inline';
+    badge.textContent = stats.unresolved_crashes;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  document.getElementById('bars-characters').innerHTML = makeBars(stats.popular_characters, 'character', 'picks', 'purple');
+  document.getElementById('bars-stages').innerHTML = makeBars(stats.popular_stages, 'stage', 'plays', 'blue');
+  document.getElementById('bars-os').innerHTML = makeBars(stats.os_distribution, 'os', 'count', 'green');
+
+  // Recent crashes
+  const crashData = await api('/crashes?limit=5&resolved=false');
+  if (crashData.crashes.length === 0) {
+    document.getElementById('recent-crashes').innerHTML = '<div class="empty-state"><p>Nenhum crash aberto</p></div>';
+  } else {
+    document.getElementById('recent-crashes').innerHTML = `<table>
+      <tr><th>Quando</th><th>Modulo</th><th>Descricao</th></tr>
+      ${crashData.crashes.map(c => `<tr class="clickable" onclick="showCrashPage(${c.id})">
+        <td>${formatDate(c.created_at)}</td>
+        <td><span class="tag tag-error">${c.module || '?'}</span></td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.description || '-'}</td>
+      </tr>`).join('')}
+    </table>`;
+  }
+
+  // Versions
+  document.getElementById('version-dist').innerHTML = makeBars(stats.versions || [], 'version', 'count', 'orange');
+}
+
+// ==== CRASHES ====
+let crashPage = 0;
+async function loadCrashes(page = 0) {
+  crashPage = page;
+  const search = document.getElementById('crash-search').value;
+  const resolved = document.getElementById('crash-filter-resolved').value;
+  const version = document.getElementById('crash-filter-version').value;
+  const module = document.getElementById('crash-filter-module').value;
+  let q = `/crashes?limit=20&offset=${page * 20}`;
+  if (search) q += `&search=${encodeURIComponent(search)}`;
+  if (resolved) q += `&resolved=${resolved}`;
+  if (version) q += `&version=${encodeURIComponent(version)}`;
+  if (module) q += `&module=${encodeURIComponent(module)}`;
+
+  const data = await api(q);
+  const total = data.total;
+  const pages = Math.ceil(total / 20);
+
+  if (data.crashes.length === 0) {
+    document.getElementById('crashes-table').innerHTML = '<div class="empty-state"><h3>Nenhum crash encontrado</h3><p>Bom sinal!</p></div>';
+    document.getElementById('crashes-pagination').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('crashes-table').innerHTML = `<table>
+    <tr><th>ID</th><th>Quando</th><th>Versao</th><th>Modulo</th><th>Descricao</th><th>OS</th><th>Status</th></tr>
+    ${data.crashes.map(c => `<tr class="clickable" onclick="showCrashDetail(${c.id})">
+      <td class="mono">#${c.id}</td>
+      <td>${formatDate(c.created_at)}</td>
+      <td><span class="tag tag-info">${c.version || '?'}</span></td>
+      <td><span class="tag tag-error">${c.module || '?'}</span></td>
+      <td style="max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.description || '-'}</td>
+      <td>${c.system_info?.os || '?'}</td>
+      <td>${c.resolved ? '<span class="tag tag-resolved">Resolvido</span>' : '<span class="tag tag-open">Aberto</span>'}</td>
+    </tr>`).join('')}
+  </table>`;
+
+  let pag = '';
+  if (pages > 1) {
+    if (page > 0) pag += `<button class="btn btn-sm" onclick="loadCrashes(${page-1})">Anterior</button>`;
+    pag += `<span style="color:var(--text2);font-size:13px">Pagina ${page+1} de ${pages} (${total} total)</span>`;
+    if (page < pages - 1) pag += `<button class="btn btn-sm" onclick="loadCrashes(${page+1})">Proxima</button>`;
+  }
+  document.getElementById('crashes-pagination').innerHTML = pag;
+}
+
+async function showCrashDetail(id) {
+  const c = await api(`/crashes/${id}`);
+  const container = document.getElementById('crash-detail-container');
+
+  const gameState = c.game_state || {};
+  const sys = c.system_info || {};
+  const stats = c.session_stats || {};
+  const tree = c.scene_tree || {};
+
+  container.innerHTML = `
+    <div class="crash-detail" id="crash-detail">
+      <div class="crash-header">
+        <div>
+          <h2 style="margin-bottom:4px">Crash #${c.id} <span style="font-weight:400;color:var(--text2);font-size:14px">${c.module}</span></h2>
+          <p style="color:var(--text2);font-size:14px">${c.description || 'Sem descricao'}</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${c.resolved
+            ? `<button class="btn btn-red btn-sm" onclick="toggleResolved(${c.id}, false)">Reabrir</button>`
+            : `<button class="btn btn-green btn-sm" onclick="toggleResolved(${c.id}, true)">Marcar resolvido</button>`
+          }
+          <button class="btn btn-sm" onclick="document.getElementById('crash-detail-container').innerHTML=''">Fechar</button>
+        </div>
+      </div>
+
+      <div class="crash-meta">
+        <div class="crash-meta-item"><label>Versao</label><span>${c.version || '?'}</span></div>
+        <div class="crash-meta-item"><label>Session</label><span class="mono">${(c.session_id || '?').slice(0, 20)}</span></div>
+        <div class="crash-meta-item"><label>Quando</label><span>${formatDate(c.created_at)}</span></div>
+        <div class="crash-meta-item"><label>OS</label><span>${sys.os || '?'}</span></div>
+        <div class="crash-meta-item"><label>Renderer</label><span>${(sys.renderer || '?').slice(0, 40)}</span></div>
+        <div class="crash-meta-item"><label>Godot</label><span>${sys.godot || '?'}</span></div>
+        <div class="crash-meta-item"><label>Memoria</label><span>${sys.memory_mb ? sys.memory_mb.toFixed(0) + ' MB' : '?'}</span></div>
+        <div class="crash-meta-item"><label>Debug build</label><span>${sys.debug_build !== undefined ? (sys.debug_build ? 'Sim' : 'Nao') : '?'}</span></div>
+      </div>
+
+      ${Object.keys(gameState).length > 0 ? `
+      <h3 style="margin:16px 0 8px;font-size:14px">Game state</h3>
+      <div class="crash-meta">
+        <div class="crash-meta-item"><label>Personagem</label><span>${gameState.selected_character || '?'}</span></div>
+        <div class="crash-meta-item"><label>Fase</label><span>${gameState.selected_stage || '?'}</span></div>
+        <div class="crash-meta-item"><label>Tempo</label><span>${formatTime(gameState.game_time)}</span></div>
+        <div class="crash-meta-item"><label>HP</label><span>${gameState.player_hp ?? '?'}</span></div>
+        <div class="crash-meta-item"><label>Nivel</label><span>${gameState.player_level ?? '?'}</span></div>
+        <div class="crash-meta-item"><label>Kills</label><span>${gameState.total_kills ?? '?'}</span></div>
+        <div class="crash-meta-item"><label>Inimigos vivos</label><span>${gameState.enemies_alive ?? '?'}</span></div>
+        <div class="crash-meta-item"><label>Armas</label><span>${gameState.weapon_count ?? '?'}</span></div>
+      </div>
+      ` : ''}
+
+      ${Object.keys(stats).length > 0 ? `
+      <h3 style="margin:16px 0 8px;font-size:14px">Session stats</h3>
+      <div class="crash-meta">
+        <div class="crash-meta-item"><label>Uptime</label><span>${formatTime(stats.uptime_seconds)}</span></div>
+        <div class="crash-meta-item"><label>Avg FPS</label><span>${stats.avg_fps ? stats.avg_fps.toFixed(0) : '?'}</span></div>
+        <div class="crash-meta-item"><label>Min FPS</label><span>${stats.min_fps ? stats.min_fps.toFixed(0) : '?'}</span></div>
+        <div class="crash-meta-item"><label>Erros</label><span style="color:var(--red)">${stats.error_count ?? 0}</span></div>
+        <div class="crash-meta-item"><label>Warnings</label><span style="color:var(--orange)">${stats.warning_count ?? 0}</span></div>
+      </div>
+      ` : ''}
+
+      ${Object.keys(tree).length > 0 ? `
+      <h3 style="margin:16px 0 8px;font-size:14px">Scene tree</h3>
+      <div class="crash-meta">
+        <div class="crash-meta-item"><label>Cena</label><span class="mono">${tree.current_scene || '?'}</span></div>
+        <div class="crash-meta-item"><label>Nodes</label><span>${tree.node_count ?? '?'}</span></div>
+        ${tree.group_counts ? Object.entries(tree.group_counts).map(([k,v]) =>
+          `<div class="crash-meta-item"><label>${k}</label><span>${v}</span></div>`
+        ).join('') : ''}
+      </div>
+      ` : ''}
+
+      <h3 style="margin:16px 0 8px;font-size:14px">Log recente (ultimas ${(c.recent_log || []).length} entradas)</h3>
+      <div class="log-viewer">${formatLog(c.recent_log || [])}</div>
+
+      <h3 style="margin:16px 0 8px;font-size:14px">Notas</h3>
+      <textarea id="crash-notes-${c.id}" placeholder="Adicionar notas sobre este crash...">${c.notes || ''}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="saveNotes(${c.id})">Salvar notas</button>
+    </div>
+  `;
+
+  container.scrollIntoView({ behavior: 'smooth' });
+}
+
+function formatLog(lines) {
+  if (!lines || lines.length === 0) return '<span style="color:var(--text2)">Nenhuma entrada</span>';
+  return lines.map(line => {
+    let cls = 'log-info';
+    if (line.includes('[ERROR]') || line.includes('[FATAL]')) cls = 'log-error';
+    else if (line.includes('[FATAL]')) cls = 'log-fatal';
+    else if (line.includes('[WARN]')) cls = 'log-warn';
+    else if (line.includes('[DEBUG]')) cls = 'log-debug';
+    return `<div class="${cls}">${escapeHtml(line)}</div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function toggleResolved(id, resolved) {
+  await fetch(`${API}/crashes/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resolved }),
+  });
+  showCrashDetail(id);
+  loadCrashes(crashPage);
+  loadOverview();
+}
+
+async function saveNotes(id) {
+  const notes = document.getElementById(`crash-notes-${id}`).value;
+  await fetch(`${API}/crashes/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes }),
+  });
+  alert('Notas salvas!');
+}
+
+function showCrashPage(id) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-page="crashes"]').classList.add('active');
+  document.getElementById('page-crashes').classList.add('active');
+  loadCrashes().then(() => showCrashDetail(id));
+}
+
+// ==== RUNS ====
+let runPage = 0;
+async function loadRuns(page = 0) {
+  runPage = page;
+  const character = document.getElementById('run-filter-character').value;
+  const stage = document.getElementById('run-filter-stage').value;
+  const victory = document.getElementById('run-filter-victory').value;
+  let q = `/runs?limit=20&offset=${page * 20}`;
+  if (character) q += `&character=${encodeURIComponent(character)}`;
+  if (stage) q += `&stage=${encodeURIComponent(stage)}`;
+  if (victory) q += `&victory=${victory}`;
+
+  const data = await api(q);
+  const total = data.total;
+  const pages = Math.ceil(total / 20);
+
+  if (data.runs.length === 0) {
+    document.getElementById('runs-table').innerHTML = '<div class="empty-state"><h3>Nenhuma run encontrada</h3><p>Os jogadores ainda nao jogaram</p></div>';
+    document.getElementById('runs-pagination').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('runs-table').innerHTML = `<table>
+    <tr><th>Quando</th><th>Versao</th><th>Personagem</th><th>Fase</th><th>Tempo</th><th>Kills</th><th>Nivel</th><th>FPS</th><th>Resultado</th></tr>
+    ${data.runs.map(r => `<tr>
+      <td>${formatDate(r.created_at)}</td>
+      <td><span class="tag tag-info">${r.version || '?'}</span></td>
+      <td>${r.character || '?'}</td>
+      <td>${r.stage || '?'}</td>
+      <td>${formatTime(r.survived_seconds)}</td>
+      <td>${r.total_kills ?? '-'}</td>
+      <td>${r.level_reached ?? '-'}</td>
+      <td>${r.fps_avg ? r.fps_avg.toFixed(0) : '-'}</td>
+      <td>${r.victory ? '<span class="tag tag-ok">Vitoria</span>' : '<span class="tag tag-error">Derrota</span>'}</td>
+    </tr>`).join('')}
+  </table>`;
+
+  let pag = '';
+  if (pages > 1) {
+    if (page > 0) pag += `<button class="btn btn-sm" onclick="loadRuns(${page-1})">Anterior</button>`;
+    pag += `<span style="color:var(--text2);font-size:13px">Pagina ${page+1} de ${pages} (${total} total)</span>`;
+    if (page < pages - 1) pag += `<button class="btn btn-sm" onclick="loadRuns(${page+1})">Proxima</button>`;
+  }
+  document.getElementById('runs-pagination').innerHTML = pag;
+}
+
+// ==== BALANCE ====
+async function loadBalance() {
+  const data = await api('/balance');
+  const container = document.getElementById('balance-content');
+
+  container.innerHTML = `
+    <div class="card">
+      <h3>DPS por arma</h3>
+      ${data.weapon_dps.length === 0 ? '<p style="color:var(--text2)">Sem dados</p>' :
+        `<table><tr><th>Arma</th><th>DPS medio</th><th>Amostras</th></tr>
+        ${data.weapon_dps.map(w => `<tr>
+          <td>${w.weapon}</td>
+          <td><span class="tag tag-warn">${w.avg_dps}</span></td>
+          <td>${w.sample_size}</td>
+        </tr>`).join('')}
+        </table>`
+      }
+    </div>
+    <div class="card">
+      <h3>Win rate por personagem</h3>
+      ${data.character_win_rates.length === 0 ? '<p style="color:var(--text2)">Sem dados</p>' :
+        `<table><tr><th>Personagem</th><th>Win %</th><th>Partidas</th><th>Sobrevivencia</th></tr>
+        ${data.character_win_rates.map(c => `<tr>
+          <td>${c.character}</td>
+          <td><span class="tag ${c.win_rate > 50 ? 'tag-ok' : 'tag-error'}">${c.win_rate}%</span></td>
+          <td>${c.total}</td>
+          <td>${formatTime(c.avg_survival)}</td>
+        </tr>`).join('')}
+        </table>`
+      }
+    </div>
+    <div class="card">
+      <h3>Dificuldade por fase</h3>
+      ${data.stage_difficulty.length === 0 ? '<p style="color:var(--text2)">Sem dados</p>' :
+        `<table><tr><th>Fase</th><th>Win %</th><th>Partidas</th><th>Kills medio</th></tr>
+        ${data.stage_difficulty.map(s => `<tr>
+          <td>${s.stage}</td>
+          <td><span class="tag ${s.win_rate > 50 ? 'tag-ok' : s.win_rate > 25 ? 'tag-warn' : 'tag-error'}">${s.win_rate}%</span></td>
+          <td>${s.total}</td>
+          <td>${s.avg_kills}</td>
+        </tr>`).join('')}
+        </table>`
+      }
+    </div>
+  `;
+}
+
+// ==== EVENTS ====
+let eventPage = 0;
+async function loadEvents(page = 0) {
+  eventPage = page;
+  const type = document.getElementById('event-filter-type').value;
+  let q = `/events?limit=20&offset=${page * 20}`;
+  if (type) q += `&event_type=${encodeURIComponent(type)}`;
+
+  const data = await api(q);
+  const total = data.total;
+  const pages = Math.ceil(total / 20);
+
+  if (data.events.length === 0) {
+    document.getElementById('events-table').innerHTML = '<div class="empty-state"><h3>Nenhum evento</h3></div>';
+    document.getElementById('events-pagination').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('events-table').innerHTML = `<table>
+    <tr><th>Quando</th><th>Session</th><th>Tipo</th><th>Dados</th></tr>
+    ${data.events.map(e => `<tr>
+      <td>${formatDate(e.created_at)}</td>
+      <td class="mono">${(e.session_id || '?').slice(0, 16)}</td>
+      <td><span class="tag tag-info">${e.event_type || '?'}</span></td>
+      <td class="mono" style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${JSON.stringify(e.data)}</td>
+    </tr>`).join('')}
+  </table>`;
+
+  let pag = '';
+  if (pages > 1) {
+    if (page > 0) pag += `<button class="btn btn-sm" onclick="loadEvents(${page-1})">Anterior</button>`;
+    pag += `<span style="color:var(--text2);font-size:13px">Pagina ${page+1} de ${pages} (${total} total)</span>`;
+    if (page < pages - 1) pag += `<button class="btn btn-sm" onclick="loadEvents(${page+1})">Proxima</button>`;
+  }
+  document.getElementById('events-pagination').innerHTML = pag;
+}
+
+// ==== POPULATE FILTERS ====
+async function populateFilters() {
+  const stats = await api('/stats');
+  // Crash version/module filters
+  const crashes = await api('/crashes?limit=200');
+  const versions = new Set(), modules = new Set(), characters = new Set(), stages = new Set();
+  crashes.crashes.forEach(c => {
+    if (c.version) versions.add(c.version);
+    if (c.module) modules.add(c.module);
+  });
+  (stats.popular_characters || []).forEach(c => characters.add(c.character));
+  (stats.popular_stages || []).forEach(s => stages.add(s.stage));
+
+  const versionSel = document.getElementById('crash-filter-version');
+  versions.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; versionSel.appendChild(o); });
+  const moduleSel = document.getElementById('crash-filter-module');
+  modules.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; moduleSel.appendChild(o); });
+  const charSel = document.getElementById('run-filter-character');
+  characters.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; charSel.appendChild(o); });
+  const stageSel = document.getElementById('run-filter-stage');
+  stages.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; stageSel.appendChild(o); });
+}
+
+// ==== INIT ====
+loadOverview();
+populateFilters();
+startAutoRefresh();
+</script>
+</body>
+</html>
