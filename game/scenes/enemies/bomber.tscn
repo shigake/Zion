@@ -21,6 +21,10 @@ max_hp = 10
 damage = 25
 xp_drop = 3
 enemy_color = Color(1.0, 0.3, 0.1, 1)
+resistances = {
+"fire": 0.5,
+"ice": 1.5
+}
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)

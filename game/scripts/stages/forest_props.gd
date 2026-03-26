@@ -17,6 +17,8 @@ var cap_colors: Array[Color] = [
 	Color(0.1, 0.6, 0.8),   # Ciano
 ]
 
+var buff_mushrooms: Array = []
+
 func _ready() -> void:
 	rng.randomize()
 	_generate_mushrooms()
@@ -69,6 +71,25 @@ func _generate_mushrooms() -> void:
 		mushroom.add_child(cap)
 
 		add_child(mushroom)
+
+		# Every 4th mushroom is interactive (gives buff)
+		if i % 4 == 0:
+			var area = Area3D.new()
+			area.name = "BuffArea"
+			var col = CollisionShape3D.new()
+			var shape = SphereShape3D.new()
+			shape.radius = 1.5
+			col.shape = shape
+			area.add_child(col)
+			area.collision_layer = 0
+			area.collision_mask = 1  # Detect players
+			mushroom.add_child(area)
+			mushroom.add_to_group("buff_mushrooms")
+			buff_mushrooms.append(mushroom)
+			area.body_entered.connect(_on_buff_mushroom_entered.bind(mushroom))
+			# Make buff mushrooms glow brighter
+			cap.material_override = cap_mat
+			cap_mat.emission_energy_multiplier = 2.0
 
 func _generate_trees() -> void:
 	for i in range(num_trees):
@@ -176,6 +197,34 @@ func _generate_sparkles() -> void:
 
 	sparkles.position = Vector3(0, 1.0, 0)
 	add_child(sparkles)
+
+func _on_buff_mushroom_entered(body: Node3D, mushroom: Node3D) -> void:
+	if not body.is_in_group("players"):
+		return
+	if not is_instance_valid(mushroom) or not mushroom.is_inside_tree():
+		return
+
+	# Pick random buff
+	var buff = rng.randi() % 3
+	match buff:
+		0:  # Speed boost +30% for 10s
+			GameManager.speed_mult += 0.3
+			get_tree().create_timer(10.0).timeout.connect(func():
+				GameManager.speed_mult -= 0.3
+			)
+		1:  # Damage boost +20% for 10s
+			GameManager.perm_damage_mult += 0.2
+			get_tree().create_timer(10.0).timeout.connect(func():
+				GameManager.perm_damage_mult -= 0.2
+			)
+		2:  # Heal 20 HP
+			GameManager.heal(20)
+
+	AudioManager.play_sfx("collect_xp")
+	# Shrink and disappear
+	var tween = create_tween()
+	tween.tween_property(mushroom, "scale", Vector3.ZERO, 0.3)
+	tween.tween_callback(mushroom.queue_free)
 
 func _generate_ambient_lights() -> void:
 	# Luzes pontuais com tons magicos

@@ -30,7 +30,7 @@ func _explode() -> void:
 			continue
 		if global_position.distance_to(e.global_position) <= explosion_radius:
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", damage)
+				e.call_deferred("take_damage", damage, "fire")
 
 	# Visual: flash (placeholder — escala uma esfera rapidamente)
 	var explosion_mesh = MeshInstance3D.new()

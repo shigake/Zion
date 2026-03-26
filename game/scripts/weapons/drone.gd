@@ -1,0 +1,82 @@
+extends Node3D
+
+## Drone — orbita o jogador e dispara projeteis no inimigo mais proximo.
+
+@export var orbit_radius: float = 2.0
+@export var rotation_speed: float = 4.0
+
+var angle: float = 0.0
+var attack_timer: float = 0.0
+var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
+
+@onready var drone_area: Area3D = $DroneArea
+@onready var drone_mesh: MeshInstance3D = $DroneMesh
+
+func _process(delta: float) -> void:
+	if GameManager.paused or GameManager.is_game_over:
+		return
+
+	var level = GameManager.get_weapon_level("drone")
+	if level <= 0:
+		return
+
+	# Orbit around player
+	var speed = rotation_speed + (level - 1) * 0.2
+	angle += speed * delta
+
+	var radius = orbit_radius + (level - 1) * 0.1
+	var pos = Vector3(cos(angle) * radius, 0.8, sin(angle) * radius)
+	drone_area.position = pos
+	drone_mesh.position = pos
+	drone_area.rotation.y = angle
+
+	# Fire at nearest enemy
+	var cooldown = WeaponDB.get_cooldown("drone", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
+	attack_timer -= delta
+	if attack_timer <= 0:
+		attack_timer = cooldown
+		_fire(level)
+
+func _fire(level: int) -> void:
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if enemies.is_empty():
+		return
+
+	var drone_global_pos = drone_mesh.global_position
+	var nearest: Node3D = null
+	var min_dist = INF
+	for e in enemies:
+		if not is_instance_valid(e):
+			continue
+		var d = drone_global_pos.distance_squared_to(e.global_position)
+		if d < min_dist:
+			min_dist = d
+			nearest = e
+
+	if nearest == null:
+		return
+
+	var direction = (nearest.global_position - drone_global_pos).normalized()
+	direction.y = 0
+
+	# More bullets at higher levels
+	var num_bullets = 1
+	if level >= 5:
+		num_bullets = 2
+	if level >= 8:
+		num_bullets = 3
+
+	for i in range(num_bullets):
+		var bullet = ObjectPool.get_instance(projectile_scene)
+		bullet.global_position = drone_global_pos
+		var spread = (randf() - 0.5) * 0.15
+		var spread_dir = direction.rotated(Vector3.UP, spread)
+		bullet.direction = spread_dir.normalized()
+		bullet.damage = int(WeaponDB.get_damage("drone", level))
+		bullet.speed = 20.0
+		bullet.lifetime = 2.5
+		bullet.damage_type = "electric"
+		get_tree().current_scene.call_deferred("add_child", bullet)
+
+	AudioManager.play_sfx("hit")
+	ParticleFactory.spawn_hit_particles(drone_global_pos, Color(0.3, 0.7, 1.0))

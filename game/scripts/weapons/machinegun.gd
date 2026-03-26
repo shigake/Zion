@@ -26,6 +26,9 @@ func _fire(level: int) -> void:
 		return
 
 	var player_pos = get_parent().get_parent().global_position
+	# Muzzle flash
+	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2))
+	AudioManager.play_sfx("hit")
 	var nearest: Node3D = null
 	var min_dist = INF
 	for e in enemies:
@@ -50,13 +53,14 @@ func _fire(level: int) -> void:
 		num_bullets = 3
 
 	for i in range(num_bullets):
-		var bullet = projectile_scene.instantiate()
+		var bullet = ObjectPool.get_instance(projectile_scene)
 		bullet.global_position = player_pos + Vector3(0, 0.5, 0)
-		# Adiciona spread
-		var spread = (randf() - 0.5) * 0.3
+		# Adiciona spread (reduced by accuracy)
+		var spread = (randf() - 0.5) * 0.3 * GameManager.get_accuracy_spread()
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		bullet.direction = spread_dir.normalized()
 		bullet.damage = int(WeaponDB.get_damage("machinegun", level))
 		bullet.speed = 22.0
 		bullet.lifetime = 2.0
+		bullet.damage_type = "electric"
 		get_tree().current_scene.call_deferred("add_child", bullet)

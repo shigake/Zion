@@ -28,13 +28,23 @@ var _fever_active: bool = false
 var _fever_prev_damage_mult: float = 1.0
 var _fever_prev_speed_mult: float = 1.0
 
+# Merchant state
+var _merchant_node: Node3D = null
+var _merchant_items: Array = []
+
+# Portal Dimensional state
+var _portal_enemies_remaining: int = 0
+var _portal_original_pos: Vector3 = Vector3.ZERO
+var _portal_active: bool = false
+
 # Eventos fixos por tempo
 var timed_events: Dictionary = {
-	300.0: "golden_horde",     # Min 5
-	480.0: "eclipse",          # Min 8
-	600.0: "roulette",         # Min 10
-	720.0: "meteor_shower",    # Min 12
-	900.0: "angel_challenge",  # Min 15
+	300.0: "golden_horde",       # Min 5
+	480.0: "eclipse",            # Min 8
+	600.0: "roulette",           # Min 10
+	720.0: "meteor_shower",      # Min 12
+	900.0: "angel_challenge",    # Min 15
+	1200.0: "portal_dimensional", # Min 20
 }
 var triggered_timed: Array = []
 
@@ -80,7 +90,7 @@ func _process(delta: float) -> void:
 
 	# Check random events
 	if GameManager.game_time >= next_random_event_time:
-		var random_events = ["treasure_goblin", "merchant"]
+		var random_events = ["treasure_goblin", "merchant", "chest_mimic"]
 		var event = random_events[rng.randi() % random_events.size()]
 		_start_event(event)
 		next_random_event_time = GameManager.game_time + rng.randf_range(120, 240)
@@ -114,6 +124,12 @@ func _start_event(event_name: String) -> void:
 		"angel_challenge":
 			event_timer = 1.0  # Instant effect, short timer
 			_do_angel_challenge()
+		"portal_dimensional":
+			event_timer = 30.0
+			_start_portal_dimensional()
+		"chest_mimic":
+			event_timer = 30.0
+			_spawn_chest_mimic()
 
 func _end_event() -> void:
 	var ended = active_event
@@ -122,6 +138,10 @@ func _end_event() -> void:
 	match ended:
 		"eclipse":
 			_end_eclipse()
+		"portal_dimensional":
+			_end_portal_dimensional()
+		"merchant":
+			_cleanup_merchant()
 
 	active_event = ""
 	event_ended.emit(ended)
@@ -137,13 +157,13 @@ func _spawn_golden_horde() -> void:
 		var angle = rng.randf() * TAU
 		var pos = center + Vector3(cos(angle), 0, sin(angle)) * rng.randf_range(15, 25)
 		var enemy = slime_scene.instantiate()
-		enemy.global_position = pos
 		if enemy is EnemyBase3D:
 			enemy.enemy_color = Color(1.0, 0.85, 0.2)
 			enemy.xp_drop = 5
 			enemy.max_hp = 5
 			enemy.hp = 5
 		get_parent().add_child(enemy)
+		enemy.global_position = pos
 		GameManager.enemies_alive += 1
 
 func _spawn_treasure_goblin() -> void:
@@ -154,7 +174,6 @@ func _spawn_treasure_goblin() -> void:
 	var bat_scene = preload("res://scenes/enemies/bat.tscn")
 
 	var goblin = bat_scene.instantiate()
-	goblin.global_position = center + Vector3(10, 0, 10)
 	if goblin is EnemyBase3D:
 		goblin.enemy_color = Color(0.2, 1.0, 0.3)
 		goblin.speed = 8.0  # Rapido, foge
@@ -163,24 +182,137 @@ func _spawn_treasure_goblin() -> void:
 		goblin.xp_drop = 30
 		goblin.scale = Vector3(1.5, 1.5, 1.5)
 	get_parent().add_child(goblin)
+	goblin.global_position = center + Vector3(10, 0, 10)
 	GameManager.enemies_alive += 1
 
 func _spawn_merchant() -> void:
-	# Merchant e um NPC parado que oferece 3 itens por cristais
-	# TODO: Implementar UI de merchant (por enquanto dropa 3 items gratis)
 	var players = get_tree().get_nodes_in_group("players")
 	if players.is_empty():
 		return
 	var center = players[0].global_position
-	var offset = Vector3(rng.randf_range(-5, 5), 0, rng.randf_range(-5, 5))
+	var offset = Vector3(rng.randf_range(-3, 3), 0, rng.randf_range(-3, 3))
 
-	# Dropa 3 XP gems grandes como placeholder
-	var gem_scene = preload("res://scenes/xp_gem.tscn")
-	for i in range(3):
-		var gem = gem_scene.instantiate()
-		gem.global_position = center + offset + Vector3(i * 1.0, 0, 0)
-		gem.xp_value = 10
-		get_parent().call_deferred("add_child", gem)
+	# Cria NPC merchant visual
+	_merchant_node = Node3D.new()
+	_merchant_node.name = "Merchant"
+
+	var body = MeshInstance3D.new()
+	var capsule = CapsuleMesh.new()
+	capsule.radius = 0.3
+	capsule.height = 1.2
+	body.mesh = capsule
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.2, 0.5, 0.9)
+	mat.emission_enabled = true
+	mat.emission = Color(0.1, 0.3, 0.6)
+	mat.emission_energy_multiplier = 1.5
+	body.material_override = mat
+	body.position.y = 0.6
+	_merchant_node.add_child(body)
+
+	# Label
+	var label = Label3D.new()
+	label.text = "MERCADOR"
+	label.font_size = 32
+	label.outline_size = 4
+	label.modulate = Color(0.2, 0.5, 0.9)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.position.y = 1.6
+	_merchant_node.add_child(label)
+
+	# Interaction Area
+	var area = Area3D.new()
+	area.name = "InteractArea"
+	var col = CollisionShape3D.new()
+	var shape = SphereShape3D.new()
+	shape.radius = 2.5
+	col.shape = shape
+	area.add_child(col)
+	area.collision_layer = 0
+	area.collision_mask = 1  # Detect players
+	_merchant_node.add_child(area)
+
+	get_parent().add_child(_merchant_node)
+	_merchant_node.global_position = center + offset
+
+	# Generate 3 random items to sell
+	_merchant_items.clear()
+	var all_items = ItemDB.get_all_item_ids()
+	all_items.shuffle()
+	for i in range(mini(3, all_items.size())):
+		var item_data = ItemDB.get_item(all_items[i])
+		_merchant_items.append({
+			"id": all_items[i],
+			"name": item_data.get("name", all_items[i]),
+			"cost": rng.randi_range(5, 15),
+		})
+
+	# Show merchant UI when player enters area
+	area.body_entered.connect(_on_merchant_body_entered)
+
+func _on_merchant_body_entered(body: Node3D) -> void:
+	if not body.is_in_group("players"):
+		return
+	_show_merchant_ui()
+
+func _show_merchant_ui() -> void:
+	# Se ja tem UI aberta, nao abre outra
+	if get_node_or_null("MerchantUI"):
+		return
+	# Cria UI de merchant como CanvasLayer
+	var canvas = CanvasLayer.new()
+	canvas.name = "MerchantUI"
+	canvas.layer = 15
+	canvas.process_mode = Node.PROCESS_MODE_ALWAYS  # Funciona mesmo com tree pausada
+
+	var panel = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.position = Vector2(-200, -150)
+	panel.custom_minimum_size = Vector2(400, 300)
+	canvas.add_child(panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	panel.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "MERCADOR - Compre com Cristais"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	for item in _merchant_items:
+		var btn = Button.new()
+		btn.text = "%s - %d Cristais" % [item["name"], item["cost"]]
+		btn.pressed.connect(_buy_merchant_item.bind(item, btn))
+		vbox.add_child(btn)
+
+	var close_btn = Button.new()
+	close_btn.text = "Fechar"
+	close_btn.pressed.connect(func():
+		canvas.queue_free()
+		GameManager.paused = false
+		get_tree().paused = false
+	)
+	vbox.add_child(close_btn)
+
+	add_child(canvas)
+	GameManager.paused = true
+	get_tree().paused = true
+
+func _buy_merchant_item(item: Dictionary, btn: Button) -> void:
+	if GameManager.crystals_this_run >= item["cost"]:
+		GameManager.crystals_this_run -= item["cost"]
+		GameManager.add_item(item["id"])
+		btn.text = item["name"] + " - COMPRADO!"
+		btn.disabled = true
+
+func _cleanup_merchant() -> void:
+	if is_instance_valid(_merchant_node):
+		_merchant_node.queue_free()
+		_merchant_node = null
+	var ui = get_node_or_null("MerchantUI")
+	if ui:
+		ui.queue_free()
 
 func _do_roulette() -> void:
 	# Roda da fortuna: efeito aleatorio
@@ -302,8 +434,8 @@ func _spawn_single_meteor() -> void:
 	meteor.add_child(mesh_instance)
 
 	# Start position (above target)
-	meteor.global_position = target_pos + Vector3(0, 20, 0)
 	get_parent().add_child(meteor)
+	meteor.global_position = target_pos + Vector3(0, 20, 0)
 
 	# Animate falling with a tween
 	var tween = create_tween()
@@ -367,3 +499,105 @@ func _end_fever_mode() -> void:
 	GameManager.perm_damage_mult = _fever_prev_damage_mult
 	GameManager.speed_mult = _fever_prev_speed_mult
 	event_ended.emit("fever_mode")
+
+# ---- Portal Dimensional (min 20) ----
+# Teletransporta o jogador para uma mini-arena com inimigos de elite.
+# Sobreviver garante recompensa rara (itens ou XP massivo).
+
+func _start_portal_dimensional() -> void:
+	var players = get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+
+	var player = players[0]
+	_portal_original_pos = player.global_position
+	_portal_active = true
+
+	# Teletransporta o jogador para longe (mini-dungeon area)
+	var dungeon_pos = Vector3(500, 0, 500)  # Longe da arena principal
+	player.global_position = dungeon_pos
+
+	# Visual: flash branco
+	var overlay = ColorRect.new()
+	overlay.name = "PortalFlash"
+	overlay.color = Color(0.6, 0.3, 1.0, 0.5)
+	overlay.anchors_preset = Control.PRESET_FULL_RECT
+	var canvas = CanvasLayer.new()
+	canvas.name = "PortalCanvas"
+	canvas.layer = 10
+	canvas.add_child(overlay)
+	add_child(canvas)
+
+	# Fade out the overlay
+	var tween = create_tween()
+	tween.tween_property(overlay, "color:a", 0.15, 1.5)
+
+	ScreenEffects.shake(0.2)
+
+	# Spawna inimigos de elite na mini-dungeon
+	_portal_enemies_remaining = 10
+	var enemy_scenes = [
+		preload("res://scenes/enemies/skeleton.tscn"),
+		preload("res://scenes/enemies/zombie_runner.tscn"),
+		preload("res://scenes/enemies/bomber.tscn"),
+		preload("res://scenes/enemies/ghost.tscn"),
+	]
+
+	for i in range(10):
+		var angle = (float(i) / 10.0) * TAU
+		var spawn_pos = dungeon_pos + Vector3(cos(angle), 0, sin(angle)) * rng.randf_range(8, 15)
+		var enemy = enemy_scenes[rng.randi() % enemy_scenes.size()].instantiate()
+		# Faz todos elite
+		if enemy is EnemyBase3D:
+			enemy.max_hp = int(enemy.max_hp * 3.0)
+			enemy.hp = enemy.max_hp
+			enemy.damage = int(enemy.damage * 1.5)
+			enemy.xp_drop = enemy.xp_drop * 5
+			enemy.enemy_color = Color(0.6, 0.2, 0.9)  # Roxo
+			enemy.scale = Vector3(1.3, 1.3, 1.3)
+		get_parent().add_child(enemy)
+		enemy.global_position = spawn_pos
+		GameManager.enemies_alive += 1
+
+func _end_portal_dimensional() -> void:
+	if not _portal_active:
+		return
+	_portal_active = false
+
+	var players = get_tree().get_nodes_in_group("players")
+	if not players.is_empty():
+		players[0].global_position = _portal_original_pos
+
+	# Remove overlay
+	var canvas = get_node_or_null("PortalCanvas")
+	if canvas:
+		canvas.queue_free()
+
+	# Recompensa: cura + XP bonus
+	GameManager.heal(GameManager.get_effective_max_hp() / 2)
+	GameManager.add_xp(50)
+
+	ScreenEffects.shake(0.15)
+
+# ---- Chest Mimic (aleatorio) ----
+# Spawna um bau falso que, ao se aproximar, vira um mini-boss Mimic.
+
+func _spawn_chest_mimic() -> void:
+	var players = get_tree().get_nodes_in_group("players")
+	if players.is_empty():
+		return
+	var center = players[0].global_position
+	var offset = Vector3(rng.randf_range(-8, 8), 0, rng.randf_range(-8, 8))
+
+	var mimic_scene = preload("res://scenes/enemies/mimic.tscn")
+	var mimic = mimic_scene.instantiate()
+	# Faz o mimic mais forte como mini-boss
+	if mimic is EnemyBase3D:
+		mimic.max_hp = 300
+		mimic.hp = 300
+		mimic.damage = 30
+		mimic.xp_drop = 30
+		mimic.scale = Vector3(1.5, 1.5, 1.5)
+	get_parent().add_child(mimic)
+	mimic.global_position = center + offset
+	GameManager.enemies_alive += 1

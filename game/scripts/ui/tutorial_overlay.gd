@@ -8,9 +8,12 @@ extends CanvasLayer
 
 var tutorial_steps: Array[Dictionary] = [
 	{"id": "move", "text": "WASD para mover, SPACE para dash", "duration": 5.0},
+	{"id": "dash_tip", "text": "Dash te deixa invulneravel! Use para esquivar", "duration": 4.0},
 	{"id": "xp", "text": "Inimigos dropam XP! Colete para subir de nivel", "duration": 5.0},
 	{"id": "levelup", "text": "Escolha um upgrade! Armas ou itens passivos", "duration": 5.0},
+	{"id": "crystals", "text": "Cristais dropam dos inimigos. Gaste na loja entre runs!", "duration": 5.0},
 	{"id": "events", "text": "Eventos especiais acontecem durante a run!", "duration": 4.0},
+	{"id": "synergy", "text": "2 armas do mesmo elemento = sinergia bonus!", "duration": 5.0},
 	{"id": "evolution", "text": "Arma max + Item max = Evolucao! Aperte E", "duration": 5.0},
 ]
 
@@ -20,6 +23,7 @@ var first_kill_connected: bool = false
 var first_levelup_connected: bool = false
 var events_checked: bool = false
 var evolution_checked: bool = false
+var synergy_checked: bool = false
 var tutorial_active: bool = false
 
 
@@ -49,7 +53,20 @@ func _process(delta: float) -> void:
 	if not tutorial_active:
 		return
 
-	# Step 4: at minute 5
+	# Dash tip: after 15 seconds
+	if "dash_tip" not in shown_steps and GameManager.game_time >= 15.0:
+		_show_step("dash_tip")
+
+	# Crystals tip: after first crystal drop (~30s into game)
+	if "crystals" not in shown_steps and GameManager.crystals_this_run > 0:
+		_show_step("crystals")
+
+	# Synergy tip: at minute 3
+	if not synergy_checked and GameManager.game_time >= 180.0:
+		synergy_checked = true
+		_show_step("synergy")
+
+	# Events tip: at minute 5
 	if not events_checked and GameManager.game_time >= 300.0:
 		events_checked = true
 		_show_step("events")

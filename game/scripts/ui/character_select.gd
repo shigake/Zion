@@ -18,18 +18,27 @@ func _build_character_list() -> void:
 	for child in char_container.get_children():
 		child.queue_free()
 
+	# Use a GridContainer for many characters (3 columns)
+	var grid = GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+
 	for char_id in CharacterDB.get_all_character_ids():
 		var data = CharacterDB.get_character(char_id)
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(150, 80)
+		btn.custom_minimum_size = Vector2(150, 70)
 		btn.text = "%s\n%s" % [data["name"], data["passive"]]
 
 		if not SaveManager.is_character_unlocked(char_id):
-			btn.text += "\n[LOCKED]"
+			var unlock_desc = data.get("unlock_description", "???")
+			btn.text += "\n[%s]" % unlock_desc
 			btn.disabled = true
 
 		btn.pressed.connect(func(): _select_character(char_id, data))
-		char_container.add_child(btn)
+		grid.add_child(btn)
+
+	char_container.add_child(grid)
 
 	_select_character("ronin", CharacterDB.get_character("ronin"))
 

@@ -10,6 +10,7 @@ extends Area3D
 var target: Node3D = null
 var direction: Vector3 = Vector3.FORWARD
 var timer: float = 0.0
+var damage_type: String = "ice"
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -32,5 +33,5 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
-		body.call_deferred("take_damage", damage)
+		body.call_deferred("take_damage", damage, damage_type)
 		queue_free()

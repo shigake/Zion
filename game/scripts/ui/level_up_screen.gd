@@ -63,7 +63,9 @@ func _show_choices() -> void:
 	banish_mode = false
 	panel.visible = true
 	GameManager.paused = true
-	get_tree().paused = true
+	# Nota: NAO pausa a tree (get_tree().paused = true) porque
+	# causa problemas com input dos botoes. GameManager.paused
+	# ja impede gameplay de rodar.
 
 func _choose(index: int) -> void:
 	if index >= options.size():
@@ -95,7 +97,6 @@ func _choose(index: int) -> void:
 		call_deferred("_show_choices")
 	else:
 		GameManager.paused = false
-		get_tree().paused = false
 	choice_made.emit()
 
 func _generate_options() -> Array:

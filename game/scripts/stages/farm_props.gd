@@ -62,6 +62,8 @@ func _generate_silos() -> void:
 
 		add_child(silo)
 
+var corn_hide_area: Area3D = null
+
 func _generate_corn_field() -> void:
 	# Milho em fileiras
 	var start_x = rng.randf_range(-30, -10)
@@ -112,6 +114,41 @@ func _generate_corn_field() -> void:
 				stalk.add_child(leaf)
 
 			add_child(stalk)
+
+	# Create hiding zone over the cornfield
+	corn_hide_area = Area3D.new()
+	corn_hide_area.name = "CornHideZone"
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(stalks_per_row * col_spacing + 2.0, 4.0, num_rows * row_spacing + 2.0)
+	col.shape = box
+	corn_hide_area.add_child(col)
+	corn_hide_area.collision_layer = 0
+	corn_hide_area.collision_mask = 1  # Detect players
+	var center_x = start_x + (stalks_per_row * col_spacing) / 2.0
+	var center_z = start_z + (num_rows * row_spacing) / 2.0
+	corn_hide_area.position = Vector3(center_x, 2.0, center_z)
+	add_child(corn_hide_area)
+	corn_hide_area.body_entered.connect(_on_corn_entered)
+	corn_hide_area.body_exited.connect(_on_corn_exited)
+
+func _on_corn_entered(body: Node3D) -> void:
+	if body.is_in_group("players"):
+		GameManager.player_hidden = true
+		# Visual: make player semi-transparent
+		if "mesh" in body:
+			var mat = body.mesh.material_override
+			if mat is ShaderMaterial:
+				mat.set_shader_parameter("albedo_color", Color(body.original_color.r, body.original_color.g, body.original_color.b, 0.5))
+
+func _on_corn_exited(body: Node3D) -> void:
+	if body.is_in_group("players"):
+		GameManager.player_hidden = false
+		# Restore opacity
+		if "mesh" in body:
+			var mat = body.mesh.material_override
+			if mat is ShaderMaterial:
+				mat.set_shader_parameter("albedo_color", body.original_color)
 
 func _generate_hay_bales() -> void:
 	var hay_mat = StandardMaterial3D.new()

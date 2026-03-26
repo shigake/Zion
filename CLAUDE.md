@@ -37,6 +37,17 @@ game/           # Godot 4 project
 - **Enemy spawning**: deterministic seed for multiplayer sync, difficulty scales with time
 - **Weapon system**: base weapons level 1-8, evolve at 8 with matching item at 5
 
+## Notificações Discord
+
+Quando terminar uma task, notifique o Discord automaticamente:
+
+```bash
+curl -s -X POST http://localhost:3123/notify -H "Content-Type: application/json" -d "{\"channel\": \"zion\", \"message\": \"DESCRIÇÃO DO QUE FOI FEITO\", \"status\": \"done\"}"
+```
+
+Status disponíveis: `done` (concluído), `error` (falhou), `info` (informativo), `warning` (atenção).
+Sempre notifique ao concluir ou falhar uma task. Escreva a mensagem em português.
+
 ## Current Phase
 
 Phase 1-2 implemented. See docs/prd.md for full roadmap.

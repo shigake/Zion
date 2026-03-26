@@ -25,11 +25,12 @@ func _process(_delta: float) -> void:
 	# Rotacao do bau
 	mesh.rotation.y += _delta * 2.0
 
-	# Interacao
-	if player_nearby and Input.is_action_just_pressed("interact"):
+	# Interacao: E ou clique
+	if player_nearby and (Input.is_action_just_pressed("interact") or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
 		_evolve()
 
 func _evolve() -> void:
+	AudioManager.play_sfx("evolve")
 	EvolutionDB.evolve_weapon(evolution_id)
 	var evo = EvolutionDB.get_evolution(evolution_id)
 

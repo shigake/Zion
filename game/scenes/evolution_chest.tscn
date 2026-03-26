@@ -12,7 +12,7 @@ emission = Color(1.0, 0.8, 0.1, 1)
 emission_energy_multiplier = 2.0
 
 [sub_resource type="BoxShape3D" id="3"]
-size = Vector3(1.0, 1.0, 1.0)
+size = Vector3(2.5, 2.0, 2.5)
 
 [node name="EvolutionChest" type="Area3D"]
 collision_layer = 4

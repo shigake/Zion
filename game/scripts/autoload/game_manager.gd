@@ -17,6 +17,7 @@ var total_kills: int = 0
 var total_damage_dealt: int = 0
 var paused: bool = false
 var is_game_over: bool = false
+var is_victory: bool = false  # true se boss morreu, false se jogador morreu
 
 # Player stats base
 var player_level: int = 1
@@ -72,6 +73,9 @@ var explosion_damage_mult: float = 1.0
 var fire_ground_active: bool = false
 var weapon_level_bonus: int = 0
 var accuracy_mult: float = 1.0
+var low_hp_damage_bonus: float = 0.0
+var player_hidden: bool = false
+var electric_damage_mult: float = 1.0
 
 func _ready() -> void:
 	_register_input_actions()
@@ -134,6 +138,7 @@ func add_xp(amount: int) -> void:
 		player_level += 1
 		player_xp_to_next = int(player_xp_to_next * 1.15) + 3
 		player_leveled_up.emit(player_level)
+		AudioManager.play_sfx("level_up")
 		# Level up particles
 		var players = get_tree().get_nodes_in_group("players")
 		if not players.is_empty():
@@ -144,12 +149,27 @@ func get_difficulty_multiplier() -> float:
 	# Cresce mais devagar, cap em 8x
 	return minf(8.0, 1.0 + (game_time / 60.0) * 0.35)
 
+# ---- Multiplayer Scaling ----
+func get_mp_hp_mult() -> float:
+	var count = MultiplayerManager.get_player_count()
+	return [1.0, 1.0, 1.3, 1.6, 2.0][mini(count, 4)]
+
+func get_mp_spawn_mult() -> float:
+	var count = MultiplayerManager.get_player_count()
+	return [1.0, 1.0, 1.2, 1.4, 1.6][mini(count, 4)]
+
+func get_mp_boss_hp_mult() -> float:
+	var count = MultiplayerManager.get_player_count()
+	return [1.0, 1.0, 1.5, 2.0, 2.5][mini(count, 4)]
+
 func take_damage(amount: int) -> void:
 	if is_game_over:
 		return
 	# Dodge check
 	if dodge_chance > 0.0 and randf() < dodge_chance:
+		AchievementManager._run_dodges += 1
 		return  # Dodged!
+	AudioManager.play_sfx("player_hurt")
 	var reduced = maxi(1, amount - perm_armor)
 	# Thorns
 	if thorns_mult > 0.0:
@@ -170,8 +190,11 @@ func take_damage(amount: int) -> void:
 		game_over.emit()
 
 func heal(amount: int) -> void:
+	var heal_amount = amount
+	if selected_character == "chef":
+		heal_amount *= 2
 	var effective_max = get_effective_max_hp()
-	player_hp = mini(player_hp + amount, effective_max)
+	player_hp = mini(player_hp + heal_amount, effective_max)
 
 func get_effective_max_hp() -> int:
 	return int(player_max_hp * max_hp_mult)
@@ -301,7 +324,7 @@ func _recalculate_item_bonuses() -> void:
 			"accuracy":
 				accuracy_mult += value
 			"electric_damage":
-				pass  # Futuro: sinergias elementais
+				electric_damage_mult += value
 
 func reset() -> void:
 	game_time = 0.0
@@ -310,6 +333,7 @@ func reset() -> void:
 	total_damage_dealt = 0
 	paused = false
 	is_game_over = false
+	is_victory = false
 	player_level = 1
 	player_xp = 0
 	player_xp_to_next = 5
@@ -341,6 +365,9 @@ func reset() -> void:
 	fire_ground_active = false
 	weapon_level_bonus = 0
 	accuracy_mult = 1.0
+	low_hp_damage_bonus = 0.0
+	player_hidden = false
+	electric_damage_mult = 1.0
 	revives_remaining = 0
 	banishes = 0
 	banished_options.clear()
@@ -397,6 +424,23 @@ func _apply_character_bonuses() -> void:
 		attack_speed_mult += char_data["attack_speed_bonus"]
 	if "area_bonus" in char_data:
 		area_mult += char_data["area_bonus"]
+	if "dodge_bonus" in char_data:
+		dodge_chance += char_data["dodge_bonus"]
+	if "low_hp_damage_bonus" in char_data:
+		low_hp_damage_bonus = char_data["low_hp_damage_bonus"]
+	# Vampiro: lifesteal natural
+	if selected_character == "vampiro":
+		lifesteal += 0.03
+	# Chef: cura 2x (tracked in heal function)
+	# Engenheiro: cooldown reduction
+	if selected_character == "engenheiro":
+		cooldown_mult = maxf(0.3, cooldown_mult - 0.15)
+	# Gladiador: armor
+	if selected_character == "gladiador":
+		perm_armor += 5
+	# Mystery: all weapons at level 1 (added by stage script after reset)
+	if selected_character == "mystery":
+		MAX_WEAPONS = 23  # Allow all weapons
 
 func _apply_relic() -> void:
 	if selected_relic.is_empty():
@@ -426,6 +470,25 @@ func _apply_relic() -> void:
 		"veteran":
 			xp_mult += 0.20
 			veteran_relic_active = true
+		"extend_time":
+			run_time_limit += 600.0  # +10 minutos
+		"show_event_direction":
+			pass  # Compass visual handled by HUD
+		"double_chest":
+			pass  # Handled in evolution_chest.gd
+
+func get_effective_damage_mult() -> float:
+	var mult = perm_damage_mult
+	if low_hp_damage_bonus > 0.0 and player_hp < int(get_effective_max_hp() * 0.3):
+		mult *= (1.0 + low_hp_damage_bonus)
+	return mult
+
+func get_electric_damage_mult() -> float:
+	return electric_damage_mult
+
+func get_accuracy_spread() -> float:
+	# accuracy_mult reduces spread. 1.0 = normal, 2.0 = half spread
+	return 1.0 / maxf(0.1, accuracy_mult)
 
 func end_run() -> void:
 	# Cristais = kills / 5 (minimo)

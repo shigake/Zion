@@ -9,9 +9,14 @@ extends Area3D
 var being_attracted: bool = false
 var attract_target: Node3D = null
 
+@onready var mesh: MeshInstance3D = $Mesh
+
 func _ready() -> void:
 	add_to_group("xp_gems")
 	body_entered.connect(_on_body_entered)
+	# Apply glow shader to XP gem mesh
+	if mesh:
+		mesh.material_override = VisualSetup.create_glow_material(Color(0.2, 0.6, 1.0), 2.0)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:
@@ -41,6 +46,7 @@ func _physics_process(delta: float) -> void:
 
 func _collect() -> void:
 	ParticleFactory.spawn_collect_particles(global_position, Color(0.2, 0.6, 1.0))
+	AudioManager.play_sfx("collect_xp")
 	GameManager.add_xp(xp_value)
 	queue_free()
 

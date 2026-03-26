@@ -12,8 +12,15 @@ var hit_timers: Dictionary = {}  # enemy_id -> timer
 @onready var scythe_area: Area3D = $ScytheArea
 @onready var scythe_mesh: MeshInstance3D = $ScytheMesh
 
+var _trail: Node3D = null
+
 func _ready() -> void:
 	scythe_area.body_entered.connect(_on_body_entered)
+	# Weapon trail
+	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
+	_trail.trail_color = Color(0.6, 0.2, 0.8, 0.6)
+	_trail.max_points = 20
+	scythe_mesh.add_child(_trail)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -59,7 +66,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 	var level = GameManager.get_weapon_level("scythe")
 	var dmg = int(WeaponDB.get_damage("scythe", level))
-	body.call_deferred("take_damage", dmg)
+	body.call_deferred("take_damage", dmg, "dark")
 	hit_timers[eid] = hit_cooldown
 
 	# Lifesteal

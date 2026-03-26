@@ -9,9 +9,14 @@ extends Area3D
 var being_attracted: bool = false
 var attract_target: Node3D = null
 
+@onready var mesh: MeshInstance3D = $Mesh
+
 func _ready() -> void:
 	add_to_group("crystals")
 	body_entered.connect(_on_body_entered)
+	# Apply glow shader to crystal mesh
+	if mesh:
+		mesh.material_override = VisualSetup.create_glow_material(Color(1.0, 0.85, 0.2), 2.5)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:
@@ -20,6 +25,8 @@ func _physics_process(delta: float) -> void:
 	# Bobbing e rotacao
 	var bob = sin(GameManager.game_time * 3.0 + global_position.z) * 0.08
 	position.y = 0.4 + bob
+	if mesh:
+		mesh.rotation.y += delta * 3.0
 
 	if not being_attracted:
 		var players = get_tree().get_nodes_in_group("players")
@@ -37,6 +44,8 @@ func _physics_process(delta: float) -> void:
 			_collect()
 
 func _collect() -> void:
+	AudioManager.play_sfx("collect_crystal")
+	ParticleFactory.spawn_collect_particles(global_position, Color(1.0, 0.85, 0.2))
 	GameManager.crystals_this_run += crystal_value
 	queue_free()
 

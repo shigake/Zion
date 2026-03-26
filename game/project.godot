@@ -24,6 +24,14 @@ SynergySystem="*res://scripts/autoload/synergy_system.gd"
 AudioManager="*res://scripts/autoload/audio_manager.gd"
 ScreenEffects="*res://scripts/effects/screen_effects.gd"
 ParticleFactory="*res://scripts/effects/particle_factory.gd"
+ObjectPool="*res://scripts/autoload/object_pool.gd"
+UITheme="*res://scripts/autoload/ui_theme.gd"
+KeybindingManager="*res://scripts/autoload/keybinding_manager.gd"
+LocaleManager="*res://scripts/autoload/locale_manager.gd"
+VisualSetup="*res://scripts/effects/visual_setup.gd"
+ModelFactory="*res://scripts/effects/model_factory.gd"
+SteamManager="*res://scripts/autoload/steam_manager.gd"
+AchievementManager="*res://scripts/autoload/achievement_manager.gd"
 
 [display]
 

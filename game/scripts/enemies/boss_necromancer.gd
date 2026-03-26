@@ -12,15 +12,23 @@ var skeleton_scene: PackedScene = preload("res://scenes/enemies/skeleton.tscn")
 var bullet_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
 func _ready() -> void:
+	# Boss tem resistencia parcial a todos os tipos
+	resistances = {
+		"physical": 0.7,
+		"fire": 0.7,
+		"ice": 0.7,
+		"electric": 0.7,
+		"dark": 0.5,  # Mais resistente a dark (ele e necromante)
+	}
 	super._ready()
+	# Extra boss HP scaling for multiplayer (on top of base enemy scaling)
+	var boss_extra = GameManager.get_mp_boss_hp_mult() / GameManager.get_mp_hp_mult()
+	if boss_extra > 1.0:
+		max_hp = int(max_hp * boss_extra)
+		hp = max_hp
 	add_to_group("boss")
 	enemy_color = Color(0.2, 0.0, 0.3)
-	var mat = mesh.get_surface_override_material(0)
-	if mat is StandardMaterial3D:
-		mat.albedo_color = enemy_color
-		mat.emission_enabled = true
-		mat.emission = Color(0.3, 0.0, 0.4)
-		mat.emission_energy_multiplier = 1.0
+	# Modelo procedural já aplicado pelo enemy_base._ready()
 
 func _physics_process(delta: float) -> void:
 	if is_dead or GameManager.paused:
@@ -109,4 +117,10 @@ func _die() -> void:
 	ScreenEffects.slow_motion(1.0, 0.2)
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 30)
 	ParticleFactory.spawn_explosion_particles(global_position, 5.0)
+	# Marca fase como completa
+	SaveManager.complete_stage(GameManager.selected_stage)
+	# Vitoria!
+	GameManager.is_victory = true
+	GameManager.is_game_over = true
+	GameManager.game_over.emit()
 	super._die()

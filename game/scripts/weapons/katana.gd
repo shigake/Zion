@@ -11,10 +11,16 @@ var attack_duration: float = 0.2
 @onready var slash_mesh: MeshInstance3D = $SlashMesh
 
 var hit_enemies: Array = []  # Evita multi-hit no mesmo swing
+var _trail: Node3D = null
 
 func _ready() -> void:
 	slash_mesh.visible = false
 	slash_area.body_entered.connect(_on_body_entered)
+	# Weapon trail
+	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
+	_trail.trail_color = Color(0.8, 0.9, 1.0, 0.6)
+	_trail.max_points = 10
+	slash_mesh.add_child(_trail)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -63,5 +69,5 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		var level = GameManager.get_weapon_level("katana")
 		var dmg = int(WeaponDB.get_damage("katana", level))
-		body.call_deferred("take_damage", dmg)
+		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)

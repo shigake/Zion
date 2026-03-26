@@ -12,8 +12,15 @@ var selected_stage: String = "cemetery"
 # Stage definitions
 var stages: Array[Dictionary] = [
 	{"id": "cemetery", "name": "Cemiterio", "description": "Um cemiterio sombrio cheio de mortos-vivos."},
-	{"id": "forest", "name": "Floresta", "description": "Uma floresta densa com criaturas selvagens."},
-	{"id": "farm", "name": "Fazenda", "description": "Uma fazenda abandonada infestada de monstros."},
+	{"id": "forest", "name": "Floresta", "description": "Floresta magica com cogumelos e fadas."},
+	{"id": "farm", "name": "Fazenda", "description": "Fazenda destruida com vacas zumbis."},
+	{"id": "tokyo", "name": "Toquio", "description": "Cidade cyberpunk com robos e neon."},
+	{"id": "volcano", "name": "Vulcao", "description": "Cavernas de lava com demonios."},
+	{"id": "ocean", "name": "Oceano", "description": "Ruinas submarinas com tubaroes zumbis."},
+	{"id": "arena", "name": "Arena", "description": "Coliseu gladiador com leoes e centurioes."},
+	{"id": "space", "name": "Espaco", "description": "Estacao espacial com aliens e parasitas."},
+	{"id": "castle", "name": "Castelo", "description": "Castelo gotico com vampiros e gargulas."},
+	{"id": "candy", "name": "Mundo Doce", "description": "Terra de doces com gummy bears."},
 ]
 
 func _ready() -> void:

@@ -14,10 +14,13 @@ signal all_players_loaded()
 const DEFAULT_PORT := 7777
 const MAX_PLAYERS := 4
 
+enum NetworkBackend { ENET, STEAM }
+
 # peer_id -> {name, character, ready, loaded}
 var players: Dictionary = {}
 var local_player_id: int = 0
 var is_online: bool = false
+var backend: int = NetworkBackend.ENET
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -25,10 +28,35 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 
-# ---- Host ----
-func create_server(port: int = DEFAULT_PORT) -> Error:
+func _create_server_peer(port: int) -> Array:
+	# Returns [peer, error]. Override for Steam networking when available.
+	if backend == NetworkBackend.STEAM and SteamManager.is_available:
+		# Steam Networking Sockets - requires GodotSteam plugin
+		# var peer = SteamMultiplayerPeer.new()
+		# var error = peer.create_host(0, [])
+		# return [peer, error]
+		pass
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_server(port, MAX_PLAYERS)
+	return [peer, error]
+
+func _create_client_peer(address: String, port: int) -> Array:
+	# Returns [peer, error]. Override for Steam networking when available.
+	if backend == NetworkBackend.STEAM and SteamManager.is_available:
+		# Steam Networking Sockets - requires GodotSteam plugin
+		# var peer = SteamMultiplayerPeer.new()
+		# var error = peer.create_client(steam_id, 0, [])
+		# return [peer, error]
+		pass
+	var peer = ENetMultiplayerPeer.new()
+	var error = peer.create_client(address, port)
+	return [peer, error]
+
+# ---- Host ----
+func create_server(port: int = DEFAULT_PORT) -> Error:
+	var result = _create_server_peer(port)
+	var peer = result[0]
+	var error = result[1]
 	if error != OK:
 		push_error("Failed to create server: %s" % error)
 		return error
@@ -42,8 +70,9 @@ func create_server(port: int = DEFAULT_PORT) -> Error:
 
 # ---- Client ----
 func join_server(address: String = "127.0.0.1", port: int = DEFAULT_PORT) -> Error:
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_client(address, port)
+	var result = _create_client_peer(address, port)
+	var peer = result[0]
+	var error = result[1]
 	if error != OK:
 		push_error("Failed to connect: %s" % error)
 		return error

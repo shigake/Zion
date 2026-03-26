@@ -20,6 +20,8 @@ func _ready() -> void:
 	# Conecta signal de kill para sinergias on-kill
 	GameManager.enemy_killed.connect(_on_enemy_killed_synergy)
 
+	AudioManager.play_music("farm")
+
 	# Aplica personagem selecionado
 	var char_data = CharacterDB.get_character(GameManager.selected_character)
 	if not char_data.is_empty():

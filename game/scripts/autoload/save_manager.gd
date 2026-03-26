@@ -7,12 +7,14 @@ const SAVE_PATH := "user://save_data.json"
 var data: Dictionary = {
 	"crystals": 0,
 	"upgrades": {},  # upgrade_id -> level
-	"unlocked_characters": ["ronin", "soldado"],
+	"unlocked_characters": ["ronin", "soldado", "mago"],
 	"unlocked_stages": ["cemetery"],
 	"total_runs": 0,
 	"total_kills": 0,
 	"best_time": 0.0,
 	"achievements": [],
+	"completed_stages": [],
+	"leaderboard": [],  # Array of {time: float, kills: int, character: String, date: String}
 }
 
 func _ready() -> void:
@@ -79,6 +81,54 @@ func end_run(crystals_earned: int, time_survived: float, kills: int) -> void:
 	if time_survived > data["best_time"]:
 		data["best_time"] = time_survived
 	save_game()
+	# Auto-add to leaderboard if endless mode
+	if GameManager.game_mode == "endless":
+		add_leaderboard_entry(time_survived, kills, CharacterDB.get_character(GameManager.selected_character).get("name", "???"))
+
+func complete_stage(stage_id: String) -> void:
+	if stage_id not in data.get("completed_stages", []):
+		if "completed_stages" not in data:
+			data["completed_stages"] = []
+		data["completed_stages"].append(stage_id)
+		# Desbloqueia proxima fase
+		var stage_order = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+		var idx = stage_order.find(stage_id)
+		if idx >= 0 and idx + 1 < stage_order.size():
+			unlock_stage(stage_order[idx + 1])
+		save_game()
+
+func check_unlocks() -> Array[String]:
+	## Checks if any characters should be unlocked based on stats. Returns newly unlocked ids.
+	var newly_unlocked: Array[String] = []
+	for char_id in CharacterDB.get_all_character_ids():
+		if is_character_unlocked(char_id):
+			continue
+		var char_data = CharacterDB.get_character(char_id)
+		if "unlock_condition" not in char_data:
+			continue
+		var unlocked = false
+		match char_data["unlock_condition"]:
+			"total_kills":
+				if data["total_kills"] >= char_data["unlock_value"]:
+					unlocked = true
+			"complete_stage":
+				if char_data["unlock_value"] in data.get("completed_stages", []):
+					unlocked = true
+			"all_characters":
+				# Unlock when all OTHER characters are unlocked
+				var all_others = true
+				for other_id in CharacterDB.get_all_character_ids():
+					if other_id == char_id:
+						continue
+					if not is_character_unlocked(other_id):
+						all_others = false
+						break
+				if all_others:
+					unlocked = true
+		if unlocked:
+			unlock_character(char_id)
+			newly_unlocked.append(char_id)
+	return newly_unlocked
 
 func is_character_unlocked(char_id: String) -> bool:
 	return char_id in data["unlocked_characters"]
@@ -87,6 +137,32 @@ func unlock_character(char_id: String) -> void:
 	if char_id not in data["unlocked_characters"]:
 		data["unlocked_characters"].append(char_id)
 		save_game()
+
+func add_leaderboard_entry(time: float, kills: int, character: String) -> int:
+	## Adds an entry to the leaderboard. Returns the rank (0-based, -1 if not in top 10).
+	var entry = {
+		"time": time,
+		"kills": kills,
+		"character": character,
+		"date": Time.get_date_string_from_system(),
+	}
+	if "leaderboard" not in data:
+		data["leaderboard"] = []
+	data["leaderboard"].append(entry)
+	# Sort by time descending (longest survival first)
+	data["leaderboard"].sort_custom(func(a, b): return a["time"] > b["time"])
+	# Keep top 10
+	if data["leaderboard"].size() > 10:
+		data["leaderboard"].resize(10)
+	save_game()
+	# Return rank
+	for i in range(data["leaderboard"].size()):
+		if data["leaderboard"][i] == entry:
+			return i
+	return -1
+
+func get_leaderboard() -> Array:
+	return data.get("leaderboard", [])
 
 func is_stage_unlocked(stage_id: String) -> bool:
 	return stage_id in data["unlocked_stages"]
