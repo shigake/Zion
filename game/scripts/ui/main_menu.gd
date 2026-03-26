@@ -19,13 +19,16 @@ func _ready() -> void:
 	leaderboard_btn.text = "Leaderboard"
 	leaderboard_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/leaderboard_screen.tscn"))
 	$VBox/Buttons.add_child(leaderboard_btn)
-	$VBox/Buttons.move_child(leaderboard_btn, $VBox/Buttons.get_child_count() - 1)
 	# Options button
 	var options_btn = Button.new()
 	options_btn.text = "Opcoes"
 	options_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/options_screen.tscn"))
 	$VBox/Buttons.add_child(options_btn)
-	$VBox/Buttons.move_child(options_btn, $VBox/Buttons.get_child_count() - 1)
+	# Reorder: Sair always last, Opcoes right above it
+	# Order: Jogar Solo, Multiplayer, Loja, Leaderboard, Opcoes, Sair
+	var btn_count = $VBox/Buttons.get_child_count()
+	$VBox/Buttons.move_child(quit_btn, btn_count - 1)  # Sair last
+	$VBox/Buttons.move_child(options_btn, btn_count - 2)  # Opcoes before Sair
 	_update_crystals()
 	_update_version()
 	AudioManager.play_music("menu")

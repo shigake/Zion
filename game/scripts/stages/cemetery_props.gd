@@ -86,9 +86,9 @@ func _generate_ambient_lights() -> void:
 		var x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
 		var z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
 		light.position = Vector3(x, 1.5, z)
-		light.light_color = Color(0.3, 0.5, 0.8)
-		light.light_energy = 0.4
-		light.omni_range = 8.0
+		light.light_color = Color(0.5, 0.65, 0.9)
+		light.light_energy = 0.7
+		light.omni_range = 12.0
 		light.omni_attenuation = 2.0
 		add_child(light)
 
