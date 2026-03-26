@@ -34,10 +34,10 @@ func _build_shop() -> void:
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(120, 35)
 		if maxed:
-			btn.text = "MAX"
+			btn.text = LocaleManager.tr_key("max_level")
 			btn.disabled = true
 		else:
-			btn.text = "Comprar (%d)" % cost
+			btn.text = LocaleManager.tr_key("buy") % cost
 			btn.disabled = SaveManager.get_crystals() < cost
 			var captured_uid = uid
 			btn.pressed.connect(func(): _buy(captured_uid))
@@ -50,7 +50,7 @@ func _buy(uid: String) -> void:
 	_build_shop()
 
 func _update_crystals() -> void:
-	crystals_label.text = "Cristais: %d" % SaveManager.get_crystals()
+	crystals_label.text = LocaleManager.tr_key("crystals") % SaveManager.get_crystals()
 
 func _clear_upgrades() -> void:
 	for child in upgrade_container.get_children():

@@ -14,14 +14,19 @@ func _ready() -> void:
 	multi_btn.pressed.connect(_on_multiplayer)
 	shop_btn.pressed.connect(_on_shop)
 	quit_btn.pressed.connect(_on_quit)
+	# Aplica texto localizado nos botoes da cena
+	play_btn.text = LocaleManager.tr_key("menu_play_solo")
+	multi_btn.text = LocaleManager.tr_key("menu_multiplayer")
+	shop_btn.text = LocaleManager.tr_key("menu_shop")
+	quit_btn.text = LocaleManager.tr_key("menu_quit")
 	# Leaderboard button (added programmatically)
 	var leaderboard_btn = Button.new()
-	leaderboard_btn.text = "Leaderboard"
+	leaderboard_btn.text = LocaleManager.tr_key("menu_leaderboard")
 	leaderboard_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/leaderboard_screen.tscn"))
 	$VBox/Buttons.add_child(leaderboard_btn)
 	# Options button
 	var options_btn = Button.new()
-	options_btn.text = "Opcoes"
+	options_btn.text = LocaleManager.tr_key("menu_options")
 	options_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/options_screen.tscn"))
 	$VBox/Buttons.add_child(options_btn)
 	# Reorder: Sair always last, Opcoes right above it
@@ -64,7 +69,7 @@ func _update_version() -> void:
 		version_label.text = "v1.0.0"
 
 func _update_crystals() -> void:
-	crystals_label.text = "Cristais: %d" % SaveManager.get_crystals()
+	crystals_label.text = LocaleManager.tr_key("crystals") % SaveManager.get_crystals()
 
 func _on_play() -> void:
 	AudioManager.play_sfx("menu_click")

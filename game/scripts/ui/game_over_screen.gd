@@ -25,32 +25,34 @@ func _show() -> void:
 	AchievementManager.check_achievements()
 	await get_tree().create_timer(1.0).timeout
 	var t = int(GameManager.game_time)
+	var time_str = "%02d:%02d" % [t / 60, t % 60]
 	if GameManager.is_victory:
-		time_label.text = "VITORIA! Tempo: %02d:%02d" % [t / 60, t % 60]
+		time_label.text = LocaleManager.tr_key("victory_time") % time_str
 	else:
-		time_label.text = "Tempo: %02d:%02d" % [t / 60, t % 60]
-	kills_label.text = "Kills: %d" % GameManager.total_kills
-	level_label.text = "Level: %d" % GameManager.player_level
-	crystals_label.text = "Cristais ganhos: +%d" % GameManager.crystals_this_run
+		time_label.text = LocaleManager.tr_key("time") % time_str
+	kills_label.text = LocaleManager.tr_key("kills_stat") % GameManager.total_kills
+	level_label.text = LocaleManager.tr_key("level_stat") % GameManager.player_level
+	crystals_label.text = LocaleManager.tr_key("crystals_earned") % GameManager.crystals_this_run
 	# Leaderboard rank para endless mode
 	if GameManager.game_mode == "endless":
 		var leaderboard = SaveManager.get_leaderboard()
 		for i in range(leaderboard.size()):
 			if absf(leaderboard[i].get("time", 0) - GameManager.game_time) < 1.0:
-				crystals_label.text += "\nLeaderboard: #%d!" % (i + 1)
+				crystals_label.text += "\n" + LocaleManager.tr_key("leaderboard_rank") % (i + 1)
 				break
 	# Stage completion check
 	if GameManager.game_mode == "normal":
-		var stage_name = GameManager.selected_stage.capitalize()
-		crystals_label.text += "\nFase %s completa!" % stage_name
+		var stage_key = "stage_" + GameManager.selected_stage
+		var stage_name = LocaleManager.tr_key(stage_key)
+		crystals_label.text += "\n" + LocaleManager.tr_key("stage_complete") % stage_name
 	# Show total damage dealt
-	crystals_label.text += "\nDano total: %d" % GameManager.total_damage_dealt
+	crystals_label.text += "\n" + LocaleManager.tr_key("total_damage") % GameManager.total_damage_dealt
 	# Unlocks
 	var unlocked = SaveManager.check_unlocks()
 	if not unlocked.is_empty():
 		for char_id in unlocked:
 			var char_data = CharacterDB.get_character(char_id)
-			crystals_label.text += "\nDESBLOQUEADO: %s!" % char_data["name"]
+			crystals_label.text += "\n" + LocaleManager.tr_key("unlocked") % char_data["name"]
 	overlay.visible = true
 	panel.visible = true
 	GameManager.paused = true

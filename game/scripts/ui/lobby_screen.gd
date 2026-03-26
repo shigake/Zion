@@ -27,32 +27,32 @@ func _ready() -> void:
 func _on_host() -> void:
 	var error = MultiplayerManager.create_server()
 	if error == OK:
-		status_label.text = "Servidor criado! Aguardando jogadores..."
+		status_label.text = LocaleManager.tr_key("lobby_server_created")
 		host_btn.disabled = true
 		join_btn.disabled = true
 	else:
-		status_label.text = "Erro ao criar servidor!"
+		status_label.text = LocaleManager.tr_key("lobby_server_error")
 
 func _on_join() -> void:
 	var ip = ip_input.text if ip_input.text != "" else "127.0.0.1"
 	var error = MultiplayerManager.join_server(ip)
 	if error == OK:
-		status_label.text = "Conectando a %s..." % ip
+		status_label.text = LocaleManager.tr_key("lobby_connecting") % ip
 		host_btn.disabled = true
 		join_btn.disabled = true
 	else:
-		status_label.text = "Erro ao conectar!"
+		status_label.text = LocaleManager.tr_key("lobby_connect_error")
 
 func _on_server_created() -> void:
 	start_btn.visible = true
 	_update_player_list()
 
 func _on_connected() -> void:
-	status_label.text = "Conectado! Aguardando host iniciar..."
+	status_label.text = LocaleManager.tr_key("lobby_connected")
 	_update_player_list()
 
 func _on_failed() -> void:
-	status_label.text = "Falha na conexao!"
+	status_label.text = LocaleManager.tr_key("lobby_failed")
 	host_btn.disabled = false
 	join_btn.disabled = false
 
@@ -68,13 +68,13 @@ func _update_player_list() -> void:
 		var info = MultiplayerManager.players[pid]
 		var label = Label.new()
 		var char_name = CharacterDB.get_character(info["character"]).get("name", "???")
-		var is_local = "(Voce)" if pid == MultiplayerManager.local_player_id else ""
+		var is_local = LocaleManager.tr_key("lobby_you") if pid == MultiplayerManager.local_player_id else ""
 		label.text = "Player %d — %s %s" % [pid, char_name, is_local]
 		if pid in colors:
 			label.modulate = colors[pid]
 		player_list.add_child(label)
 
-	status_label.text = "%d/%d jogadores" % [MultiplayerManager.get_player_count(), MultiplayerManager.MAX_PLAYERS]
+	status_label.text = LocaleManager.tr_key("lobby_players") % [MultiplayerManager.get_player_count(), MultiplayerManager.MAX_PLAYERS]
 
 func _on_start() -> void:
 	if not MultiplayerManager.is_host():

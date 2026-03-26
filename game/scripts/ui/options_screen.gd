@@ -68,13 +68,13 @@ func _build_ui() -> void:
 	# ---- Window Mode ----
 	var wm_hbox = HBoxContainer.new()
 	var wm_label = Label.new()
-	wm_label.text = "Modo Janela"
+	wm_label.text = LocaleManager.tr_key("window_mode")
 	wm_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	wm_hbox.add_child(wm_label)
 	var wm_option = OptionButton.new()
-	wm_option.add_item("Janela", 0)
-	wm_option.add_item("Tela Cheia", 1)
-	wm_option.add_item("Borderless", 2)
+	wm_option.add_item(LocaleManager.tr_key("window_windowed"), 0)
+	wm_option.add_item(LocaleManager.tr_key("window_fullscreen"), 1)
+	wm_option.add_item(LocaleManager.tr_key("window_borderless"), 2)
 	var current_mode = DisplayServer.window_get_mode()
 	if current_mode == DisplayServer.WINDOW_MODE_FULLSCREEN:
 		wm_option.selected = 1
@@ -98,7 +98,7 @@ func _build_ui() -> void:
 	# ---- Resolution ----
 	var res_hbox = HBoxContainer.new()
 	var res_label = Label.new()
-	res_label.text = "Resolucao"
+	res_label.text = LocaleManager.tr_key("resolution")
 	res_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	res_hbox.add_child(res_label)
 	var res_option = OptionButton.new()

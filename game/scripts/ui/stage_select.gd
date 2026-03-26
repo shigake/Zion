@@ -19,28 +19,27 @@ var current_page: int = 0
 var total_pages: int = 1
 var _selected_btn: Button = null
 
-# Stage definitions
-var stages: Array[Dictionary] = [
-	{"id": "cemetery", "name": "Cemiterio", "description": "Um cemiterio sombrio cheio de mortos-vivos."},
-	{"id": "forest", "name": "Floresta", "description": "Floresta magica com cogumelos e fadas."},
-	{"id": "farm", "name": "Fazenda", "description": "Fazenda destruida com vacas zumbis."},
-	{"id": "tokyo", "name": "Toquio", "description": "Cidade cyberpunk com robos e neon."},
-	{"id": "volcano", "name": "Vulcao", "description": "Cavernas de lava com demonios."},
-	{"id": "ocean", "name": "Oceano", "description": "Ruinas submarinas com tubaroes zumbis."},
-	{"id": "arena", "name": "Arena", "description": "Coliseu gladiador com leoes e centurioes."},
-	{"id": "space", "name": "Espaco", "description": "Estacao espacial com aliens e parasitas."},
-	{"id": "castle", "name": "Castelo", "description": "Castelo gotico com vampiros e gargulas."},
-	{"id": "candy", "name": "Mundo Doce", "description": "Terra de doces com gummy bears."},
+# Stage IDs — nomes e descrições vêm do LocaleManager
+var stage_ids: Array[String] = [
+	"cemetery", "forest", "farm", "tokyo", "volcano",
+	"ocean", "arena", "space", "castle", "candy",
 ]
+
+func _get_stage_data(stage_id: String) -> Dictionary:
+	return {
+		"id": stage_id,
+		"name": LocaleManager.tr_key("stage_" + stage_id),
+		"description": LocaleManager.tr_key("stage_" + stage_id + "_desc"),
+	}
 
 func _ready() -> void:
 	next_btn.pressed.connect(_on_next)
 	back_btn.pressed.connect(_on_back)
 	left_arrow.pressed.connect(_prev_page)
 	right_arrow.pressed.connect(_next_page)
-	total_pages = maxi(1, ceili(float(stages.size()) / PER_PAGE))
+	total_pages = maxi(1, ceili(float(stage_ids.size()) / PER_PAGE))
 	_show_page(0)
-	_select_stage(stages[0])
+	_select_stage(_get_stage_data(stage_ids[0]))
 	GamepadUI.notify_menu_opened()
 
 func _show_page(page: int) -> void:
@@ -50,10 +49,10 @@ func _show_page(page: int) -> void:
 		child.queue_free()
 
 	var start_idx = current_page * PER_PAGE
-	var end_idx = mini(start_idx + PER_PAGE, stages.size())
+	var end_idx = mini(start_idx + PER_PAGE, stage_ids.size())
 
 	for i in range(start_idx, end_idx):
-		var stage = stages[i]
+		var stage = _get_stage_data(stage_ids[i])
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(140, 70)
 
@@ -61,7 +60,7 @@ func _show_page(page: int) -> void:
 		if unlocked:
 			btn.text = stage["name"]
 		else:
-			btn.text = stage["name"] + "\n[LOCKED]"
+			btn.text = stage["name"] + "\n[" + LocaleManager.tr_key("locked") + "]"
 			btn.disabled = true
 
 		var b = btn  # capture for lambda

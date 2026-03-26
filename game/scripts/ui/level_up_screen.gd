@@ -36,7 +36,7 @@ func _show_choices() -> void:
 		pending_levels = 0
 		return
 
-	title_label.text = "LEVEL UP! (Lv. %d)" % GameManager.player_level
+	title_label.text = LocaleManager.tr_key("level_up_title") % GameManager.player_level
 
 	var buttons = [option1_btn, option2_btn, option3_btn]
 	for i in range(3):
@@ -49,14 +49,14 @@ func _show_choices() -> void:
 	# Reroll button
 	if GameManager.rerolls > 0:
 		reroll_btn.visible = true
-		reroll_btn.text = "Reroll (%d)" % GameManager.rerolls
+		reroll_btn.text = LocaleManager.tr_key("reroll") % GameManager.rerolls
 	else:
 		reroll_btn.visible = false
 
 	# Banish button
 	if GameManager.banishes > 0:
 		banish_btn.visible = true
-		banish_btn.text = "Banish (%d)" % GameManager.banishes
+		banish_btn.text = LocaleManager.tr_key("banish") % GameManager.banishes
 	else:
 		banish_btn.visible = false
 
@@ -147,7 +147,7 @@ func _generate_options() -> Array:
 				pool.append({
 					"type": "weapon",
 					"id": wid,
-					"label": "%s (NOVO!)" % data["name"],
+					"label": "%s (%s)" % [data["name"], LocaleManager.tr_key("new")],
 					"weight": 8,
 				})
 
@@ -170,7 +170,7 @@ func _generate_options() -> Array:
 				pool.append({
 					"type": "item",
 					"id": iid,
-					"label": "%s (NOVO!)" % data["name"],
+					"label": "%s (%s)" % [data["name"], LocaleManager.tr_key("new")],
 					"weight": 8,
 				})
 
@@ -205,7 +205,7 @@ func _on_banish() -> void:
 	if GameManager.banishes <= 0:
 		return
 	banish_mode = true
-	title_label.text = "BANISH: Escolha uma opcao para remover"
+	title_label.text = LocaleManager.tr_key("banish_select")
 	banish_btn.visible = false
 
 func _banish_option(index: int) -> void:

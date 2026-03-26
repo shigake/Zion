@@ -30,9 +30,12 @@ func _ready() -> void:
 		event.physical_keycode = KEY_ESCAPE
 		InputMap.action_add_event("pause", event)
 
+	# Aplica texto localizado nos botoes da cena
+	resume_btn.text = LocaleManager.tr_key("resume")
+	menu_btn.text = LocaleManager.tr_key("quit_to_menu")
 	# Options button
 	var options_btn = Button.new()
-	options_btn.text = "Opcoes"
+	options_btn.text = LocaleManager.tr_key("options")
 	options_btn.custom_minimum_size = Vector2(0, 40)
 	options_btn.pressed.connect(_on_options)
 	$Panel/VBox.add_child(options_btn)
@@ -40,7 +43,7 @@ func _ready() -> void:
 
 	# Quit button (fecha a aplicacao)
 	var quit_btn = Button.new()
-	quit_btn.text = "Sair do Jogo"
+	quit_btn.text = LocaleManager.tr_key("quit_game")
 	quit_btn.custom_minimum_size = Vector2(0, 40)
 	quit_btn.pressed.connect(_on_quit)
 	$Panel/VBox.add_child(quit_btn)
@@ -135,7 +138,7 @@ func _on_options() -> void:
 	margin.add_child(vbox)
 
 	var title = Label.new()
-	title.text = "OPCOES"
+	title.text = LocaleManager.tr_key("options")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 22)
 	vbox.add_child(title)
@@ -143,16 +146,16 @@ func _on_options() -> void:
 	vbox.add_child(HSeparator.new())
 
 	# ---- Volume ----
-	_add_slider(vbox, "Volume Master", "master", 1.0)
-	_add_slider(vbox, "Volume Musica", "music", 0.8)
-	_add_slider(vbox, "Volume SFX", "sfx", 1.0)
+	_add_slider(vbox, LocaleManager.tr_key("volume_master"), "master", 1.0)
+	_add_slider(vbox, LocaleManager.tr_key("volume_music"), "music", 0.8)
+	_add_slider(vbox, LocaleManager.tr_key("volume_sfx"), "sfx", 1.0)
 
 	vbox.add_child(HSeparator.new())
 
 	# ---- Fullscreen ----
 	var fs_hbox = HBoxContainer.new()
 	var fs_label = Label.new()
-	fs_label.text = "Tela Cheia"
+	fs_label.text = LocaleManager.tr_key("fullscreen")
 	fs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	fs_hbox.add_child(fs_label)
 	var fs_check = CheckButton.new()
@@ -171,13 +174,13 @@ func _on_options() -> void:
 	# ---- Window Mode ----
 	var wm_hbox = HBoxContainer.new()
 	var wm_label = Label.new()
-	wm_label.text = "Modo Janela"
+	wm_label.text = LocaleManager.tr_key("window_mode")
 	wm_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	wm_hbox.add_child(wm_label)
 	var wm_option = OptionButton.new()
-	wm_option.add_item("Janela", 0)
-	wm_option.add_item("Tela Cheia", 1)
-	wm_option.add_item("Borderless", 2)
+	wm_option.add_item(LocaleManager.tr_key("window_windowed"), 0)
+	wm_option.add_item(LocaleManager.tr_key("window_fullscreen"), 1)
+	wm_option.add_item(LocaleManager.tr_key("window_borderless"), 2)
 	var current_mode = DisplayServer.window_get_mode()
 	if current_mode == DisplayServer.WINDOW_MODE_FULLSCREEN:
 		wm_option.selected = 1
@@ -201,7 +204,7 @@ func _on_options() -> void:
 	# ---- Resolution ----
 	var res_hbox = HBoxContainer.new()
 	var res_label = Label.new()
-	res_label.text = "Resolucao"
+	res_label.text = LocaleManager.tr_key("resolution")
 	res_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	res_hbox.add_child(res_label)
 	var res_option = OptionButton.new()
@@ -233,7 +236,7 @@ func _on_options() -> void:
 	# ---- Language ----
 	var lang_hbox = HBoxContainer.new()
 	var lang_label = Label.new()
-	lang_label.text = "Idioma"
+	lang_label.text = LocaleManager.tr_key("language")
 	lang_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lang_hbox.add_child(lang_label)
 	var lang_btn = OptionButton.new()
@@ -252,7 +255,7 @@ func _on_options() -> void:
 
 	# ---- Keybindings ----
 	var kb_title = Label.new()
-	kb_title.text = "CONTROLES"
+	kb_title.text = LocaleManager.tr_key("controls_title")
 	kb_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(kb_title)
 
@@ -273,7 +276,7 @@ func _on_options() -> void:
 		vbox.add_child(hbox)
 
 	var reset_btn = Button.new()
-	reset_btn.text = "Resetar Controles"
+	reset_btn.text = LocaleManager.tr_key("reset_keybindings")
 	reset_btn.pressed.connect(func():
 		KeybindingManager.reset_defaults()
 		for act in keybind_buttons:
@@ -285,7 +288,7 @@ func _on_options() -> void:
 
 	# Close button
 	var close_btn = Button.new()
-	close_btn.text = "Fechar"
+	close_btn.text = LocaleManager.tr_key("close")
 	close_btn.pressed.connect(func():
 		options_panel.queue_free()
 		options_panel = null
