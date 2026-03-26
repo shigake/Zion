@@ -115,6 +115,19 @@ curl -s -X POST http://localhost:3123/notify -H "Content-Type: application/json"
 Status disponiveis: `done` (concluido), `error` (falhou), `info` (informativo), `warning` (atencao).
 Sempre notifique ao concluir ou falhar uma task. Escreva a mensagem em portugues.
 
+## Versionamento
+
+Arquivo `game/VERSION` contem a versao atual (sem o "v"). Começa em 1.0.0.
+O label de versão aparece no canto inferior direito do menu principal.
+
+**Regra obrigatoria — ao terminar QUALQUER tarefa:**
+1. Incrementar a **patch** version em `game/VERSION` (ex: 1.1.0 → 1.1.1)
+2. Fazer `git add` + `git commit` + `git push` automaticamente
+3. Notificar o Discord
+
+Se a tarefa for grande (feature nova), incrementar a **minor** (ex: 1.1.0 → 1.2.0).
+Se for fix/ajuste pequeno, incrementar o **patch** (ex: 1.1.0 → 1.1.1).
+
 ## Current Phase
 
 Fases 0-2 do PRD substancialmente implementadas. Fases 3-6 parcialmente (conteudo das 10 fases existe, multiplayer basico existe, mas falta polish).
