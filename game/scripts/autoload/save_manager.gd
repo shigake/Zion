@@ -15,6 +15,8 @@ var data: Dictionary = {
 	"achievements": [],
 	"completed_stages": [],
 	"leaderboard": [],  # Array of {time: float, kills: int, character: String, date: String}
+	"bestiary": {},  # enemy_name -> {kills: int, first_seen: String}
+	"codex": [],  # Array of weapon IDs the player has used
 }
 
 func _ready() -> void:
@@ -206,3 +208,30 @@ func unlock_stage(stage_id: String) -> void:
 	if stage_id not in data["unlocked_stages"]:
 		data["unlocked_stages"].append(stage_id)
 		save_game()
+
+# ---- Bestiary ----
+func track_bestiary(enemy_name: String) -> void:
+	if "bestiary" not in data:
+		data["bestiary"] = {}
+	if enemy_name in data["bestiary"]:
+		data["bestiary"][enemy_name]["kills"] += 1
+	else:
+		data["bestiary"][enemy_name] = {
+			"kills": 1,
+			"first_seen": Time.get_date_string_from_system(),
+		}
+	save_game()
+
+func get_bestiary() -> Dictionary:
+	return data.get("bestiary", {})
+
+# ---- Codex ----
+func track_codex(weapon_id: String) -> void:
+	if "codex" not in data:
+		data["codex"] = []
+	if weapon_id not in data["codex"]:
+		data["codex"].append(weapon_id)
+		save_game()
+
+func get_codex() -> Array:
+	return data.get("codex", [])

@@ -48,6 +48,20 @@ func _ready() -> void:
 			GameManager.add_weapon(char_data["starting_weapon"])
 			player.add_weapon_node(char_data["starting_weapon"])
 
+	# New Game+: re-add weapons from previous run (capped at level 3)
+	if GameManager.game_mode == "new_game_plus" and not GameManager.ng_plus_weapons.is_empty():
+		for w in GameManager.ng_plus_weapons:
+			var wid: String = w["id"]
+			if not GameManager.has_weapon(wid):
+				GameManager.add_weapon(wid)
+				player.add_weapon_node(wid)
+			# Upgrade to min(original_level, 3)
+			var target_level = mini(w["level"], 3)
+			while GameManager.get_weapon_level(wid) < target_level:
+				GameManager.upgrade_weapon(wid)
+		GameManager.new_game_plus = true
+		LogManager.info("Game", "New Game+ applied: %d weapons carried over" % GameManager.ng_plus_weapons.size())
+
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return

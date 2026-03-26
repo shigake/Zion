@@ -213,6 +213,8 @@ func _die() -> void:
 		return
 	is_dead = true
 	AudioManager.play_sfx("kill")
+	# Track in bestiary
+	SaveManager.track_bestiary(name)
 	# One Punch achievement: boss killed in 1 hit
 	if is_in_group("boss") and _hit_count <= 1:
 		AchievementManager.on_boss_killed_one_hit()

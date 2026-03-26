@@ -148,6 +148,13 @@ func _create_mode_buttons() -> void:
 		btn.custom_minimum_size = Vector2(100, 35)
 		btn.pressed.connect(Callable(self, mode["method"]))
 		mode_hbox.add_child(btn)
+	# New Game+ button (only if weapons available from a previous victory)
+	if not GameManager.ng_plus_weapons.is_empty():
+		var ng_btn = Button.new()
+		ng_btn.text = "New Game+"
+		ng_btn.custom_minimum_size = Vector2(100, 35)
+		ng_btn.pressed.connect(_on_mode_new_game_plus)
+		mode_hbox.add_child(ng_btn)
 	# Insert before start button
 	var vbox = start_btn.get_parent()
 	vbox.add_child(mode_hbox)
@@ -168,6 +175,14 @@ func _on_mode_boss_rush() -> void:
 func _on_mode_hyper() -> void:
 	selected_mode = "hyper"
 	info_label.text = LocaleManager.tr_key("mode_hyper_desc")
+
+func _on_mode_new_game_plus() -> void:
+	selected_mode = "new_game_plus"
+	var weapon_names: Array[String] = []
+	for w in GameManager.ng_plus_weapons:
+		var data = WeaponDB.weapons.get(w["id"], {})
+		weapon_names.append(data.get("name", w["id"]))
+	info_label.text = "New Game+: Comeca com armas da run anterior (cap lv3). Armas: " + ", ".join(weapon_names)
 
 func _on_start() -> void:
 	GameManager.selected_relic = selected_relic

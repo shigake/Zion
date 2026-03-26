@@ -44,8 +44,12 @@ var rerolls: int = 1
 var veteran_relic_active: bool = false
 
 # Modo de jogo
-var game_mode: String = "normal"  # "normal", "endless", "boss_rush", "hyper"
+var game_mode: String = "normal"  # "normal", "endless", "boss_rush", "hyper", "daily", "new_game_plus"
 var run_time_limit: float = 1800.0  # 30 min default
+
+# New Game+
+var new_game_plus: bool = false
+var ng_plus_weapons: Array[Dictionary] = []  # Weapons carried from previous victory run
 
 # Weapons e items do jogador
 var player_weapons: Array[Dictionary] = []  # {id, level}
@@ -262,6 +266,8 @@ func add_weapon(weapon_id: String) -> bool:
 		return false
 	player_weapons.append({"id": weapon_id, "level": 1})
 	weapon_added.emit(weapon_id)
+	# Track for codex
+	SaveManager.track_codex(weapon_id)
 	return true
 
 func upgrade_weapon(weapon_id: String) -> bool:
@@ -424,6 +430,9 @@ func reset() -> void:
 	banishes = 0
 	banished_options.clear()
 	MAX_WEAPONS = 4
+	# Reset NG+ flag (preserved across reset only if mode is new_game_plus)
+	if game_mode != "new_game_plus":
+		new_game_plus = false
 	_apply_permanent_upgrades()
 	_apply_character_bonuses()
 	_apply_relic()
@@ -560,4 +569,9 @@ func end_run() -> void:
 	LogManager.info("Game", "Run ended: %s on %s, time: %.1fs, kills: %d, crystals: %d, victory: %s" % [
 		selected_character, selected_stage, game_time, total_kills, crystals_this_run, str(is_victory)
 	])
+	# Save weapons for New Game+ on victory
+	if is_victory:
+		ng_plus_weapons.clear()
+		for w in player_weapons:
+			ng_plus_weapons.append({"id": w["id"], "level": w["level"]})
 	SaveManager.end_run(crystals_this_run, game_time, total_kills)

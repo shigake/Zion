@@ -16,6 +16,9 @@ var translations: Dictionary = {
 	"menu_leaderboard": {"pt": "Leaderboard", "en": "Leaderboard"},
 	"menu_options": {"pt": "Opções", "en": "Options"},
 	"menu_quit": {"pt": "Sair", "en": "Quit"},
+	"bestiary": {"pt": "Bestiario", "en": "Bestiary"},
+	"codex": {"pt": "Codex de armas", "en": "Weapon codex"},
+	"new_game_plus": {"pt": "New game+", "en": "New game+"},
 	"crystals": {"pt": "Cristais: %d", "en": "Crystals: %d"},
 	"menu_play_solo": {"pt": "Jogar solo", "en": "Play solo"},
 

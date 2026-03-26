@@ -25,6 +25,22 @@ func _ready() -> void:
 	leaderboard_btn.text = LocaleManager.tr_key("menu_leaderboard")
 	leaderboard_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/leaderboard_screen.tscn"))
 	$VBox/Buttons.add_child(leaderboard_btn)
+	# Bestiary button
+	var bestiary_btn = Button.new()
+	bestiary_btn.text = LocaleManager.tr_key("bestiary")
+	bestiary_btn.pressed.connect(func():
+		AudioManager.play_sfx("menu_click")
+		get_tree().change_scene_to_file("res://scenes/ui/bestiary_screen.tscn")
+	)
+	$VBox/Buttons.add_child(bestiary_btn)
+	# Codex button
+	var codex_btn = Button.new()
+	codex_btn.text = LocaleManager.tr_key("codex")
+	codex_btn.pressed.connect(func():
+		AudioManager.play_sfx("menu_click")
+		get_tree().change_scene_to_file("res://scenes/ui/codex_screen.tscn")
+	)
+	$VBox/Buttons.add_child(codex_btn)
 	# Options button
 	var options_btn = Button.new()
 	options_btn.text = LocaleManager.tr_key("menu_options")

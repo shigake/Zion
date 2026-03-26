@@ -23,23 +23,23 @@
 ## Prioridade Media
 
 ### Performance
-- [ ] MultiMeshInstance3D para renderizar hordas de 1000+ inimigos
+- [x] MultiMeshInstance3D para renderizar hordas de 1000+ inimigos (MultiMeshManager)
 - [ ] Profiling com Godot debugger para identificar bottlenecks
 - [ ] LOD (Level of Detail) para props distantes
 - [ ] Frustum culling manual para particulas
 
 ### Multiplayer Polish
 - [ ] Ally HP bars mostrando HP real de cada jogador (precisa sync per-player)
-- [ ] Setas direcionais indicando aliados fora da tela
-- [ ] Display de ping/latencia no HUD
+- [x] Setas direcionais indicando aliados fora da tela
+- [x] Display de ping/latencia no HUD
 - [ ] Host migration (complexo, mas importante para UX)
 - [ ] Reconnect apos desconexao
 
 ### Modos de Jogo Adicionais
 - [ ] Daily Challenge (seed fixa por dia, leaderboard online)
-- [ ] Boss Rush (todos os 10 bosses em sequencia)
-- [ ] Hyper Mode (2x velocidade, 2x spawns, 2x rewards)
-- [ ] New Game+ (comeca com armas do run anterior)
+- [x] Boss Rush (todos os 10 bosses em sequencia)
+- [x] Hyper Mode (2x velocidade, 2x spawns, 2x rewards)
+- [x] New Game+ (comeca com armas do run anterior, capped lv3)
 
 ### Inimigos Especificos por Stage
 - [ ] Criar scripts dedicados para inimigos tematicos (fadas, robos, aliens)
@@ -71,7 +71,7 @@
 - [ ] Controle de Switch Pro / PS5 DualSense (haptics)
 
 ### QA & Testing
-- [ ] Testes automatizados de balanceamento (simulated runs)
+- [x] Testes automatizados de balanceamento (AutoTester)
 - [ ] Testes de networking (latencia, desync, packet loss)
 - [ ] Testes de performance em hardware variado
 - [ ] CI/CD pipeline para builds automaticos
@@ -91,7 +91,7 @@
 - [ ] Verificar que evolucoes novas nao quebram o power curve
 
 ### UX
-- [ ] Tela de stats detalhada pos-run (DPS por arma, dano por tipo, etc)
-- [ ] Bestiary (catalogo de inimigos encontrados)
-- [ ] Weapon codex (catalogo de armas com descricoes e evolucoes)
-- [ ] Mini-mapa mostrando direcao de eventos/bosses
+- [x] Tela de stats detalhada pos-run (run summary com DPS, armas, eventos)
+- [x] Bestiary (catalogo de inimigos encontrados)
+- [x] Weapon codex (catalogo de armas com descricoes e evolucoes)
+- [x] Mini-mapa mostrando direcao de eventos/bosses
