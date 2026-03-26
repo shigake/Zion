@@ -18,20 +18,28 @@ func _build_relic_list() -> void:
 	for child in relic_container.get_children():
 		child.queue_free()
 
+	# Use GridContainer to prevent overflow
+	var grid = GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+
 	# Opcao sem reliquia
 	var none_btn = Button.new()
-	none_btn.custom_minimum_size = Vector2(150, 80)
+	none_btn.custom_minimum_size = Vector2(140, 60)
 	none_btn.text = "Nenhuma\nSem bonus"
 	none_btn.pressed.connect(func(): _select_relic("", {"name": "Nenhuma", "description": "Sem bonus"}))
-	relic_container.add_child(none_btn)
+	grid.add_child(none_btn)
 
 	for relic_id in RelicDB.get_all_relic_ids():
 		var data = RelicDB.get_relic(relic_id)
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(150, 80)
-		btn.text = "%s\n%s" % [data["name"], data["description"]]
+		btn.custom_minimum_size = Vector2(140, 60)
+		btn.text = "%s" % data["name"]
 		btn.pressed.connect(func(): _select_relic(relic_id, data))
-		relic_container.add_child(btn)
+		grid.add_child(btn)
+
+	relic_container.add_child(grid)
 
 func _select_relic(relic_id: String, data: Dictionary) -> void:
 	selected_relic = relic_id
@@ -54,7 +62,20 @@ func _on_start() -> void:
 		GameManager.run_time_limit = 999999.0
 	else:
 		GameManager.run_time_limit = 1800.0
-	get_tree().change_scene_to_file("res://scenes/stages/stage_cemetery.tscn")
+	var stage_scenes = {
+		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
+		"forest": "res://scenes/stages/stage_forest.tscn",
+		"farm": "res://scenes/stages/stage_farm.tscn",
+		"tokyo": "res://scenes/stages/stage_tokyo.tscn",
+		"volcano": "res://scenes/stages/stage_volcano.tscn",
+		"ocean": "res://scenes/stages/stage_ocean.tscn",
+		"arena": "res://scenes/stages/stage_arena.tscn",
+		"space": "res://scenes/stages/stage_space.tscn",
+		"castle": "res://scenes/stages/stage_castle.tscn",
+		"candy": "res://scenes/stages/stage_candy.tscn",
+	}
+	var scene = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
+	get_tree().change_scene_to_file(scene)
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")

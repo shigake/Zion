@@ -57,7 +57,7 @@ func _attack(level: int) -> void:
 	slam_mesh.scale = Vector3(0.3, 0.1, 0.3) * area_scale
 
 	# Screen shake on impact
-	ScreenEffects.shake(0.3, 8.0)
+	ScreenEffects.shake(0.3)
 	AudioManager.play_sfx("hit")
 
 func _on_body_entered(body: Node3D) -> void:

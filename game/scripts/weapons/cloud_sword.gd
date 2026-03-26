@@ -1,11 +1,11 @@
 extends Node3D
 
-## Espada Cloud — ataque lento e massivo em arco frontal de 180 graus.
+## Espada Cloud (FF7) — golpe frontal massivo em arco de 180 graus.
 
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_anim_timer: float = 0.0
-var attack_duration: float = 0.5
+var attack_duration: float = 0.4
 
 @onready var slash_area: Area3D = $SlashArea
 @onready var slash_mesh: MeshInstance3D = $SlashMesh
@@ -18,8 +18,8 @@ func _ready() -> void:
 	slash_area.body_entered.connect(_on_body_entered)
 	# Weapon trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.3, 0.5, 1.0, 0.6)
-	_trail.max_points = 20
+	_trail.trail_color = Color(0.4, 0.6, 1.0, 0.7)
+	_trail.max_points = 14
 	slash_mesh.add_child(_trail)
 
 func _process(delta: float) -> void:
@@ -34,7 +34,7 @@ func _process(delta: float) -> void:
 
 	if is_attacking:
 		attack_anim_timer -= delta
-		# Sweep 180 degrees arc — slow massive slash
+		# Arco de 180 graus (PI radianos)
 		var progress = 1.0 - (attack_anim_timer / attack_duration)
 		var arc_angle = lerp(-PI / 2.0, PI / 2.0, progress)
 		slash_area.rotation.y = arc_angle
@@ -58,13 +58,13 @@ func _attack(level: int) -> void:
 	slash_area.monitoring = true
 	hit_enemies.clear()
 
-	# Scale with level — very wide slash
-	var area_scale = 1.0 + (level - 1) * 0.18
+	# Escala com level
+	var area_scale = 1.0 + (level - 1) * 0.15
 	slash_area.scale = Vector3.ONE * area_scale
 	slash_mesh.scale = Vector3.ONE * area_scale
 
-	# Screen shake on massive swing
-	ScreenEffects.shake(0.2, 6.0)
+	# Screen shake — golpe pesado
+	ScreenEffects.shake(0.4, 10.0)
 	AudioManager.play_sfx("hit")
 
 func _on_body_entered(body: Node3D) -> void:

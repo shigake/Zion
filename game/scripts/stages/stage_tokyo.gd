@@ -34,10 +34,15 @@ func _ready() -> void:
 
 		# Arma inicial
 		GameManager.player_weapons.clear()
-		GameManager.add_weapon(char_data["starting_weapon"])
 		for child in player.get_node("WeaponPivot").get_children():
 			child.queue_free()
-		player.add_weapon_node(char_data["starting_weapon"])
+		if GameManager.selected_character == "mystery":
+			for wid in WeaponDB.get_all_weapon_ids():
+				GameManager.add_weapon(wid)
+				player.add_weapon_node(wid)
+		else:
+			GameManager.add_weapon(char_data["starting_weapon"])
+			player.add_weapon_node(char_data["starting_weapon"])
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

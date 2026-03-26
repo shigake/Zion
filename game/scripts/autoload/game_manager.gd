@@ -327,6 +327,7 @@ func _recalculate_item_bonuses() -> void:
 				electric_damage_mult += value
 
 func reset() -> void:
+	AchievementManager.reset_run()
 	game_time = 0.0
 	enemies_alive = 0
 	total_kills = 0

@@ -89,8 +89,16 @@ var evolutions: Dictionary = {
 		"description": "Raios atingem todos os inimigos na tela",
 		"weapon_required": "lightning_chain",
 		"item_required": "tesla",
-		"evolved_damage_mult": 3.0,
-		"special": "screen_lightning",
+		"evolved_damage_mult": 2.5,
+		"special": "chain_storm",
+	},
+	"arrow_storm": {
+		"name": "Tempestade de Flechas",
+		"description": "Chuva de flechas cai do ceu na area ao redor",
+		"weapon_required": "elven_bow",
+		"item_required": "cape",
+		"evolved_damage_mult": 2.5,
+		"special": "arrow_rain",
 	},
 }
 

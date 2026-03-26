@@ -168,6 +168,11 @@ var weapon_scenes: Dictionary = {
 	"ice_staff": preload("res://scenes/weapons/ice_staff.tscn"),
 	"crossbow": preload("res://scenes/weapons/crossbow.tscn"),
 	"plasma_cannon": preload("res://scenes/weapons/plasma_cannon.tscn"),
+	"cloud_sword": preload("res://scenes/weapons/cloud_sword.tscn"),
+	"elven_bow": preload("res://scenes/weapons/elven_bow.tscn"),
+	"boxing_gloves": preload("res://scenes/weapons/boxing_gloves.tscn"),
+	"time_bomb": preload("res://scenes/weapons/time_bomb.tscn"),
+	"portal_weapon": preload("res://scenes/weapons/portal_weapon.tscn"),
 }
 
 func _spawn_weapon(weapon_id: String) -> void:

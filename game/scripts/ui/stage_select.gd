@@ -32,9 +32,15 @@ func _build_stage_list() -> void:
 	for child in stage_container.get_children():
 		child.queue_free()
 
+	# Use GridContainer to fit 10 stages without overflowing
+	var grid = GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+
 	for stage in stages:
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(180, 80)
+		btn.custom_minimum_size = Vector2(140, 60)
 
 		var unlocked = SaveManager.is_stage_unlocked(stage["id"])
 		if unlocked:
@@ -44,7 +50,9 @@ func _build_stage_list() -> void:
 			btn.disabled = true
 
 		btn.pressed.connect(func(): _select_stage(stage))
-		stage_container.add_child(btn)
+		grid.add_child(btn)
+
+	stage_container.add_child(grid)
 
 	# Select first stage by default
 	_select_stage(stages[0])
