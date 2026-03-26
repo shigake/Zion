@@ -217,6 +217,9 @@ func take_damage(amount: int) -> void:
 	player_hp -= reduced
 	# Lifesteal tracking (applied by weapons on hit, not here)
 	if player_hp <= 0:
+		# One-shot kill detection (possible balance issue or bug)
+		if amount > get_effective_max_hp() / 2:
+			LogManager.warn("Balance", "One-shot kill! Damage: %d, Max HP: %d" % [amount, get_effective_max_hp()])
 		# Revive check
 		if revives_remaining > 0:
 			revives_remaining -= 1

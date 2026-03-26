@@ -29,6 +29,9 @@ func _ready() -> void:
 func _show() -> void:
 	GameManager.end_run()
 	AchievementManager.check_achievements()
+	# Auto crash report if player died very fast (possible bug)
+	if not GameManager.is_victory and GameManager.game_time < 30.0:
+		LogManager.report_crash("GameOver", "Player died very fast (%.1fs)" % GameManager.game_time)
 	await get_tree().create_timer(1.0).timeout
 	var t = int(GameManager.game_time)
 	var time_str = "%02d:%02d" % [t / 60, t % 60]

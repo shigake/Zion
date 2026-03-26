@@ -69,6 +69,11 @@ func _ready() -> void:
 	# Conectar ao tree para capturar erros nao tratados
 	get_tree().node_added.connect(_on_node_added)
 
+	# Capture Godot's error output by reading the log file Godot writes
+	# Note: in debug builds, errors show in console. We track them manually.
+	if OS.is_debug_build():
+		set_process_unhandled_input(true)
+
 	# Log de inicio
 	info("LogManager", "Session started: %s" % _session_id)
 	info("LogManager", "Log file: %s" % _log_path)
@@ -126,6 +131,14 @@ func fatal(module: String, message: String) -> void:
 	_log(Level.FATAL, module, message)
 	_fatal_count += 1
 	_generate_crash_report(module, message)
+
+
+## Registra uma excecao capturada por outro script
+func log_exception(module: String, error_text: String, stack: String = "") -> void:
+	error(module, "EXCEPTION: %s" % error_text)
+	if not stack.is_empty():
+		error(module, "Stack: %s" % stack)
+	_generate_crash_report(module, error_text, {"stack": stack})
 
 
 ## Gera um crash report manual (pode ser chamado de qualquer lugar)
