@@ -18,6 +18,8 @@ var burning_enemies: Dictionary = {}  # enemy_id -> burn_timer
 func _ready() -> void:
 	flame_mesh.visible = false
 	flame_area.monitoring = false
+	# 3D model
+	ModelFactory.attach_weapon_model(flame_mesh, "flamethrower")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

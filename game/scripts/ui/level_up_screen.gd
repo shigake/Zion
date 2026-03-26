@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-## Tela de Level Up: 3 opcoes (arma ou item). Pausa o jogo.
+## Tela de Level Up: 3 opcoes (arma ou item) em cards visuais. Pausa o jogo.
 
 signal choice_made()
 
@@ -9,21 +9,46 @@ signal choice_made()
 @onready var option2_btn: Button = $Panel/VBox/Options/Option2
 @onready var option3_btn: Button = $Panel/VBox/Options/Option3
 @onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var options_container: HBoxContainer = $Panel/VBox/Options
 @onready var reroll_btn: Button = $Panel/VBox/RerollButton
 @onready var banish_btn: Button = $Panel/VBox/BanishButton
 
 var options: Array = []
 var pending_levels: int = 0
 var banish_mode: bool = false
+var _card_buttons: Array[Button] = []
+
+const TYPE_COLORS = {
+	"melee": Color(0.85, 0.25, 0.2),
+	"ranged": Color(0.2, 0.5, 0.85),
+	"summon": Color(0.6, 0.3, 0.8),
+	"item": Color(0.2, 0.75, 0.35),
+}
+const ELEMENT_COLORS = {
+	"fire": Color(1.0, 0.4, 0.1),
+	"ice": Color(0.3, 0.7, 1.0),
+	"electric": Color(1.0, 0.9, 0.2),
+	"dark": Color(0.6, 0.2, 0.8),
+	"physical": Color(0.7, 0.7, 0.7),
+	"poison": Color(0.3, 0.8, 0.2),
+	"arcane": Color(0.8, 0.3, 0.9),
+}
+const TYPE_ICONS = {
+	"melee": "⚔",
+	"ranged": "🏹",
+	"summon": "✨",
+	"item": "💎",
+}
 
 func _ready() -> void:
 	panel.visible = false
+	# Esconde os botoes originais (usaremos cards dinamicos)
+	option1_btn.visible = false
+	option2_btn.visible = false
+	option3_btn.visible = false
 	GameManager.player_leveled_up.connect(_on_level_up)
-	option1_btn.pressed.connect(func(): _choose(0))
-	option2_btn.pressed.connect(func(): _choose(1))
 	reroll_btn.pressed.connect(_on_reroll)
 	banish_btn.pressed.connect(_on_banish)
-	option3_btn.pressed.connect(func(): _choose(2))
 
 func _on_level_up(_new_level: int) -> void:
 	pending_levels += 1
@@ -38,13 +63,15 @@ func _show_choices() -> void:
 
 	title_label.text = LocaleManager.tr_key("level_up_title") % GameManager.player_level
 
-	var buttons = [option1_btn, option2_btn, option3_btn]
-	for i in range(3):
-		if i < options.size():
-			buttons[i].visible = true
-			buttons[i].text = options[i]["label"]
-		else:
-			buttons[i].visible = false
+	# Limpa cards antigos
+	_card_buttons.clear()
+	for child in options_container.get_children():
+		if child != option1_btn and child != option2_btn and child != option3_btn:
+			child.queue_free()
+
+	# Cria cards visuais
+	for i in range(options.size()):
+		_build_card(options[i], i)
 
 	# Reroll button
 	if GameManager.rerolls > 0:
@@ -69,9 +96,8 @@ func _show_choices() -> void:
 
 func _setup_levelup_focus() -> void:
 	var focusable: Array[Button] = []
-	var buttons = [option1_btn, option2_btn, option3_btn]
-	for btn in buttons:
-		if btn.visible:
+	for btn in _card_buttons:
+		if is_instance_valid(btn) and btn.visible:
 			btn.focus_mode = Control.FOCUS_ALL
 			focusable.append(btn)
 	if reroll_btn.visible:
@@ -80,7 +106,6 @@ func _setup_levelup_focus() -> void:
 	if banish_btn.visible:
 		banish_btn.focus_mode = Control.FOCUS_ALL
 		focusable.append(banish_btn)
-	# Setup vizinhos para navegacao horizontal nas opcoes + vertical para reroll/banish
 	for i in range(focusable.size()):
 		var btn = focusable[i]
 		if i > 0:
@@ -89,8 +114,144 @@ func _setup_levelup_focus() -> void:
 		if i < focusable.size() - 1:
 			btn.focus_neighbor_right = focusable[i + 1].get_path()
 			btn.focus_neighbor_bottom = focusable[i + 1].get_path()
-	# Nota: NAO pausa a tree (get_tree().paused = true) porque
-	# causa problemas com input dos botoes. GameManager.paused
+	if not focusable.is_empty():
+		focusable[0].grab_focus()
+
+func _build_card(opt: Dictionary, index: int) -> void:
+	var card = PanelContainer.new()
+	card.custom_minimum_size = Vector2(200, 260)
+
+	# Card style
+	var opt_type = opt.get("type", "item")
+	var weapon_type = ""
+	if opt_type == "weapon":
+		weapon_type = WeaponDB.get_weapon(opt["id"]).get("type", "melee")
+	var card_type = weapon_type if opt_type == "weapon" else "item"
+	var type_color = TYPE_COLORS.get(card_type, Color(0.4, 0.4, 0.4))
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.16, 0.95)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	style.border_width_top = 3
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = type_color
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+
+	# Type badge
+	var badge = Label.new()
+	var icon = TYPE_ICONS.get(card_type, "")
+	badge.text = "%s %s" % [icon, card_type.to_upper()]
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge.add_theme_font_size_override("font_size", 11)
+	badge.add_theme_color_override("font_color", type_color.lightened(0.3))
+	vbox.add_child(badge)
+
+	# Icon area with element color
+	var icon_container = CenterContainer.new()
+	icon_container.custom_minimum_size = Vector2(0, 70)
+	vbox.add_child(icon_container)
+	var icon_rect = ColorRect.new()
+	icon_rect.custom_minimum_size = Vector2(64, 64)
+	var element = _get_element(opt)
+	var elem_color = ELEMENT_COLORS.get(element, Color(0.5, 0.5, 0.5))
+	icon_rect.color = elem_color.darkened(0.4)
+	icon_container.add_child(icon_rect)
+	# Type icon overlay
+	var icon_label = Label.new()
+	icon_label.text = TYPE_ICONS.get(card_type, "?")
+	icon_label.add_theme_font_size_override("font_size", 28)
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	icon_label.anchors_preset = Control.PRESET_FULL_RECT
+	icon_rect.add_child(icon_label)
+
+	# Name
+	var name_label = Label.new()
+	name_label.text = _get_opt_name(opt)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 15)
+	name_label.add_theme_color_override("font_color", Color.WHITE)
+	vbox.add_child(name_label)
+
+	# Level / New badge
+	var level_label = Label.new()
+	level_label.text = _get_level_text(opt)
+	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_label.add_theme_font_size_override("font_size", 12)
+	var is_new = not GameManager.has_weapon(opt["id"]) if opt_type == "weapon" else not GameManager.has_item(opt["id"])
+	level_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4) if is_new else Color(0.9, 0.85, 0.5))
+	vbox.add_child(level_label)
+
+	# Description
+	var desc_label = Label.new()
+	desc_label.text = _get_description(opt)
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_label.add_theme_font_size_override("font_size", 11)
+	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	desc_label.custom_minimum_size = Vector2(170, 0)
+	vbox.add_child(desc_label)
+
+	# Clickable button overlay
+	var btn = Button.new()
+	btn.flat = true
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.anchors_preset = Control.PRESET_FULL_RECT
+	btn.anchor_right = 1.0
+	btn.anchor_bottom = 1.0
+	var idx = index
+	btn.pressed.connect(func(): _choose(idx))
+	# Hover effect
+	btn.mouse_entered.connect(func(): style.border_color = type_color.lightened(0.4); card.add_theme_stylebox_override("panel", style))
+	btn.mouse_exited.connect(func(): style.border_color = type_color; card.add_theme_stylebox_override("panel", style))
+	card.add_child(btn)
+	_card_buttons.append(btn)
+
+	options_container.add_child(card)
+
+func _get_opt_name(opt: Dictionary) -> String:
+	if opt["type"] == "weapon":
+		return WeaponDB.get_weapon(opt["id"])["name"]
+	else:
+		return ItemDB.get_item(opt["id"])["name"]
+
+func _get_level_text(opt: Dictionary) -> String:
+	if opt["type"] == "weapon":
+		if GameManager.has_weapon(opt["id"]):
+			var w = GameManager.player_weapons.filter(func(x): return x["id"] == opt["id"])
+			if not w.is_empty():
+				return "Lv.%d → %d" % [w[0]["level"], w[0]["level"] + 1]
+		return LocaleManager.tr_key("new").to_upper()
+	else:
+		if GameManager.has_item(opt["id"]):
+			var it = GameManager.player_items.filter(func(x): return x["id"] == opt["id"])
+			if not it.is_empty():
+				return "Lv.%d → %d" % [it[0]["level"], it[0]["level"] + 1]
+		return LocaleManager.tr_key("new").to_upper()
+
+func _get_description(opt: Dictionary) -> String:
+	if opt["type"] == "weapon":
+		return WeaponDB.get_weapon(opt["id"]).get("description", "")
+	else:
+		return ItemDB.get_item(opt["id"]).get("description", "")
+
+func _get_element(opt: Dictionary) -> String:
+	if opt["type"] == "weapon":
+		return WeaponDB.get_weapon(opt["id"]).get("element", "physical")
+	return "physical"
 	# ja impede gameplay de rodar.
 
 func _choose(index: int) -> void:

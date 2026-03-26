@@ -12,6 +12,10 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 @onready var drone_area: Area3D = $DroneArea
 @onready var drone_mesh: MeshInstance3D = $DroneMesh
 
+func _ready() -> void:
+	# 3D model
+	ModelFactory.attach_weapon_model(drone_mesh, "drone")
+
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return

@@ -17,6 +17,8 @@ var hit_enemies_this_step: Array = []
 func _ready() -> void:
 	punch_mesh.visible = false
 	punch_area.body_entered.connect(_on_body_entered)
+	# 3D model
+	ModelFactory.attach_weapon_model(punch_mesh, "boxing_gloves")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

@@ -20,6 +20,8 @@ func _ready() -> void:
 	_trail.trail_color = Color(0.9, 0.2, 0.2, 0.6)
 	_trail.max_points = 15
 	slash_mesh.add_child(_trail)
+	# 3D model
+	ModelFactory.attach_weapon_model(slash_mesh, "whip")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

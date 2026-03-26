@@ -22,6 +22,8 @@ func _ready() -> void:
 	charge_mesh.visible = false
 	beam_area.monitoring = false
 	beam_area.body_entered.connect(_on_body_entered)
+	# 3D model
+	ModelFactory.attach_weapon_model(charge_mesh, "plasma_cannon")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

@@ -23,6 +23,8 @@ func _ready() -> void:
 	axe_mesh.visible = false
 	axe_area.monitoring = false
 	axe_area.body_entered.connect(_on_body_entered)
+	# 3D model
+	ModelFactory.attach_weapon_model(axe_mesh, "axe")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

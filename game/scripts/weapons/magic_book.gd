@@ -16,6 +16,8 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
 func _ready() -> void:
 	book_area.body_entered.connect(_on_body_entered)
+	# 3D model
+	ModelFactory.attach_weapon_model(book_mesh, "magic_book")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

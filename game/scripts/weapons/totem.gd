@@ -33,21 +33,26 @@ func _place_totem(level: int) -> void:
 	totem.name = "Totem"
 	totem.global_position = player_pos
 
-	# Visual mesh - pillar
-	var mesh_inst = MeshInstance3D.new()
-	var cylinder = CylinderMesh.new()
-	cylinder.top_radius = 0.2
-	cylinder.bottom_radius = 0.35
-	cylinder.height = 1.2
-	mesh_inst.mesh = cylinder
-	mesh_inst.position = Vector3(0, 0.6, 0)
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 0.6, 1.0, 1.0)
-	mat.emission_enabled = true
-	mat.emission = Color(0.1, 0.4, 0.9, 1.0)
-	mat.emission_energy_multiplier = 0.6
-	mesh_inst.material_override = mat
-	totem.add_child(mesh_inst)
+	# Visual mesh - 3D model or fallback pillar
+	var model = ModelFactory.get_weapon_model("totem")
+	if model:
+		model.position = Vector3(0, 0, 0)
+		totem.add_child(model)
+	else:
+		var mesh_inst = MeshInstance3D.new()
+		var cylinder = CylinderMesh.new()
+		cylinder.top_radius = 0.2
+		cylinder.bottom_radius = 0.35
+		cylinder.height = 1.2
+		mesh_inst.mesh = cylinder
+		mesh_inst.position = Vector3(0, 0.6, 0)
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.2, 0.6, 1.0, 1.0)
+		mat.emission_enabled = true
+		mat.emission = Color(0.1, 0.4, 0.9, 1.0)
+		mat.emission_energy_multiplier = 0.6
+		mesh_inst.material_override = mat
+		totem.add_child(mesh_inst)
 
 	# Damage area
 	var area = Area3D.new()

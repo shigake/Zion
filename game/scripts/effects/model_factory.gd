@@ -1018,6 +1018,14 @@ func get_weapon_model(weapon_id: String) -> Node3D:
 	var glb_path = "res://assets/models/weapons/%s.glb" % weapon_id
 	return _try_load_glb(glb_path, Vector3(0.4, 0.4, 0.4))
 
+func attach_weapon_model(mesh_node: MeshInstance3D, weapon_id: String, model_scale := Vector3(0.4, 0.4, 0.4)) -> void:
+	## Carrega .glb de arma e acopla no MeshInstance3D, escondendo a primitiva
+	var glb_path = "res://assets/models/weapons/%s.glb" % weapon_id
+	var model = _try_load_glb(glb_path, model_scale)
+	if model:
+		mesh_node.add_child(model)
+		mesh_node.mesh = null
+
 # ===================== HELPERS =====================
 
 func _mesh(mesh_res: Mesh, pos: Vector3) -> MeshInstance3D:

@@ -15,6 +15,8 @@ var hit_enemies: Array = []
 func _ready() -> void:
 	slam_mesh.visible = false
 	slam_area.body_entered.connect(_on_body_entered)
+	# 3D model
+	ModelFactory.attach_weapon_model(slam_mesh, "hammer", Vector3(0.6, 0.6, 0.6))
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
