@@ -22,23 +22,10 @@ func _process(delta: float) -> void:
 
 func _fire(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
-	# Acha inimigo mais proximo
 	var player_pos = get_parent().get_parent().global_position  # WeaponPivot -> Player
-	var nearest: Node3D = null
-	var min_dist = INF
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var d = player_pos.distance_squared_to(e.global_position)
-		if d < min_dist:
-			min_dist = d
-			nearest = e
-
-	if nearest == null:
-		return
 
 	# Numero de projeteis: +1 nos levels 3 e 6
 	var num_projectiles = 1
@@ -47,14 +34,26 @@ func _fire(level: int) -> void:
 	if level >= 6:
 		num_projectiles = 3
 
-	var targets = _get_nearest_enemies(player_pos, num_projectiles)
-
-	for t in targets:
-		var proj = ObjectPool.get_instance(projectile_scene)
-		proj.global_position = player_pos + Vector3(0, 0.5, 0)
-		proj.target = t
-		proj.damage = int(WeaponDB.get_damage("staff", level))
-		get_tree().current_scene.call_deferred("add_child", proj)
+	if GameManager.manual_aim:
+		# Manual aim: fire straight projectiles (no homing)
+		for i in range(num_projectiles):
+			var proj = ObjectPool.get_instance(projectile_scene)
+			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			proj.target = null  # No homing target
+			proj.direction = GameManager.aim_direction
+			var spread = (randf() - 0.5) * 0.2 * i
+			proj.direction = proj.direction.rotated(Vector3.UP, spread).normalized()
+			proj.damage = int(WeaponDB.get_damage("staff", level))
+			get_tree().current_scene.call_deferred("add_child", proj)
+	else:
+		# Auto-aim: homing projectiles
+		var targets = _get_nearest_enemies(player_pos, num_projectiles)
+		for t in targets:
+			var proj = ObjectPool.get_instance(projectile_scene)
+			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			proj.target = t
+			proj.damage = int(WeaponDB.get_damage("staff", level))
+			get_tree().current_scene.call_deferred("add_child", proj)
 
 func _get_nearest_enemies(from: Vector3, count: int) -> Array:
 	var enemies = get_tree().get_nodes_in_group("enemies")

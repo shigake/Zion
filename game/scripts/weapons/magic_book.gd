@@ -74,25 +74,30 @@ func _on_body_entered(body: Node3D) -> void:
 
 func _fire_page(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
 	var book_global_pos = book_mesh.global_position
-	var nearest: Node3D = null
-	var min_dist = INF
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var d = book_global_pos.distance_squared_to(e.global_position)
-		if d < min_dist:
-			min_dist = d
-			nearest = e
 
-	if nearest == null:
-		return
+	var direction: Vector3
+	if GameManager.manual_aim:
+		direction = GameManager.aim_direction
+	else:
+		var nearest: Node3D = null
+		var min_dist = INF
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var d = book_global_pos.distance_squared_to(e.global_position)
+			if d < min_dist:
+				min_dist = d
+				nearest = e
 
-	var direction = (nearest.global_position - book_global_pos).normalized()
-	direction.y = 0
+		if nearest == null:
+			return
+
+		direction = (nearest.global_position - book_global_pos).normalized()
+		direction.y = 0
 
 	var num_pages = 1
 	if level >= 6:

@@ -77,6 +77,10 @@ var low_hp_damage_bonus: float = 0.0
 var player_hidden: bool = false
 var electric_damage_mult: float = 1.0
 
+# Manual aiming (right stick)
+var manual_aim: bool = false
+var aim_direction: Vector3 = Vector3.ZERO
+
 func _ready() -> void:
 	_register_input_actions()
 
@@ -113,6 +117,13 @@ func _add_joypad_actions() -> void:
 	_add_joy_button("interact", JOY_BUTTON_B)
 	# Start = Pause
 	_add_joy_button("pause", JOY_BUTTON_START)
+	# D-Pad for UI navigation
+	_add_joy_button("ui_up", JOY_BUTTON_DPAD_UP)
+	_add_joy_button("ui_down", JOY_BUTTON_DPAD_DOWN)
+	_add_joy_button("ui_left", JOY_BUTTON_DPAD_LEFT)
+	_add_joy_button("ui_right", JOY_BUTTON_DPAD_RIGHT)
+	# B/Circle = Cancel (back navigation)
+	_add_joy_button("ui_cancel", JOY_BUTTON_B)
 
 func _add_joy_axis(action_name: String, axis: int, axis_value: float) -> void:
 	if not InputMap.has_action(action_name):
@@ -374,6 +385,8 @@ func reset() -> void:
 	low_hp_damage_bonus = 0.0
 	player_hidden = false
 	electric_damage_mult = 1.0
+	manual_aim = false
+	aim_direction = Vector3.ZERO
 	revives_remaining = 0
 	banishes = 0
 	banished_options.clear()

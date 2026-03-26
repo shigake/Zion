@@ -114,6 +114,18 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Right stick aiming
+	var aim_input = Vector2(
+		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
+		Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
+	)
+	if aim_input.length() > 0.3:  # Dead zone
+		GameManager.manual_aim = true
+		GameManager.aim_direction = Vector3(aim_input.x, 0, aim_input.y).normalized()
+	else:
+		GameManager.manual_aim = false
+		GameManager.aim_direction = Vector3.ZERO
+
 	# Update procedural animation
 	if _animator:
 		_animator.set_walking(velocity.length() > 0.5)

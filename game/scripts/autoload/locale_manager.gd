@@ -104,6 +104,36 @@ var translations: Dictionary = {
 
 	# ---- Unlocks ----
 	"unlocked": {"pt": "DESBLOQUEADO: %s!", "en": "UNLOCKED: %s!"},
+
+	# ---- Aliases / Missing Keys ----
+	"play": {"pt": "Jogar", "en": "Play"},
+	"shop": {"pt": "Loja", "en": "Shop"},
+	"quit": {"pt": "Sair", "en": "Quit"},
+	"leaderboard": {"pt": "Leaderboard", "en": "Leaderboard"},
+	"multiplayer": {"pt": "Multiplayer", "en": "Multiplayer"},
+	"choose_character": {"pt": "Selecione o Personagem", "en": "Choose Character"},
+	"choose_stage": {"pt": "Selecione a Fase", "en": "Choose Stage"},
+	"choose_relic": {"pt": "Escolha uma Reliquia", "en": "Choose a Relic"},
+	"no_relic": {"pt": "Nenhuma", "en": "None"},
+	"mode_normal": {"pt": "Normal", "en": "Normal"},
+	"mode_endless": {"pt": "Endless", "en": "Endless"},
+	"mode_boss_rush": {"pt": "Boss Rush", "en": "Boss Rush"},
+	"mode_hyper": {"pt": "Hyper", "en": "Hyper"},
+	"dash_ready": {"pt": "Dash Pronto", "en": "Dash Ready"},
+	"dash_cooldown": {"pt": "Dash em Cooldown", "en": "Dash Cooldown"},
+	"level_up": {"pt": "LEVEL UP!", "en": "LEVEL UP!"},
+	"victory": {"pt": "VITORIA!", "en": "VICTORY!"},
+	"kills_label": {"pt": "Kills", "en": "Kills"},
+	"level_label": {"pt": "Level", "en": "Level"},
+	"damage_dealt": {"pt": "Dano Causado: %d", "en": "Damage Dealt: %d"},
+	"menu": {"pt": "Menu", "en": "Menu"},
+	"crystals_label": {"pt": "Cristais", "en": "Crystals"},
+	"window_mode": {"pt": "Modo Janela", "en": "Window Mode"},
+	"resolution": {"pt": "Resolucao", "en": "Resolution"},
+	"normal": {"pt": "Normal", "en": "Normal"},
+	"endless": {"pt": "Endless", "en": "Endless"},
+	"boss_rush": {"pt": "Boss Rush", "en": "Boss Rush"},
+	"hyper": {"pt": "Hyper", "en": "Hyper"},
 }
 
 func _ready() -> void:

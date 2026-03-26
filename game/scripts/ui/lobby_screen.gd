@@ -87,6 +87,11 @@ func _on_start() -> void:
 func _load_game_scene(scene_path: String) -> void:
 	get_tree().change_scene_to_file(scene_path)
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back()
+		get_viewport().set_input_as_handled()
+
 func _on_back() -> void:
 	MultiplayerManager.disconnect_from_game()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

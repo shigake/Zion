@@ -60,27 +60,30 @@ func _process(delta: float) -> void:
 
 func _start_charge(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
 	var player_pos = get_parent().get_parent().global_position
 
-	# Find nearest enemy
-	var nearest: Node3D = null
-	var min_dist = INF
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var d = player_pos.distance_squared_to(e.global_position)
-		if d < min_dist:
-			min_dist = d
-			nearest = e
+	if GameManager.manual_aim:
+		beam_direction = GameManager.aim_direction
+	else:
+		# Find nearest enemy
+		var nearest: Node3D = null
+		var min_dist = INF
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var d = player_pos.distance_squared_to(e.global_position)
+			if d < min_dist:
+				min_dist = d
+				nearest = e
 
-	if nearest == null:
-		return
+		if nearest == null:
+			return
 
-	beam_direction = (nearest.global_position - player_pos).normalized()
-	beam_direction.y = 0
+		beam_direction = (nearest.global_position - player_pos).normalized()
+		beam_direction.y = 0
 
 	is_charging = true
 	charge_duration = maxf(0.5, 1.0 - (level - 1) * 0.05)

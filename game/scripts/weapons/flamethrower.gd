@@ -62,7 +62,7 @@ func _process(delta: float) -> void:
 
 func _start_fire(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
 	is_firing = true
@@ -80,6 +80,14 @@ func _start_fire(level: int) -> void:
 	_update_aim()
 
 func _update_aim() -> void:
+	if GameManager.manual_aim:
+		fire_direction = GameManager.aim_direction
+		if fire_direction.length() > 0.01:
+			var angle = atan2(fire_direction.x, fire_direction.z)
+			flame_area.rotation.y = -angle
+			flame_mesh.rotation.y = -angle
+		return
+
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	if enemies.is_empty():
 		return

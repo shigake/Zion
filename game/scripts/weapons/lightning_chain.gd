@@ -28,15 +28,29 @@ func _cast(level: int) -> void:
 		return
 
 	var player_pos = get_parent().get_parent().global_position
+
 	var nearest: Node3D = null
-	var min_dist = INF
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var d = player_pos.distance_squared_to(e.global_position)
-		if d < min_dist:
-			min_dist = d
-			nearest = e
+	if GameManager.manual_aim:
+		# With manual aim, find enemy closest to the aim direction ray
+		var best_dot = -1.0
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var to_enemy = (e.global_position - player_pos).normalized()
+			to_enemy.y = 0
+			var dot = to_enemy.dot(GameManager.aim_direction)
+			if dot > best_dot:
+				best_dot = dot
+				nearest = e
+	else:
+		var min_dist = INF
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var d = player_pos.distance_squared_to(e.global_position)
+			if d < min_dist:
+				min_dist = d
+				nearest = e
 
 	if nearest == null:
 		return

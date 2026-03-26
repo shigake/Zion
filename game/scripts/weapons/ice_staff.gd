@@ -22,27 +22,31 @@ func _process(delta: float) -> void:
 
 func _fire(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
 	var player_pos = get_parent().get_parent().global_position
 
-	# Find nearest enemy
-	var nearest: Node3D = null
-	var min_dist = INF
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var d = player_pos.distance_squared_to(e.global_position)
-		if d < min_dist:
-			min_dist = d
-			nearest = e
+	var direction: Vector3
+	if GameManager.manual_aim:
+		direction = GameManager.aim_direction
+	else:
+		# Find nearest enemy
+		var nearest: Node3D = null
+		var min_dist = INF
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var d = player_pos.distance_squared_to(e.global_position)
+			if d < min_dist:
+				min_dist = d
+				nearest = e
 
-	if nearest == null:
-		return
+		if nearest == null:
+			return
 
-	var direction = (nearest.global_position - player_pos).normalized()
-	direction.y = 0
+		direction = (nearest.global_position - player_pos).normalized()
+		direction.y = 0
 
 	# Ice particles at spawn
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))

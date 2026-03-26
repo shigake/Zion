@@ -9,17 +9,25 @@ func _ready() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 8)
+	var scroll = ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	add_child(scroll)
+
 	var margin = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_theme_constant_override("margin_left", 60)
 	margin.add_theme_constant_override("margin_right", 60)
 	margin.add_theme_constant_override("margin_top", 30)
 	margin.add_theme_constant_override("margin_bottom", 30)
+	scroll.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 8)
 	margin.add_child(vbox)
-	add_child(margin)
 
 	# Title
 	var title = Label.new()
@@ -205,6 +213,9 @@ func _start_rebind(action: String, btn: Button) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if waiting_for_key.is_empty():
+		if event.is_action_pressed("ui_cancel"):
+			_on_back()
+			get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed:
 		KeybindingManager.rebind_action(waiting_for_key, event.physical_keycode)

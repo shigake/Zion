@@ -19,6 +19,7 @@ var selected_mode: String = "normal"
 var all_items: Array = []
 var current_page: int = 0
 var total_pages: int = 1
+var _selected_btn: Button = null
 
 func _ready() -> void:
 	start_btn.pressed.connect(_on_start)
@@ -56,7 +57,8 @@ func _show_page(page: int) -> void:
 		btn.custom_minimum_size = Vector2(140, 70)
 		btn.text = data["name"]
 
-		btn.pressed.connect(func(): _select_relic(relic_id, data))
+		var b = btn  # capture for lambda
+		b.pressed.connect(func(): _select_relic(relic_id, data, b))
 		grid.add_child(btn)
 
 	# Preenche slots vazios para manter layout 4x3
@@ -85,9 +87,20 @@ func _prev_page() -> void:
 func _next_page() -> void:
 	_show_page(current_page + 1)
 
-func _select_relic(relic_id: String, data: Dictionary) -> void:
+func _select_relic(relic_id: String, data: Dictionary, btn: Button = null) -> void:
 	selected_relic = relic_id
 	info_label.text = "%s — %s" % [data["name"], data["description"]]
+	# Highlight selected button
+	if btn:
+		if _selected_btn and is_instance_valid(_selected_btn):
+			_selected_btn.remove_theme_stylebox_override("normal")
+		_selected_btn = btn
+		var highlight = StyleBoxFlat.new()
+		highlight.bg_color = Color(0.15, 0.3, 0.55)
+		highlight.set_corner_radius_all(4)
+		highlight.set_border_width_all(2)
+		highlight.border_color = Color(0.3, 0.6, 1.0)
+		_selected_btn.add_theme_stylebox_override("normal", highlight)
 
 func _create_mode_buttons() -> void:
 	var mode_hbox = HBoxContainer.new()
@@ -153,5 +166,10 @@ func _on_start() -> void:
 	var scene = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
 	get_tree().change_scene_to_file(scene)
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back()
+		get_viewport().set_input_as_handled()
+
 func _on_back() -> void:
-	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")

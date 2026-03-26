@@ -52,5 +52,10 @@ func _build_leaderboard() -> void:
 			label.add_theme_color_override("font_color", Color(0.8, 0.5, 0.2))
 		list_container.add_child(label)
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back()
+		get_viewport().set_input_as_handled()
+
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

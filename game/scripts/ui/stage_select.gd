@@ -17,6 +17,7 @@ const PER_PAGE := COLUMNS * ROWS
 var selected_stage: String = "cemetery"
 var current_page: int = 0
 var total_pages: int = 1
+var _selected_btn: Button = null
 
 # Stage definitions
 var stages: Array[Dictionary] = [
@@ -62,7 +63,8 @@ func _show_page(page: int) -> void:
 			btn.text = stage["name"] + "\n[LOCKED]"
 			btn.disabled = true
 
-		btn.pressed.connect(func(): _select_stage(stage))
+		var b = btn  # capture for lambda
+		b.pressed.connect(func(): _select_stage(stage, b))
 		grid.add_child(btn)
 
 	# Preenche slots vazios para manter layout 4x3
@@ -91,9 +93,25 @@ func _prev_page() -> void:
 func _next_page() -> void:
 	_show_page(current_page + 1)
 
-func _select_stage(stage: Dictionary) -> void:
+func _select_stage(stage: Dictionary, btn: Button = null) -> void:
 	selected_stage = stage["id"]
 	info_label.text = "%s — %s" % [stage["name"], stage["description"]]
+	# Highlight selected button
+	if btn:
+		if _selected_btn and is_instance_valid(_selected_btn):
+			_selected_btn.remove_theme_stylebox_override("normal")
+		_selected_btn = btn
+		var highlight = StyleBoxFlat.new()
+		highlight.bg_color = Color(0.15, 0.3, 0.55)
+		highlight.set_corner_radius_all(4)
+		highlight.set_border_width_all(2)
+		highlight.border_color = Color(0.3, 0.6, 1.0)
+		_selected_btn.add_theme_stylebox_override("normal", highlight)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back()
+		get_viewport().set_input_as_handled()
 
 func _on_next() -> void:
 	GameManager.selected_stage = selected_stage

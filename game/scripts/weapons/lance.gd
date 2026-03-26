@@ -55,6 +55,11 @@ func _attack(level: int) -> void:
 	thrust_mesh.visible = true
 	thrust_area.monitoring = true
 
+	# Manual aim: rotate thrust to face aim direction
+	if GameManager.manual_aim:
+		var aim_angle = atan2(GameManager.aim_direction.x, GameManager.aim_direction.z)
+		rotation.y = aim_angle
+
 	# Scale with level — longer reach
 	var area_scale = 1.0 + (level - 1) * 0.15
 	thrust_area.scale = Vector3(1.0, 1.0, area_scale)

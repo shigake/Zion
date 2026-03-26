@@ -22,24 +22,30 @@ func _process(delta: float) -> void:
 
 func _fire(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
-	# Mira no cluster mais denso de inimigos
 	var player_pos = get_parent().get_parent().global_position
-	var best_target: Vector3 = enemies[0].global_position
-	var best_count: int = 0
+	var best_target: Vector3
 
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var count = 0
-		for e2 in enemies:
-			if is_instance_valid(e2) and e.global_position.distance_to(e2.global_position) < 4.0:
-				count += 1
-		if count > best_count:
-			best_count = count
-			best_target = e.global_position
+	if GameManager.manual_aim:
+		# Fire in aim direction, target a point 12 units away
+		best_target = player_pos + GameManager.aim_direction * 12.0
+	else:
+		# Mira no cluster mais denso de inimigos
+		best_target = enemies[0].global_position
+		var best_count: int = 0
+
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var count = 0
+			for e2 in enemies:
+				if is_instance_valid(e2) and e.global_position.distance_to(e2.global_position) < 4.0:
+					count += 1
+			if count > best_count:
+				best_count = count
+				best_target = e.global_position
 
 	var rocket = ObjectPool.get_instance(rocket_scene)
 	rocket.global_position = player_pos + Vector3(0, 0.5, 0)

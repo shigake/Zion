@@ -18,6 +18,7 @@ var selected_character: String = "ronin"
 var all_items: Array = []
 var current_page: int = 0
 var total_pages: int = 1
+var _selected_btn: Button = null
 
 func _ready() -> void:
 	start_btn.pressed.connect(_on_start)
@@ -59,7 +60,8 @@ func _show_page(page: int) -> void:
 			btn.text += "\n[%s]" % unlock_desc
 			btn.disabled = true
 
-		btn.pressed.connect(func(): _select_character(char_id, data))
+		var b = btn  # capture for lambda
+		b.pressed.connect(func(): _select_character(char_id, data, b))
 		grid.add_child(btn)
 
 	# Preenche slots vazios para manter layout 4x3
@@ -88,13 +90,29 @@ func _prev_page() -> void:
 func _next_page() -> void:
 	_show_page(current_page + 1)
 
-func _select_character(char_id: String, data: Dictionary) -> void:
+func _select_character(char_id: String, data: Dictionary, btn: Button = null) -> void:
 	selected_character = char_id
 	info_label.text = "%s — Arma: %s\n%s" % [
 		data["name"],
 		WeaponDB.get_weapon(data["starting_weapon"])["name"],
 		data["passive"]
 	]
+	# Highlight selected button
+	if btn:
+		if _selected_btn and is_instance_valid(_selected_btn):
+			_selected_btn.remove_theme_stylebox_override("normal")
+		_selected_btn = btn
+		var highlight = StyleBoxFlat.new()
+		highlight.bg_color = Color(0.15, 0.3, 0.55)
+		highlight.set_corner_radius_all(4)
+		highlight.set_border_width_all(2)
+		highlight.border_color = Color(0.3, 0.6, 1.0)
+		_selected_btn.add_theme_stylebox_override("normal", highlight)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back()
+		get_viewport().set_input_as_handled()
 
 func _on_start() -> void:
 	GameManager.selected_character = selected_character

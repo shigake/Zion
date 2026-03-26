@@ -46,6 +46,12 @@ func _process(delta: float) -> void:
 func _start_combo(level: int) -> void:
 	is_attacking = true
 	combo_step = 0
+
+	# Manual aim: rotate punches to face aim direction
+	if GameManager.manual_aim:
+		var aim_angle = atan2(GameManager.aim_direction.x, GameManager.aim_direction.z)
+		rotation.y = aim_angle
+
 	_do_punch(level)
 
 func _do_punch(level: int) -> void:

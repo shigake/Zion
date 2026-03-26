@@ -26,25 +26,32 @@ func _process(delta: float) -> void:
 
 func _throw_bottle(level: int) -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
 	var player_pos = get_parent().get_parent().global_position
-	var nearest: Node3D = null
-	var min_dist = INF
-	for e in enemies:
-		if not is_instance_valid(e):
-			continue
-		var d = player_pos.distance_squared_to(e.global_position)
-		if d < min_dist:
-			min_dist = d
-			nearest = e
 
-	if nearest == null:
-		return
+	var target_pos: Vector3
+	if GameManager.manual_aim:
+		# Throw in aim direction, 8 units away
+		target_pos = player_pos + GameManager.aim_direction * 8.0
+		target_pos.y = 0.05
+	else:
+		var nearest: Node3D = null
+		var min_dist = INF
+		for e in enemies:
+			if not is_instance_valid(e):
+				continue
+			var d = player_pos.distance_squared_to(e.global_position)
+			if d < min_dist:
+				min_dist = d
+				nearest = e
 
-	var target_pos = nearest.global_position
-	target_pos.y = 0.05
+		if nearest == null:
+			return
+
+		target_pos = nearest.global_position
+		target_pos.y = 0.05
 
 	# Create poison pool
 	var pool = Node3D.new()

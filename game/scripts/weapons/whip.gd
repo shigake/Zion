@@ -55,6 +55,11 @@ func _attack(level: int) -> void:
 	slash_mesh.visible = true
 	slash_area.monitoring = true
 
+	# Manual aim: rotate slash to face aim direction
+	if GameManager.manual_aim:
+		var aim_angle = atan2(GameManager.aim_direction.x, GameManager.aim_direction.z)
+		rotation.y = aim_angle
+
 	# Scale with level
 	var area_scale = 1.0 + (level - 1) * 0.15
 	slash_area.scale = Vector3.ONE * area_scale
