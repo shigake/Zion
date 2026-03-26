@@ -974,9 +974,9 @@ const KENNEY_DUNGEON := "res://assets/models/downloaded/kenney/mini-dungeon/Mode
 const KAYKIT_GAME := "res://assets/models/downloaded/kaykit/mini-game-variety/Models/gltf/"
 
 ## Escala dos modelos KayKit/Kenney para caber no jogo
-const CHARACTER_SCALE := Vector3(0.6, 0.6, 0.6)
-const ENEMY_SCALE := Vector3(0.5, 0.5, 0.5)
-const BOSS_SCALE := Vector3(1.0, 1.0, 1.0)
+const CHARACTER_SCALE := Vector3(1.2, 1.2, 1.2)
+const ENEMY_SCALE := Vector3(1.0, 1.0, 1.0)
+const BOSS_SCALE := Vector3(2.0, 2.0, 2.0)
 
 func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 	## Tenta carregar modelo .glb. Retorna null se nao encontrar.
@@ -1086,7 +1086,16 @@ func get_model_for_character(char_id: String) -> Node3D:
 		"mystery": return _create_mystery_model()
 	return create_ronin_model()
 
+func _clean_enemy_name(raw_name: String) -> String:
+	## Strip Godot's auto-rename suffixes (@N, trailing digits) from node names.
+	## e.g. "@Slime@2" -> "Slime", "Skeleton3" -> "Skeleton"
+	var clean = raw_name.replace("@", "")
+	while clean.length() > 0 and clean[-1].is_valid_int():
+		clean = clean.substr(0, clean.length() - 1)
+	return clean
+
 func get_model_for_enemy(enemy_name: String) -> Node3D:
+	var clean_name = _clean_enemy_name(enemy_name)
 	# Map enemy names to .glb file names
 	var glb_map = {
 		"Slime": "slime", "SlimeBig": "slime_big",
@@ -1107,15 +1116,15 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		"BossSugarKing": "boss_sugar_king",
 	}
 	# Try .glb model
-	var file_name = glb_map.get(enemy_name, enemy_name.to_snake_case())
-	var folder = "bosses" if enemy_name.begins_with("Boss") else "enemies"
-	var s = BOSS_SCALE if enemy_name.begins_with("Boss") else ENEMY_SCALE
+	var file_name = glb_map.get(clean_name, clean_name.to_snake_case())
+	var folder = "bosses" if clean_name.begins_with("Boss") else "enemies"
+	var s = BOSS_SCALE if clean_name.begins_with("Boss") else ENEMY_SCALE
 	var glb_path = "res://assets/models/%s/%s.glb" % [folder, file_name]
 	var loaded = _try_load_glb(glb_path, s)
 	if loaded:
 		return loaded
 	# Fallback to procedural
-	match enemy_name:
+	match clean_name:
 		"Slime", "SlimeBig": return create_slime_model()
 		"Bat": return create_bat_model()
 		"Skeleton", "SkeletonArcher": return create_skeleton_model()
@@ -1130,6 +1139,7 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		"BossNecromancer": return create_boss_model()
 		"Swarm": return create_swarm_model()
 		"Mimic": return create_mimic_model()
+		"ToothFairy": return create_bat_model()
 	return create_slime_model()
 
 # ===================== PROP SCATTER SYSTEM =====================

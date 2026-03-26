@@ -107,9 +107,9 @@ func _setup_3d_background() -> void:
 	# Camera
 	var cam = Camera3D.new()
 	cam.position = Vector3(2.5, 1.5, 3.5)
-	cam.look_at(Vector3(0, 0.5, 0))
 	cam.fov = 40
 	world.add_child(cam)
+	cam.look_at(Vector3(0, 0.5, 0))
 
 	# Luz
 	var light = DirectionalLight3D.new()

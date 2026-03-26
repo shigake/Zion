@@ -38,18 +38,14 @@ func _ready() -> void:
 func _apply_procedural_model() -> void:
 	var model = ModelFactory.get_model_for_enemy(name)
 	if model.get_child_count() > 0:
-		# Esconde mesh original
 		mesh.visible = false
-		# Adiciona modelo procedural
 		model.name = "ProceduralModel"
 		add_child(model)
 		ModelFactory.apply_model_materials(model, enemy_color)
-		# Procedural animation
 		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
 		_animator.setup(model)
 		add_child(_animator)
 	else:
-		# Fallback: cel-shader na mesh original
 		VisualSetup.apply_cel_shader_to_mesh(mesh, enemy_color)
 
 ## Separacao entre inimigos — raio e forca de repulsao
