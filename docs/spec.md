@@ -379,3 +379,97 @@ Host cria lobby Steam → Amigos veem e entram → Host inicia partida
 - [ ] Daily Challenge (backend)
 - [ ] Workshop support
 - [ ] QA e optimization final
+
+---
+
+## 10. Sistema de Logging e Diagnosticos
+
+### 10.1 LogManager (Autoload)
+
+Sistema centralizado de logging — **deve ser o primeiro autoload** para capturar logs de todos os outros sistemas.
+
+**Niveis:** DEBUG, INFO, WARNING, ERROR, FATAL
+
+**API:**
+```gdscript
+LogManager.debug("Module", "mensagem")
+LogManager.info("Module", "mensagem")
+LogManager.warn("Module", "mensagem")
+LogManager.error("Module", "mensagem")        # incrementa contador de erros
+LogManager.fatal("Module", "mensagem")        # gera crash report automatico
+LogManager.log_exception("Module", error, stack)  # exception com stack trace
+LogManager.report_crash("Module", "desc", extra)  # crash report manual
+```
+
+**Armazenamento:**
+- Logs: `user://logs/zion_YYYYMMDD_HHMMSS.log`
+- Crash reports: `user://logs/crashes/crash_YYYYMMDD_HHMMSS.json`
+- Rotacao automatica (max 10 logs, 20 crash reports)
+
+**Crash report inclui:** timestamp, session_id, system_info (Godot, OS, renderer, memoria), session_stats (uptime, FPS, contadores), game_state (tempo, nivel, HP, kills, armas), scene_tree, ultimas 100 entradas de log, extra_data.
+
+**Sinais:**
+- `log_entry_added(entry: Dictionary)`
+- `error_logged(module, message)`
+- `crash_reported(report_path)`
+
+### 10.2 Debug Overlay
+
+Overlay em tempo real ativado por teclas de atalho durante gameplay:
+
+| Tecla | Funcao |
+|-------|--------|
+| F3 | Toggle overlay (FPS, enemies, HP, pool stats, logs coloridos) |
+| F4 | Cicla filtro de logs (ALL → INFO+ → WARN+ → ERROR) |
+
+Mostra ate 20 entradas de log simultaneas com cor por nivel. CanvasLayer 100 (sempre no topo), nao bloqueia input do jogo.
+
+---
+
+## 11. Sistema de Telemetria
+
+### 11.1 Cliente (Telemetry autoload)
+
+Analytics anonimo com opt-out (`SaveManager.data["telemetry_enabled"]`).
+
+**Dados enviados automaticamente:**
+- **Fim de run** (POST /telemetry): session_id, version, character, stage, mode, survived_seconds, victory, kills, damage, level, weapons, items, evolutions, events, crystals, FPS, peak_enemies, OS, renderer
+- **Crash reports** (POST /crash): report completo do LogManager
+- **Achievements** (POST /event): id, name, time
+
+**Crash reports pendentes** de sessoes anteriores sao enviados 5s apos startup.
+
+### 11.2 Servidor (`server/`)
+
+Backend Node.js + Express + SQLite (better-sqlite3) com WAL mode.
+
+**Rodar:** `cd server && npm install && npm start` → `http://localhost:3456`
+
+**Variaveis de ambiente (.env):**
+- `PORT` (default: 3456)
+- `API_KEY` (opcional, protege PATCH endpoints)
+- `DISCORD_WEBHOOK_URL` (opcional, alerta crashes no Discord)
+
+**Endpoints:**
+
+| Metodo | Rota | Rate Limit | Descricao |
+|--------|------|-----------|-----------|
+| POST | /telemetry | 30/min | Dados de fim de run |
+| POST | /crash | 10/min | Crash reports |
+| POST | /event | 60/min | Eventos (achievements, etc) |
+| GET | /stats | — | Overview agregado |
+| GET | /crashes | — | Lista paginada + filtros (module, version, resolved, search) |
+| GET | /crashes/:id | — | Detalhe de crash |
+| GET | /runs | — | Lista paginada + filtros (character, stage, version, victory) |
+| GET | /events | — | Lista paginada + filtros (event_type, session_id) |
+| GET | /balance | — | DPS por arma, win rate por char, dificuldade por stage |
+| GET | /health | — | Health check |
+| PATCH | /crashes/:id | — | Resolver crash / adicionar notas (API key) |
+
+**Dashboard web** (`/dashboard`): Overview, Crashes, Runs, Balance, Events. Auto-refresh 30s.
+
+### 11.3 Privacidade
+- Sem dados pessoais (sem nome, email, IP armazenado)
+- Session ID aleatorio e nao-identificavel
+- Opt-out disponivel nas opcoes do jogo
+- Dados usados exclusivamente para melhorar o jogo

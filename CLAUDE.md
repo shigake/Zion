@@ -22,6 +22,9 @@ GODOT="/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotE
 
 # Export para Windows (precisa preset configurado no editor)
 "$GODOT" --headless --path game --export-release "Windows Desktop" ../build/zion.exe
+
+# Servidor de telemetria (dashboard em http://localhost:3456)
+cd server && npm install && npm start
 ```
 
 ## Structure
@@ -41,21 +44,32 @@ Zion/
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── prd_balancing.md         # PRD de balanceamento
 │   ├── prd_missing_features.md  # Checklist de features faltantes
-│   └── prd_visual_polish.md     # PRD de polish visual
+│   ├── prd_visual_polish.md     # PRD de polish visual
+│   ├── prd_telemetry.md         # PRD do sistema de telemetria
+│   ├── prd_3d_models.md         # PRD de modelos 3D
+│   ├── prd_auto_tester.md       # PRD de testes automatizados
+│   ├── prd_ui_ux_fixes.md       # PRD de correcoes UI/UX
+│   └── prd_future.md            # Roadmap futuro
+├── server/                      # Servidor de telemetria (Node.js)
+│   ├── index.js                 # Express + SQLite (API REST + dashboard web)
+│   ├── package.json             # Dependencias (express, better-sqlite3)
+│   ├── .env.example             # PORT, API_KEY, DISCORD_WEBHOOK_URL
+│   └── public/                  # Dashboard web estatico
 └── game/                        # Projeto Godot 4
     ├── project.godot            # Config (autoloads, layers, display)
+    ├── VERSION                  # Versao atual (sem "v")
     ├── scenes/ (82 .tscn)       # Cenas
     │   ├── enemies/             # 11 genericos + 10 bosses
     │   ├── stages/              # 10 stages com props procedurais
     │   ├── weapons/             # 28 armas
-    │   ├── ui/                  # HUD, menus, shop, leaderboard
+    │   ├── ui/                  # HUD, menus, shop, leaderboard, debug overlay
     │   └── player/              # Cena do jogador
-    ├── scripts/ (120 .gd)       # GDScript
-    │   ├── autoload/            # 17 singletons (ver lista abaixo)
+    ├── scripts/ (120+ .gd)      # GDScript
+    │   ├── autoload/            # 19 singletons (ver lista abaixo)
     │   ├── player/              # Player controller
     │   ├── enemies/             # Base + spawner + 10 bosses + especiais
     │   ├── weapons/             # 28 armas + projectiles + behaviors
-    │   ├── ui/                  # 13 telas
+    │   ├── ui/                  # 13 telas + debug overlay (F3/F4)
     │   ├── stages/              # 10 stages + 10 props + camera + events
     │   ├── effects/             # Particulas, shaders, procedural anims
     │   └── tests/               # Testes
@@ -64,8 +78,8 @@ Zion/
 
 ## Architecture
 
-### Autoload Singletons (17)
-GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager
+### Autoload Singletons (19 + 4 effects)
+LogManager, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry
 
 Adicionalmente registrados como autoload (mas ficam em scripts/effects/):
 ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
@@ -77,6 +91,9 @@ ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
 - **Procedural props**: cada stage gera ambiente (meshes, luzes, particulas)
 - **Procedural anims**: idle bob, walk lean, hit squash-stretch, death tumble
 - **Synergies**: 6 combinacoes elementais (Fogo, Gelo, Eletrico, Dark)
+- **Logging**: LogManager (5 niveis, arquivo + console, crash reports JSON, rotacao)
+- **Telemetria**: Telemetry client → servidor HTTP (runs, crashes, events, balance)
+- **Debug overlay**: F3 (overlay tempo real), F4 (filtro de logs)
 
 ### Physics Layers
 1. Players

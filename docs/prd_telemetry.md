@@ -1,5 +1,8 @@
 # PRD — Telemetria e Analytics
 
+> **Status: ✅ IMPLEMENTADO (v1.8.0)**
+> Cliente Godot (LogManager + Telemetry), servidor Node.js com dashboard web, crash reports com game state completo.
+
 ## Objetivo
 
 Receber logs, crash reports e metricas de gameplay dos jogadores em tempo real para:
@@ -82,3 +85,42 @@ Um servidor HTTP minimo que:
 - Session ID e aleatorio, nao identificavel
 - Opt-out disponivel nas opcoes (toggle "Enviar dados anonimos")
 - Dados usados apenas para melhorar o jogo
+
+---
+
+## Implementacao (v1.8.0)
+
+### O que foi entregue
+
+**Cliente Godot:**
+- `LogManager` (autoload): logging centralizado com 5 niveis, crash reports JSON, rotacao de arquivos, buffer em memoria (500 entries), monitoramento de FPS
+- `Telemetry` (autoload): envia runs, crashes e events ao servidor; reenvio automatico de crashes pendentes; opt-out
+- `DebugOverlay` (UI): F3 toggle overlay (FPS, enemies, HP, pool stats, logs coloridos), F4 filtro de niveis
+
+**Servidor (`server/`):**
+- Node.js + Express + SQLite (better-sqlite3, WAL mode)
+- 7 endpoints GET (stats, crashes, runs, events, balance, health, crash detail)
+- 3 endpoints POST (telemetry, crash, event) com rate limiting
+- 1 endpoint PATCH (resolver crash, adicionar notas)
+- Dashboard web com 5 abas: Overview, Crashes, Runs, Balance, Events
+- Discord webhook para alertas de crash
+- API key opcional para endpoints de gerenciamento
+
+### Como usar
+
+```bash
+# Iniciar servidor
+cd server && npm install && npm start
+# Dashboard: http://localhost:3456
+
+# Variaveis de ambiente (opcional)
+PORT=3456
+API_KEY=minha-chave-secreta
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+### Teclas de debug (em jogo)
+| Tecla | Funcao |
+|-------|--------|
+| F3 | Toggle debug overlay |
+| F4 | Cicla filtro: ALL → INFO+ → WARN+ → ERROR |

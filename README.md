@@ -85,20 +85,26 @@ Zion/
 │   ├── prd_balancing.md    # PRD de balanceamento
 │   ├── prd_missing_features.md  # Features faltantes (checklist)
 │   └── prd_visual_polish.md     # PRD de polish visual
+├── server/                 # Servidor de telemetria (Node.js)
+│   ├── index.js            # Express + SQLite (API + dashboard)
+│   ├── package.json        # Dependencias (express, better-sqlite3)
+│   ├── .env.example        # Variaveis de ambiente (PORT, API_KEY, DISCORD_WEBHOOK_URL)
+│   └── public/             # Dashboard web estatico
 └── game/                   # Projeto Godot 4
     ├── project.godot       # Configuracao do projeto (autoloads, layers, display)
+    ├── VERSION             # Versao atual do jogo (sem "v")
     ├── scenes/             # Cenas (.tscn) — 82 arquivos
     │   ├── enemies/        # 11 inimigos genericos + 10 bosses
     │   ├── stages/         # 10 fases com ambientes procedurais
     │   ├── weapons/        # 28 cenas de armas
-    │   ├── ui/             # HUD, menus, level up, shop, leaderboard
+    │   ├── ui/             # HUD, menus, level up, shop, leaderboard, debug overlay
     │   └── player/         # Cena do jogador
-    ├── scripts/            # GDScript (.gd) — 120 arquivos
-    │   ├── autoload/       # 17 singletons globais
+    ├── scripts/            # GDScript (.gd) — 120+ arquivos
+    │   ├── autoload/       # 19 singletons globais (ver tabela abaixo)
     │   ├── player/         # Controlador do jogador
     │   ├── enemies/        # Base + spawner + 10 bosses + 4 especiais
     │   ├── weapons/        # 28 armas + projectiles/behaviors
-    │   ├── ui/             # 13 telas (menu, HUD, shop, lobby, etc)
+    │   ├── ui/             # 13 telas + debug overlay (F3)
     │   ├── stages/         # 10 stages + 10 props procedurais + camera + events
     │   ├── effects/        # Particulas, shaders, animacoes procedurais
     │   └── tests/          # Testes
@@ -107,10 +113,11 @@ Zion/
 
 ## Arquitetura
 
-### Autoload Singletons (17)
+### Autoload Singletons (19)
 
 | Singleton | Responsabilidade |
 |-----------|-----------------|
+| LogManager | Logging centralizado, crash reports, diagnosticos (primeiro autoload) |
 | GameManager | Estado global, loop do jogo, timers |
 | WeaponDB | Catalogo de 28 armas e stats por level |
 | ItemDB | 19 itens passivos e seus efeitos |
@@ -128,6 +135,7 @@ Zion/
 | KeybindingManager | Rebind de teclas |
 | LocaleManager | i18n (PT-BR / EN) |
 | SteamManager | Stub para integracao Steam |
+| Telemetry | Analytics anonimo + envio de crash reports ao servidor |
 
 ### Multiplayer
 - **Host-client**: um jogador hospeda, outros conectam via ENet
@@ -179,6 +187,59 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 - **6 sinergias** elementais
 - **11 inimigos** genericos + 4 especiais (Skeleton Archer, Mimic, Bomber, Swarm)
 
+## Telemetria e Logging
+
+### Sistema de Logging (LogManager)
+Sistema centralizado de logging com 5 niveis (DEBUG, INFO, WARNING, ERROR, FATAL):
+- **Logs em arquivo** com rotacao automatica (ultimos 10 arquivos em `user://logs/`)
+- **Crash reports JSON** automaticos com game state, scene tree e ultimas 100 entradas
+- **Buffer em memoria** com as ultimas 500 entradas
+- **Monitoramento de FPS** (alerta se cair abaixo de 20)
+- **Sinais**: `log_entry_added`, `error_logged`, `crash_reported`
+
+### Debug overlay (em jogo)
+- **F3**: Ativa/desativa overlay com FPS, HP, enemies, pool stats e logs em tempo real
+- **F4**: Filtra logs (ALL → INFO+ → WARN+ → ERROR)
+
+### Telemetria (Telemetry)
+Cliente anonimo de analytics com opt-out:
+- Envia **estatisticas de run** ao fim de cada partida (kills, dano, armas, FPS, etc)
+- Envia **crash reports** automaticamente (incluindo pendentes de sessoes anteriores)
+- Envia **eventos** (achievements, etc)
+- Servidor configuravel, sem dados pessoais
+
+### Servidor de telemetria (`server/`)
+Backend Node.js + Express + SQLite que recebe e analisa os dados:
+
+```bash
+cd server && npm install && npm start
+# Dashboard em http://localhost:3456
+```
+
+**API endpoints:**
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| POST | `/telemetry` | Estatisticas de fim de run |
+| POST | `/crash` | Crash reports |
+| POST | `/event` | Eventos (achievements, etc) |
+| GET | `/stats` | Overview agregado |
+| GET | `/crashes` | Lista de crashes (paginado, filtros) |
+| GET | `/crashes/:id` | Detalhe de um crash |
+| GET | `/runs` | Lista de runs (paginado, filtros) |
+| GET | `/events` | Lista de eventos |
+| GET | `/balance` | Analytics de balanceamento |
+| GET | `/health` | Health check |
+| PATCH | `/crashes/:id` | Marcar crash como resolvido |
+
+**Dashboard web** (`http://localhost:3456`):
+- **Overview**: total runs, crashes, win rate, FPS medio, personagens/fases populares
+- **Crashes**: lista com filtros, detalhe com game state e scene tree, marcar como resolvido
+- **Runs**: historico de partidas com filtros por personagem, fase, versao
+- **Balance**: DPS por arma, win rate por personagem, dificuldade por fase
+- **Events**: achievements e eventos do jogo
+
+**Recursos**: rate limiting, API key opcional, Discord webhook para crashes, auto-refresh 30s.
+
 ## Controles
 
 | Acao | Teclado | Gamepad |
@@ -200,6 +261,11 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 | [Mecanicas](docs/mecanicas.md) | Gameplay e sistemas |
 | [Personagens](docs/personagens.md) | 12 personagens e armas |
 | [Progressao](docs/progressao.md) | Loja, cristais, meta-progressao |
+| [Telemetria PRD](docs/prd_telemetry.md) | PRD do sistema de telemetria |
+| [UI/UX Fixes](docs/prd_ui_ux_fixes.md) | PRD de correcoes de UI/UX |
+| [3D Models](docs/prd_3d_models.md) | PRD de modelos 3D |
+| [Auto Tester](docs/prd_auto_tester.md) | PRD de testes automatizados |
+| [Future](docs/prd_future.md) | Roadmap futuro |
 
 ## Configuracoes do Projeto
 
@@ -214,9 +280,12 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 
 ## Status
 
-Em desenvolvimento ativo. Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados.
+Em desenvolvimento ativo. Versao atual: **1.8.0**
+
+Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web.
 
 ### Trabalho Restante
 - **Audio**: sistema implementado, faltam arquivos .ogg/.wav
 - **Steam**: stub existe, falta plugin GodotSteam
 - **Performance**: MultiMesh para hordas grandes
+- **Multiplayer HUD**: falta ping e setas direcionais dos aliados
