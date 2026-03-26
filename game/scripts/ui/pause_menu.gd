@@ -15,6 +15,13 @@ func _ready() -> void:
 
 	if not InputMap.has_action("pause"):
 		InputMap.add_action("pause")
+	# Always ensure ESC is mapped (GameManager may have created the action with only gamepad)
+	var already_has_key := false
+	for ev in InputMap.action_get_events("pause"):
+		if ev is InputEventKey and ev.physical_keycode == KEY_ESCAPE:
+			already_has_key = true
+			break
+	if not already_has_key:
 		var event = InputEventKey.new()
 		event.physical_keycode = KEY_ESCAPE
 		InputMap.action_add_event("pause", event)
