@@ -127,7 +127,7 @@ func _candy_projectiles(count: int) -> void:
 	var base_dir = (target.global_position - global_position).normalized()
 	base_dir.y = 0
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var spread = Vector3(randf_range(-0.3, 0.3), 0, randf_range(-0.3, 0.3))
 		var dir = (base_dir + spread).normalized()
 		proj.global_position = global_position + dir * 1.5
@@ -141,7 +141,7 @@ func _candy_projectiles(count: int) -> void:
 
 func _star_burst(count: int) -> void:
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 		proj.global_position = global_position + dir * 1.5
@@ -155,7 +155,7 @@ func _star_burst(count: int) -> void:
 
 func _summon_gummy_bears(count: int) -> void:
 	for i in range(count):
-		var gummy = slime_scene.instantiate()
+		var gummy = ObjectPool.get_instance(slime_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		gummy.global_position = global_position + offset
@@ -167,7 +167,7 @@ func _summon_gummy_bears(count: int) -> void:
 
 func _summon_cupcake_bombers(count: int) -> void:
 	for i in range(count):
-		var bomber = bomber_scene.instantiate()
+		var bomber = ObjectPool.get_instance(bomber_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
 		bomber.global_position = global_position + offset

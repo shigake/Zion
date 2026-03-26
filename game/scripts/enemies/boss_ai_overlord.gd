@@ -105,7 +105,7 @@ func _teleport_near_player() -> void:
 
 func _summon_drones(count: int) -> void:
 	for i in range(count):
-		var drone = bat_scene.instantiate()
+		var drone = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		drone.global_position = global_position + offset
@@ -117,7 +117,7 @@ func _summon_drones(count: int) -> void:
 
 func _summon_virus_minions(count: int) -> void:
 	for i in range(count):
-		var virus = slime_scene.instantiate()
+		var virus = ObjectPool.get_instance(slime_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		virus.global_position = global_position + offset
@@ -135,7 +135,7 @@ func _fire_laser_grid(count: int) -> void:
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		proj.global_position = global_position + Vector3(0, 0.8, 0)
 		proj.direction = dir
 		proj.damage = int(damage * 0.4)

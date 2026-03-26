@@ -109,7 +109,7 @@ func _physics_process(delta: float) -> void:
 
 func _fire_projectile_ring(count: int) -> void:
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 		proj.global_position = global_position + dir * 1.5
@@ -125,7 +125,7 @@ func _fire_homing_projectiles(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 2.0
 		proj.global_position = global_position + offset
@@ -162,7 +162,7 @@ func _pull_player(delta: float) -> void:
 
 func _summon_parasites(count: int) -> void:
 	for i in range(count):
-		var parasite = slime_scene.instantiate()
+		var parasite = ObjectPool.get_instance(slime_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		parasite.global_position = global_position + offset
@@ -174,7 +174,7 @@ func _summon_parasites(count: int) -> void:
 
 func _summon_drones(count: int) -> void:
 	for i in range(count):
-		var drone = bat_scene.instantiate()
+		var drone = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
 		drone.global_position = global_position + offset
@@ -186,7 +186,7 @@ func _summon_drones(count: int) -> void:
 
 func _summon_mutants(count: int) -> void:
 	for i in range(count):
-		var mutant = slime_big_scene.instantiate()
+		var mutant = ObjectPool.get_instance(slime_big_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 5.0
 		mutant.global_position = global_position + offset

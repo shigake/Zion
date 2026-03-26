@@ -50,7 +50,7 @@ func _fire(level: int) -> void:
 	var targets = _get_nearest_enemies(player_pos, num_projectiles)
 
 	for t in targets:
-		var proj = projectile_scene.instantiate()
+		var proj = ObjectPool.get_instance(projectile_scene)
 		proj.global_position = player_pos + Vector3(0, 0.5, 0)
 		proj.target = t
 		proj.damage = int(WeaponDB.get_damage("staff", level))

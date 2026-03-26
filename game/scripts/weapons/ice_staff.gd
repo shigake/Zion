@@ -51,7 +51,7 @@ func _fire(level: int) -> void:
 	var dmg = int(WeaponDB.get_damage("ice_staff", level))
 
 	# Create ice projectile — uses bullet scene but with custom on-hit
-	var bullet = projectile_scene.instantiate()
+	var bullet = ObjectPool.get_instance(projectile_scene)
 	bullet.global_position = player_pos + Vector3(0, 0.5, 0)
 	bullet.direction = direction.normalized()
 	bullet.damage = dmg

@@ -48,7 +48,7 @@ func _fire(level: int) -> void:
 	var speed = 18.0 + (level - 1) * 1.0
 
 	for dir in dirs:
-		var bullet = projectile_scene.instantiate()
+		var bullet = ObjectPool.get_instance(projectile_scene)
 		bullet.global_position = player_pos + Vector3(0, 0.5, 0)
 		bullet.direction = dir.normalized()
 		bullet.damage = dmg

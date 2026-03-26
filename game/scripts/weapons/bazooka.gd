@@ -41,7 +41,7 @@ func _fire(level: int) -> void:
 			best_count = count
 			best_target = e.global_position
 
-	var rocket = rocket_scene.instantiate()
+	var rocket = ObjectPool.get_instance(rocket_scene)
 	rocket.global_position = player_pos + Vector3(0, 0.5, 0)
 	rocket.target_pos = best_target
 	rocket.damage = int(WeaponDB.get_damage("bazooka", level))

@@ -94,7 +94,7 @@ func _fire_projectile_ring(count: int, proj_speed: float) -> void:
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		proj.global_position = global_position + Vector3(0, 0.8, 0)
 		proj.direction = dir
 		proj.damage = int(damage * 0.5)
@@ -138,7 +138,7 @@ func _abduction_beam() -> void:
 	ParticleFactory.spawn_death_particles(global_position, Color(0.3, 0.9, 0.3), 10)
 
 func _spawn_buffed_minion() -> void:
-	var minion = slime_big_scene.instantiate()
+	var minion = ObjectPool.get_instance(slime_big_scene)
 	if minion is EnemyBase3D:
 		minion.max_hp = minion.max_hp * 3
 		minion.hp = minion.max_hp
@@ -150,7 +150,7 @@ func _spawn_buffed_minion() -> void:
 
 func _spawn_mutant_cows(count: int) -> void:
 	for i in range(count):
-		var cow = slime_big_scene.instantiate()
+		var cow = ObjectPool.get_instance(slime_big_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		cow.global_position = global_position + offset

@@ -127,7 +127,7 @@ func _fire_flame_ring(count: int) -> void:
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		proj.global_position = global_position + Vector3(0, 0.8, 0)
 		proj.direction = dir
 		proj.damage = int(damage * 0.5)
@@ -145,7 +145,7 @@ func _fire_flame_spiral(count: int) -> void:
 		var angle = base_angle + (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		proj.global_position = global_position + Vector3(0, 0.8, 0)
 		proj.direction = dir
 		proj.damage = int(damage * 0.4)
@@ -157,7 +157,7 @@ func _fire_flame_spiral(count: int) -> void:
 
 func _summon_imps(count: int) -> void:
 	for i in range(count):
-		var imp = bat_scene.instantiate()
+		var imp = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		imp.global_position = global_position + offset
@@ -169,7 +169,7 @@ func _summon_imps(count: int) -> void:
 
 func _summon_lava_golems(count: int) -> void:
 	for i in range(count):
-		var golem = tank_scene.instantiate()
+		var golem = ObjectPool.get_instance(tank_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
 		golem.global_position = global_position + offset

@@ -1,86 +1,145 @@
 # Zion
 
-Jogo estilo Vampire Survivors / The Spell Brigade, feito com Godot 4.
+Survivors roguelite estilo Vampire Survivors / The Spell Brigade, feito com **Godot 4** (GDScript).
 
 ## Sobre
 
-Zion e um survivors roguelite com tematicas variadas, 12 personagens jogaveis, 28 armas, 10 fases com bosses unicos e sistema de progressao entre runs. O objetivo e sobreviver a hordas de inimigos cada vez maiores enquanto evolui armas e coleta itens. Suporta co-op online ate 4 jogadores.
+Zion e um survivors roguelite 3D com tematicas variadas, **12 personagens jogaveis**, **28 armas**, **10 fases** com bosses unicos e sistema de progressao entre runs. Suporta **co-op online ate 4 jogadores** via ENet.
 
 ## Requisitos
 
-- [Godot Engine 4.6+](https://godotengine.org/download) (versao com console para debug)
-- Windows 10/11
+- [Godot Engine 4.6+](https://godotengine.org/download) (versao com console recomendada para debug)
+- Windows 10/11 (64-bit)
 - Git
 
-## Como abrir o projeto
+## Setup Rapido
 
-1. Clone o repositorio:
 ```bash
+# 1. Clone o repositorio
 git clone <url-do-repo>
 cd Zion
-```
 
-2. Abra no editor do Godot:
-```bash
-# Via linha de comando
+# 2. Abra no editor do Godot (uma das opcoes abaixo)
+
+# Opcao A: Se godot esta no PATH
 godot --editor --path game
 
-# Ou abra o Godot Editor e importe game/project.godot
+# Opcao B: Caminho completo (Windows, WinGet)
+"/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --editor --path game
+
+# Opcao C: Abra o Godot Editor manualmente e importe game/project.godot
 ```
 
-3. Na primeira vez, o Godot vai importar todos os assets automaticamente.
+Na primeira vez o Godot importa todos os assets automaticamente.
 
-## Como rodar o jogo
+## Como Rodar
 
 ### Pelo Editor
 - Abra o projeto no Godot Editor
-- Pressione F5 ou clique no botao Play
+- Pressione **F5** ou clique no botao **Play**
 
-### Pela linha de comando
+### Pela Linha de Comando
 ```bash
-# Rodar diretamente (Windows, com Godot instalado via WinGet)
+# Se godot esta no PATH
 godot --path game --run
 
-# Ou com caminho completo
+# Caminho completo (Windows, WinGet)
 "/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --path game --run
 ```
 
-## Como compilar (build/export)
+### Verificar Erros (Headless)
+```bash
+godot --headless --import game/project.godot
+```
 
+## Como Compilar (Export)
+
+### Pelo Editor
 1. Abra o projeto no Godot Editor
 2. Va em **Project > Export**
 3. Adicione um preset (ex: Windows Desktop)
 4. Configure o caminho de saida
 5. Clique em **Export Project**
 
-Para export via linha de comando:
+### Pela Linha de Comando
 ```bash
-# Export para Windows (precisa configurar export preset antes no editor)
+# Precisa configurar export preset antes no editor
 godot --headless --path game --export-release "Windows Desktop" ../build/zion.exe
 ```
 
 ## Estrutura do Projeto
 
 ```
-docs/                    # Documentacao de game design
-game/                    # Projeto Godot 4
-  project.godot          # Arquivo principal do projeto
-  scenes/                # Cenas (.tscn)
-    enemies/             # 11 inimigos genericos + 10 bosses
-    stages/              # 10 fases com ambientes procedurais
-    weapons/             # 28 cenas de armas
-    ui/                  # HUD, menus, level up, shop, leaderboard
-    player/              # Cena do jogador
-  scripts/               # Scripts GDScript (.gd)
-    autoload/            # Singletons globais
-    player/              # Controlador do jogador
-    enemies/             # Base de inimigos + spawner + bosses
-    weapons/             # Logica das armas
-    ui/                  # Logica das telas
-    stages/              # Logica dos stages + props procedurais
-    effects/             # Particulas, shaders, animacoes
-  assets/                # Materiais, shaders, audio
+Zion/
+├── CLAUDE.md               # Guia de desenvolvimento (instrucoes para AI/devs)
+├── README.md               # Este arquivo
+├── docs/                   # Documentacao de game design
+│   ├── gdd.md              # Game Design Document
+│   ├── prd.md              # Product Requirements Document (roadmap)
+│   ├── spec.md             # Especificacao tecnica
+│   ├── fases.md            # Detalhes das 10 fases
+│   ├── itens.md            # Itens, evolucoes, reliquias
+│   ├── mecanicas.md        # Mecanicas de gameplay
+│   ├── personagens.md      # 12 personagens e armas
+│   ├── progressao.md       # Loja, cristais, meta-progressao
+│   ├── prd_balancing.md    # PRD de balanceamento
+│   ├── prd_missing_features.md  # Features faltantes (checklist)
+│   └── prd_visual_polish.md     # PRD de polish visual
+└── game/                   # Projeto Godot 4
+    ├── project.godot       # Configuracao do projeto (autoloads, layers, display)
+    ├── scenes/             # Cenas (.tscn) — 82 arquivos
+    │   ├── enemies/        # 11 inimigos genericos + 10 bosses
+    │   ├── stages/         # 10 fases com ambientes procedurais
+    │   ├── weapons/        # 28 cenas de armas
+    │   ├── ui/             # HUD, menus, level up, shop, leaderboard
+    │   └── player/         # Cena do jogador
+    ├── scripts/            # GDScript (.gd) — 120 arquivos
+    │   ├── autoload/       # 17 singletons globais
+    │   ├── player/         # Controlador do jogador
+    │   ├── enemies/        # Base + spawner + 10 bosses + 4 especiais
+    │   ├── weapons/        # 28 armas + projectiles/behaviors
+    │   ├── ui/             # 13 telas (menu, HUD, shop, lobby, etc)
+    │   ├── stages/         # 10 stages + 10 props procedurais + camera + events
+    │   ├── effects/        # Particulas, shaders, animacoes procedurais
+    │   └── tests/          # Testes
+    └── assets/             # Materiais, shaders, audio
 ```
+
+## Arquitetura
+
+### Autoload Singletons (17)
+
+| Singleton | Responsabilidade |
+|-----------|-----------------|
+| GameManager | Estado global, loop do jogo, timers |
+| WeaponDB | Catalogo de 28 armas e stats por level |
+| ItemDB | 19 itens passivos e seus efeitos |
+| CharacterDB | 12 personagens, stats e armas iniciais |
+| EvolutionDB | 12 evolucoes (arma lv8 + item lv5) |
+| RelicDB | 7 reliquias pre-run |
+| ShopDB | 12 upgrades permanentes |
+| SaveManager | Save/load local (perfil, cristais, progresso) |
+| MultiplayerManager | ENet host-client, lobby, sync |
+| SynergySystem | 6 sinergias elementais |
+| AudioManager | Musica + SFX com crossfade |
+| ObjectPool | Pool de objetos (inimigos, projeteis) |
+| AchievementManager | 13 achievements |
+| UITheme | Tema visual global |
+| KeybindingManager | Rebind de teclas |
+| LocaleManager | i18n (PT-BR / EN) |
+| SteamManager | Stub para integracao Steam |
+
+### Multiplayer
+- **Host-client**: um jogador hospeda, outros conectam via ENet
+- **Steam Networking Sockets**: preparado via SteamManager stub
+- **Sync**: posicoes unreliable (20 tick/s), eventos criticos reliable
+
+### Sistemas de Gameplay
+- **Armas**: nivel 1-8, evoluem no 8 com item correspondente no 5
+- **Spawner**: dificuldade escala com tempo, skins por stage
+- **Props procedurais**: cada stage gera seu ambiente (meshes, luzes, particulas)
+- **Animacoes procedurais**: idle bob, walk lean, hit squash-stretch, death tumble
+- **Sinergias**: Fogo+Fogo, Gelo+Gelo, Eletrico+Eletrico, Dark+Dark, Fogo+Gelo, Eletrico+Gelo
 
 ## Conteudo Implementado
 
@@ -88,52 +147,66 @@ game/                    # Projeto Godot 4
 Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Gladiador, Chef, ???
 
 ### 28 Armas
-- **Melee**: Katana, Foice, Machado, Chicote, Lanca, Martelo, Nunchaku, Katana Dupla, Espada Cloud, Luvas de Boxe
-- **Ranged**: Metralhadora, Staff, Bazuca, Shuriken, Pistola Dupla, Lanca-chamas, Cajado de Gelo, Besta, Canhao de Plasma, Arco Elfico
-- **Summon**: Necromante, Drone, Totem, Garrafa de Veneno, Corrente Eletrica, Livro Magico, Bomba Relogio, Portal
+| Tipo | Armas |
+|------|-------|
+| **Melee** (10) | Katana, Foice, Machado, Chicote, Lanca, Martelo, Nunchaku, Katana Dupla, Espada Cloud, Luvas de Boxe |
+| **Ranged** (10) | Metralhadora, Staff, Bazuca, Shuriken, Pistola Dupla, Lanca-chamas, Cajado de Gelo, Besta, Canhao de Plasma, Arco Elfico |
+| **Summon** (8) | Necromante, Drone, Totem, Garrafa de Veneno, Corrente Eletrica, Livro Magico, Bomba Relogio, Portal |
 
 ### 10 Fases
-| Fase | Ambiente | Boss |
-|------|---------|------|
-| Cemiterio | Neblina, lapides | Necromancer King |
-| Floresta | Cogumelos magicos | Rainha das Fadas |
-| Fazenda | Silos, milharal | Mega Vaca Alienigena |
-| Toquio | Neon cyberpunk | AI Overlord |
-| Vulcao | Lava, cavernas | Demon Lord |
-| Oceano | Ruinas submarinas | Leviathan |
-| Arena | Coliseu romano | Imperador Corrompido |
-| Espaco | Estacao espacial | Singularidade |
-| Castelo | Gotico, vampiros | Conde Dracula |
-| Mundo Doce | Chocolate, sorvete | Rei Acucar |
+| Fase | Ambiente | Boss | Mecanica Unica |
+|------|---------|------|----------------|
+| Cemiterio | Neblina, lapides | Necromancer King | Lapides destrutiveis |
+| Floresta | Cogumelos magicos | Rainha das Fadas | Cogumelos com buffs |
+| Fazenda | Silos, milharal | Mega Vaca Alienigena | Milharal esconde inimigos |
+| Toquio | Neon cyberpunk | AI Overlord | — |
+| Vulcao | Lava, cavernas | Demon Lord | — |
+| Oceano | Ruinas submarinas | Leviathan | — |
+| Arena | Coliseu romano | Imperador Corrompido | — |
+| Espaco | Estacao espacial | Singularidade | — |
+| Castelo | Gotico, vampiros | Conde Dracula | — |
+| Mundo Doce | Chocolate, sorvete | Rei Acucar | — |
 
 ### Sistemas
-- 19 itens passivos com efeitos funcionais
-- 12 evolucoes de armas (arma lv8 + item lv5)
-- 7 reliquias pre-run
-- 10 eventos especiais (Horda Dourada, Eclipse, Chuva de Meteoros, etc)
-- 13 achievements
-- Loja com 12 upgrades permanentes
-- Leaderboard local (modo Endless)
-- Multiplayer co-op ate 4 jogadores (ENet)
-- Sistema de sinergias elementais (6 combinacoes)
+- **19 itens passivos** com efeitos funcionais
+- **12 evolucoes** de armas (arma lv8 + item lv5)
+- **7 reliquias** pre-run
+- **10 eventos** especiais (Horda Dourada, Eclipse, Chuva de Meteoros, etc)
+- **13 achievements**
+- **12 upgrades** permanentes na loja
+- **Leaderboard** local (modo Endless)
+- **Multiplayer** co-op ate 4 jogadores (ENet)
+- **6 sinergias** elementais
+- **11 inimigos** genericos + 4 especiais (Skeleton Archer, Mimic, Bomber, Swarm)
 
 ## Controles
 
 | Acao | Teclado | Gamepad |
 |------|---------|---------|
 | Mover | WASD | Left Stick |
-| Dash | Space | A/X |
-| Interagir | E | B/Circle |
+| Dash | Space | A / X |
+| Interagir | E | B / Circle |
 | Pause | ESC | Start |
 
-## Documentacao
+## Documentacao de Design
 
-- [Game Design Document](docs/gdd.md)
-- [Personagens e Armas](docs/personagens.md)
-- [Fases e Inimigos](docs/fases.md)
-- [Itens e Evolucoes](docs/itens.md)
-- [Progressao e Loja](docs/progressao.md)
-- [Mecanicas de Gameplay](docs/mecanicas.md)
+| Documento | Descricao |
+|-----------|-----------|
+| [GDD](docs/gdd.md) | Game Design Document completo |
+| [PRD](docs/prd.md) | Roadmap por fases (0-6) |
+| [Spec](docs/spec.md) | Especificacao tecnica |
+| [Fases](docs/fases.md) | Detalhes das 10 fases e bosses |
+| [Itens](docs/itens.md) | Itens, evolucoes, reliquias |
+| [Mecanicas](docs/mecanicas.md) | Gameplay e sistemas |
+| [Personagens](docs/personagens.md) | 12 personagens e armas |
+| [Progressao](docs/progressao.md) | Loja, cristais, meta-progressao |
+
+## Configuracoes do Projeto
+
+- **Resolucao**: 1280x720 (stretch mode: canvas_items, aspect: expand)
+- **Renderer**: Forward Plus
+- **MSAA**: 2x
+- **Physics layers**: Players, Enemies, Pickups, PlayerAttacks, EnemyAttacks
 
 ## Plataforma
 
@@ -141,4 +214,9 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 
 ## Status
 
-Em desenvolvimento ativo. Todas as 10 fases e 12 personagens implementados.
+Em desenvolvimento ativo. Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados.
+
+### Trabalho Restante
+- **Audio**: sistema implementado, faltam arquivos .ogg/.wav
+- **Steam**: stub existe, falta plugin GodotSteam
+- **Performance**: MultiMesh para hordas grandes

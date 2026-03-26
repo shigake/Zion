@@ -83,7 +83,7 @@ func _physics_process(delta: float) -> void:
 
 func _summon_skeletons(count: int) -> void:
 	for i in range(count):
-		var sk = skeleton_scene.instantiate()
+		var sk = ObjectPool.get_instance(skeleton_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		sk.global_position = global_position + offset
@@ -99,7 +99,7 @@ func _fire_projectiles(count: int) -> void:
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
 
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		proj.global_position = global_position + Vector3(0, 0.8, 0)
 		proj.direction = dir
 		proj.damage = int(damage * 0.5)

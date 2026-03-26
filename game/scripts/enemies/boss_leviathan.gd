@@ -128,7 +128,7 @@ func _tentacle_attack(count: int) -> void:
 		var spawn_pos = center + spawn_offset
 		var dir = (center - spawn_pos).normalized()
 
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		proj.global_position = spawn_pos + Vector3(0, 0.8, 0)
 		proj.direction = dir
 		proj.damage = int(damage * 0.4)
@@ -174,7 +174,7 @@ func _tentacle_slam(radius: float) -> void:
 
 func _summon_jellyfish(count: int) -> void:
 	for i in range(count):
-		var jelly = ghost_scene.instantiate()
+		var jelly = ObjectPool.get_instance(ghost_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		jelly.global_position = global_position + offset

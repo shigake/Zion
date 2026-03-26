@@ -118,7 +118,7 @@ func _physics_process(delta: float) -> void:
 
 func _summon_gladiators(count: int) -> void:
 	for i in range(count):
-		var glad = skeleton_scene.instantiate()
+		var glad = ObjectPool.get_instance(skeleton_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
 		glad.global_position = global_position + offset
@@ -130,7 +130,7 @@ func _summon_gladiators(count: int) -> void:
 
 func _summon_shield_bearers(count: int) -> void:
 	for i in range(count):
-		var bearer = tank_scene.instantiate()
+		var bearer = ObjectPool.get_instance(tank_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		bearer.global_position = global_position + offset
@@ -147,7 +147,7 @@ func _fire_pillar() -> void:
 	var dir = (target.global_position - global_position).normalized()
 	dir.y = 0
 
-	var proj = bullet_scene.instantiate()
+	var proj = ObjectPool.get_instance(bullet_scene)
 	proj.global_position = global_position + Vector3(0, 0.8, 0)
 	proj.direction = dir
 	proj.damage = int(damage * 1.0)  # Alto dano
@@ -189,7 +189,7 @@ func _fire_rain(count: int) -> void:
 	# Pilares de fogo caindo do ceu (como thorn_rain mas cor de fogo)
 	var center = target.global_position
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var rand_offset = Vector3(randf_range(-6.0, 6.0), 0, randf_range(-6.0, 6.0))
 		proj.global_position = center + rand_offset + Vector3(0, 10.0, 0)
 		proj.direction = Vector3(0, -1, 0)  # Cai pra baixo

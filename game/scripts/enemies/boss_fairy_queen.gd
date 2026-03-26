@@ -109,7 +109,7 @@ func _teleport_near_player() -> void:
 
 func _summon_fairies(count: int) -> void:
 	for i in range(count):
-		var fairy = bat_scene.instantiate()
+		var fairy = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		fairy.global_position = global_position + offset
@@ -123,7 +123,7 @@ func _spawn_clones(count: int) -> void:
 	for i in range(count):
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
-		var clone = bat_scene.instantiate()
+		var clone = ObjectPool.get_instance(bat_scene)
 		if clone is EnemyBase3D:
 			clone.max_hp = 1
 			clone.hp = 1
@@ -142,7 +142,7 @@ func _thorn_rain(count: int) -> void:
 	# Projeteis caindo do ceu em area ao redor do player
 	var center = target.global_position
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var rand_offset = Vector3(randf_range(-6.0, 6.0), 0, randf_range(-6.0, 6.0))
 		proj.global_position = center + rand_offset + Vector3(0, 10.0, 0)
 		proj.direction = Vector3(0, -1, 0)  # Cai pra baixo

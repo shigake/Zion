@@ -51,7 +51,7 @@ func _fire(level: int) -> void:
 	var dmg = int(WeaponDB.get_damage("crossbow", level))
 
 	# Create piercing bolt — does NOT destroy on hit
-	var bolt = projectile_scene.instantiate()
+	var bolt = ObjectPool.get_instance(projectile_scene)
 	bolt.global_position = player_pos + Vector3(0, 0.5, 0)
 	bolt.direction = direction.normalized()
 	bolt.damage = dmg

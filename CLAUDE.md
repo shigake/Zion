@@ -2,52 +2,93 @@
 
 ## Project
 
-Survivors roguelite game built with Godot 4 (GDScript). Online co-op up to 4 players.
-12 characters, 28 weapons, 10 stages, 10 bosses, 12 evolutions.
+Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
+12 personagens, 28 armas, 10 fases, 10 bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+
+## Quick Start
+
+```bash
+# Alias para o executavel do Godot (Windows, WinGet)
+GODOT="/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe"
+
+# Rodar o jogo
+"$GODOT" --path game --run
+
+# Abrir no editor
+"$GODOT" --editor --path game
+
+# Verificar erros (headless)
+"$GODOT" --headless --import game/project.godot
+
+# Export para Windows (precisa preset configurado no editor)
+"$GODOT" --headless --path game --export-release "Windows Desktop" ../build/zion.exe
+```
 
 ## Structure
 
 ```
-docs/           # Game design documents (GDD, PRD, spec)
-game/           # Godot 4 project
-  scenes/       # .tscn scene files
-    enemies/    # 11 generic enemies + 10 bosses
-    stages/     # 10 stages with procedural props
-    weapons/    # 28 weapon scenes
-    ui/         # HUD, menus, level up, shop, leaderboard
-    player/     # Player scene
-  scripts/      # .gd script files
-    autoload/   # Singletons (GameManager, WeaponDB, ItemDB, etc)
-    player/     # Player controller
-    enemies/    # Enemy base + spawner + 10 boss scripts
-    weapons/    # All weapon scripts (28)
-    ui/         # HUD, menus, level up, shop
-    stages/     # Stage logic + props (10 stages)
-    effects/    # Particles, shaders, animations, procedural animator
-  assets/       # Materials, shaders, audio
-```
-
-## Commands
-
-```bash
-# Run the game (from repo root)
-"/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --path game --run
-
-# Import project (headless check for errors)
-"/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --headless --import game/project.godot
-
-# Open in editor
-"/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --editor --path game
+Zion/
+├── CLAUDE.md                    # Este arquivo — guia de dev
+├── README.md                    # Documentacao publica do projeto
+├── docs/                        # Game design documents
+│   ├── gdd.md                   # Game Design Document
+│   ├── prd.md                   # Product Requirements (roadmap fases 0-6)
+│   ├── spec.md                  # Especificacao tecnica
+│   ├── fases.md                 # 10 fases detalhadas
+│   ├── itens.md                 # Itens, evolucoes, reliquias
+│   ├── mecanicas.md             # Mecanicas de gameplay
+│   ├── personagens.md           # 12 personagens
+│   ├── progressao.md            # Loja, cristais, meta-progressao
+│   ├── prd_balancing.md         # PRD de balanceamento
+│   ├── prd_missing_features.md  # Checklist de features faltantes
+│   └── prd_visual_polish.md     # PRD de polish visual
+└── game/                        # Projeto Godot 4
+    ├── project.godot            # Config (autoloads, layers, display)
+    ├── scenes/ (82 .tscn)       # Cenas
+    │   ├── enemies/             # 11 genericos + 10 bosses
+    │   ├── stages/              # 10 stages com props procedurais
+    │   ├── weapons/             # 28 armas
+    │   ├── ui/                  # HUD, menus, shop, leaderboard
+    │   └── player/              # Cena do jogador
+    ├── scripts/ (120 .gd)       # GDScript
+    │   ├── autoload/            # 17 singletons (ver lista abaixo)
+    │   ├── player/              # Player controller
+    │   ├── enemies/             # Base + spawner + 10 bosses + especiais
+    │   ├── weapons/             # 28 armas + projectiles + behaviors
+    │   ├── ui/                  # 13 telas
+    │   ├── stages/              # 10 stages + 10 props + camera + events
+    │   ├── effects/             # Particulas, shaders, procedural anims
+    │   └── tests/               # Testes
+    └── assets/                  # Materiais, shaders, audio
 ```
 
 ## Architecture
 
-- **Host-client multiplayer**: one player hosts, others connect via ENet (Steam Networking Sockets ready via SteamManager stub)
-- **Autoload singletons**: GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ScreenEffects, ParticleFactory, ObjectPool, UITheme, KeybindingManager, LocaleManager, VisualSetup, ModelFactory, SteamManager, AchievementManager
-- **Enemy spawning**: ObjectPool-backed, difficulty scales with time, stage-themed skins
-- **Weapon system**: base weapons level 1-8, evolve at 8 with matching item at 5
-- **Procedural props**: each stage generates its environment procedurally (meshes, lights, particles)
-- **Procedural animations**: idle bob, walk lean, hit squash-stretch, death tumble
+### Autoload Singletons (17)
+GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager
+
+Adicionalmente registrados como autoload (mas ficam em scripts/effects/):
+ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
+
+### Key Systems
+- **Multiplayer**: Host-client via ENet (Steam Networking Sockets pronto via SteamManager stub)
+- **Enemy spawning**: ObjectPool-backed, dificuldade escala com tempo, skins por stage
+- **Weapons**: nivel 1-8, evolucao no 8 com item correspondente no 5
+- **Procedural props**: cada stage gera ambiente (meshes, luzes, particulas)
+- **Procedural anims**: idle bob, walk lean, hit squash-stretch, death tumble
+- **Synergies**: 6 combinacoes elementais (Fogo, Gelo, Eletrico, Dark)
+
+### Physics Layers
+1. Players
+2. Enemies
+3. Pickups
+4. PlayerAttacks
+5. EnemyAttacks
+
+### Display
+- Viewport: 1280x720 (stretch: canvas_items, aspect: expand)
+- Renderer: Forward Plus, MSAA 2x
+- Main scene: `res://scenes/ui/main_menu.tscn`
 
 ## Content Summary
 
@@ -55,11 +96,13 @@ game/           # Godot 4 project
 - **Weapons**: 28 (10 melee, 10 ranged, 8 summon/special)
 - **Stages**: 10 (cemetery, forest, farm, tokyo, volcano, ocean, arena, space, castle, candy)
 - **Bosses**: 10 (one per stage, each with 3 phases)
+- **Enemies**: 11 genericos + 4 especiais (skeleton_archer, mimic, bomber, swarm)
 - **Items**: 19 passive items
 - **Evolutions**: 12 weapon evolutions
 - **Relics**: 7 pre-run relics
 - **Events**: 10 special events
 - **Achievements**: 13
+- **Shop upgrades**: 12 permanent upgrades
 
 ## Notificacoes Discord
 
@@ -74,10 +117,13 @@ Sempre notifique ao concluir ou falhar uma task. Escreva a mensagem em portugues
 
 ## Current Phase
 
-All 10 stages implemented with bosses, props, and mechanics. See docs/prd.md for full roadmap.
+Fases 0-2 do PRD substancialmente implementadas. Fases 3-6 parcialmente (conteudo das 10 fases existe, multiplayer basico existe, mas falta polish).
+
+Ver `docs/prd.md` para roadmap completo e `docs/prd_missing_features.md` para checklist detalhado.
 
 ## Remaining Work
 
-- Audio files (system exists, needs .ogg/.wav assets)
-- Steam integration (GodotSteam plugin needed)
-- MultiMesh for large hordes (performance optimization)
+- **Audio**: sistema (AudioManager) existe e carrega automaticamente, mas faltam arquivos .ogg/.wav em game/assets/audio/
+- **Steam**: plugin GodotSteam necessario para multiplayer P2P
+- **MultiMesh**: para renderizar hordas grandes com performance
+- **Multiplayer HUD**: falta ping e setas direcionais dos aliados

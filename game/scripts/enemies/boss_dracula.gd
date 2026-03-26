@@ -130,7 +130,7 @@ func _teleport_bat_form() -> void:
 
 func _summon_bats(count: int) -> void:
 	for i in range(count):
-		var bat = bat_scene.instantiate()
+		var bat = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 3.0
 		bat.global_position = global_position + offset
@@ -142,7 +142,7 @@ func _summon_bats(count: int) -> void:
 
 func _summon_vampires(count: int) -> void:
 	for i in range(count):
-		var vamp = skeleton_scene.instantiate()
+		var vamp = ObjectPool.get_instance(skeleton_scene)
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
 		vamp.global_position = global_position + offset
@@ -160,7 +160,7 @@ func _blood_fan(count: int) -> void:
 	var base_angle = atan2(base_dir.z, base_dir.x)
 	var spread = PI / 4.0  # 45 grau spread total
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var angle_offset = -spread / 2.0 + (spread / (count - 1)) * i
 		var angle = base_angle + angle_offset
 		var dir = Vector3(cos(angle), 0, sin(angle))
@@ -178,7 +178,7 @@ func _blood_rain(count: int) -> void:
 		return
 	var center = target.global_position
 	for i in range(count):
-		var proj = bullet_scene.instantiate()
+		var proj = ObjectPool.get_instance(bullet_scene)
 		var rand_offset = Vector3(randf_range(-7.0, 7.0), 0, randf_range(-7.0, 7.0))
 		proj.global_position = center + rand_offset + Vector3(0, 10.0, 0)
 		proj.direction = Vector3(0, -1, 0)
@@ -192,7 +192,7 @@ func _blood_rain(count: int) -> void:
 func _charm_projectile() -> void:
 	if not target or not is_instance_valid(target):
 		return
-	var proj = bullet_scene.instantiate()
+	var proj = ObjectPool.get_instance(bullet_scene)
 	var dir = (target.global_position - global_position).normalized()
 	dir.y = 0
 	proj.global_position = global_position + dir * 1.5

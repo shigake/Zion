@@ -28,7 +28,7 @@ func _summon(level: int) -> void:
 	var player_pos = get_parent().get_parent().global_position
 	var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
 
-	var skeleton = skeleton_scene.instantiate()
+	var skeleton = ObjectPool.get_instance(skeleton_scene)
 	skeleton.global_position = player_pos + offset
 	skeleton.damage = int(WeaponDB.get_damage("necro", level))
 	skeleton.lifetime = 8.0 + level * 2.0
