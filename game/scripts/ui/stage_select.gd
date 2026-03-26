@@ -41,6 +41,7 @@ func _ready() -> void:
 	total_pages = maxi(1, ceili(float(stages.size()) / PER_PAGE))
 	_show_page(0)
 	_select_stage(stages[0])
+	GamepadUI.notify_menu_opened()
 
 func _show_page(page: int) -> void:
 	current_page = clampi(page, 0, total_pages - 1)
@@ -75,6 +76,7 @@ func _show_page(page: int) -> void:
 		grid.add_child(spacer)
 
 	_update_arrows()
+	_setup_grid_focus()
 
 func _update_arrows() -> void:
 	left_arrow.visible = total_pages > 1
@@ -107,6 +109,32 @@ func _select_stage(stage: Dictionary, btn: Button = null) -> void:
 		highlight.set_border_width_all(2)
 		highlight.border_color = Color(0.3, 0.6, 1.0)
 		_selected_btn.add_theme_stylebox_override("normal", highlight)
+
+func _setup_grid_focus() -> void:
+	var buttons: Array[Button] = []
+	for child in grid.get_children():
+		if child is Button and not child.disabled:
+			child.focus_mode = Control.FOCUS_ALL
+			buttons.append(child)
+	for i in range(buttons.size()):
+		var btn = buttons[i]
+		if i % COLUMNS > 0 and i > 0:
+			btn.focus_neighbor_left = buttons[i - 1].get_path()
+		if i % COLUMNS < COLUMNS - 1 and i < buttons.size() - 1:
+			btn.focus_neighbor_right = buttons[i + 1].get_path()
+		if i >= COLUMNS:
+			btn.focus_neighbor_top = buttons[i - COLUMNS].get_path()
+		if i + COLUMNS < buttons.size():
+			btn.focus_neighbor_bottom = buttons[i + COLUMNS].get_path()
+		else:
+			btn.focus_neighbor_bottom = next_btn.get_path()
+	next_btn.focus_mode = Control.FOCUS_ALL
+	back_btn.focus_mode = Control.FOCUS_ALL
+	next_btn.focus_neighbor_bottom = back_btn.get_path()
+	back_btn.focus_neighbor_top = next_btn.get_path()
+	if not buttons.is_empty():
+		next_btn.focus_neighbor_top = buttons[mini(buttons.size() - 1, buttons.size() - 1)].get_path()
+		back_btn.focus_neighbor_bottom = buttons[0].get_path()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

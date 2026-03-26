@@ -29,6 +29,7 @@ func _ready() -> void:
 	_load_items()
 	_show_page(0)
 	_create_mode_buttons()
+	GamepadUI.notify_menu_opened()
 
 func _load_items() -> void:
 	all_items.clear()
@@ -69,6 +70,7 @@ func _show_page(page: int) -> void:
 		grid.add_child(spacer)
 
 	_update_arrows()
+	_setup_grid_focus()
 
 func _update_arrows() -> void:
 	left_arrow.visible = total_pages > 1

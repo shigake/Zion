@@ -63,6 +63,32 @@ func _show_choices() -> void:
 	banish_mode = false
 	panel.visible = true
 	GameManager.paused = true
+	# Gamepad: foca na primeira opcao
+	_setup_levelup_focus()
+	GamepadUI.notify_menu_opened()
+
+func _setup_levelup_focus() -> void:
+	var focusable: Array[Button] = []
+	var buttons = [option1_btn, option2_btn, option3_btn]
+	for btn in buttons:
+		if btn.visible:
+			btn.focus_mode = Control.FOCUS_ALL
+			focusable.append(btn)
+	if reroll_btn.visible:
+		reroll_btn.focus_mode = Control.FOCUS_ALL
+		focusable.append(reroll_btn)
+	if banish_btn.visible:
+		banish_btn.focus_mode = Control.FOCUS_ALL
+		focusable.append(banish_btn)
+	# Setup vizinhos para navegacao horizontal nas opcoes + vertical para reroll/banish
+	for i in range(focusable.size()):
+		var btn = focusable[i]
+		if i > 0:
+			btn.focus_neighbor_left = focusable[i - 1].get_path()
+			btn.focus_neighbor_top = focusable[i - 1].get_path()
+		if i < focusable.size() - 1:
+			btn.focus_neighbor_right = focusable[i + 1].get_path()
+			btn.focus_neighbor_bottom = focusable[i + 1].get_path()
 	# Nota: NAO pausa a tree (get_tree().paused = true) porque
 	# causa problemas com input dos botoes. GameManager.paused
 	# ja impede gameplay de rodar.

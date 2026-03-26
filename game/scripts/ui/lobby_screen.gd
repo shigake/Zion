@@ -17,6 +17,7 @@ func _ready() -> void:
 	back_btn.pressed.connect(_on_back)
 	start_btn.visible = false
 
+	GamepadUI.notify_menu_opened()
 	MultiplayerManager.player_connected.connect(_on_player_changed)
 	MultiplayerManager.player_disconnected.connect(_on_player_changed)
 	MultiplayerManager.server_created.connect(_on_server_created)

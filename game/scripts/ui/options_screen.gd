@@ -7,6 +7,7 @@ var keybind_buttons: Dictionary = {}  # action -> Button
 
 func _ready() -> void:
 	_build_ui()
+	GamepadUI.notify_menu_opened()
 
 func _build_ui() -> void:
 	var scroll = ScrollContainer.new()

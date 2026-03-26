@@ -28,6 +28,7 @@ func _ready() -> void:
 	_load_items()
 	_show_page(0)
 	_select_character("ronin", CharacterDB.get_character("ronin"))
+	GamepadUI.notify_menu_opened()
 
 func _load_items() -> void:
 	all_items.clear()
@@ -72,6 +73,8 @@ func _show_page(page: int) -> void:
 		grid.add_child(spacer)
 
 	_update_arrows()
+	# Gamepad: configura foco nos botoes do grid
+	_setup_grid_focus()
 
 func _update_arrows() -> void:
 	left_arrow.visible = total_pages > 1
@@ -108,6 +111,39 @@ func _select_character(char_id: String, data: Dictionary, btn: Button = null) ->
 		highlight.set_border_width_all(2)
 		highlight.border_color = Color(0.3, 0.6, 1.0)
 		_selected_btn.add_theme_stylebox_override("normal", highlight)
+
+func _setup_grid_focus() -> void:
+	var buttons: Array[Button] = []
+	for child in grid.get_children():
+		if child is Button and not child.disabled:
+			child.focus_mode = Control.FOCUS_ALL
+			buttons.append(child)
+	# Grid focus: cima/baixo pula COLUMNS, esquerda/direita pula 1
+	for i in range(buttons.size()):
+		var btn = buttons[i]
+		# Esquerda
+		if i % COLUMNS > 0 and i > 0:
+			btn.focus_neighbor_left = buttons[i - 1].get_path()
+		# Direita
+		if i % COLUMNS < COLUMNS - 1 and i < buttons.size() - 1:
+			btn.focus_neighbor_right = buttons[i + 1].get_path()
+		# Cima
+		if i >= COLUMNS:
+			btn.focus_neighbor_top = buttons[i - COLUMNS].get_path()
+		# Baixo
+		if i + COLUMNS < buttons.size():
+			btn.focus_neighbor_bottom = buttons[i + COLUMNS].get_path()
+		else:
+			# Ultimo row: baixo vai para Start
+			btn.focus_neighbor_bottom = start_btn.get_path()
+	# Start e Back
+	start_btn.focus_mode = Control.FOCUS_ALL
+	back_btn.focus_mode = Control.FOCUS_ALL
+	start_btn.focus_neighbor_bottom = back_btn.get_path()
+	back_btn.focus_neighbor_top = start_btn.get_path()
+	if not buttons.is_empty():
+		start_btn.focus_neighbor_top = buttons[mini(buttons.size() - 1, buttons.size() - 1)].get_path()
+		back_btn.focus_neighbor_bottom = buttons[0].get_path()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

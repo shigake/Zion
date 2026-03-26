@@ -68,9 +68,17 @@ func _setup_button_style() -> void:
 	disabled.border_color = Color(0.15, 0.15, 0.2)
 	theme.set_stylebox("disabled", "Button", disabled)
 
+	# Focus (gamepad navigation)
+	var focus = normal.duplicate()
+	focus.bg_color = Color(0.15, 0.25, 0.4)
+	focus.border_color = ACCENT_GOLD
+	focus.set_border_width_all(3)
+	theme.set_stylebox("focus", "Button", focus)
+
 	# Colors
 	theme.set_color("font_color", "Button", TEXT_PRIMARY)
 	theme.set_color("font_hover_color", "Button", ACCENT_BLUE)
+	theme.set_color("font_focus_color", "Button", ACCENT_GOLD)
 	theme.set_color("font_pressed_color", "Button", Color.WHITE)
 	theme.set_color("font_disabled_color", "Button", TEXT_DISABLED)
 

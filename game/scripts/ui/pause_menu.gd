@@ -70,6 +70,26 @@ func _pause() -> void:
 	overlay.visible = true
 	GameManager.paused = true
 	get_tree().paused = true
+	# Gamepad: foco no Resume
+	_setup_pause_focus()
+	GamepadUI.notify_menu_opened()
+
+func _setup_pause_focus() -> void:
+	var buttons := []
+	for child in $Panel/VBox.get_children():
+		if child is Button:
+			child.focus_mode = Control.FOCUS_ALL
+			buttons.append(child)
+	for i in range(buttons.size()):
+		var btn: Button = buttons[i]
+		if i > 0:
+			btn.focus_neighbor_top = buttons[i - 1].get_path()
+		else:
+			btn.focus_neighbor_top = buttons[buttons.size() - 1].get_path()
+		if i < buttons.size() - 1:
+			btn.focus_neighbor_bottom = buttons[i + 1].get_path()
+		else:
+			btn.focus_neighbor_bottom = buttons[0].get_path()
 
 func _on_resume() -> void:
 	if options_panel and is_instance_valid(options_panel):

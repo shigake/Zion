@@ -54,6 +54,14 @@ func _show() -> void:
 	overlay.visible = true
 	panel.visible = true
 	GameManager.paused = true
+	# Gamepad: foca no Retry
+	retry_btn.focus_mode = Control.FOCUS_ALL
+	menu_btn.focus_mode = Control.FOCUS_ALL
+	retry_btn.focus_neighbor_bottom = menu_btn.get_path()
+	retry_btn.focus_neighbor_top = menu_btn.get_path()
+	menu_btn.focus_neighbor_top = retry_btn.get_path()
+	menu_btn.focus_neighbor_bottom = retry_btn.get_path()
+	GamepadUI.notify_menu_opened()
 
 func _on_retry() -> void:
 	get_tree().paused = false

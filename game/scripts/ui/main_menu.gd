@@ -32,6 +32,29 @@ func _ready() -> void:
 	_update_crystals()
 	_update_version()
 	AudioManager.play_music("menu")
+	# Gamepad: garante foco nos botoes
+	_setup_gamepad_focus()
+
+func _setup_gamepad_focus() -> void:
+	# Garante que todos os botoes podem receber foco
+	var buttons := []
+	for child in $VBox/Buttons.get_children():
+		if child is Button:
+			child.focus_mode = Control.FOCUS_ALL
+			buttons.append(child)
+	# Configura vizinhos de foco verticais
+	for i in range(buttons.size()):
+		var btn: Button = buttons[i]
+		if i > 0:
+			btn.focus_neighbor_top = buttons[i - 1].get_path()
+		else:
+			btn.focus_neighbor_top = buttons[buttons.size() - 1].get_path()  # Wrap
+		if i < buttons.size() - 1:
+			btn.focus_neighbor_bottom = buttons[i + 1].get_path()
+		else:
+			btn.focus_neighbor_bottom = buttons[0].get_path()  # Wrap
+	# Foca no primeiro botao se estiver no modo gamepad
+	GamepadUI.notify_menu_opened()
 
 func _update_version() -> void:
 	var file = FileAccess.open("res://VERSION", FileAccess.READ)
