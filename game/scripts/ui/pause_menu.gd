@@ -10,6 +10,9 @@ extends CanvasLayer
 var options_panel: PanelContainer = null
 var waiting_for_key: String = ""
 var keybind_buttons: Dictionary = {}
+# Guarda se o jogo ja estava "pausado" antes do pause ser aberto
+# (ex: levelup aberto). Ao retomar, restaura esse estado.
+var _was_gm_paused_before: bool = false
 
 func _ready() -> void:
 	panel.visible = false
@@ -71,6 +74,8 @@ func _unhandled_input(event: InputEvent) -> void:
 var stats_panel: PanelContainer = null
 
 func _pause() -> void:
+	# Salva se GameManager ja estava pausado (ex: levelup aberto)
+	_was_gm_paused_before = GameManager.paused
 	panel.visible = true
 	overlay.visible = true
 	GameManager.paused = true
@@ -107,8 +112,11 @@ func _on_resume() -> void:
 		stats_panel = null
 	panel.visible = false
 	overlay.visible = false
-	GameManager.paused = false
 	get_tree().paused = false
+	# Restaura o estado de pausa anterior ao pause:
+	# Se o levelup estava aberto antes, GameManager.paused deve continuar true
+	# para que o jogo nao rode enquanto o levelup estiver na tela.
+	GameManager.paused = _was_gm_paused_before
 
 func _show_stats() -> void:
 	if stats_panel and is_instance_valid(stats_panel):

@@ -43,11 +43,15 @@ func _ready() -> void:
 	else:
 		VisualSetup.apply_cel_shader_to_mesh(mesh, original_color)
 
-	# Arma inicial e configurada pelo stage_cemetery.gd
-	# Se nenhuma arma foi setada (fallback), usa katana
+	# Arma inicial e configurada pelo base_stage via CharacterDB.
+	# Fallback: usa a arma inicial do personagem selecionado (ou katana se nao encontrar).
 	if GameManager.player_weapons.is_empty():
-		GameManager.add_weapon("katana")
-		_spawn_weapon("katana")
+		var char_data = CharacterDB.get_character(GameManager.selected_character)
+		var start_weapon = "katana"
+		if not char_data.is_empty() and "starting_weapon" in char_data:
+			start_weapon = char_data["starting_weapon"]
+		GameManager.add_weapon(start_weapon)
+		_spawn_weapon(start_weapon)
 
 	# Procedural animation
 	var proc_model = get_node_or_null("ProceduralModel")

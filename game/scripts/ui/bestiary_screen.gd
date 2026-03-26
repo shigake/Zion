@@ -1,41 +1,48 @@
 extends Control
 
 ## Bestiario — catalogo de inimigos encontrados pelo jogador.
+## Ao clicar num card, exibe detalhes e visual do inimigo no painel direito.
 
-const COLUMNS := 4
-const CARD_SIZE := Vector2(180, 120)
+const COLUMNS := 3
+const CARD_SIZE := Vector2(180, 110)
 
 # All known enemies with descriptions
 var enemy_data: Dictionary = {
 	# Generic enemies
-	"Slime": {"desc": "Basico e lento. Nao subestime em grupo.", "color": Color(0.2, 0.8, 0.2)},
-	"Bat": {"desc": "Rapido e irritante. Mira ruim.", "color": Color(0.5, 0.3, 0.6)},
-	"Skeleton": {"desc": "Guerreiro de ossos. Resiste a morte.", "color": Color(0.9, 0.9, 0.8)},
-	"ZombieRunner": {"desc": "Corre mais rapido que parece. Cuidado.", "color": Color(0.4, 0.6, 0.3)},
-	"Ghost": {"desc": "Fantasma transparente. Atravessa tudo.", "color": Color(0.6, 0.7, 0.9)},
-	"SlimeBig": {"desc": "Versao gigante do slime. Tanque lento.", "color": Color(0.1, 0.6, 0.1)},
-	"SkeletonArcher": {"desc": "Atira flechas de longe. Priorize.", "color": Color(0.8, 0.7, 0.6)},
-	"Bomber": {"desc": "Explode perto de voce. Mantenha distancia.", "color": Color(0.9, 0.4, 0.1)},
-	"Tank": {"desc": "Lento mas quase indestrutivel.", "color": Color(0.5, 0.5, 0.5)},
-	"Swarm": {"desc": "Enxame de criaturas. Muitos, mas frageis.", "color": Color(0.7, 0.7, 0.2)},
-	"Mimic": {"desc": "Parece um bau. Nao e um bau.", "color": Color(0.8, 0.6, 0.2)},
+	"Slime": {"desc": "Basico e lento. Nao subestime em grupo.", "color": Color(0.2, 0.8, 0.2), "type": "Generico"},
+	"Bat": {"desc": "Rapido e irritante. Mira ruim.", "color": Color(0.5, 0.3, 0.6), "type": "Generico"},
+	"Skeleton": {"desc": "Guerreiro de ossos. Resiste a morte.", "color": Color(0.9, 0.9, 0.8), "type": "Generico"},
+	"ZombieRunner": {"desc": "Corre mais rapido que parece. Cuidado.", "color": Color(0.4, 0.6, 0.3), "type": "Generico"},
+	"Ghost": {"desc": "Fantasma transparente. Atravessa tudo.", "color": Color(0.6, 0.7, 0.9), "type": "Generico"},
+	"SlimeBig": {"desc": "Versao gigante do slime. Tanque lento.", "color": Color(0.1, 0.6, 0.1), "type": "Generico"},
+	"SkeletonArcher": {"desc": "Atira flechas de longe. Priorize.", "color": Color(0.8, 0.7, 0.6), "type": "Especial"},
+	"Bomber": {"desc": "Explode perto de voce. Mantenha distancia.", "color": Color(0.9, 0.4, 0.1), "type": "Especial"},
+	"Tank": {"desc": "Lento mas quase indestrutivel.", "color": Color(0.5, 0.5, 0.5), "type": "Especial"},
+	"Swarm": {"desc": "Enxame de criaturas. Muitos, mas frageis.", "color": Color(0.7, 0.7, 0.2), "type": "Especial"},
+	"Mimic": {"desc": "Parece um bau. Nao e um bau.", "color": Color(0.8, 0.6, 0.2), "type": "Especial"},
 	# Bosses
-	"BossNecromancer": {"desc": "Invoca mortos e drena vida. Boss do cemiterio.", "color": Color(0.3, 0.0, 0.5)},
-	"BossFairyQueen": {"desc": "Rainha das fadas. Magias de natureza.", "color": Color(0.2, 0.8, 0.4)},
-	"BossAlienCow": {"desc": "Vaca alienigena. Sim, e serio.", "color": Color(0.6, 0.9, 0.6)},
-	"BossAIOverlord": {"desc": "Inteligencia artificial malvada. Lasers.", "color": Color(0.0, 0.8, 1.0)},
-	"BossDemonLord": {"desc": "Senhor dos demonios. Fogo infernal.", "color": Color(0.9, 0.1, 0.0)},
-	"BossLeviathan": {"desc": "Monstro marinho ancestral. Tentaculos.", "color": Color(0.1, 0.3, 0.7)},
-	"BossEmperor": {"desc": "Imperador da arena. Combate honrado.", "color": Color(0.8, 0.6, 0.1)},
-	"BossSingularity": {"desc": "Buraco negro vivo. Gravidade extrema.", "color": Color(0.4, 0.0, 0.6)},
-	"BossDracula": {"desc": "Vampiro milenar. Drena vida sem parar.", "color": Color(0.5, 0.0, 0.1)},
-	"BossSugarKing": {"desc": "Rei dos doces. Doce por fora, mortal por dentro.", "color": Color(1.0, 0.5, 0.7)},
+	"BossNecromancer": {"desc": "Invoca mortos e drena vida. Boss do cemiterio.", "color": Color(0.3, 0.0, 0.5), "type": "Boss"},
+	"BossFairyQueen": {"desc": "Rainha das fadas. Magias de natureza.", "color": Color(0.2, 0.8, 0.4), "type": "Boss"},
+	"BossAlienCow": {"desc": "Vaca alienigena. Sim, e serio.", "color": Color(0.6, 0.9, 0.6), "type": "Boss"},
+	"BossAIOverlord": {"desc": "Inteligencia artificial malvada. Lasers.", "color": Color(0.0, 0.8, 1.0), "type": "Boss"},
+	"BossDemonLord": {"desc": "Senhor dos demonios. Fogo infernal.", "color": Color(0.9, 0.1, 0.0), "type": "Boss"},
+	"BossLeviathan": {"desc": "Monstro marinho ancestral. Tentaculos.", "color": Color(0.1, 0.3, 0.7), "type": "Boss"},
+	"BossEmperor": {"desc": "Imperador da arena. Combate honrado.", "color": Color(0.8, 0.6, 0.1), "type": "Boss"},
+	"BossSingularity": {"desc": "Buraco negro vivo. Gravidade extrema.", "color": Color(0.4, 0.0, 0.6), "type": "Boss"},
+	"BossDracula": {"desc": "Vampiro milenar. Drena vida sem parar.", "color": Color(0.5, 0.0, 0.1), "type": "Boss"},
+	"BossSugarKing": {"desc": "Rei dos doces. Doce por fora, mortal por dentro.", "color": Color(1.0, 0.5, 0.7), "type": "Boss"},
 }
 
 var grid: GridContainer
 var info_label: Label
 var back_btn: Button
 var scroll: ScrollContainer
+var detail_panel: PanelContainer
+var detail_portrait: ColorRect
+var detail_name: Label
+var detail_type: Label
+var detail_kills: Label
+var detail_desc: Label
 
 func _ready() -> void:
 	_build_ui()
@@ -49,41 +56,120 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 30
-	vbox.offset_right = -30
-	vbox.offset_top = 20
-	vbox.offset_bottom = -20
-	vbox.add_theme_constant_override("separation", 10)
-	add_child(vbox)
+	var main_vbox = VBoxContainer.new()
+	main_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	main_vbox.offset_left = 24
+	main_vbox.offset_right = -24
+	main_vbox.offset_top = 16
+	main_vbox.offset_bottom = -16
+	main_vbox.add_theme_constant_override("separation", 10)
+	add_child(main_vbox)
 
 	# Title
 	var title = Label.new()
 	title.text = "Bestiario"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-	vbox.add_child(title)
+	main_vbox.add_child(title)
 
-	# Info label
-	info_label = Label.new()
-	info_label.text = "Selecione um inimigo para ver detalhes."
-	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_label.add_theme_font_size_override("font_size", 16)
-	info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(info_label)
+	# Conteudo: grid a esquerda + detalhe a direita
+	var content_hbox = HBoxContainer.new()
+	content_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_hbox.add_theme_constant_override("separation", 16)
+	main_vbox.add_child(content_hbox)
 
-	# Scroll + Grid
+	# --- Lado esquerdo: scroll com grid ---
 	scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(scroll)
+	content_hbox.add_child(scroll)
 
 	grid = GridContainer.new()
 	grid.columns = COLUMNS
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
 	scroll.add_child(grid)
+
+	# --- Lado direito: painel de detalhe ---
+	detail_panel = PanelContainer.new()
+	detail_panel.custom_minimum_size = Vector2(260, 0)
+	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var dp_style = StyleBoxFlat.new()
+	dp_style.bg_color = Color(0.1, 0.1, 0.16)
+	dp_style.set_corner_radius_all(8)
+	dp_style.set_border_width_all(2)
+	dp_style.border_color = Color(0.3, 0.3, 0.4)
+	detail_panel.add_theme_stylebox_override("panel", dp_style)
+	content_hbox.add_child(detail_panel)
+
+	var dp_margin = MarginContainer.new()
+	dp_margin.add_theme_constant_override("margin_left", 16)
+	dp_margin.add_theme_constant_override("margin_right", 16)
+	dp_margin.add_theme_constant_override("margin_top", 16)
+	dp_margin.add_theme_constant_override("margin_bottom", 16)
+	detail_panel.add_child(dp_margin)
+
+	var dp_vbox = VBoxContainer.new()
+	dp_vbox.add_theme_constant_override("separation", 10)
+	dp_margin.add_child(dp_vbox)
+
+	# Instrucao inicial
+	var hint = Label.new()
+	hint.text = "Clique num inimigo\npara ver detalhes."
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.name = "Hint"
+	dp_vbox.add_child(hint)
+
+	# Portrait (imagem colorida do inimigo)
+	detail_portrait = ColorRect.new()
+	detail_portrait.custom_minimum_size = Vector2(220, 160)
+	detail_portrait.color = Color(0.15, 0.15, 0.2)
+	detail_portrait.visible = false
+	dp_vbox.add_child(detail_portrait)
+
+	# Icone grande dentro do portrait
+	var portrait_icon = Label.new()
+	portrait_icon.name = "PortraitIcon"
+	portrait_icon.text = "?"
+	portrait_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	portrait_icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	portrait_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait_icon.add_theme_font_size_override("font_size", 80)
+	portrait_icon.add_theme_color_override("font_color", Color(1, 1, 1, 0.15))
+	detail_portrait.add_child(portrait_icon)
+
+	detail_name = Label.new()
+	detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_name.add_theme_font_size_override("font_size", 20)
+	detail_name.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+	detail_name.visible = false
+	dp_vbox.add_child(detail_name)
+
+	detail_type = Label.new()
+	detail_type.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_type.add_theme_font_size_override("font_size", 13)
+	detail_type.add_theme_color_override("font_color", Color(0.6, 0.6, 0.8))
+	detail_type.visible = false
+	dp_vbox.add_child(detail_type)
+
+	detail_kills = Label.new()
+	detail_kills.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_kills.add_theme_font_size_override("font_size", 14)
+	detail_kills.add_theme_color_override("font_color", Color(0.8, 0.8, 0.4))
+	detail_kills.visible = false
+	dp_vbox.add_child(detail_kills)
+
+	detail_desc = Label.new()
+	detail_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_desc.add_theme_font_size_override("font_size", 13)
+	detail_desc.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
+	detail_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail_desc.visible = false
+	dp_vbox.add_child(detail_desc)
 
 	# Back button
 	back_btn = Button.new()
@@ -91,7 +177,7 @@ func _build_ui() -> void:
 	back_btn.custom_minimum_size = Vector2(120, 40)
 	back_btn.pressed.connect(_on_back)
 	back_btn.focus_mode = Control.FOCUS_ALL
-	vbox.add_child(back_btn)
+	main_vbox.add_child(back_btn)
 
 func _populate_grid() -> void:
 	var bestiary = SaveManager.get_bestiary()
@@ -101,58 +187,114 @@ func _populate_grid() -> void:
 		var is_seen = _is_enemy_seen(enemy_name, bestiary)
 		var kills = _get_enemy_kills(enemy_name, bestiary)
 
-		var card = PanelContainer.new()
-		card.custom_minimum_size = CARD_SIZE
+		var card_btn = Button.new()
+		card_btn.custom_minimum_size = CARD_SIZE
+		card_btn.flat = true
 
 		var card_style = StyleBoxFlat.new()
 		card_style.bg_color = Color(0.12, 0.12, 0.18) if is_seen else Color(0.08, 0.08, 0.1)
 		card_style.set_corner_radius_all(6)
 		card_style.set_border_width_all(2)
 		card_style.border_color = data["color"] if is_seen else Color(0.2, 0.2, 0.2)
-		card.add_theme_stylebox_override("panel", card_style)
+		card_btn.add_theme_stylebox_override("normal", card_style)
+
+		var hover_style = card_style.duplicate()
+		hover_style.bg_color = card_style.bg_color.lightened(0.1)
+		hover_style.border_color = data["color"].lightened(0.2) if is_seen else Color(0.35, 0.35, 0.35)
+		card_btn.add_theme_stylebox_override("hover", hover_style)
+		card_btn.add_theme_stylebox_override("pressed", hover_style)
 
 		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 4)
-		card.add_child(vbox)
+		vbox.add_theme_constant_override("separation", 3)
+		card_btn.add_child(vbox)
 
 		# Color swatch
 		var swatch = ColorRect.new()
-		swatch.custom_minimum_size = Vector2(0, 8)
+		swatch.custom_minimum_size = Vector2(0, 7)
 		swatch.color = data["color"] if is_seen else Color(0.3, 0.3, 0.3)
+		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(swatch)
 
 		# Name
 		var name_lbl = Label.new()
 		name_lbl.text = enemy_name if is_seen else "???"
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_font_size_override("font_size", 14)
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8) if is_seen else Color(0.4, 0.4, 0.4))
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(name_lbl)
 
-		# Kills count
+		# Type badge
+		var type_lbl = Label.new()
+		type_lbl.text = data["type"] if is_seen else ""
+		type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		type_lbl.add_theme_font_size_override("font_size", 10)
+		type_lbl.add_theme_color_override("font_color", data["color"] if is_seen else Color(0.3, 0.3, 0.3))
+		type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(type_lbl)
+
+		# Kills
 		var kills_lbl = Label.new()
 		kills_lbl.text = "Kills: %d" % kills if is_seen else ""
 		kills_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		kills_lbl.add_theme_font_size_override("font_size", 12)
+		kills_lbl.add_theme_font_size_override("font_size", 11)
 		kills_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		kills_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(kills_lbl)
 
-		# Description (short)
-		var desc_lbl = Label.new()
-		desc_lbl.text = data["desc"] if is_seen else "Encontre este inimigo para desbloquear."
-		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		desc_lbl.add_theme_font_size_override("font_size", 11)
-		desc_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(desc_lbl)
+		# Clique: exibe detalhes no painel direito
+		card_btn.pressed.connect(_show_enemy_details.bind(enemy_name, data, is_seen, kills))
 
-		grid.add_child(card)
+		grid.add_child(card_btn)
+
+func _show_enemy_details(enemy_name: String, data: Dictionary, is_seen: bool, kills: int) -> void:
+	AudioManager.play_sfx("menu_click")
+
+	# Esconde hint
+	var hint = detail_panel.get_node_or_null("MarginContainer/VBoxContainer/Hint")
+	if hint:
+		hint.visible = false
+
+	# Atualiza portrait
+	detail_portrait.visible = true
+	var icon_node = detail_portrait.get_node_or_null("PortraitIcon")
+
+	if is_seen:
+		detail_portrait.color = data["color"].darkened(0.55)
+		# Icone baseado no tipo
+		var icon_text: String
+		match data["type"]:
+			"Boss": icon_text = "👑"
+			"Especial": icon_text = "⚡"
+			_: icon_text = "☠"
+		if icon_node:
+			icon_node.text = icon_text
+			icon_node.add_theme_color_override("font_color", data["color"].lightened(0.3))
+			icon_node.modulate.a = 0.9
+		detail_name.text = enemy_name
+		detail_name.add_theme_color_override("font_color", data["color"].lightened(0.2))
+		detail_type.text = data["type"]
+		detail_kills.text = "Kills: %d" % kills
+		detail_desc.text = data["desc"]
+	else:
+		detail_portrait.color = Color(0.1, 0.1, 0.12)
+		if icon_node:
+			icon_node.text = "?"
+			icon_node.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+		detail_name.text = "???"
+		detail_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		detail_type.text = ""
+		detail_kills.text = ""
+		detail_desc.text = "Encontre este inimigo para desbloquear as informacoes."
+
+	detail_name.visible = true
+	detail_type.visible = true
+	detail_kills.visible = is_seen
+	detail_desc.visible = true
 
 func _is_enemy_seen(enemy_name: String, bestiary: Dictionary) -> bool:
-	# Check direct name or any themed variant
 	if enemy_name in bestiary:
 		return true
-	# Some enemies have themed names, check base types
 	return false
 
 func _get_enemy_kills(enemy_name: String, bestiary: Dictionary) -> int:

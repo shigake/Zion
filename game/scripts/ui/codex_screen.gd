@@ -1,14 +1,21 @@
 extends Control
 
 ## Codex de armas — catalogo de todas as armas com stats e info de evolucao.
+## Ao clicar numa arma, exibe detalhes e visual no painel direito.
 
-const COLUMNS := 4
-const CARD_SIZE := Vector2(200, 140)
+const COLUMNS := 3
+const CARD_SIZE := Vector2(190, 120)
 
 var grid: GridContainer
-var info_label: Label
 var back_btn: Button
 var scroll: ScrollContainer
+var detail_panel: PanelContainer
+var detail_portrait: ColorRect
+var detail_name: Label
+var detail_type_lbl: Label
+var detail_dmg: Label
+var detail_desc: Label
+var detail_evo: Label
 
 func _ready() -> void:
 	_build_ui()
@@ -22,41 +29,127 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 30
-	vbox.offset_right = -30
-	vbox.offset_top = 20
-	vbox.offset_bottom = -20
-	vbox.add_theme_constant_override("separation", 10)
-	add_child(vbox)
+	var main_vbox = VBoxContainer.new()
+	main_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	main_vbox.offset_left = 24
+	main_vbox.offset_right = -24
+	main_vbox.offset_top = 16
+	main_vbox.offset_bottom = -16
+	main_vbox.add_theme_constant_override("separation", 10)
+	add_child(main_vbox)
 
 	# Title
 	var title = Label.new()
-	title.text = "Codex de Armas"
+	title.text = "Codex de armas"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0))
-	vbox.add_child(title)
+	main_vbox.add_child(title)
 
-	# Info label
-	info_label = Label.new()
-	info_label.text = "Todas as armas disponiveis no jogo."
-	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_label.add_theme_font_size_override("font_size", 16)
-	info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(info_label)
+	# Conteudo: grid a esquerda + detalhe a direita
+	var content_hbox = HBoxContainer.new()
+	content_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_hbox.add_theme_constant_override("separation", 16)
+	main_vbox.add_child(content_hbox)
 
-	# Scroll + Grid
+	# --- Lado esquerdo: scroll com grid ---
 	scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(scroll)
+	content_hbox.add_child(scroll)
 
 	grid = GridContainer.new()
 	grid.columns = COLUMNS
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
 	scroll.add_child(grid)
+
+	# --- Lado direito: painel de detalhe ---
+	detail_panel = PanelContainer.new()
+	detail_panel.custom_minimum_size = Vector2(260, 0)
+	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var dp_style = StyleBoxFlat.new()
+	dp_style.bg_color = Color(0.1, 0.1, 0.16)
+	dp_style.set_corner_radius_all(8)
+	dp_style.set_border_width_all(2)
+	dp_style.border_color = Color(0.25, 0.35, 0.5)
+	detail_panel.add_theme_stylebox_override("panel", dp_style)
+	content_hbox.add_child(detail_panel)
+
+	var dp_margin = MarginContainer.new()
+	dp_margin.add_theme_constant_override("margin_left", 16)
+	dp_margin.add_theme_constant_override("margin_right", 16)
+	dp_margin.add_theme_constant_override("margin_top", 16)
+	dp_margin.add_theme_constant_override("margin_bottom", 16)
+	detail_panel.add_child(dp_margin)
+
+	var dp_vbox = VBoxContainer.new()
+	dp_vbox.add_theme_constant_override("separation", 10)
+	dp_margin.add_child(dp_vbox)
+
+	# Instrucao inicial
+	var hint = Label.new()
+	hint.text = "Clique numa arma\npara ver detalhes."
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.45, 0.55, 0.7))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.name = "Hint"
+	dp_vbox.add_child(hint)
+
+	# Portrait (visual colorido da arma)
+	detail_portrait = ColorRect.new()
+	detail_portrait.custom_minimum_size = Vector2(220, 150)
+	detail_portrait.color = Color(0.12, 0.12, 0.18)
+	detail_portrait.visible = false
+	dp_vbox.add_child(detail_portrait)
+
+	# Icone grande
+	var portrait_icon = Label.new()
+	portrait_icon.name = "PortraitIcon"
+	portrait_icon.text = "?"
+	portrait_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	portrait_icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	portrait_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait_icon.add_theme_font_size_override("font_size", 72)
+	portrait_icon.add_theme_color_override("font_color", Color(1, 1, 1, 0.15))
+	detail_portrait.add_child(portrait_icon)
+
+	detail_name = Label.new()
+	detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_name.add_theme_font_size_override("font_size", 20)
+	detail_name.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+	detail_name.visible = false
+	dp_vbox.add_child(detail_name)
+
+	detail_type_lbl = Label.new()
+	detail_type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_type_lbl.add_theme_font_size_override("font_size", 13)
+	detail_type_lbl.visible = false
+	dp_vbox.add_child(detail_type_lbl)
+
+	detail_dmg = Label.new()
+	detail_dmg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_dmg.add_theme_font_size_override("font_size", 14)
+	detail_dmg.add_theme_color_override("font_color", Color(0.9, 0.7, 0.3))
+	detail_dmg.visible = false
+	dp_vbox.add_child(detail_dmg)
+
+	detail_desc = Label.new()
+	detail_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_desc.add_theme_font_size_override("font_size", 12)
+	detail_desc.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	detail_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail_desc.visible = false
+	dp_vbox.add_child(detail_desc)
+
+	detail_evo = Label.new()
+	detail_evo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_evo.add_theme_font_size_override("font_size", 12)
+	detail_evo.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	detail_evo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail_evo.visible = false
+	dp_vbox.add_child(detail_evo)
 
 	# Back button
 	back_btn = Button.new()
@@ -64,7 +157,7 @@ func _build_ui() -> void:
 	back_btn.custom_minimum_size = Vector2(120, 40)
 	back_btn.pressed.connect(_on_back)
 	back_btn.focus_mode = Control.FOCUS_ALL
-	vbox.add_child(back_btn)
+	main_vbox.add_child(back_btn)
 
 func _populate_grid() -> void:
 	var codex = SaveManager.get_codex()
@@ -74,88 +167,132 @@ func _populate_grid() -> void:
 		"ranged": Color(0.3, 0.5, 1.0),
 		"summon": Color(0.3, 0.9, 0.4),
 	}
+	var type_icons := {
+		"melee": "⚔",
+		"ranged": "🏹",
+		"summon": "✨",
+	}
 
 	for weapon_id in all_weapons:
 		var data = all_weapons[weapon_id]
 		var is_unlocked = weapon_id in codex
 
-		var card = PanelContainer.new()
-		card.custom_minimum_size = CARD_SIZE
-
 		var weapon_type: String = data.get("type", "melee")
 		var type_color: Color = type_colors.get(weapon_type, Color.WHITE)
+		var type_icon: String = type_icons.get(weapon_type, "?")
+
+		var card_btn = Button.new()
+		card_btn.custom_minimum_size = CARD_SIZE
+		card_btn.flat = true
 
 		var card_style = StyleBoxFlat.new()
 		card_style.bg_color = Color(0.12, 0.12, 0.18) if is_unlocked else Color(0.08, 0.08, 0.1)
 		card_style.set_corner_radius_all(6)
 		card_style.set_border_width_all(2)
 		card_style.border_color = type_color if is_unlocked else Color(0.2, 0.2, 0.2)
-		card.add_theme_stylebox_override("panel", card_style)
+		card_btn.add_theme_stylebox_override("normal", card_style)
+
+		var hover_style = card_style.duplicate()
+		hover_style.bg_color = card_style.bg_color.lightened(0.1)
+		hover_style.border_color = type_color.lightened(0.2) if is_unlocked else Color(0.35, 0.35, 0.35)
+		card_btn.add_theme_stylebox_override("hover", hover_style)
+		card_btn.add_theme_stylebox_override("pressed", hover_style)
 
 		var vbox = VBoxContainer.new()
 		vbox.add_theme_constant_override("separation", 3)
-		card.add_child(vbox)
+		card_btn.add_child(vbox)
 
 		# Type color swatch
 		var swatch = ColorRect.new()
 		swatch.custom_minimum_size = Vector2(0, 6)
 		swatch.color = type_color if is_unlocked else Color(0.3, 0.3, 0.3)
+		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(swatch)
 
-		# Name
+		# Icone + nome
 		var name_lbl = Label.new()
-		name_lbl.text = data.get("name", weapon_id) if is_unlocked else "???"
+		name_lbl.text = (type_icon + " " + data.get("name", weapon_id)) if is_unlocked else "???"
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 15)
+		name_lbl.add_theme_font_size_override("font_size", 14)
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8) if is_unlocked else Color(0.4, 0.4, 0.4))
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(name_lbl)
 
 		if is_unlocked:
-			# Type + element
 			var type_lbl = Label.new()
 			type_lbl.text = "%s | %s" % [weapon_type.capitalize(), data.get("element", "physical").capitalize()]
 			type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			type_lbl.add_theme_font_size_override("font_size", 11)
+			type_lbl.add_theme_font_size_override("font_size", 10)
 			type_lbl.add_theme_color_override("font_color", type_color)
+			type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			vbox.add_child(type_lbl)
 
-			# Base damage
 			var dmg_lbl = Label.new()
 			dmg_lbl.text = "Dano: %d" % data.get("base_damage", 0)
 			dmg_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			dmg_lbl.add_theme_font_size_override("font_size", 11)
 			dmg_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+			dmg_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			vbox.add_child(dmg_lbl)
-
-			# Description
-			var desc_lbl = Label.new()
-			desc_lbl.text = data.get("description", "")
-			desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			desc_lbl.add_theme_font_size_override("font_size", 10)
-			desc_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			vbox.add_child(desc_lbl)
-
-			# Evolution info
-			var evo_text = _get_evolution_info(weapon_id)
-			if not evo_text.is_empty():
-				var evo_lbl = Label.new()
-				evo_lbl.text = evo_text
-				evo_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				evo_lbl.add_theme_font_size_override("font_size", 10)
-				evo_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-				evo_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				vbox.add_child(evo_lbl)
 		else:
 			var locked_lbl = Label.new()
-			locked_lbl.text = "Use esta arma para desbloquear."
+			locked_lbl.text = "Use para desbloquear."
 			locked_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			locked_lbl.add_theme_font_size_override("font_size", 11)
+			locked_lbl.add_theme_font_size_override("font_size", 10)
 			locked_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 			locked_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			locked_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			vbox.add_child(locked_lbl)
 
-		grid.add_child(card)
+		card_btn.pressed.connect(_show_weapon_details.bind(weapon_id, data, is_unlocked, type_color, type_icon))
+		grid.add_child(card_btn)
+
+func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool, type_color: Color, type_icon: String) -> void:
+	AudioManager.play_sfx("menu_click")
+
+	var hint = detail_panel.get_node_or_null("MarginContainer/VBoxContainer/Hint")
+	if hint:
+		hint.visible = false
+
+	detail_portrait.visible = true
+	var icon_node = detail_portrait.get_node_or_null("PortraitIcon")
+
+	if is_unlocked:
+		detail_portrait.color = type_color.darkened(0.6)
+		if icon_node:
+			icon_node.text = type_icon
+			icon_node.add_theme_color_override("font_color", type_color.lightened(0.4))
+			icon_node.modulate.a = 0.85
+
+		var weapon_type: String = data.get("type", "melee")
+		var element: String = data.get("element", "physical")
+
+		detail_name.text = data.get("name", weapon_id)
+		detail_name.add_theme_color_override("font_color", type_color.lightened(0.25))
+		detail_type_lbl.text = "%s | %s" % [weapon_type.capitalize(), element.capitalize()]
+		detail_type_lbl.add_theme_color_override("font_color", type_color)
+		detail_dmg.text = "Dano base: %d  |  CD: %.2fs" % [data.get("base_damage", 0), data.get("base_cooldown", 1.0)]
+		detail_desc.text = data.get("description", "")
+
+		var evo_text = _get_evolution_info(weapon_id)
+		detail_evo.text = evo_text
+		detail_evo.visible = not evo_text.is_empty()
+	else:
+		detail_portrait.color = Color(0.1, 0.1, 0.14)
+		if icon_node:
+			icon_node.text = "?"
+			icon_node.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))
+		detail_name.text = "???"
+		detail_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		detail_type_lbl.text = ""
+		detail_dmg.text = ""
+		detail_desc.text = "Use esta arma numa partida para desbloquear as informacoes."
+		detail_evo.visible = false
+
+	detail_name.visible = true
+	detail_type_lbl.visible = is_unlocked
+	detail_dmg.visible = is_unlocked
+	detail_desc.visible = true
 
 func _get_evolution_info(weapon_id: String) -> String:
 	for evo_id in EvolutionDB.evolutions:
@@ -163,7 +300,7 @@ func _get_evolution_info(weapon_id: String) -> String:
 		if evo["weapon_required"] == weapon_id:
 			var item_data = ItemDB.get_item(evo["item_required"])
 			var item_name = item_data.get("name", evo["item_required"]) if not item_data.is_empty() else evo["item_required"]
-			return "Evolui com %s -> %s" % [item_name, evo["name"]]
+			return "Evolui com %s → %s" % [item_name, evo["name"]]
 	return ""
 
 func _unhandled_input(event: InputEvent) -> void:

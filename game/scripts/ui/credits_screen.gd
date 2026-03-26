@@ -1,7 +1,7 @@
 extends Control
 
 ## Tela de creditos: herois sentados em volta de uma fogueira,
-## nomes como estrelas no ceu noturno com estrelas coloridas piscando.
+## nomes dos criadores no topo, personagens do jogo na parte inferior.
 
 const CREDITS := [
 	"Erick Higaki",
@@ -31,9 +31,32 @@ var _time: float = 0.0
 @onready var back_btn: Button = $BackButton
 
 func _ready() -> void:
+	# Garante que o botao funciona mesmo se a tree estiver pausada
+	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.pressed.connect(_on_back)
+
+	# --- Layout: viewport ocupa a parte inferior (65%) ---
+	viewport_container.anchor_top = 0.35
+	viewport_container.anchor_bottom = 1.0
+	viewport_container.anchor_left = 0.0
+	viewport_container.anchor_right = 1.0
+	viewport_container.offset_top = 0.0
+	viewport_container.offset_bottom = 0.0
+	viewport_container.offset_left = 0.0
+	viewport_container.offset_right = 0.0
+
+	# StarOverlay cobre apenas o topo (35%) para as estrelas decorativas
+	star_overlay.anchor_top = 0.0
+	star_overlay.anchor_bottom = 0.35
+	star_overlay.anchor_left = 0.0
+	star_overlay.anchor_right = 1.0
+	star_overlay.offset_top = 0.0
+	star_overlay.offset_bottom = 0.0
+	star_overlay.offset_left = 0.0
+	star_overlay.offset_right = 0.0
+
+	_setup_top_section()
 	_setup_3d_scene()
-	_setup_star_names()
 	_setup_twinkling_stars()
 	AudioManager.play_sfx("menu_click")
 
@@ -42,14 +65,97 @@ func _process(delta: float) -> void:
 	_animate_twinkling_stars()
 	_animate_name_labels()
 
+# ==================== SECAO SUPERIOR (nomes dos criadores) ====================
+
+func _setup_top_section() -> void:
+	var screen_size = get_viewport_rect().size
+	var top_h = screen_size.y * 0.35
+
+	# Painel escuro semi-transparente no topo
+	var top_bg = PanelContainer.new()
+	top_bg.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	top_bg.anchor_bottom = 0.35
+	top_bg.offset_top = 0.0
+	top_bg.offset_bottom = 0.0
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.02, 0.07, 0.92)
+	style.set_border_width_all(0)
+	top_bg.add_theme_stylebox_override("panel", style)
+	add_child(top_bg)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	top_bg.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	margin.add_child(vbox)
+
+	# Titulo
+	var title = Label.new()
+	title.text = "Creditos"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	vbox.add_child(title)
+
+	var sep = HSeparator.new()
+	sep.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.4))
+	vbox.add_child(sep)
+
+	# Nomes dos desenvolvedores em linha horizontal
+	var names_hbox = HBoxContainer.new()
+	names_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	names_hbox.add_theme_constant_override("separation", 40)
+	vbox.add_child(names_hbox)
+
+	var star_chars = ["✦", "✧", "⭑", "✦"]
+	for i in range(CREDITS.size()):
+		var col = VBoxContainer.new()
+		col.alignment = BoxContainer.ALIGNMENT_CENTER
+		col.add_theme_constant_override("separation", 2)
+		names_hbox.add_child(col)
+
+		var star_lbl = Label.new()
+		star_lbl.text = star_chars[i % star_chars.size()]
+		star_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		star_lbl.add_theme_font_size_override("font_size", 20)
+		star_lbl.add_theme_color_override("font_color", STAR_COLORS[i % STAR_COLORS.size()])
+		col.add_child(star_lbl)
+
+		var name_lbl = Label.new()
+		name_lbl.text = CREDITS[i]
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_size_override("font_size", 20)
+		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85))
+		col.add_child(name_lbl)
+
+		_name_labels.append({"label": name_lbl, "star": star_lbl, "phase": i * 1.2})
+
+	var sep2 = HSeparator.new()
+	sep2.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.3))
+	vbox.add_child(sep2)
+
+	# Subtitulo dos herois
+	var heroes_lbl = Label.new()
+	heroes_lbl.text = "Herois do jogo"
+	heroes_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heroes_lbl.add_theme_font_size_override("font_size", 14)
+	heroes_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 0.8))
+	vbox.add_child(heroes_lbl)
+
 # ==================== 3D CAMPFIRE SCENE ====================
 
 func _setup_3d_scene() -> void:
-	# Camera
+	# Camera mais alta para ver todos os personagens em circulo
 	var camera = Camera3D.new()
-	camera.position = Vector3(0, 4.5, 6.5)
-	camera.rotation.x = deg_to_rad(-30)
-	camera.fov = 50
+	camera.position = Vector3(0, 5.5, 7.0)
+	camera.rotation.x = deg_to_rad(-32)
+	camera.fov = 55
 	sub_viewport.add_child(camera)
 
 	# Environment: noite estrelada
@@ -67,7 +173,7 @@ func _setup_3d_scene() -> void:
 	world_env.environment = env
 	sub_viewport.add_child(world_env)
 
-	# Luz da fogueira (ponto de luz quente)
+	# Luz da fogueira
 	var fire_light = OmniLight3D.new()
 	fire_light.position = Vector3(0, 1.0, 0)
 	fire_light.light_color = Color(1.0, 0.6, 0.15)
@@ -76,7 +182,7 @@ func _setup_3d_scene() -> void:
 	fire_light.omni_attenuation = 1.5
 	sub_viewport.add_child(fire_light)
 
-	# Luz secundaria fraca (moonlight)
+	# Moonlight
 	var moon_light = DirectionalLight3D.new()
 	moon_light.rotation.x = deg_to_rad(-45)
 	moon_light.rotation.y = deg_to_rad(30)
@@ -84,13 +190,8 @@ func _setup_3d_scene() -> void:
 	moon_light.light_energy = 0.15
 	sub_viewport.add_child(moon_light)
 
-	# Chao
 	_create_ground()
-
-	# Fogueira no centro
 	_create_campfire()
-
-	# Personagens em circulo
 	_create_characters_circle()
 
 func _create_ground() -> void:
@@ -140,7 +241,7 @@ func _create_campfire() -> void:
 		stone.material_override = mat
 		fire_root.add_child(stone)
 
-	# Chamas (esferas com emission)
+	# Chamas
 	for i in range(3):
 		var flame = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
@@ -169,95 +270,60 @@ func _create_characters_circle() -> void:
 	for i in range(count):
 		var char_id = char_ids[i]
 		var char_data = CharacterDB.get_character(char_id)
-		var angle = (float(i) / count) * TAU - PI / 2.0  # Comeca de frente
+		var angle = (float(i) / count) * TAU - PI / 2.0
 
 		var char_root = Node3D.new()
 		char_root.position = Vector3(cos(angle) * radius, 0, sin(angle) * radius)
 
-		# Rotaciona para olhar pro centro (fogueira)
 		var look_target = Vector3(0, 0, 0)
 		var dir = (look_target - char_root.position).normalized()
 		char_root.rotation.y = atan2(dir.x, dir.z)
 
-		# Modelo procedural do personagem
 		var model = ModelFactory.get_model_for_character(char_id)
 		model.scale = Vector3(0.8, 0.8, 0.8)
-
-		# "Sentar" — abaixa o modelo e inclina levemente
 		model.position.y = -0.15
-		model.rotation.x = deg_to_rad(8)  # Leve inclinacao pra frente
+		model.rotation.x = deg_to_rad(8)
 
-		# Aplica materiais com cor do personagem
 		var base_color = char_data.get("color", Color(0.5, 0.5, 0.5))
 		ModelFactory.apply_model_materials(model, base_color)
 
 		char_root.add_child(model)
 
-		# Label do nome flutuando acima
-		_add_character_name_3d(char_root, char_data.get("name", char_id), i)
+		# Nome do personagem flutuando acima
+		_add_character_name_3d(char_root, char_data.get("name", char_id))
 
 		sub_viewport.add_child(char_root)
 
-func _add_character_name_3d(parent: Node3D, char_name: String, _index: int) -> void:
+func _add_character_name_3d(parent: Node3D, char_name: String) -> void:
 	var label = Label3D.new()
 	label.text = char_name
 	label.position = Vector3(0, 1.8, 0)
-	label.font_size = 32
-	label.pixel_size = 0.01
+	label.font_size = 28
+	label.pixel_size = 0.012
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(1.0, 0.9, 0.7, 0.7)
+	label.modulate = Color(1.0, 0.9, 0.7, 0.85)
 	label.outline_size = 4
-	label.outline_modulate = Color(0.3, 0.2, 0.1, 0.5)
+	label.outline_modulate = Color(0.2, 0.1, 0.05, 0.6)
 	label.no_depth_test = true
 	parent.add_child(label)
 
-# ==================== STAR NAMES (2D OVERLAY) ====================
-
-func _setup_star_names() -> void:
-	var screen_w = get_viewport_rect().size.x
-	var screen_h = get_viewport_rect().size.y
-
-	# Posicoes dos nomes no "ceu" (parte superior da tela)
-	var positions = [
-		Vector2(screen_w * 0.3, screen_h * 0.08),
-		Vector2(screen_w * 0.7, screen_h * 0.12),
-		Vector2(screen_w * 0.5, screen_h * 0.18),
-		Vector2(screen_w * 0.2, screen_h * 0.22),
-	]
-
-	for i in range(CREDITS.size()):
-		var label = Label.new()
-		label.text = CREDITS[i]
-		label.add_theme_font_size_override("font_size", 22)
-		label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
-		label.add_theme_color_override("font_shadow_color", Color(1.0, 0.8, 0.4, 0.6))
-		label.add_theme_constant_override("shadow_offset_x", 0)
-		label.add_theme_constant_override("shadow_offset_y", 0)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.position = positions[i] - Vector2(60, 12)
-		label.custom_minimum_size = Vector2(120, 24)
-		star_overlay.add_child(label)
-		_name_labels.append({"label": label, "base_pos": positions[i], "phase": i * 1.2})
-
-# ==================== TWINKLING STARS ====================
+# ==================== TWINKLING STARS (decoracao no topo) ====================
 
 func _setup_twinkling_stars() -> void:
 	var screen_w = get_viewport_rect().size.x
-	var screen_h = get_viewport_rect().size.y
-	var sky_height = screen_h * 0.35  # Estrelas na parte superior
+	var sky_height = get_viewport_rect().size.y * 0.35
 
-	# Estrelas decorativas ao redor dos nomes
-	for i in range(60):
+	for i in range(40):
 		var star_label = Label.new()
 		star_label.text = "✦" if i % 3 == 0 else ("✧" if i % 3 == 1 else "⭑")
 
 		var color = STAR_COLORS[i % STAR_COLORS.size()]
 		star_label.add_theme_color_override("font_color", color)
-		star_label.add_theme_font_size_override("font_size", randi_range(8, 18))
+		star_label.add_theme_font_size_override("font_size", randi_range(6, 14))
 
 		var pos = Vector2(
 			randf_range(20, screen_w - 20),
-			randf_range(10, sky_height)
+			randf_range(5, sky_height - 5)
 		)
 		star_label.position = pos
 		star_label.modulate.a = randf_range(0.3, 1.0)
@@ -278,11 +344,12 @@ func _animate_twinkling_stars() -> void:
 
 func _animate_name_labels() -> void:
 	for data in _name_labels:
-		# Leve flutuacao vertical como estrela brilhando
-		var offset_y = sin(_time * 0.8 + data.phase) * 3.0
 		var glow = sin(_time * 1.2 + data.phase) * 0.15 + 0.85
-		data.label.position.y = data.base_pos.y - 12 + offset_y
 		data.label.modulate = Color(1.0, 1.0, 1.0, glow)
+		# Estrela pisca com cor variada
+		var t = sin(_time * 0.9 + data.phase) * 0.5 + 0.5
+		var ci = int(data.phase) % STAR_COLORS.size()
+		data.star.modulate = STAR_COLORS[ci].lerp(Color.WHITE, t * 0.3)
 
 # ==================== NAVIGATION ====================
 

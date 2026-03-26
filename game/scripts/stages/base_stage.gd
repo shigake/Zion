@@ -27,6 +27,14 @@ func _ready() -> void:
 
 	# Aplica personagem selecionado
 	var char_data = CharacterDB.get_character(GameManager.selected_character)
+
+	# Limpa o WeaponPivot garantidamente antes de configurar armas
+	GameManager.player_weapons.clear()
+	var weapon_pivot = player.get_node("WeaponPivot")
+	for child in weapon_pivot.get_children():
+		weapon_pivot.remove_child(child)
+		child.queue_free()
+
 	if not char_data.is_empty():
 		# Cor
 		if player.has_node("Mesh"):
@@ -36,17 +44,20 @@ func _ready() -> void:
 				player.original_color = char_data["color"]
 
 		# Arma inicial
-		GameManager.player_weapons.clear()
-		for child in player.get_node("WeaponPivot").get_children():
-			child.queue_free()
 		if GameManager.selected_character == "mystery":
 			# Mystery: todas as armas no nivel 1
 			for wid in WeaponDB.get_all_weapon_ids():
 				GameManager.add_weapon(wid)
 				player.add_weapon_node(wid)
 		else:
-			GameManager.add_weapon(char_data["starting_weapon"])
-			player.add_weapon_node(char_data["starting_weapon"])
+			var start_wid: String = char_data.get("starting_weapon", "katana")
+			GameManager.add_weapon(start_wid)
+			player.add_weapon_node(start_wid)
+	else:
+		# Fallback de seguranca: personagem desconhecido, usa katana
+		LogManager.warn("BaseStage", "Personagem desconhecido: '%s'. Usando katana como fallback." % GameManager.selected_character)
+		GameManager.add_weapon("katana")
+		player.add_weapon_node("katana")
 
 	# New Game+: re-add weapons from previous run (capped at level 3)
 	if GameManager.game_mode == "new_game_plus" and not GameManager.ng_plus_weapons.is_empty():
