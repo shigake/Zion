@@ -12,6 +12,12 @@ var direction: Vector3 = Vector3.FORWARD
 func _ready() -> void:
 	direction = (target_pos - global_position).normalized()
 	direction.y = 0
+	# Gray smoke trail
+	var trail = Node3D.new()
+	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
+	trail.trail_color = Color(0.5, 0.5, 0.5, 0.4)
+	trail.max_points = 20
+	add_child(trail)
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta

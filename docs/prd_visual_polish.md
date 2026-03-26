@@ -11,8 +11,8 @@ Transformar cubos e capsulas em algo que pareca um jogo de verdade. Efeitos de p
 - [x] Particula branca ao acertar inimigo (burst de 5-8 particulas)
 - [x] Particula vermelha ao tomar dano
 - [x] Particula azul ao coletar XP gem
-- [ ] Particula roxa ao coletar cristal
-- [ ] Particula dourada ao matar elite
+- [x] Particula roxa ao coletar cristal
+- [x] Particula dourada ao matar elite
 
 ### Death Effects
 - [x] Inimigo: burst de particulas na cor do inimigo + scale down rapido
@@ -20,22 +20,22 @@ Transformar cubos e capsulas em algo que pareca um jogo de verdade. Efeitos de p
 
 ### Weapon Effects
 - [x] Katana: trail de corte (linha brilhante)
-- [ ] Staff: trail azul no projetil
-- [ ] Bazuca: smoke trail + explosao com particulas de fogo
+- [x] Staff: trail azul no projetil
+- [x] Bazuca: smoke trail + explosao com particulas de fogo
 - [x] Metralhadora: muzzle flash
 - [x] Foice: trail roxo
-- [ ] Necro: particulas de invocacao (circlo verde no chao)
+- [x] Necro: particulas de invocacao (circulo verde no chao)
 
 ### Coleta
 - [x] XP gems: glow pulsante
-- [ ] Cristais: rotacao + sparkle
+- [x] Cristais: rotacao + sparkle
 - [x] Level up: flash branco na tela + particulas subindo
 
 ---
 
 ## Screen Effects
 - [x] Screen shake ao tomar dano (intensidade proporcional)
-- [x] Screen shake leve ao matar inimigos (opcional, toggle)
+- [x] Screen shake leve ao matar inimigos
 - [x] Flash branco sutil ao dar level up
 - [x] Slow motion (0.3s) ao matar o boss
 - [x] Vignette escurecendo conforme HP baixa
@@ -66,3 +66,4 @@ Transformar cubos e capsulas em algo que pareca um jogo de verdade. Efeitos de p
 - [x] Animacao de texto "LEVEL UP!" (scale bounce)
 - [x] Ally HP bars no multiplayer
 - [x] Resolucao + Borderless nas opcoes
+- [x] Achievement notification popup

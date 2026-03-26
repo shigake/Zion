@@ -33,3 +33,25 @@ func _summon(level: int) -> void:
 	skeleton.damage = int(WeaponDB.get_damage("necro", level))
 	skeleton.lifetime = 8.0 + level * 2.0
 	get_tree().current_scene.call_deferred("add_child", skeleton)
+	# Green summon circle
+	_spawn_summon_circle(player_pos + offset)
+
+func _spawn_summon_circle(pos: Vector3) -> void:
+	var circle = MeshInstance3D.new()
+	var disc = CylinderMesh.new()
+	disc.top_radius = 1.0
+	disc.bottom_radius = 1.0
+	disc.height = 0.05
+	circle.mesh = disc
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.2, 1.0, 0.3, 0.8)
+	mat.emission_enabled = true
+	mat.emission = Color(0.2, 1.0, 0.3)
+	mat.emission_energy_multiplier = 3.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	circle.material_override = mat
+	circle.global_position = pos
+	get_tree().current_scene.add_child(circle)
+	var tween = circle.create_tween()
+	tween.tween_property(mat, "albedo_color", Color(0.2, 1.0, 0.3, 0.0), 0.5)
+	tween.tween_callback(circle.queue_free)

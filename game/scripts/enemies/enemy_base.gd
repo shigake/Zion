@@ -188,6 +188,9 @@ func _die() -> void:
 	GameManager.enemy_killed.emit(pos, xp_drop)
 	if is_inside_tree():
 		ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.3, 0), enemy_color)
+		# Gold particles for elite enemies
+		if enemy_color == Color(1.0, 0.85, 0.2) or scale.x > 1.2:
+			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 15)
 		ScreenEffects.shake(0.06)
 		SynergySystem.apply_on_kill_synergies(pos)
 		_spawn_xp_gem()

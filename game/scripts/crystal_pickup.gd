@@ -17,6 +17,31 @@ func _ready() -> void:
 	# Apply glow shader to crystal mesh
 	if mesh:
 		mesh.material_override = VisualSetup.create_glow_material(Color(1.0, 0.85, 0.2), 2.5)
+	# Sparkle particles
+	var sparkle = GPUParticles3D.new()
+	var mat = ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 45.0
+	mat.initial_velocity_min = 0.3
+	mat.initial_velocity_max = 0.8
+	mat.gravity = Vector3(0, 0.5, 0)
+	mat.scale_min = 0.02
+	mat.scale_max = 0.05
+	mat.color = Color(1.0, 0.9, 0.3)
+	sparkle.process_material = mat
+	sparkle.amount = 3
+	sparkle.lifetime = 1.0
+	var draw_pass = SphereMesh.new()
+	draw_pass.radius = 0.03
+	draw_pass.height = 0.06
+	var draw_mat = StandardMaterial3D.new()
+	draw_mat.albedo_color = Color(1.0, 0.9, 0.3)
+	draw_mat.emission_enabled = true
+	draw_mat.emission = Color(1.0, 0.85, 0.2)
+	draw_mat.emission_energy_multiplier = 3.0
+	draw_pass.surface_set_material(0, draw_mat)
+	sparkle.draw_pass_1 = draw_pass
+	add_child(sparkle)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:
@@ -45,7 +70,7 @@ func _physics_process(delta: float) -> void:
 
 func _collect() -> void:
 	AudioManager.play_sfx("collect_crystal")
-	ParticleFactory.spawn_collect_particles(global_position, Color(1.0, 0.85, 0.2))
+	ParticleFactory.spawn_collect_particles(global_position, Color(0.7, 0.3, 0.9))
 	GameManager.crystals_this_run += crystal_value
 	queue_free()
 

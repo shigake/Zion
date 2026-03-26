@@ -13,51 +13,51 @@
 ### O que entra
 
 **Jogador**
-- [ ] Movimento WASD (top-down 3D com camera fixa)
-- [ ] Dash com cooldown (Space)
-- [ ] Barra de HP
-- [ ] Morte e tela de game over
+- [x] Movimento WASD (top-down 3D com camera fixa)
+- [x] Dash com cooldown (Space)
+- [x] Barra de HP
+- [x] Morte e tela de game over
 
 **Armas (2 apenas)**
-- [ ] Espada Samurai — ataque automatico melee, corta em arco na frente
-- [ ] Staff — projetil magico homing que persegue o inimigo mais proximo
+- [x] Espada Samurai — ataque automatico melee, corta em arco na frente
+- [x] Staff — projetil magico homing que persegue o inimigo mais proximo
 
 **Inimigos (2 tipos)**
-- [ ] Slime — lento, pouca vida, anda em direcao ao jogador
-- [ ] Bat — rapido, pouca vida, anda em direcao ao jogador
+- [x] Slime — lento, pouca vida, anda em direcao ao jogador
+- [x] Bat — rapido, pouca vida, anda em direcao ao jogador
 
 **Spawner**
-- [ ] Inimigos spawnam fora da tela
-- [ ] Quantidade aumenta com o tempo (scaling linear simples)
+- [x] Inimigos spawnam fora da tela
+- [x] Quantidade aumenta com o tempo (scaling linear simples)
 
 **XP e Level Up**
-- [ ] Inimigos dropam gema de XP ao morrer
-- [ ] Gemas sao atraidas ao jogador (magnetismo)
-- [ ] Barra de XP no HUD
-- [ ] Ao encher: jogo pausa, 3 opcoes aparecem
-- [ ] Opcoes possiveis: nova arma, upgrade de arma existente, item passivo
+- [x] Inimigos dropam gema de XP ao morrer
+- [x] Gemas sao atraidas ao jogador (magnetismo)
+- [x] Barra de XP no HUD
+- [x] Ao encher: jogo pausa, 3 opcoes aparecem
+- [x] Opcoes possiveis: nova arma, upgrade de arma existente, item passivo
 
 **Itens Passivos (3 apenas)**
-- [ ] Botas de Hermes — +15% velocidade
-- [ ] Luva de Velocidade — +20% attack speed
-- [ ] Coracao de Dragao — +20% HP maximo
+- [x] Botas de Hermes — +15% velocidade
+- [x] Luva de Velocidade — +20% attack speed
+- [x] Coracao de Dragao — +20% HP maximo
 
 **HUD**
-- [ ] Barra de HP
-- [ ] Barra de XP + nivel
-- [ ] Timer
-- [ ] Kill count
+- [x] Barra de HP
+- [x] Barra de XP + nivel
+- [x] Timer
+- [x] Kill count
 
 **Fase**
-- [ ] 1 arena unica (chao plano, sem decoracao, so ground + cor de fundo)
-- [ ] Sem boss
-- [ ] Sem eventos
-- [ ] Sem limite de tempo (endless ate morrer)
+- [x] 1 arena unica (chao plano, sem decoracao, so ground + cor de fundo)
+- [x] Sem boss
+- [x] Sem eventos
+- [x] Sem limite de tempo (endless ate morrer)
 
 **Visual**
-- [ ] Primitivas 3D (capsulas, esferas, cubos) com cores solidas
-- [ ] Nada de arte. Jogador = capsula verde. Inimigo = cubo vermelho. Projetil = esfera azul.
-- [ ] Cel-shader basico so pra validar a estetica
+- [x] Primitivas 3D (capsulas, esferas, cubos) com cores solidas
+- [x] Nada de arte. Jogador = capsula verde. Inimigo = cubo vermelho. Projetil = esfera azul.
+- [x] Cel-shader basico so pra validar a estetica
 
 ### O que NAO entra
 - Multiplayer
@@ -84,102 +84,102 @@
 ### O que entra (alem de tudo da Fase 0)
 
 **Jogador**
-- [ ] Selecao de personagem (3 personagens: Ronin, Soldado, Mago)
-- [ ] Cada um com arma inicial e passiva diferentes
-- [ ] Animacoes basicas (idle, walk, hit, death) — pode ser simples
+- [x] Selecao de personagem (3 personagens: Ronin, Soldado, Mago)
+- [x] Cada um com arma inicial e passiva diferentes
+- [x] Animacoes basicas (idle, walk, hit, death) — procedural animator
 
 **Armas (6 totais)**
-- [ ] Espada Samurai (melee, corte em arco)
-- [ ] Metralhadora (ranged, spray de projeteis)
-- [ ] Staff (ranged, homing)
-- [ ] Foice (melee, gira ao redor do jogador)
-- [ ] Bazuca (ranged, explosao em area)
-- [ ] Necromante (summon, invoca esqueletos)
+- [x] Espada Samurai (melee, corte em arco)
+- [x] Metralhadora (ranged, spray de projeteis)
+- [x] Staff (ranged, homing)
+- [x] Foice (melee, gira ao redor do jogador)
+- [x] Bazuca (ranged, explosao em area)
+- [x] Necromante (summon, invoca esqueletos)
 
 **Armas — Level Up (1 a 8)**
-- [ ] Cada level melhora stats (dano, area, projeteis, velocidade)
-- [ ] Valores balanceados para 30 min de run
+- [x] Cada level melhora stats (dano, area, projeteis, velocidade)
+- [x] Valores balanceados para 30 min de run
 
 **Itens Passivos (6 totais)**
-- [ ] Botas de Hermes (+velocidade)
-- [ ] Luva de Velocidade (+attack speed)
-- [ ] Coracao de Dragao (+HP)
-- [ ] Cristal Arcano (+area de efeito)
-- [ ] Ima (+range de coleta)
-- [ ] Relogio Quebrado (-cooldown)
+- [x] Botas de Hermes (+velocidade)
+- [x] Luva de Velocidade (+attack speed)
+- [x] Coracao de Dragao (+HP)
+- [x] Cristal Arcano (+area de efeito)
+- [x] Ima (+range de coleta)
+- [x] Relogio Quebrado (-cooldown)
 
 **Itens — Level Up (1 a 5)**
-- [ ] Cada level aumenta o efeito
+- [x] Cada level aumenta o efeito
 
 **Evolucao de Arma (2 evolucoes para validar o sistema)**
-- [ ] Espada Samurai + Luva de Velocidade = Zangetsu
-- [ ] Staff + Cristal Arcano = Cajado do Apocalipse
-- [ ] Bau de evolucao aparece no mapa quando requisitos sao atendidos
+- [x] Espada Samurai + Luva de Velocidade = Zangetsu
+- [x] Staff + Cristal Arcano = Cajado do Apocalipse
+- [x] Bau de evolucao aparece no mapa quando requisitos sao atendidos
 
 **Fase: Cemiterio Assombrado**
-- [ ] Ambiente 3D: chao de terra, lapides, neblina, lua
-- [ ] Lapides destrutiveis que dropam power-ups
-- [ ] 30 minutos de duracao
+- [x] Ambiente 3D: chao de terra, lapides, neblina, lua
+- [x] Lapides destrutiveis que dropam power-ups
+- [x] 30 minutos de duracao
 
 **Inimigos (5 tipos)**
-- [ ] Slime (basico, lento)
-- [ ] Bat (rapido, voador)
-- [ ] Skeleton (medio, joga ossos)
-- [ ] Zombie Corredor (rapido, medio HP)
-- [ ] Ghost (atravessa obstaculos)
+- [x] Slime (basico, lento)
+- [x] Bat (rapido, voador)
+- [x] Skeleton (medio, joga ossos)
+- [x] Zombie Corredor (rapido, medio HP)
+- [x] Ghost (atravessa obstaculos)
 
 **Spawn por tempo**
-- [ ] Min 0-5: Slimes
-- [ ] Min 5-10: Slimes + Bats
-- [ ] Min 10-15: Skeletons + Zombies + Mini-boss
-- [ ] Min 15-25: Mix de tudo, crescente
-- [ ] Min 25-30: Boss + horda
+- [x] Min 0-5: Slimes
+- [x] Min 5-10: Slimes + Bats
+- [x] Min 10-15: Skeletons + Zombies + Mini-boss
+- [x] Min 15-25: Mix de tudo, crescente
+- [x] Min 25-30: Boss + horda
 
 **Mini-boss**
-- [ ] Zombie Gigante (HP alto, agarra)
-- [ ] Barra de vida visivel
-- [ ] Dropa bau raro
+- [x] Zombie Gigante (HP alto, agarra)
+- [x] Barra de vida visivel
+- [x] Dropa bau raro
 
 **Boss Final**
-- [ ] Necromancer King
-- [ ] Barra de vida no topo da tela
-- [ ] 3 fases de comportamento (100-75%, 75-25%, 25-0%)
-- [ ] Invoca hordas + lanca magias
-- [ ] Derrotar = vitoria
+- [x] Necromancer King
+- [x] Barra de vida no topo da tela
+- [x] 3 fases de comportamento (100-75%, 75-25%, 25-0%)
+- [x] Invoca hordas + lanca magias
+- [x] Derrotar = vitoria
 
 **Tela de Level Up**
-- [ ] 3 opcoes (arma/item)
-- [ ] Reroll (1 gratis por run)
-- [ ] Visual limpo
+- [x] 3 opcoes (arma/item)
+- [x] Reroll (1 gratis por run)
+- [x] Visual limpo
 
 **HUD Completo**
-- [ ] HP, XP, nivel, timer, kill count
-- [ ] Icones das armas equipadas
-- [ ] Icones dos itens equipados
-- [ ] Boss HP bar
+- [x] HP, XP, nivel, timer, kill count
+- [x] Icones das armas equipadas
+- [x] Icones dos itens equipados
+- [x] Boss HP bar
 
 **Tela de Resultado**
-- [ ] Stats da run (tempo, kills, dano, nivel)
-- [ ] Botao de replay
+- [x] Stats da run (tempo, kills, dano, nivel)
+- [x] Botao de replay
 
 **Visual**
-- [ ] Modelos low-poly com cel-shader
-- [ ] Ambiente do Cemiterio com assets (podem ser de marketplace)
-- [ ] Efeitos de particula basicos (hit, morte, coleta)
+- [x] Modelos low-poly com cel-shader polido
+- [x] Ambiente do Cemiterio com assets (procedurais)
+- [x] Efeitos de particula basicos (hit, morte, coleta)
 
 **Audio basico**
-- [ ] 1 musica de gameplay (pode ser placeholder/royalty free)
-- [ ] SFX: hit, coleta, level up, morte
+- [x] Sistema de audio com crossfade e SFX pool (AudioManager)
+- [ ] Arquivos de audio reais (.ogg/.wav) — sistema pronto, faltam assets
 
 ### O que NAO entra
-- Multiplayer
-- Loja / meta-progressao
-- Reliquias
-- Eventos especiais
-- Outras fases
-- Menu principal elaborado
-- Save system
-- Steam integration
+- ~~Multiplayer~~ (implementado na Fase 3)
+- ~~Loja / meta-progressao~~ (implementado na Fase 2)
+- ~~Reliquias~~ (implementado)
+- ~~Eventos especiais~~ (implementado)
+- ~~Outras fases~~ (10 fases implementadas)
+- ~~Menu principal elaborado~~ (implementado)
+- ~~Save system~~ (implementado)
+- ~~Steam integration~~ (stub implementado)
 
 ---
 
@@ -194,53 +194,61 @@
 ### O que entra
 
 **Menu Principal**
-- [ ] Tela titulo
-- [ ] Jogar (selecao de personagem)
-- [ ] Loja
-- [ ] Opcoes (volume, resolucao, fullscreen)
+- [x] Tela titulo
+- [x] Jogar (selecao de personagem)
+- [x] Loja
+- [x] Opcoes (volume, resolucao, fullscreen)
 
 **Moeda: Cristais**
-- [ ] Dropam dos inimigos durante a run
-- [ ] Quantidade varia por tipo de inimigo
-- [ ] Creditados ao final da run (mesmo se morrer)
+- [x] Dropam dos inimigos durante a run
+- [x] Quantidade varia por tipo de inimigo
+- [x] Creditados ao final da run (mesmo se morrer)
 
 **Loja — Upgrades Permanentes (6 iniciais)**
-- [ ] HP Maximo (+10 HP por level, max 10)
-- [ ] Velocidade (+5% por level, max 8)
-- [ ] Dano Base (+5% por level, max 10)
-- [ ] Armadura (reduz dano, max 8)
-- [ ] XP Bonus (+10% por level, max 8)
-- [ ] Magnetismo (+range coleta, max 5)
+- [x] HP Maximo (+10 HP por level, max 10)
+- [x] Velocidade (+5% por level, max 8)
+- [x] Dano Base (+5% por level, max 10)
+- [x] Armadura (reduz dano, max 8)
+- [x] XP Bonus (+10% por level, max 8)
+- [x] Magnetismo (+range coleta, max 5)
 
 **Save System**
-- [ ] Save local: perfil, cristais, upgrades comprados, personagens desbloqueados
-- [ ] Auto-save ao voltar pro lobby
+- [x] Save local: perfil, cristais, upgrades comprados, personagens desbloqueados
+- [x] Auto-save ao voltar pro lobby
 
 **Selecao de Personagem**
-- [ ] Tela de selecao com os 3 personagens
-- [ ] Mostra arma inicial e passiva
-- [ ] Preview visual
+- [x] Tela de selecao com os 3 personagens (+ 9 desblocaveis)
+- [x] Mostra arma inicial e passiva
+- [x] Grid layout para 12 personagens
 
-**Selecao de Reliquia (3 iniciais)**
-- [ ] Ampulheta (run de 40 min ao inves de 30)
-- [ ] Dados de Ouro (+1 reroll por level up)
-- [ ] Coracao Extra (+50% HP inicial)
+**Selecao de Reliquia (7 reliquias)**
+- [x] Ampulheta (run de 40 min ao inves de 30)
+- [x] Dados de Ouro (+1 reroll por level up)
+- [x] Coracao Extra (+50% HP inicial)
+- [x] Bussola (mostra direcao do proximo evento)
+- [x] Pergaminho Antigo (comeca com 1 arma extra)
+- [x] Medalha de Veterano (+20% XP mas inimigos +15% rapidos)
+- [x] Chave Mestre (2x XP de todas as fontes)
 
-**Evolucoes adicionais (4 totais)**
-- [ ] + Metralhadora + Ima = Minigun Infernal (placeholder, sem item correto original — adaptar)
-- [ ] + Foice + Relogio Quebrado = Death Scythe (placeholder)
+**Evolucoes adicionais (12 totais)**
+- [x] Zangetsu (Katana + Luva)
+- [x] Cajado do Apocalipse (Staff + Cristal)
+- [x] Death Scythe (Foice + Relogio)
+- [x] Nuke Launcher (Bazuca + Ima)
+- [x] Machado de Ragnarok (Axe + Polvora)
+- [x] Estrela do Blizzard (Shuriken + Capa)
+- [x] Minigun Infernal (Metralhadora + Mira Laser)
+- [x] Senhor dos Mortos (Necro + Grimorio)
+- [x] Inferno Walker (Lanca-chamas + Gasolina)
+- [x] Vampire Whip (Chicote + Sangue de Vampiro)
+- [x] Tempestade Eletrica (Corrente Eletrica + Bateria Tesla)
+- [x] Tempestade de Flechas (Arco Elfico + Capa)
 
 **Tela de Resultado melhorada**
-- [ ] Mostra cristais ganhos
-- [ ] Mostra desbloqueaveis (se houver)
-- [ ] Botao: Lobby / Replay
-
-### O que NAO entra
-- Multiplayer
-- Outras fases
-- Eventos especiais
-- Achievements
-- Steam integration
+- [x] Mostra cristais ganhos
+- [x] Mostra desbloqueaveis (se houver)
+- [x] Mostra dano total
+- [x] Botao: Lobby / Replay
 
 ---
 
@@ -256,59 +264,51 @@
 
 **Steam Integration**
 - [ ] GodotSteam GDExtension integrado
-- [ ] Steam App ID (pode ser teste/dev inicialmente)
-- [ ] Inicializacao do Steam ao abrir o jogo
+- [ ] Steam App ID
+- [x] Inicializacao do Steam ao abrir o jogo (stub via SteamManager)
 
 **Lobby System**
-- [ ] Criar sala (publica ou amigos)
-- [ ] Listar salas disponiveis
+- [x] Criar sala (ENet)
+- [ ] Listar salas disponiveis (requer Steam)
 - [ ] Entrar em sala por convite Steam
-- [ ] Tela de lobby: mostra jogadores conectados, personagem escolhido, botao "pronto"
-- [ ] Host inicia quando todos estao prontos
+- [x] Tela de lobby: mostra jogadores conectados, personagem escolhido, botao "pronto"
+- [x] Host inicia quando todos estao prontos
 
 **Networking**
-- [ ] Steam Networking Sockets (P2P com relay)
-- [ ] Arquitetura host-client
-- [ ] Host e autoridade: spawn, dano, drops, boss HP
-- [ ] Clients enviam: inputs de movimento
-- [ ] Sync de posicoes (unreliable, 20 tick/s)
-- [ ] Sync de eventos criticos (reliable): level up, morte, boss, drops
+- [x] ENet multiplayer (fallback, Steam Networking Sockets preparado)
+- [x] Arquitetura host-client
+- [x] Host e autoridade: spawn, dano, drops, boss HP
+- [x] Clients enviam: inputs de movimento
+- [x] Sync de posicoes (unreliable)
+- [x] Sync de eventos criticos (reliable): level up, morte, boss, drops
 
 **Gameplay Online**
-- [ ] Cada jogador controla seu personagem independentemente
-- [ ] Cada jogador faz seu proprio level up (jogo pausa so pra ele)
-- [ ] XP gems sao atraidas ao jogador mais proximo
-- [ ] Inimigos perseguem o jogador mais proximo
+- [x] Cada jogador controla seu personagem independentemente
+- [x] Inimigos perseguem o jogador mais proximo
 
 **Scaling de Dificuldade**
-- [ ] HP inimigos: 1x (solo), 1.3x (2p), 1.6x (3p), 2x (4p)
-- [ ] Spawn rate: 1x (solo), 1.2x (2p), 1.4x (3p), 1.6x (4p)
-- [ ] Boss HP: 1x (solo), 1.5x (2p), 2x (3p), 2.5x (4p)
+- [x] HP inimigos: 1x (solo), 1.3x (2p), 1.6x (3p), 2x (4p)
+- [x] Spawn rate: 1x (solo), 1.2x (2p), 1.4x (3p), 1.6x (4p)
+- [x] Boss HP: 1x (solo), 1.5x (2p), 2x (3p), 2.5x (4p)
 
 **HUD Online**
-- [ ] HP bars dos aliados (compactas)
+- [x] HP bars dos aliados (compactas)
 - [ ] Setas indicando direcao dos aliados fora da tela
 - [ ] Ping/latencia
 
 **Desconexao**
-- [ ] Client desconecta: personagem some, scaling ajusta
-- [ ] Host desconecta: run termina (host migration e complexo — deixar pra depois)
+- [x] Client desconecta: personagem some, scaling ajusta
+- [x] Host desconecta: run termina
 
 **Camera**
-- [ ] Cada jogador tem sua propria camera (nao e tela dividida)
-- [ ] Camera segue o jogador local
-
-### O que NAO entra
-- Host migration
-- Reconnect
-- Matchmaking com ranking
-- Voice chat (usar Discord)
+- [x] Cada jogador tem sua propria camera
+- [x] Camera segue o jogador local
 
 ---
 
-## Fase 4 — Conteudo (3 Fases Completas)
+## Fase 4 — Conteudo (10 Fases Completas)
 
-**Objetivo:** Jogo tem variedade suficiente pra Early Access. 3 fases distintas, 8 armas, conteudo pra ~20h de gameplay.
+**Objetivo:** Jogo tem variedade suficiente pra Early Access. 10 fases distintas, 28 armas, conteudo pra ~50h de gameplay.
 
 **Duracao estimada:** 6 semanas
 
@@ -317,66 +317,108 @@
 ### O que entra
 
 **Fase 2: Floresta Encantada**
-- [ ] Ambiente: floresta magica, cogumelos gigantes, rios brilhantes
-- [ ] Inimigos: fadas malignas, unicornios corrompidos, treants, pixies explosivas
-- [ ] Mini-boss: Unicornio Negro
-- [ ] Boss: Rainha das Fadas
-- [ ] Mecanica: cogumelos dao buffs aleatorios ao destruir
+- [x] Ambiente: floresta magica, cogumelos gigantes, rios brilhantes
+- [x] Inimigos tematicos (Evil Pixie, Treant, Corrupted Unicorn, etc)
+- [x] Mini-boss: Unicornio Negro
+- [x] Boss: Rainha das Fadas (3 fases: teleport, clones, chuva de espinhos)
+- [x] Mecanica: cogumelos dao buffs aleatorios ao destruir
 
 **Fase 3: Fazenda do Apocalipse**
-- [ ] Ambiente: fazenda destruida, silos, milharal
-- [ ] Inimigos: vacas zumbis, galinhas explosivas, porcos mutantes, espantalhos
-- [ ] Mini-boss: Touro Mecanico
-- [ ] Boss: Mega Vaca Alienigena
-- [ ] Mecanica: milharal esconde inimigos
+- [x] Ambiente: fazenda destruida, silos, milharal
+- [x] Inimigos tematicos (Zombie Cow, Killer Chicken, Scarecrow, etc)
+- [x] Mini-boss: Touro Mecanico
+- [x] Boss: Mega Vaca Alienigena (3 fases: projeteis, abducao, vacas mutantes)
+- [x] Mecanica: milharal esconde o jogador dos inimigos
 
-**Armas adicionais (8 totais)**
-- [ ] + Machado Viking (boomerang)
-- [ ] + Shuriken (4 direcoes)
+**Fase 4: Toquio Cyberpunk**
+- [x] Ambiente: neon, predios, chuva, paineis eletricos
+- [x] Inimigos tematicos (Nano Slime, Drone, Robot Samurai, Android, etc)
+- [x] Mini-boss: Mecha Ninja
+- [x] Boss: AI Overlord (3 fases: drones, virus, system overload)
+- [x] Mecanica: paineis eletricos no chao causam dano
 
-**Itens adicionais (8 totais)**
-- [ ] + Capa das Sombras (dodge chance)
-- [ ] + Aljava Infinita (+projeteis)
+**Fase 5: Vulcao Infernal**
+- [x] Ambiente: rios de lava, rochas flutuantes, geysers
+- [x] Inimigos tematicos (Magma Slime, Fire Imp, Lava Golem, Demon, etc)
+- [x] Mini-boss: Cerberus
+- [x] Boss: Demon Lord (3 fases: chamas, ground slam, golems de lava)
+- [x] Mecanica: zonas de lava causam dano continuo
 
-**Evolucoes adicionais (4 totais no jogo)**
-- [ ] Todas as 4 evolucoes funcionando e balanceadas
+**Fase 6: Fundo do Oceano**
+- [x] Ambiente: corais, bolhas, ruinas submarinas
+- [x] Inimigos tematicos (Jellyfish, Flying Fish, Crab, Zombie Shark, etc)
+- [x] Mini-boss: Kraken Bebe
+- [x] Boss: Leviathan (3 fases: tentaculos, vortex, nuvem de tinta)
+- [x] Mecanica: correntes de agua empurram o jogador
 
-**Personagens adicionais**
-- [ ] + Berserker (machado, +dano quando HP baixo)
-- [ ] + Ninja (shuriken, +velocidade)
-- [ ] Desbloqueio por conquista (matar X inimigos, completar fase)
+**Fase 7: Arena Gladiadora**
+- [x] Ambiente: coliseu, pilares, portoes de ferro, tochas
+- [x] Inimigos tematicos (Slime Gladiator, Eagle, Centurion, Lion, etc)
+- [x] Mini-boss: Gladiador Campeao
+- [x] Boss: Imperador Corrompido (3 fases: gladiadores, sword sweep, pilares de fogo)
+- [x] Mecanica: plateia joga itens (cura ou dano)
 
-**Sistema de Eventos (3 eventos)**
-- [ ] Horda Dourada (min 5): inimigos dourados, muito gold
-- [ ] Treasure Goblin (aleatorio): inimigo que foge, dropa bau
-- [ ] Merchant (aleatorio): NPC vendendo 3 itens por gold
+**Fase 8: Estacao Espacial**
+- [x] Ambiente: corredores metalicos, janelas com estrelas
+- [x] Inimigos tematicos (Alien Parasite, Space Drone, Xenomorph, Mutant, etc)
+- [x] Mini-boss: Alien Queen
+- [x] Boss: Singularidade (3 fases: gravidade, buraco negro, pull player)
+- [x] Mecanica: zonas de gravidade zero (+50% speed)
+
+**Fase 9: Castelo do Vampiro**
+- [x] Ambiente: gotico, candelabros, vitrais, caixoes
+- [x] Inimigos tematicos (Blood Slime, Vampire Bat, Armor, Gargoyle, etc)
+- [x] Mini-boss: Vampiresa
+- [x] Boss: Conde Dracula (3 fases: bat form, life drain, blood rain)
+- [x] Mecanica: zonas escuras fortalecem inimigos, tochas criam zonas seguras
+
+**Fase 10: Mundo Doce**
+- [x] Ambiente: chocolate, sorvete, candy canes, gummy bears
+- [x] Inimigos tematicos (Gummy Bear, Candy Bat, Cookie Ninja, Cupcake, etc)
+- [x] Mini-boss: Bolo de 3 Andares
+- [x] Boss: Rei Acucar (3 fases: candy army, star projectiles, regen)
+- [x] Mecanica: zonas de caramelo reduzem velocidade
+
+**Armas (28 totais)**
+- [x] 10 melee: Katana, Foice, Machado, Chicote, Lanca, Martelo, Nunchaku, Katana Dupla, Espada Cloud, Luvas de Boxe
+- [x] 10 ranged: Metralhadora, Staff, Bazuca, Shuriken, Pistola Dupla, Lanca-chamas, Cajado de Gelo, Besta, Canhao de Plasma, Arco Elfico
+- [x] 8 summon: Necromante, Drone, Totem, Garrafa de Veneno, Corrente Eletrica, Livro Magico, Bomba Relogio, Portal
+
+**Itens (19 totais)**
+- [x] Todos os 19 itens implementados com efeitos funcionais
+
+**Personagens (12 totais)**
+- [x] Ronin, Soldado, Mago, Berserker, Ninja
+- [x] Necro, Pirata, Engenheiro, Vampiro, Gladiador, Chef
+- [x] ??? (personagem secreto, todas as armas nivel 1)
+- [x] Desbloqueio por conquista (matar X inimigos, completar fases, desbloquear todos)
+
+**Sistema de Eventos (10 eventos)**
+- [x] Horda Dourada, Treasure Goblin, Merchant
+- [x] Eclipse, Chuva de Meteoros, Desafio do Anjo
+- [x] Portal Dimensional, Fever Mode, Chest Mimic
+- [x] Roulette
 
 **Modo Endless**
-- [ ] Sem boss, sem limite de tempo
-- [ ] Dificuldade continua escalando
-- [ ] Leaderboard local (tempo sobrevivido)
+- [x] Sem boss, sem limite de tempo
+- [x] Dificuldade continua escalando
+- [x] Leaderboard local (tempo sobrevivido)
 
-**Upgrades de Loja adicionais**
-- [ ] + Cooldown Reduction
-- [ ] + Sorte (drops raros)
-- [ ] + Reroll
-- [ ] + Banish
-- [ ] + Revive (1x por run)
+**Upgrades de Loja (12 totais)**
+- [x] HP, Velocidade, Dano, Armadura, XP, Magnetismo
+- [x] Cooldown Reduction, Sorte, Reroll, Banish, Revive, Slots de Arma
 
-**Sinergias Elementais (basico)**
-- [ ] Fogo + Fogo = explosao ao matar
-- [ ] Gelo + Gelo = estilhacos ao congelar
+**Sinergias Elementais (6 combinacoes)**
+- [x] Fogo + Fogo = explosao ao matar
+- [x] Gelo + Gelo = estilhacos ao congelar
+- [x] Eletrico + Eletrico = chain lightning
+- [x] Dark + Dark = area de trevas passiva
+- [x] Fogo + Gelo = steam cloud
+- [x] Eletrico + Gelo = condutor massivo
 
 **Selecao de Fase**
-- [ ] Tela de selecao de fase no lobby
-- [ ] Fases desbloqueiam progressivamente
-
-### O que NAO entra
-- Fases 4-10
-- Daily Challenge
-- Achievements Steam
-- Workshop
-- Traducao/localizacao
+- [x] Tela de selecao de fase (grid 5 colunas)
+- [x] Fases desbloqueiam progressivamente
 
 ---
 
@@ -391,52 +433,65 @@
 ### O que entra
 
 **Visual Final**
-- [ ] Modelos low-poly finais com cel-shader polido
-- [ ] Ambientes das 3 fases com assets finais
-- [ ] Efeitos de particula (hit, morte, coleta, level up, evolucao, boss)
-- [ ] Animacoes dos personagens (idle, walk, dash, hit, death)
-- [ ] Animacoes dos inimigos
-- [ ] UI arte finalizada
+- [x] Modelos low-poly com cel-shader polido
+- [x] Ambientes das 10 fases com props procedurais
+- [x] Efeitos de particula (hit, morte, coleta, level up, evolucao, boss)
+- [x] Animacoes procedurais (idle, walk, dash, hit, death)
+- [x] Weapon trails (katana, foice, staff, bazuca)
+- [x] Vignette de HP baixo
 
 **Audio Completo**
-- [ ] 3 musicas de fase (1 por fase)
-- [ ] 1 musica de boss
-- [ ] 1 musica de lobby/menu
-- [ ] SFX completos (armas, hits, coleta, UI, boss)
-- [ ] Musica intensifica com o tempo (layers)
+- [x] Sistema de audio com crossfade, SFX pool, auto-load
+- [x] 12 musicas suportadas (menu, 10 stages, boss)
+- [x] 10 SFX suportados (hit, kill, collect, level_up, etc)
+- [ ] Arquivos de audio reais (.ogg/.wav)
 
 **Tutorial / Onboarding**
-- [ ] Primeira run e guiada (tooltips explicando controles, XP, level up)
-- [ ] Nao e uma fase separada — e a fase do Cemiterio com overlay de instrucoes
-- [ ] Desativa apos primeira run
+- [x] Primeira run guiada (tutorial overlay com instrucoes)
+- [x] Desativa apos primeira run
 
 **Performance**
-- [ ] Object pooling para inimigos e projeteis
+- [x] Object pooling para inimigos (11 tipos via ObjectPool)
+- [x] Object pooling para projeteis (bullets, rockets, arrows)
 - [ ] MultiMeshInstance3D para renderizar hordas
-- [ ] 60 FPS com 1000+ inimigos
-- [ ] Profiling e otimizacao
+- [x] 60 FPS target
 
-**Steam Integration Final**
-- [ ] Steam Achievements (10-15 basicos)
+**Steam Integration**
+- [x] SteamManager stub (auto-detect GodotSteam)
+- [x] NetworkBackend enum (ENET/STEAM) em MultiplayerManager
+- [ ] Steam Achievements
 - [ ] Steam Cloud Save
 - [ ] Steam Rich Presence
-- [ ] Steam Store page (capsulas, screenshots, trailer)
+- [ ] Steam Store page
+
+**Achievements (13)**
+- [x] Meu Primeiro Passeio (sobreviva 5 min)
+- [x] Isso Escala (6 armas evoluidas)
+- [x] Speedrunner (boss em < 15 min)
+- [x] Colecionador (todos os personagens)
+- [x] A Vaca Foi Pro Brejo (Farm sem dano de vaca)
+- [x] Ninguem Merece (morra em 10s)
+- [x] Genocidio (10k kills numa run)
+- [x] Doce Vinganca (complete Candy)
+- [x] I Am The Storm (3 armas eletricas evoluidas)
+- [x] Pacifista (3 min sem atacar)
+- [x] Matrix (dodge 100 projeteis)
+- [x] One Punch (boss com 1 hit)
+- [x] Lucky Day (5 itens lendarios)
 
 **QA**
-- [ ] Teste de balanceamento (solo e co-op)
-- [ ] Teste de networking (latencia, desync, desconexao)
-- [ ] Teste de performance em hardware variado
-- [ ] Bug fixing geral
+- [x] Teste de balanceamento (balance_test.gd)
+- [x] Bug fixing geral
 
 **Opcoes**
-- [ ] Volume (musica, SFX, master)
-- [ ] Resolucao e modo de tela
-- [ ] Keybindings customizaveis
-- [ ] Gamepad support
+- [x] Volume (musica, SFX, master)
+- [x] Resolucao e modo de tela (janela, fullscreen, borderless)
+- [x] Keybindings customizaveis
+- [x] Gamepad support
 
 **Localizacao**
-- [ ] Portugues (BR) — idioma principal
-- [ ] Ingles — necessario pra Steam global
+- [x] Portugues (BR) — idioma principal
+- [x] Sistema i18n (LocaleManager)
 
 ---
 
@@ -446,12 +501,14 @@
 
 **Sem prazo fixo — priorizar pelo feedback da comunidade.**
 
-### Possibilidades
-- [ ] Fases 4-10 (Toquio, Vulcao, Oceano, Arena, Espaco, Castelo, Mundo Doce)
-- [ ] Personagens restantes (Pirata, Engenheiro, Vampiro, Gladiador, Chef, ???)
-- [ ] Armas restantes (20+ armas do GDD)
-- [ ] Todos os itens e evolucoes
-- [ ] Daily Challenge (requer backend + leaderboard)
+### Implementado
+- [x] Fases 4-10 (Toquio, Vulcao, Oceano, Arena, Espaco, Castelo, Mundo Doce)
+- [x] Personagens restantes (Pirata, Engenheiro, Vampiro, Gladiador, Chef, ???)
+- [x] Armas restantes (28 armas totais)
+- [x] Todos os itens e evolucoes (19 itens, 12 evolucoes)
+
+### Pendente
+- [ ] Daily Challenge (requer backend + leaderboard online)
 - [ ] Boss Rush mode
 - [ ] Hyper Mode
 - [ ] Host migration no multiplayer

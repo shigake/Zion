@@ -16,6 +16,11 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	if target and is_instance_valid(target):
 		direction = (target.global_position - global_position).normalized()
+	# Blue weapon trail
+	var trail = Node3D.new()
+	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
+	trail.trail_color = Color(0.3, 0.5, 1.0, 0.6)
+	add_child(trail)
 
 func _physics_process(delta: float) -> void:
 	timer += delta
