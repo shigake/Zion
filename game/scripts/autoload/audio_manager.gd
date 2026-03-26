@@ -181,14 +181,30 @@ func _load_audio(base_path: String, extensions: Array) -> AudioStream:
 	if base_path in _audio_cache:
 		return _audio_cache[base_path]
 
-	# Try each extension
-	for ext in extensions:
-		var path = base_path + ext
-		if ResourceLoader.exists(path):
-			var stream = load(path)
-			if stream is AudioStream:
-				_audio_cache[base_path] = stream
-				return stream
+	# Determine subdirectories to search based on path type
+	var subdirs: Array[String] = [""]
+	if "audio/sfx/" in base_path:
+		subdirs = ["", "combat/", "player/", "pickup/", "ui/", "enemies/", "boss/", "environment/"]
+	elif "audio/music/" in base_path:
+		subdirs = ["", "stages/", "menu/", "boss/"]
+
+	# Extract the filename from the base_path
+	var filename = base_path.get_file()
+	var dir_path = base_path.get_base_dir()
+
+	# Try each subdirectory and extension combination
+	for subdir in subdirs:
+		for ext in extensions:
+			var path: String
+			if subdir == "":
+				path = base_path + ext
+			else:
+				path = dir_path + "/" + subdir + filename + ext
+			if ResourceLoader.exists(path):
+				var stream = load(path)
+				if stream is AudioStream:
+					_audio_cache[base_path] = stream
+					return stream
 
 	# No file found - cache null to avoid repeated lookups
 	_audio_cache[base_path] = null
