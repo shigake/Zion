@@ -969,7 +969,16 @@ func create_mimic_model() -> Node3D:
 
 # ===================== GLB LOADER =====================
 
-func _try_load_glb(path: String) -> Node3D:
+const KENNEY_NATURE := "res://assets/models/downloaded/kenney/nature-kit/Models/GLTF format/"
+const KENNEY_DUNGEON := "res://assets/models/downloaded/kenney/mini-dungeon/Models/GLB format/"
+const KAYKIT_GAME := "res://assets/models/downloaded/kaykit/mini-game-variety/Models/gltf/"
+
+## Escala dos modelos KayKit/Kenney para caber no jogo
+const CHARACTER_SCALE := Vector3(0.6, 0.6, 0.6)
+const ENEMY_SCALE := Vector3(0.5, 0.5, 0.5)
+const BOSS_SCALE := Vector3(1.0, 1.0, 1.0)
+
+func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 	## Tenta carregar modelo .glb. Retorna null se nao encontrar.
 	if not ResourceLoader.exists(path):
 		return null
@@ -981,8 +990,33 @@ func _try_load_glb(path: String) -> Node3D:
 		return null
 	# Wrap in Node3D root for compatibility with existing code
 	var root = Node3D.new()
+	root.set_meta("glb_model", true)
+	instance.scale = model_scale
 	root.add_child(instance)
 	return root
+
+func load_prop(file_name: String, source: String = "nature") -> Node3D:
+	## Carrega um modelo de prop dos assets baixados.
+	## source: "nature" (Kenney nature-kit), "dungeon" (Kenney mini-dungeon), "game" (KayKit)
+	var base_path: String
+	match source:
+		"nature": base_path = KENNEY_NATURE
+		"dungeon": base_path = KENNEY_DUNGEON
+		"game": base_path = KAYKIT_GAME
+		_: base_path = KENNEY_NATURE
+	var path = base_path + file_name
+	if not ResourceLoader.exists(path):
+		return null
+	var scene = load(path) as PackedScene
+	if scene == null:
+		return null
+	var instance = scene.instantiate()
+	return instance
+
+func get_weapon_model(weapon_id: String) -> Node3D:
+	## Carrega modelo 3D de uma arma
+	var glb_path = "res://assets/models/weapons/%s.glb" % weapon_id
+	return _try_load_glb(glb_path, Vector3(0.4, 0.4, 0.4))
 
 # ===================== HELPERS =====================
 
@@ -997,7 +1031,10 @@ func _mark_as_accent(mi: MeshInstance3D) -> void:
 	mi.set_meta("accent", true)
 
 func apply_model_materials(root: Node3D, base_color: Color) -> void:
-	## Aplica cel-shader a todos os meshes do modelo, glow nos accents
+	## Aplica cel-shader a todos os meshes do modelo, glow nos accents.
+	## Modelos .glb importados preservam seus materiais originais.
+	if root.has_meta("glb_model"):
+		return
 	for child in root.get_children():
 		if child is MeshInstance3D:
 			if child.has_meta("star"):
@@ -1020,9 +1057,9 @@ func apply_model_materials(root: Node3D, base_color: Color) -> void:
 				VisualSetup.apply_cel_shader_to_mesh(child, base_color)
 
 func get_model_for_character(char_id: String) -> Node3D:
-	# Try loading .glb model first
+	# Try loading .glb model first (KayKit Adventurers)
 	var glb_path = "res://assets/models/characters/%s.glb" % char_id
-	var loaded = _try_load_glb(glb_path)
+	var loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
 	if loaded:
 		return loaded
 	# Fallback to procedural
@@ -1064,8 +1101,9 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 	# Try .glb model
 	var file_name = glb_map.get(enemy_name, enemy_name.to_snake_case())
 	var folder = "bosses" if enemy_name.begins_with("Boss") else "enemies"
+	var s = BOSS_SCALE if enemy_name.begins_with("Boss") else ENEMY_SCALE
 	var glb_path = "res://assets/models/%s/%s.glb" % [folder, file_name]
-	var loaded = _try_load_glb(glb_path)
+	var loaded = _try_load_glb(glb_path, s)
 	if loaded:
 		return loaded
 	# Fallback to procedural
@@ -1085,3 +1123,98 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		"Swarm": return create_swarm_model()
 		"Mimic": return create_mimic_model()
 	return create_slime_model()
+
+# ===================== PROP SCATTER SYSTEM =====================
+
+## Catalogo de props por tema/bioma, mapeia para arquivos .glb reais
+var _prop_catalog := {
+	# Floresta
+	"tree": ["tree_default.glb", "tree_oak.glb", "tree_fat.glb", "tree_tall.glb", "tree_simple.glb"],
+	"tree_pine": ["tree_pineDefaultA.glb", "tree_pineDefaultB.glb", "tree_pineSmallA.glb"],
+	"tree_dark": ["tree_default_dark.glb", "tree_thin_dark.glb", "tree_oak_dark.glb"],
+	"tree_fall": ["tree_default_fall.glb", "tree_oak_fall.glb", "tree_thin_fall.glb"],
+	"tree_palm": ["tree_palmDetailedShort.glb", "tree_palmDetailedTall.glb", "tree_palmShort.glb"],
+	"rock_large": ["rock_largeA.glb", "rock_largeB.glb", "rock_largeC.glb", "rock_largeD.glb", "rock_largeE.glb", "rock_largeF.glb"],
+	"rock_small": ["rock_smallA.glb", "rock_smallB.glb", "rock_smallC.glb", "rock_smallD.glb", "rock_smallE.glb"],
+	"rock_tall": ["rock_tallA.glb", "rock_tallB.glb", "rock_tallC.glb", "rock_tallD.glb", "rock_tallE.glb"],
+	"stone_large": ["stone_largeA.glb", "stone_largeB.glb", "stone_largeC.glb", "stone_largeD.glb", "stone_largeE.glb"],
+	"stone_small": ["stone_smallA.glb", "stone_smallB.glb", "stone_smallC.glb", "stone_smallD.glb", "stone_smallE.glb"],
+	"stone_tall": ["stone_tallA.glb", "stone_tallB.glb", "stone_tallC.glb", "stone_tallD.glb", "stone_tallE.glb"],
+	"mushroom": ["mushroom_red.glb", "mushroom_tan.glb", "mushroom_redTall.glb", "mushroom_tanTall.glb"],
+	"mushroom_group": ["mushroom_redGroup.glb", "mushroom_tanGroup.glb"],
+	"grass": ["grass.glb", "grass_large.glb", "grass_leafs.glb", "grass_leafsLarge.glb"],
+	"flower": ["flower_redA.glb", "flower_redB.glb", "flower_purpleA.glb", "flower_purpleB.glb", "flower_yellowA.glb", "flower_yellowB.glb"],
+	"bush": ["plant_bush.glb", "plant_bushSmall.glb", "plant_bushLarge.glb"],
+	"plant_flat": ["plant_flatShort.glb", "plant_flatTall.glb"],
+	"log": ["log.glb", "log_large.glb", "log_stack.glb", "log_stackLarge.glb"],
+	"stump": ["stump_round.glb", "stump_roundDetailed.glb", "stump_old.glb", "stump_oldTall.glb"],
+	"fence": ["fence_simple.glb", "fence_planks.glb", "fence_bend.glb"],
+	"crops": ["crops_cornStageA.glb", "crops_cornStageB.glb", "crops_wheatStageA.glb", "crops_wheatStageB.glb", "crops_leafsStageA.glb"],
+	"cliff": ["cliff_block_rock.glb", "cliff_block_stone.glb", "cliff_corner_rock.glb"],
+	"cactus": ["cactus_short.glb", "cactus_tall.glb"],
+	"lily": ["lily_small.glb", "lily_large.glb"],
+	"tent": ["tent_detailedOpen.glb", "tent_detailedClosed.glb"],
+	"campfire": ["campfire_stones.glb", "campfire_logs.glb"],
+	"statue": ["statue_obelisk.glb", "statue_column.glb", "statue_columnDamaged.glb"],
+	"bridge": ["bridge_center_stoneRound.glb", "bridge_side_stoneRound.glb"],
+	"sign": ["sign.glb"],
+	"hanging_moss": ["hanging_moss.glb"],
+	# Kenney mini-dungeon
+	"dungeon_wall": ["wall.glb", "wall-half.glb", "wall-narrow.glb", "wall-opening.glb"],
+	"dungeon_column": ["column.glb"],
+	"dungeon_barrel": ["barrel.glb"],
+	"dungeon_chest": ["chest.glb"],
+	"dungeon_banner": ["banner.glb"],
+	"dungeon_gate": ["gate.glb"],
+	"dungeon_stairs": ["stairs.glb"],
+	"dungeon_rocks": ["rocks.glb", "stones.glb"],
+	"dungeon_trap": ["trap.glb"],
+	"dungeon_floor": ["floor.glb", "floor-detail.glb"],
+	"dungeon_wood": ["wood-structure.glb", "wood-support.glb"],
+}
+
+func scatter_nature_props(parent: Node3D, prop_type: String, count: int, area_size: float,
+		scale_range := Vector2(0.8, 1.5), y_offset := 0.0, avoid_center := 5.0) -> void:
+	## Espalha props do Kenney nature-kit numa area. Usa modelos reais.
+	var variants: Array = _prop_catalog.get(prop_type, [])
+	if variants.is_empty():
+		return
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(count):
+		var file_name: String = variants[rng.randi() % variants.size()]
+		var model = load_prop(file_name, "nature")
+		if model == null:
+			continue
+		var x = rng.randf_range(-area_size, area_size)
+		var z = rng.randf_range(-area_size, area_size)
+		if abs(x) < avoid_center and abs(z) < avoid_center:
+			x += avoid_center * 2.0 * sign(x) if x != 0.0 else avoid_center * 2.0
+		model.position = Vector3(x, y_offset, z)
+		model.rotation.y = rng.randf() * TAU
+		var s = rng.randf_range(scale_range.x, scale_range.y)
+		model.scale = Vector3(s, s, s)
+		parent.add_child(model)
+
+func scatter_dungeon_props(parent: Node3D, prop_type: String, count: int, area_size: float,
+		scale_range := Vector2(0.8, 1.2), y_offset := 0.0, avoid_center := 5.0) -> void:
+	## Espalha props do Kenney mini-dungeon numa area.
+	var variants: Array = _prop_catalog.get(prop_type, [])
+	if variants.is_empty():
+		return
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(count):
+		var file_name: String = variants[rng.randi() % variants.size()]
+		var model = load_prop(file_name, "dungeon")
+		if model == null:
+			continue
+		var x = rng.randf_range(-area_size, area_size)
+		var z = rng.randf_range(-area_size, area_size)
+		if abs(x) < avoid_center and abs(z) < avoid_center:
+			x += avoid_center * 2.0 * sign(x) if x != 0.0 else avoid_center * 2.0
+		model.position = Vector3(x, y_offset, z)
+		model.rotation.y = rng.randf() * TAU
+		var s = rng.randf_range(scale_range.x, scale_range.y)
+		model.scale = Vector3(s, s, s)
+		parent.add_child(model)

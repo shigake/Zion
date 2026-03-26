@@ -29,6 +29,18 @@ func _ready() -> void:
 	_generate_sand_particles()
 	_generate_dust_devil()
 	_generate_arena_lighting()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney — colunas, estátuas, tendas, rochas
+	ModelFactory.scatter_nature_props(self, "statue", 8, area_size, Vector2(1.5, 2.5))
+	ModelFactory.scatter_nature_props(self, "stone_tall", 12, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "tent", 4, area_size, Vector2(1.5, 2.0))
+	ModelFactory.scatter_nature_props(self, "campfire", 5, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "rock_large", 8, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "sign", 4, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_banner", 6, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_barrel", 8, area_size, Vector2(1.0, 1.5))
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

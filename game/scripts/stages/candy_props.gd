@@ -41,6 +41,17 @@ func _ready() -> void:
 	_generate_sprinkle_particles()
 	_generate_confetti_particles()
 	_generate_ambient_lights()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney — cogumelos coloridos, flores, arvores estilizadas
+	ModelFactory.scatter_nature_props(self, "mushroom", 20, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "mushroom_group", 10, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "flower", 25, area_size, Vector2(1.0, 2.5))
+	ModelFactory.scatter_nature_props(self, "tree", 8, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "bush", 12, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "grass", 15, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "plant_flat", 10, area_size, Vector2(1.0, 2.0))
 
 func _process(delta: float) -> void:
 	## Efeito de slow do caramelo

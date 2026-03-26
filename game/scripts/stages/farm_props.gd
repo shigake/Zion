@@ -37,6 +37,19 @@ func _ready() -> void:
 	_generate_ambient_lights()
 	_generate_dust_particles()
 	_generate_pollen_particles()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney reais — arvores outonais, cercas, cultivos
+	ModelFactory.scatter_nature_props(self, "tree_fall", 15, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "tree", 5, area_size, Vector2(1.5, 2.5))
+	ModelFactory.scatter_nature_props(self, "fence", 15, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "crops", 20, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "rock_small", 10, area_size, Vector2(0.6, 1.2))
+	ModelFactory.scatter_nature_props(self, "grass", 25, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "flower", 15, area_size, Vector2(0.8, 1.5))
+	ModelFactory.scatter_nature_props(self, "log", 5, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "bush", 8, area_size, Vector2(1.0, 1.8))
 
 func _process(delta: float) -> void:
 	## Rotacao lenta das pas do moinho

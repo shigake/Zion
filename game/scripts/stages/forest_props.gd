@@ -35,6 +35,22 @@ func _ready() -> void:
 	_generate_butterflies()
 	_generate_sparkles()
 	_generate_ambient_lights()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney nature-kit reais para enriquecer o cenario
+	ModelFactory.scatter_nature_props(self, "tree", 20, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "tree_pine", 10, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "mushroom", 15, area_size, Vector2(1.0, 2.5))
+	ModelFactory.scatter_nature_props(self, "mushroom_group", 8, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "rock_large", 10, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "rock_small", 15, area_size, Vector2(0.8, 1.5))
+	ModelFactory.scatter_nature_props(self, "grass", 30, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "flower", 20, area_size, Vector2(1.0, 1.8))
+	ModelFactory.scatter_nature_props(self, "bush", 12, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "log", 6, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "stump", 8, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "hanging_moss", 10, area_size, Vector2(1.0, 2.0))
 
 ## -------------------------------------------------------
 ## Cogumelos com manchas brancas e clusters pequenos na base das arvores

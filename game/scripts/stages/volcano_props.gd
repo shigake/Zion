@@ -36,6 +36,17 @@ func _ready() -> void:
 	_generate_lava_bubbles()
 	_generate_ember_particles()
 	_generate_ambient_lights()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney — rochas, pilares, cactos, cliffs
+	ModelFactory.scatter_nature_props(self, "rock_tall", 15, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "rock_large", 12, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "cliff", 8, area_size, Vector2(2.0, 4.0))
+	ModelFactory.scatter_nature_props(self, "cactus", 6, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "stone_tall", 10, area_size, Vector2(1.5, 2.5))
+	ModelFactory.scatter_nature_props(self, "stone_large", 8, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "campfire", 4, area_size, Vector2(1.0, 1.5))
 
 func _process(delta: float) -> void:
 	## Lava causa 5 de dano por segundo

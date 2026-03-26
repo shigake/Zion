@@ -32,6 +32,18 @@ func _ready() -> void:
 	_generate_ambient_lights()
 	_generate_ground_fog()
 	_generate_fireflies()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney reais — arvores mortas, rochas, cercas
+	ModelFactory.scatter_nature_props(self, "tree_dark", 15, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "stump", 10, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "stone_tall", 12, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "stone_large", 8, area_size, Vector2(0.8, 1.5))
+	ModelFactory.scatter_nature_props(self, "fence", 10, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_nature_props(self, "rock_small", 10, area_size, Vector2(0.6, 1.2))
+	ModelFactory.scatter_nature_props(self, "hanging_moss", 8, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "grass", 15, area_size, Vector2(0.8, 1.5))
 
 ## -------------------------------------------------------
 ## Lapides com variedade: rachadas, com musgo, inclinadas

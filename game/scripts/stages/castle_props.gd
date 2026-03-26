@@ -39,6 +39,20 @@ func _ready() -> void:
 	_generate_fog_particles()
 	_generate_bat_particles()
 	_generate_atmospheric_lights()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney mini-dungeon — paredes, colunas, barris, bau
+	ModelFactory.scatter_dungeon_props(self, "dungeon_wall", 15, area_size, Vector2(1.5, 2.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_column", 12, area_size, Vector2(1.5, 2.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_barrel", 10, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_banner", 8, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_chest", 5, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_gate", 3, area_size, Vector2(1.5, 2.0))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_rocks", 10, area_size, Vector2(0.8, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_stairs", 4, area_size, Vector2(1.5, 2.0))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_wood", 8, area_size, Vector2(1.0, 1.5))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_trap", 4, area_size, Vector2(1.0, 1.5))
 
 func _process(delta: float) -> void:
 	dark_buff_timer += delta

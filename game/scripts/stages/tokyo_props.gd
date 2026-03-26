@@ -49,6 +49,15 @@ func _ready() -> void:
 	_generate_wire_tangles()
 	_generate_glitch_particles()
 	_generate_neon_lights()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney — arvores decorativas urbanas, rochas, tochas
+	ModelFactory.scatter_nature_props(self, "tree_pine", 8, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "rock_small", 10, area_size, Vector2(0.5, 1.0))
+	ModelFactory.scatter_nature_props(self, "stone_small", 8, area_size, Vector2(0.5, 1.0))
+	ModelFactory.scatter_nature_props(self, "bush", 6, area_size, Vector2(0.8, 1.5))
+	ModelFactory.scatter_nature_props(self, "plant_flat", 10, area_size, Vector2(0.6, 1.2))
 
 func _process(delta: float) -> void:
 	## Paineis eletricos causam 10 de dano a cada 2 segundos

@@ -30,6 +30,15 @@ func _ready() -> void:
 	_generate_ambient_lights()
 	_generate_star_particles()
 	_generate_nebula_clouds()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney — rochas flutuantes no espaco
+	ModelFactory.scatter_nature_props(self, "rock_large", 15, area_size, Vector2(1.0, 3.0), rng.randf_range(-5.0, 5.0))
+	ModelFactory.scatter_nature_props(self, "rock_tall", 10, area_size, Vector2(1.0, 2.5), rng.randf_range(-3.0, 3.0))
+	ModelFactory.scatter_nature_props(self, "stone_large", 10, area_size, Vector2(1.0, 2.0), rng.randf_range(-4.0, 4.0))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_column", 8, area_size, Vector2(1.5, 2.0))
+	ModelFactory.scatter_dungeon_props(self, "dungeon_barrel", 6, area_size, Vector2(1.0, 1.5))
 
 func _process(_delta: float) -> void:
 	# Track bodies in zero-g zones for speed boost

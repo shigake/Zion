@@ -47,6 +47,17 @@ func _ready() -> void:
 	_generate_sea_floor_details()
 	_generate_underwater_light_rays()
 	_generate_ambient_lights()
+	_add_real_models()
+
+func _add_real_models() -> void:
+	## Adiciona modelos Kenney — rochas, lirios, musgo (algas)
+	ModelFactory.scatter_nature_props(self, "stone_large", 12, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "stone_small", 15, area_size, Vector2(0.8, 1.5))
+	ModelFactory.scatter_nature_props(self, "rock_large", 10, area_size, Vector2(1.5, 3.0))
+	ModelFactory.scatter_nature_props(self, "lily", 12, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "hanging_moss", 15, area_size, Vector2(1.0, 2.5))
+	ModelFactory.scatter_nature_props(self, "plant_flat", 15, area_size, Vector2(1.0, 2.0))
+	ModelFactory.scatter_nature_props(self, "grass", 20, area_size, Vector2(1.0, 2.0))
 
 func _process(delta: float) -> void:
 	## Muda direcao da corrente periodicamente
