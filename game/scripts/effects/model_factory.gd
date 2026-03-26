@@ -967,6 +967,23 @@ func create_mimic_model() -> Node3D:
 
 	return root
 
+# ===================== GLB LOADER =====================
+
+func _try_load_glb(path: String) -> Node3D:
+	## Tenta carregar modelo .glb. Retorna null se nao encontrar.
+	if not ResourceLoader.exists(path):
+		return null
+	var scene = load(path) as PackedScene
+	if scene == null:
+		return null
+	var instance = scene.instantiate()
+	if instance == null:
+		return null
+	# Wrap in Node3D root for compatibility with existing code
+	var root = Node3D.new()
+	root.add_child(instance)
+	return root
+
 # ===================== HELPERS =====================
 
 func _mesh(mesh_res: Mesh, pos: Vector3) -> MeshInstance3D:
@@ -1003,6 +1020,12 @@ func apply_model_materials(root: Node3D, base_color: Color) -> void:
 				VisualSetup.apply_cel_shader_to_mesh(child, base_color)
 
 func get_model_for_character(char_id: String) -> Node3D:
+	# Try loading .glb model first
+	var glb_path = "res://assets/models/characters/%s.glb" % char_id
+	var loaded = _try_load_glb(glb_path)
+	if loaded:
+		return loaded
+	# Fallback to procedural
 	match char_id:
 		"ronin": return create_ronin_model()
 		"soldado": return create_soldado_model()
@@ -1019,6 +1042,33 @@ func get_model_for_character(char_id: String) -> Node3D:
 	return create_ronin_model()
 
 func get_model_for_enemy(enemy_name: String) -> Node3D:
+	# Map enemy names to .glb file names
+	var glb_map = {
+		"Slime": "slime", "SlimeBig": "slime_big",
+		"Bat": "bat", "Skeleton": "skeleton",
+		"SkeletonArcher": "skeleton_archer",
+		"ZombieRunner": "zombie", "Ghost": "ghost",
+		"Tank": "tank", "Bomber": "bomber",
+		"Swarm": "swarm", "Mimic": "mimic",
+		"BossNecromancer": "boss_necromancer",
+		"BossFairyQueen": "boss_fairy_queen",
+		"BossAlienCow": "boss_alien_cow",
+		"BossAIOverlord": "boss_ai_overlord",
+		"BossDemonLord": "boss_demon_lord",
+		"BossLeviathan": "boss_leviathan",
+		"BossEmperor": "boss_emperor",
+		"BossSingularity": "boss_singularity",
+		"BossDracula": "boss_dracula",
+		"BossSugarKing": "boss_sugar_king",
+	}
+	# Try .glb model
+	var file_name = glb_map.get(enemy_name, enemy_name.to_snake_case())
+	var folder = "bosses" if enemy_name.begins_with("Boss") else "enemies"
+	var glb_path = "res://assets/models/%s/%s.glb" % [folder, file_name]
+	var loaded = _try_load_glb(glb_path)
+	if loaded:
+		return loaded
+	# Fallback to procedural
 	match enemy_name:
 		"Slime", "SlimeBig": return create_slime_model()
 		"Bat": return create_bat_model()
