@@ -40,11 +40,11 @@ func _capture_character(char_id: String) -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(viewport)
 
-	# Camera - close-up portrait angle
+	# Camera - full body slightly elevated angle
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.3, 1.0, 1.5)
-	camera.look_at(Vector3(0, 0.7, 0))
-	camera.fov = 28
+	camera.position = Vector3(0.5, 1.4, 2.2)
+	camera.look_at(Vector3(0, 0.6, 0))
+	camera.fov = 25
 	viewport.add_child(camera)
 
 	# Key light
@@ -87,8 +87,8 @@ func _capture_character(char_id: String) -> void:
 					anim_player.play(anim_name)
 					break
 
-	# Wait several frames for render
-	for i in range(6):
+	# Wait many frames for animation to settle and render
+	for i in range(30):
 		await process_frame
 
 	# Capture

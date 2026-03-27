@@ -8,7 +8,7 @@ const ROWS := 3
 const PER_PAGE := COLUMNS * ROWS
 
 # Card dimensions
-const CARD_MIN_SIZE := Vector2(150, 130)
+const CARD_MIN_SIZE := Vector2(150, 100)
 
 # Colors
 const COLOR_BG_CARD := Color(0.09, 0.09, 0.12, 0.95)
@@ -229,7 +229,7 @@ func _create_card(char_id: String, data: Dictionary, char_color: Color, is_locke
 		var icon_center = CenterContainer.new()
 		var icon_rect = TextureRect.new()
 		icon_rect.texture = char_icon_tex
-		icon_rect.custom_minimum_size = Vector2(40, 40)
+		icon_rect.custom_minimum_size = Vector2(28, 28)
 		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon_center.add_child(icon_rect)
 		vbox.add_child(icon_center)
@@ -418,9 +418,9 @@ func _update_preview(char_id: String, data: Dictionary) -> void:
 	# Load new model
 	var model = ModelFactory.get_model_for_character(char_id)
 	if model:
-		model.position = Vector3(0, 0, 0)
+		model.position = Vector3(0, -0.3, 0)
 		model.rotation = Vector3(0, PI, 0)  # Facing camera
-		model.scale = Vector3(0.5, 0.5, 0.5)  # Diminuído para metade
+		model.scale = Vector3(0.375, 0.375, 0.375)  # 75% do anterior
 		model_root.add_child(model)
 		_preview_model = model
 
