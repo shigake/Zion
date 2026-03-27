@@ -156,21 +156,21 @@ func _setup_3d_scene() -> void:
 	world_env.environment = env
 	sub_viewport.add_child(world_env)
 
-	# Luz da fogueira
+	# Luz da fogueira (aumentada)
 	var fire_light = OmniLight3D.new()
 	fire_light.position = Vector3(0, 1.0, 0)
 	fire_light.light_color = Color(1.0, 0.6, 0.15)
-	fire_light.light_energy = 3.0
-	fire_light.omni_range = 8.0
+	fire_light.light_energy = 5.0
+	fire_light.omni_range = 12.0
 	fire_light.omni_attenuation = 1.5
 	sub_viewport.add_child(fire_light)
 
-	# Moonlight
+	# Moonlight (lua cheia iluminando o ambiente)
 	var moon_light = DirectionalLight3D.new()
 	moon_light.rotation.x = deg_to_rad(-45)
 	moon_light.rotation.y = deg_to_rad(30)
 	moon_light.light_color = Color(0.3, 0.35, 0.5)
-	moon_light.light_energy = 0.15
+	moon_light.light_energy = 0.5
 	sub_viewport.add_child(moon_light)
 
 	_create_ground()
@@ -272,23 +272,8 @@ func _create_characters_circle() -> void:
 
 		char_root.add_child(model)
 
-		# Nome do personagem flutuando acima
-		_add_character_name_3d(char_root, char_data.get("name", char_id))
-
 		sub_viewport.add_child(char_root)
 
-func _add_character_name_3d(parent: Node3D, char_name: String) -> void:
-	var label = Label3D.new()
-	label.text = char_name
-	label.position = Vector3(0, 1.8, 0)
-	label.font_size = 28
-	label.pixel_size = 0.012
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(1.0, 0.9, 0.7, 0.85)
-	label.outline_size = 4
-	label.outline_modulate = Color(0.2, 0.1, 0.05, 0.6)
-	label.no_depth_test = true
-	parent.add_child(label)
 
 # ==================== TWINKLING STARS (decoracao no topo) ====================
 
