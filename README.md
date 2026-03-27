@@ -74,7 +74,7 @@ godot --headless --path game --export-release "Windows Desktop" ../build/zion.ex
 Zion/
 ├── CLAUDE.md               # Guia de desenvolvimento (instrucoes para AI/devs)
 ├── README.md               # Este arquivo
-├── docs/                   # Documentacao de game design
+├── docs/                   # Documentacao de game design (27 arquivos)
 │   ├── gdd.md              # Game Design Document
 │   ├── prd.md              # Product Requirements Document (roadmap)
 │   ├── spec.md             # Especificacao tecnica
@@ -83,9 +83,8 @@ Zion/
 │   ├── mecanicas.md        # Mecanicas de gameplay
 │   ├── personagens.md      # 12 personagens e armas
 │   ├── progressao.md       # Loja, cristais, meta-progressao
-│   ├── prd_balancing.md    # PRD de balanceamento
-│   ├── prd_missing_features.md  # Features faltantes (checklist)
-│   └── prd_visual_polish.md     # PRD de polish visual
+│   ├── prd_*.md            # 16 PRDs (balancing, missing_features, visual_polish, etc.)
+│   └── balance_analysis.md # Analise de balanceamento verificada
 ├── server/                 # Servidor de telemetria (Node.js)
 │   ├── index.js            # Express + SQLite (API + dashboard)
 │   ├── package.json        # Dependencias (express, better-sqlite3)
@@ -94,31 +93,32 @@ Zion/
 └── game/                   # Projeto Godot 4
     ├── project.godot       # Configuracao do projeto (autoloads, layers, display)
     ├── VERSION             # Versao atual do jogo (sem "v")
-    ├── scenes/             # Cenas (.tscn) — 82 arquivos
-    │   ├── enemies/        # 11 inimigos genericos + 10 bosses
+    ├── scenes/             # Cenas (.tscn) — 96 arquivos
+    │   ├── enemies/        # 16 inimigos genericos + 10 bosses (26 total)
     │   ├── stages/         # 10 fases com ambientes procedurais
-    │   ├── weapons/        # 28 cenas de armas
+    │   ├── weapons/        # 35 cenas (28 armas + projeteis)
     │   ├── ui/             # HUD, menus, level up, shop, leaderboard, debug overlay
     │   └── player/         # Cena do jogador
-    ├── scripts/            # GDScript (.gd) — 120+ arquivos
-    │   ├── autoload/       # 19 singletons globais (ver tabela abaixo)
+    ├── scripts/            # GDScript (.gd) — 153 arquivos
+    │   ├── autoload/       # 27 singletons globais (ver tabela abaixo)
     │   ├── player/         # Controlador do jogador
-    │   ├── enemies/        # Base + spawner + 10 bosses + 4 especiais
+    │   ├── enemies/        # Base + spawner + 10 bosses + 6 especiais
     │   ├── weapons/        # 28 armas + projectiles/behaviors
-    │   ├── ui/             # 13 telas + debug overlay (F3)
+    │   ├── ui/             # 24 telas + debug overlay (F3/F4)
     │   ├── stages/         # 10 stages + 10 props procedurais + camera + events
-    │   ├── effects/        # Particulas, shaders, animacoes procedurais
+    │   ├── effects/        # 9 scripts (particulas, shaders, animacoes procedurais)
     │   └── tests/          # Testes
     └── assets/             # Materiais, shaders, audio
 ```
 
 ## Arquitetura
 
-### Autoload Singletons (19)
+### Autoload Singletons (29)
 
 | Singleton | Responsabilidade |
 |-----------|-----------------|
 | LogManager | Logging centralizado, crash reports, diagnosticos (primeiro autoload) |
+| PlatformHelper | Deteccao de plataforma e helpers |
 | GameManager | Estado global, loop do jogo, timers |
 | WeaponDB | Catalogo de 28 armas e stats por level |
 | ItemDB | 19 itens passivos e seus efeitos |
@@ -127,16 +127,25 @@ Zion/
 | RelicDB | 7 reliquias pre-run |
 | ShopDB | 12 upgrades permanentes |
 | SaveManager | Save/load local (perfil, cristais, progresso) |
-| MultiplayerManager | ENet host-client, lobby, sync |
-| SynergySystem | 6 sinergias elementais |
+| MultiplayerManager | ENet host-client, lobby, sync, reconexao, host migration |
+| SynergySystem | 6 sinergias base + 4 agua + 8 cross-combos |
 | AudioManager | Musica + SFX com crossfade |
+| ScreenEffects | Efeitos de tela (shake, flash, fade) |
+| ParticleFactory | Factory de particulas procedurais |
 | ObjectPool | Pool de objetos (inimigos, projeteis) |
-| AchievementManager | 13 achievements |
 | UITheme | Tema visual global |
 | KeybindingManager | Rebind de teclas |
 | LocaleManager | i18n (PT-BR / EN) |
+| VisualSetup | Setup visual global (luzes, ambiente) |
+| ModelFactory | Factory de modelos 3D procedurais |
 | SteamManager | Stub para integracao Steam |
+| AchievementManager | 13 achievements |
+| MultiMeshManager | Renderizacao otimizada de hordas |
+| AutoTester | Testes automatizados in-game |
+| GamepadUI | Navegacao de UI por gamepad |
 | Telemetry | Analytics anonimo + envio de crash reports ao servidor |
+| MutationManager | 6 mutacoes do modo ascensao |
+| DailyChallenge | Desafio diario com leaderboard online |
 
 ### Multiplayer
 - **Host-client**: um jogador hospeda, outros conectam via ENet
@@ -148,7 +157,14 @@ Zion/
 - **Spawner**: dificuldade escala com tempo, skins por stage
 - **Props procedurais**: cada stage gera seu ambiente (meshes, luzes, particulas)
 - **Animacoes procedurais**: idle bob, walk lean, hit squash-stretch, death tumble
-- **Sinergias**: Fogo+Fogo, Gelo+Gelo, Eletrico+Eletrico, Dark+Dark, Fogo+Gelo, Eletrico+Gelo
+- **Sinergias**: 6 base + 4 agua (Tidal Wave, Steam Explosion, Absolute Zero, Abyssal Depths) + 8 cross-combos multiplayer
+- **Mutacoes/Ascensao**: 6 modificadores de dificuldade que aumentam recompensa de cristais
+- **Cross-Combo**: Sinergias elementais entre jogadores no multiplayer (12 combinacoes)
+- **Revive**: Sistema de lapide no multiplayer com sacrificio (debuff -30% HP)
+- **Daily Challenge**: Desafio diario com seed fixa e leaderboard online
+- **Performance**: LOD system, PerfMonitor, EnemyCuller, cap de pickups
+- **Drops**: Coracoes (5% chance, cura 8% HP) e imas (1% chance, atrai todos pickups)
+- **HP Tematica**: Barra de HP unica por personagem (katana, calice, cristal, etc.)
 
 ## Conteudo Implementado
 
@@ -185,8 +201,12 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 - **12 upgrades** permanentes na loja
 - **Leaderboard** local (modo Endless)
 - **Multiplayer** co-op ate 4 jogadores (ENet)
-- **6 sinergias** elementais
-- **11 inimigos** genericos + 4 especiais (Skeleton Archer, Mimic, Bomber, Swarm)
+- **18 sinergias** elementais (6 base + 4 agua + 8 cross-combos)
+- **11 inimigos** genericos + 6 especiais (Skeleton Archer, Mimic, Bomber, Swarm, Tank, Tooth Fairy)
+- **6 mutacoes** do modo ascensao
+- **Desafio diario** com leaderboard online
+- **Drops** de vida e ima de inimigos
+- **HP tematica** por personagem
 
 ## Telemetria e Logging
 
@@ -262,10 +282,21 @@ cd server && npm install && npm start
 | [Mecanicas](docs/mecanicas.md) | Gameplay e sistemas |
 | [Personagens](docs/personagens.md) | 12 personagens e armas |
 | [Progressao](docs/progressao.md) | Loja, cristais, meta-progressao |
+| [Balance Analysis](docs/balance_analysis.md) | Analise de balanceamento verificada |
+| [Balancing PRD](docs/prd_balancing.md) | PRD de balanceamento |
+| [Missing Features](docs/prd_missing_features.md) | Checklist de features (quase tudo ✅) |
+| [Visual Polish](docs/prd_visual_polish.md) | PRD de polish visual |
 | [Telemetria PRD](docs/prd_telemetry.md) | PRD do sistema de telemetria |
-| [UI/UX Fixes](docs/prd_ui_ux_fixes.md) | PRD de correcoes de UI/UX |
 | [3D Models](docs/prd_3d_models.md) | PRD de modelos 3D |
 | [Auto Tester](docs/prd_auto_tester.md) | PRD de testes automatizados |
+| [UI/UX Fixes](docs/prd_ui_ux_fixes.md) | PRD de correcoes de UI/UX |
+| [Art Direction](docs/prd_art_direction.md) | PRD de direcao artistica |
+| [Ascension Mode](docs/prd_ascension_mode.md) | PRD do modo ascensao |
+| [Cross-Combo](docs/prd_cross_combo.md) | PRD de cross-combo multiplayer |
+| [Revive/Sacrifice](docs/prd_revive_sacrifice.md) | PRD do sistema de revive |
+| [Icons](docs/prd_icons.md) | PRD de icones |
+| [Options Menu](docs/prd_options_menu.md) | PRD do menu de opcoes |
+| [Projectile Effects](docs/prd_projectiles_effects.md) | PRD de efeitos de projeteis |
 | [Future](docs/prd_future.md) | Roadmap futuro |
 
 ## Configuracoes do Projeto
@@ -281,12 +312,12 @@ cd server && npm install && npm start
 
 ## Status
 
-Em desenvolvimento ativo. Versao atual: **1.8.0**
+Em desenvolvimento ativo. Versao atual: **2.26.0**
 
-Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web.
+Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web. Modo ascensao (mutacoes), cross-combos multiplayer, revive com sacrificio, desafio diario, sistema de performance (LOD/culling), drops de vida/ima, e barras de HP tematicas por personagem.
 
 ### Trabalho Restante
 - **Audio**: sistema implementado, faltam arquivos .ogg/.wav
 - **Steam**: stub existe, falta plugin GodotSteam
-- **Performance**: MultiMesh para hordas grandes
-- **Multiplayer HUD**: falta ping e setas direcionais dos aliados
+- **Multiplayer HUD**: falta setas direcionais dos aliados
+- **Art Direction**: concept art de referencia (ver docs/prd_art_direction.md)
