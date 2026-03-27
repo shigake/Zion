@@ -339,6 +339,7 @@ func _setup_3d_background() -> void:
 	_model_node = ModelFactory.get_model_for_character(random_char)
 	if _model_node:
 		_model_node.position = Vector3(1.5, 0, 0)
+		_model_node.scale = Vector3(0.5, 0.5, 0.5)  # Metade do tamanho
 		world.add_child(_model_node)
 
 

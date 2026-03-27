@@ -418,7 +418,7 @@ func _update_preview(char_id: String, data: Dictionary) -> void:
 	if model:
 		model.position = Vector3(0, 0, 0)
 		model.rotation = Vector3(0, PI, 0)  # Facing camera
-		model.scale = Vector3(0.5, 0.5, 0.5)  # Diminuído para metade
+		model.scale = Vector3(0.375, 0.375, 0.375)  # Diminuído 25%
 		model_root.add_child(model)
 		_preview_model = model
 
