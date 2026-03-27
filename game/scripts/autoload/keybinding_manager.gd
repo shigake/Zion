@@ -13,6 +13,10 @@ var defaults: Dictionary = {
 	"dash": {"key": KEY_SPACE, "gamepad_button": JOY_BUTTON_A},
 	"interact": {"key": KEY_E, "gamepad_button": JOY_BUTTON_B},
 	"pause": {"key": KEY_ESCAPE, "gamepad_button": JOY_BUTTON_START},
+	"level_up_choice_1": {"key": KEY_1},
+	"level_up_choice_2": {"key": KEY_2},
+	"level_up_choice_3": {"key": KEY_3},
+	"level_up_reroll": {"key": KEY_SPACE, "gamepad_button": JOY_BUTTON_Y},
 }
 
 var bindings: Dictionary = {}
@@ -26,6 +30,10 @@ var action_names: Dictionary = {
 	"dash": "Dash",
 	"interact": "Interagir",
 	"pause": "Pausar",
+	"level_up_choice_1": "Level Up - Escolha 1",
+	"level_up_choice_2": "Level Up - Escolha 2",
+	"level_up_choice_3": "Level Up - Escolha 3",
+	"level_up_reroll": "Level Up - Reroll",
 }
 
 func _ready() -> void:
