@@ -74,7 +74,7 @@ godot --headless --path game --export-release "Windows Desktop" ../build/zion.ex
 Zion/
 ├── CLAUDE.md               # Guia de desenvolvimento (instrucoes para AI/devs)
 ├── README.md               # Este arquivo
-├── docs/                   # Documentacao de game design (27 arquivos)
+├── docs/                   # Documentacao de game design (18 arquivos)
 │   ├── gdd.md              # Game Design Document
 │   ├── prd.md              # Product Requirements Document (roadmap)
 │   ├── spec.md             # Especificacao tecnica
@@ -83,7 +83,7 @@ Zion/
 │   ├── mecanicas.md        # Mecanicas de gameplay
 │   ├── personagens.md      # 12 personagens e armas
 │   ├── progressao.md       # Loja, cristais, meta-progressao
-│   ├── prd_*.md            # 16 PRDs (balancing, missing_features, visual_polish, etc.)
+│   ├── prd_*.md            # 8 PRDs (3d_models, art_direction, auto_tester, icons, etc.)
 │   └── balance_analysis.md # Analise de balanceamento verificada
 ├── server/                 # Servidor de telemetria (Node.js)
 │   ├── index.js            # Express + SQLite (API + dashboard)
@@ -113,7 +113,7 @@ Zion/
 
 ## Arquitetura
 
-### Autoload Singletons (29)
+### Autoload Singletons (30)
 
 | Singleton | Responsabilidade |
 |-----------|-----------------|
@@ -272,6 +272,7 @@ cd server && npm install && npm start
 
 ## Documentacao de Design
 
+### Documentos base
 | Documento | Descricao |
 |-----------|-----------|
 | [GDD](docs/gdd.md) | Game Design Document completo |
@@ -283,19 +284,17 @@ cd server && npm install && npm start
 | [Personagens](docs/personagens.md) | 12 personagens e armas |
 | [Progressao](docs/progressao.md) | Loja, cristais, meta-progressao |
 | [Balance Analysis](docs/balance_analysis.md) | Analise de balanceamento verificada |
-| [Balancing PRD](docs/prd_balancing.md) | PRD de balanceamento |
-| [Missing Features](docs/prd_missing_features.md) | Checklist de features (quase tudo ✅) |
-| [Visual Polish](docs/prd_visual_polish.md) | PRD de polish visual |
-| [Telemetria PRD](docs/prd_telemetry.md) | PRD do sistema de telemetria |
+| [Art Prompts](docs/art_prompts.md) | Prompts de arte para geracao de assets |
+
+### PRDs ativos
+| Documento | Descricao |
+|-----------|-----------|
 | [3D Models](docs/prd_3d_models.md) | PRD de modelos 3D |
 | [Auto Tester](docs/prd_auto_tester.md) | PRD de testes automatizados |
-| [UI/UX Fixes](docs/prd_ui_ux_fixes.md) | PRD de correcoes de UI/UX |
 | [Art Direction](docs/prd_art_direction.md) | PRD de direcao artistica |
-| [Ascension Mode](docs/prd_ascension_mode.md) | PRD do modo ascensao |
-| [Cross-Combo](docs/prd_cross_combo.md) | PRD de cross-combo multiplayer |
-| [Revive/Sacrifice](docs/prd_revive_sacrifice.md) | PRD do sistema de revive |
+| [Docs Update](docs/prd_docs_update.md) | PRD de atualizacao de docs |
+| [Icon/Projectile Polish](docs/prd_icon_projectile_polish.md) | PRD de polish de icones e projeteis |
 | [Icons](docs/prd_icons.md) | PRD de icones |
-| [Options Menu](docs/prd_options_menu.md) | PRD do menu de opcoes |
 | [Projectile Effects](docs/prd_projectiles_effects.md) | PRD de efeitos de projeteis |
 | [Future](docs/prd_future.md) | Roadmap futuro |
 
@@ -312,12 +311,12 @@ cd server && npm install && npm start
 
 ## Status
 
-Em desenvolvimento ativo. Versao atual: **2.26.0**
+Em desenvolvimento ativo. Versao atual: **2.29.2**
 
-Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web. Modo ascensao (mutacoes), cross-combos multiplayer, revive com sacrificio, desafio diario, sistema de performance (LOD/culling), drops de vida/ima, e barras de HP tematicas por personagem.
+Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web. Modo ascensao (mutacoes), cross-combos multiplayer, revive com sacrificio, desafio diario, sistema de performance (LOD/culling), drops de vida/ima, barras de HP tematicas por personagem, HUD multiplayer com ping e setas de aliados, modelos 3D Quaternius integrados, e selecao de personagem estilo Genshin.
 
 ### Trabalho Restante
 - **Audio**: sistema implementado, faltam arquivos .ogg/.wav
 - **Steam**: stub existe, falta plugin GodotSteam
-- **Multiplayer HUD**: falta setas direcionais dos aliados
+- **3D Models**: modelos Quaternius integrados, falta polish e customizacao
 - **Art Direction**: concept art de referencia (ver docs/prd_art_direction.md)

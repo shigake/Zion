@@ -82,14 +82,15 @@ Zion/
 
 ## Architecture
 
-### Autoload Singletons (29 total)
+### Autoload Singletons (30 total)
 LogManager, PlatformHelper, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry, MultiMeshManager, AutoTester, GamepadUI, MutationManager, DailyChallenge
 
 Adicionalmente registrados como autoload (mas ficam em scripts/effects/):
 ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
 
-Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao registrados como autoload no project.godot (sao instanciados manualmente).
 DebugOverlay fica em scripts/ui/ (registrado como autoload).
+
+Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao registrados como autoload no project.godot (sao instanciados manualmente).
 
 ### Key Systems
 - **Multiplayer**: Host-client via ENet (Steam Networking Sockets pronto via SteamManager stub), ping RPC, reconexao automatica, host migration
@@ -168,12 +169,11 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 Fases 0-3 do PRD substancialmente implementadas. Sistema de mutacoes (Modo Ascensao), cross-combo multiplayer, e revive com sacrificio implementados. Fases 4-6 parcialmente (conteudo das 10 fases existe, multiplayer avancado existe, falta polish e audio).
 
-Ver `docs/prd.md` para roadmap completo e `docs/prd_missing_features.md` para checklist detalhado.
+Ver `docs/prd.md` para roadmap completo.
 
 ## Remaining Work
 
 - **Audio**: sistema (AudioManager) existe e carrega automaticamente, mas faltam arquivos .ogg/.wav em game/assets/audio/
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
-- **MultiMesh**: para renderizar hordas grandes com performance
-- **Multiplayer HUD**: falta ping e setas direcionais dos aliados
 - **Art Direction**: concept art de referencia para personagens e fases (ver docs/prd_art_direction.md)
+- **3D Models**: modelos Quaternius integrados, falta polish e customizacao por personagem
