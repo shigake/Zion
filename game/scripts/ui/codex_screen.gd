@@ -128,7 +128,7 @@ func _build_ui() -> void:
 	# Luz ambiente
 	var ambient = WorldEnvironment.new()
 	var env = Environment.new()
-	env.ambient_light_source = Environment.AMBIENT_LIGHT_DISABLED
+	env.ambient_light_source = 0  # AMBIENT_LIGHT_DISABLED
 	ambient.environment = env
 	detail_viewport.add_child(ambient)
 
