@@ -106,6 +106,7 @@ func _build_ui() -> void:
 	svc.stretch = true
 	svc.visible = false
 	svc.name = "DetailPortrait"
+	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dp_vbox.add_child(svc)
 	detail_portrait = svc
 

@@ -31,31 +31,12 @@ var _time: float = 0.0
 @onready var back_btn: Button = $BackButton
 
 func _ready() -> void:
-	# Garante que o botao funciona mesmo se a tree estiver pausada
+	# Garanta que o botão funciona mesmo se a tree estiver pausada
 	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.pressed.connect(_on_back)
-	# Permitir unhandled input globalmente
-	self.set_process_unhandled_input(true)
 
-	# --- Layout: viewport ocupa a parte inferior (65%) ---
-	viewport_container.anchor_top = 0.35
-	viewport_container.anchor_bottom = 1.0
-	viewport_container.anchor_left = 0.0
-	viewport_container.anchor_right = 1.0
-	viewport_container.offset_top = 0.0
-	viewport_container.offset_bottom = 0.0
-	viewport_container.offset_left = 0.0
-	viewport_container.offset_right = 0.0
-
-	# StarOverlay cobre apenas o topo (35%) para as estrelas decorativas
-	star_overlay.anchor_top = 0.0
-	star_overlay.anchor_bottom = 0.35
-	star_overlay.anchor_left = 0.0
-	star_overlay.anchor_right = 1.0
-	star_overlay.offset_top = 0.0
-	star_overlay.offset_bottom = 0.0
-	star_overlay.offset_left = 0.0
-	star_overlay.offset_right = 0.0
+	# Habilitar input
+	self.set_process_input(true)
 
 	_setup_top_section()
 	_setup_3d_scene()
