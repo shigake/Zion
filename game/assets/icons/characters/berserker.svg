@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Horns -->
+  <path d="M14 28C10 16 6 8 8 4C12 6 16 14 18 24Z" fill="#795548"/>
+  <path d="M50 28C54 16 58 8 56 4C52 6 48 14 46 24Z" fill="#795548"/>
+  <path d="M14 28C11 18 8 10 9 6" stroke="#5D4037" stroke-width="1"/>
+  <path d="M50 28C53 18 56 10 55 6" stroke="#5D4037" stroke-width="1"/>
+  <!-- Viking helmet -->
+  <path d="M16 28C16 18 22 12 32 12C42 12 48 18 48 28H16Z" fill="#607D8B"/>
+  <rect x="14" y="26" width="36" height="4" rx="1" fill="#455A64"/>
+  <!-- Helmet nose guard -->
+  <rect x="30" y="26" width="4" height="10" rx="1" fill="#455A64"/>
+  <!-- Face - furious red -->
+  <ellipse cx="32" cy="38" rx="14" ry="14" fill="#F44336"/>
+  <!-- Rage veins -->
+  <path d="M20 32L22 34L20 36" stroke="#D32F2F" stroke-width="0.8"/>
+  <path d="M44 32L42 34L44 36" stroke="#D32F2F" stroke-width="0.8"/>
+  <!-- Eyes - furious -->
+  <path d="M23 34L29 32L29 36Z" fill="white"/>
+  <path d="M41 34L35 32L35 36Z" fill="white"/>
+  <circle cx="27" cy="34" r="1.5" fill="#263238"/>
+  <circle cx="37" cy="34" r="1.5" fill="#263238"/>
+  <!-- Angry eyebrows -->
+  <path d="M22 30L30 32" stroke="#263238" stroke-width="2" stroke-linecap="round"/>
+  <path d="M42 30L34 32" stroke="#263238" stroke-width="2" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M32 37L30 40H34Z" fill="#D32F2F"/>
+  <!-- Mouth - roaring -->
+  <path d="M26 42C26 42 29 46 32 46C35 46 38 42 38 42" stroke="#263238" stroke-width="1.5" fill="#B71C1C"/>
+  <!-- Teeth -->
+  <rect x="28" y="42" width="2" height="2" fill="white"/>
+  <rect x="34" y="42" width="2" height="2" fill="white"/>
+  <!-- Shoulders - fur -->
+  <path d="M6 58C6 48 16 44 32 44C48 44 58 48 58 58V64H6V58Z" fill="#795548"/>
+  <!-- Fur texture -->
+  <path d="M10 54C12 52 14 54 16 52C18 54 20 52 22 54" stroke="#5D4037" stroke-width="1"/>
+  <path d="M42 54C44 52 46 54 48 52C50 54 52 52 54 54" stroke="#5D4037" stroke-width="1"/>
+</svg>

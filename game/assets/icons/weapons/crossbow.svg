@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Stock -->
+  <rect x="26" y="28" width="28" height="6" rx="2" fill="#5D4037" stroke="#3E2723" stroke-width="0.8"/>
+  <!-- Stock taper -->
+  <path d="M52 28 L56 30 L56 32 L52 34" fill="#5D4037" stroke="#3E2723" stroke-width="0.5"/>
+  <!-- Bow arms -->
+  <path d="M28 30 Q28 16, 14 8" fill="none" stroke="#78909C" stroke-width="3" stroke-linecap="round"/>
+  <path d="M28 32 Q28 46, 14 54" fill="none" stroke="#78909C" stroke-width="3" stroke-linecap="round"/>
+  <!-- Bowstring -->
+  <line x1="14" y1="8" x2="14" y2="54" stroke="#B0BEC5" stroke-width="1"/>
+  <!-- String pulled -->
+  <line x1="14" y1="8" x2="26" y2="31" stroke="#B0BEC5" stroke-width="0.8"/>
+  <line x1="14" y1="54" x2="26" y2="31" stroke="#B0BEC5" stroke-width="0.8"/>
+  <!-- Arrow shaft -->
+  <line x1="6" y1="31" x2="28" y2="31" stroke="#8D6E63" stroke-width="1.5"/>
+  <!-- Arrow head -->
+  <polygon points="4,31 10,28 10,34" fill="#90A4AE" stroke="#78909C" stroke-width="0.5"/>
+  <!-- Arrow fletching -->
+  <polygon points="26,29 30,31 26,33 27,31" fill="#B0BEC5" opacity="0.6"/>
+  <!-- Trigger mechanism -->
+  <rect x="34" y="34" width="4" height="6" rx="1" fill="#455A64"/>
+  <!-- Bow arm tips -->
+  <circle cx="14" cy="8" r="1.5" fill="#546E7A"/>
+  <circle cx="14" cy="54" r="1.5" fill="#546E7A"/>
+  <!-- Sight -->
+  <rect x="28" y="24" width="2" height="4" rx="0.5" fill="#455A64"/>
+</svg>

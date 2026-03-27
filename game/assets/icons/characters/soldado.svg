@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Helmet -->
+  <path d="M14 26C14 14 22 8 32 8C42 8 50 14 50 26H14Z" fill="#558B2F"/>
+  <rect x="12" y="24" width="40" height="4" rx="1" fill="#33691E"/>
+  <!-- Helmet brim -->
+  <path d="M12 26H52V28C52 28 48 30 32 30C16 30 12 28 12 28V26Z" fill="#33691E"/>
+  <!-- Face -->
+  <ellipse cx="32" cy="36" rx="13" ry="14" fill="#FFCC80"/>
+  <!-- Eyes - serious -->
+  <rect x="24" y="33" width="5" height="3" rx="1" fill="white"/>
+  <rect x="35" y="33" width="5" height="3" rx="1" fill="white"/>
+  <circle cx="27" cy="34.5" r="1.5" fill="#263238"/>
+  <circle cx="37" cy="34.5" r="1.5" fill="#263238"/>
+  <!-- Eyebrows -->
+  <line x1="23" y1="31" x2="30" y2="31" stroke="#4E342E" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="34" y1="31" x2="41" y2="31" stroke="#4E342E" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M32 37L30 41H34Z" fill="#E0A060"/>
+  <!-- Mouth -->
+  <line x1="28" y1="44" x2="36" y2="44" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Chin strap -->
+  <path d="M20 28V40" stroke="#33691E" stroke-width="1.5"/>
+  <path d="M44 28V40" stroke="#33691E" stroke-width="1.5"/>
+  <!-- Shoulders - military -->
+  <path d="M8 58C8 50 18 46 32 46C46 46 56 50 56 58V64H8V58Z" fill="#558B2F"/>
+  <!-- Collar/neckline -->
+  <rect x="28" y="46" width="8" height="6" rx="1" fill="#33691E"/>
+  <!-- Epaulettes -->
+  <rect x="10" y="52" width="8" height="3" rx="1" fill="#33691E"/>
+  <rect x="46" y="52" width="8" height="3" rx="1" fill="#33691E"/>
+</svg>

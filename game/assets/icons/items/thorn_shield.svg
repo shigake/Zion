@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Shield body -->
+  <path d="M32 4 L8 16 L8 36 Q8 52 32 60 Q56 52 56 36 L56 16Z" fill="#4CAF50" stroke="#388E3C" stroke-width="2"/>
+  <!-- Shield inner -->
+  <path d="M32 10 L14 20 L14 36 Q14 48 32 54 Q50 48 50 36 L50 20Z" fill="#66BB6A" stroke="#43A047" stroke-width="1"/>
+  <!-- Shield center emblem -->
+  <path d="M32 18 L20 26 L20 38 Q20 46 32 50 Q44 46 44 38 L44 26Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="1"/>
+  <!-- Thorns - top -->
+  <path d="M32 4 L30 -2 L34 0Z" fill="#2E7D32"/>
+  <!-- Thorns - left -->
+  <path d="M8 20 L2 18 L4 22Z" fill="#2E7D32"/>
+  <path d="M8 30 L0 28 L2 32Z" fill="#2E7D32"/>
+  <path d="M10 42 L4 42 L6 46Z" fill="#2E7D32"/>
+  <!-- Thorns - right -->
+  <path d="M56 20 L62 18 L60 22Z" fill="#2E7D32"/>
+  <path d="M56 30 L64 28 L62 32Z" fill="#2E7D32"/>
+  <path d="M54 42 L60 42 L58 46Z" fill="#2E7D32"/>
+  <!-- Thorns - bottom -->
+  <path d="M22 54 L18 58 L24 56Z" fill="#2E7D32"/>
+  <path d="M42 54 L46 58 L40 56Z" fill="#2E7D32"/>
+  <!-- Vine pattern on shield -->
+  <path d="M32 22 Q28 28 32 34 Q36 40 32 46" stroke="#81C784" stroke-width="1.5" fill="none"/>
+  <circle cx="28" cy="28" r="1.5" fill="#A5D6A7"/>
+  <circle cx="36" cy="34" r="1.5" fill="#A5D6A7"/>
+  <circle cx="28" cy="40" r="1.5" fill="#A5D6A7"/>
+  <!-- Highlight -->
+  <path d="M18 22 L24 18" stroke="#A5D6A7" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>
+</svg>

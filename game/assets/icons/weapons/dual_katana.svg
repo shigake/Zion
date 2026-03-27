@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Blade 1 (left to right) -->
+  <path d="M12 8 C14 10, 40 38, 44 44 L42 46 C38 40, 12 12, 10 10Z" fill="#B0BEC5" stroke="#78909C" stroke-width="0.8"/>
+  <path d="M12 8 Q10 6, 8 5 L10 4 Q12 5, 14 7Z" fill="#ECEFF1"/>
+  <!-- Blade 1 highlight -->
+  <path d="M12 9 C14 11, 38 37, 42 43" fill="none" stroke="#ECEFF1" stroke-width="0.5" opacity="0.5"/>
+  <!-- Guard 1 -->
+  <ellipse cx="43" cy="45" rx="3.5" ry="2" transform="rotate(-45 43 45)" fill="#5D4037" stroke="#3E2723" stroke-width="0.5"/>
+  <!-- Handle 1 -->
+  <rect x="44" y="47" width="10" height="3" rx="1.2" transform="rotate(-45 49 48.5)" fill="#4E342E"/>
+  <!-- Blade 2 (right to left) -->
+  <path d="M52 8 C50 10, 24 38, 20 44 L22 46 C26 40, 52 12, 54 10Z" fill="#B0BEC5" stroke="#78909C" stroke-width="0.8"/>
+  <path d="M52 8 Q54 6, 56 5 L54 4 Q52 5, 50 7Z" fill="#ECEFF1"/>
+  <!-- Blade 2 highlight -->
+  <path d="M52 9 C50 11, 26 37, 22 43" fill="none" stroke="#ECEFF1" stroke-width="0.5" opacity="0.5"/>
+  <!-- Guard 2 -->
+  <ellipse cx="21" cy="45" rx="3.5" ry="2" transform="rotate(45 21 45)" fill="#5D4037" stroke="#3E2723" stroke-width="0.5"/>
+  <!-- Handle 2 -->
+  <rect x="10" y="47" width="10" height="3" rx="1.2" transform="rotate(45 15 48.5)" fill="#4E342E"/>
+  <!-- Cross point spark -->
+  <circle cx="32" cy="26" r="2" fill="#CFD8DC" opacity="0.5"/>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Chef hat - toque -->
+  <ellipse cx="32" cy="10" rx="10" ry="6" fill="#FFFFFF"/>
+  <ellipse cx="26" cy="10" rx="6" ry="6" fill="#FFFFFF"/>
+  <ellipse cx="38" cy="10" rx="6" ry="6" fill="#FFFFFF"/>
+  <ellipse cx="32" cy="8" rx="8" ry="5" fill="#FFFFFF"/>
+  <rect x="22" y="10" width="20" height="14" fill="#FFFFFF"/>
+  <!-- Hat band -->
+  <rect x="22" y="22" width="20" height="3" rx="1" fill="#E0E0E0"/>
+  <!-- Hat shadow -->
+  <path d="M22 12H42V22H22Z" fill="#F5F5F5"/>
+  <!-- Face -->
+  <ellipse cx="32" cy="36" rx="13" ry="14" fill="#FFCC80"/>
+  <!-- Eyes - friendly -->
+  <circle cx="26" cy="34" r="2.5" fill="white"/>
+  <circle cx="38" cy="34" r="2.5" fill="white"/>
+  <circle cx="26.5" cy="34" r="1.2" fill="#4E342E"/>
+  <circle cx="38.5" cy="34" r="1.2" fill="#4E342E"/>
+  <!-- Eye shine -->
+  <circle cx="27.2" cy="33.3" r="0.5" fill="white"/>
+  <circle cx="39.2" cy="33.3" r="0.5" fill="white"/>
+  <!-- Eyebrows - raised/friendly -->
+  <path d="M23 30C24 29 28 29 29 30" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M35 30C36 29 40 29 41 30" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M32 37L31 39H33Z" fill="#E0A060"/>
+  <!-- Red cheeks -->
+  <circle cx="22" cy="40" r="3" fill="#F44336" opacity="0.3"/>
+  <circle cx="42" cy="40" r="3" fill="#F44336" opacity="0.3"/>
+  <!-- Mouth - big smile -->
+  <path d="M26 42C28 46 36 46 38 42" stroke="#5D4037" stroke-width="1.2" fill="none"/>
+  <path d="M27 42C29 44 35 44 37 42" fill="white"/>
+  <!-- Mustache (optional chef feature) -->
+  <path d="M28 40C30 41 32 40 32 40C32 40 34 41 36 40" stroke="#5D4037" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <!-- Shoulders - chef coat -->
+  <path d="M8 58C8 50 18 46 32 46C46 46 56 50 56 58V64H8V58Z" fill="#FFFFFF"/>
+  <!-- Double-breasted buttons -->
+  <circle cx="28" cy="52" r="1.2" fill="#E0E0E0"/>
+  <circle cx="28" cy="56" r="1.2" fill="#E0E0E0"/>
+  <circle cx="28" cy="60" r="1.2" fill="#E0E0E0"/>
+  <circle cx="36" cy="52" r="1.2" fill="#E0E0E0"/>
+  <circle cx="36" cy="56" r="1.2" fill="#E0E0E0"/>
+  <circle cx="36" cy="60" r="1.2" fill="#E0E0E0"/>
+  <!-- Collar -->
+  <path d="M24 46L28 50" stroke="#E0E0E0" stroke-width="1.5"/>
+  <path d="M40 46L36 50" stroke="#E0E0E0" stroke-width="1.5"/>
+</svg>

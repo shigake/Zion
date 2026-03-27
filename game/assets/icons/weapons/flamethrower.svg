@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Fuel tank -->
+  <rect x="4" y="28" width="10" height="20" rx="4" fill="#455A64" stroke="#37474F" stroke-width="0.8"/>
+  <!-- Tank detail -->
+  <line x1="6" y1="34" x2="12" y2="34" stroke="#546E7A" stroke-width="0.5"/>
+  <!-- Hose from tank -->
+  <path d="M14 34 Q18 34, 18 30" fill="none" stroke="#37474F" stroke-width="2"/>
+  <!-- Main body -->
+  <rect x="16" y="26" width="24" height="8" rx="2" fill="#546E7A" stroke="#37474F" stroke-width="0.5"/>
+  <!-- Barrel/nozzle -->
+  <rect x="38" y="27" width="10" height="6" rx="1" fill="#455A64" stroke="#37474F" stroke-width="0.5"/>
+  <!-- Nozzle tip -->
+  <rect x="46" y="26" width="4" height="8" rx="1" fill="#37474F"/>
+  <!-- Handle -->
+  <path d="M24 34 L28 34 L26 44 L22 44Z" fill="#5D4037" stroke="#3E2723" stroke-width="0.4"/>
+  <!-- Trigger -->
+  <rect x="29" y="34" width="2" height="4" rx="0.5" fill="#455A64"/>
+  <!-- Flames -->
+  <path d="M50 28 Q54 20, 56 24 Q58 18, 60 22 Q62 16, 62 24 Q62 30, 60 32 Q58 38, 56 34 Q54 40, 52 34 Q50 36, 50 32Z" fill="#FF6B35" opacity="0.85"/>
+  <path d="M52 28 Q54 22, 56 26 Q58 20, 58 26 Q58 32, 56 32 Q54 36, 52 32Z" fill="#FFAB40" opacity="0.9"/>
+  <path d="M54 28 Q56 24, 56 28 Q56 32, 54 30Z" fill="#FFF176" opacity="0.9"/>
+  <!-- Flame glow -->
+  <circle cx="56" cy="28" r="12" fill="#FF6B35" opacity="0.15"/>
+  <!-- Heat distortion -->
+  <path d="M50 18 Q52 16, 54 18" fill="none" stroke="#FF6B35" stroke-width="0.5" opacity="0.3"/>
+  <path d="M54 14 Q56 12, 58 14" fill="none" stroke="#FF6B35" stroke-width="0.5" opacity="0.2"/>
+</svg>
