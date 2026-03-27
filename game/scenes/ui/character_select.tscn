@@ -68,7 +68,7 @@ fov = 22.0
 
 [node name="DimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 2, 1)
-light_energy = 0.5
+light_energy = 1.5
 shadow_enabled = false
 
 [node name="LeftModelRoot" type="Node3D" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
@@ -88,6 +88,8 @@ render_target_update_mode = 4
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 3.5)
 fov = 35.0
 
+[node name="CenterAmbientLight3D" type="WorldEnvironment" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
+
 [node name="Spotlight" type="SpotLight3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
 transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 3.5, 0.5)
 light_energy = 4.0
@@ -98,7 +100,7 @@ shadow_enabled = true
 [node name="FillLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.7, -0.7, 0, 0.7, 0.7, -1.5, 2, -1)
 light_color = Color(0.6, 0.7, 0.9, 1)
-light_energy = 1.2
+light_energy = 2.0
 shadow_enabled = false
 
 [node name="CenterModelRoot" type="Node3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
@@ -122,7 +124,7 @@ fov = 40.0
 
 [node name="DimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 2, 1)
-light_energy = 0.5
+light_energy = 1.5
 shadow_enabled = false
 
 [node name="RightModelRoot" type="Node3D" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]

@@ -19,6 +19,7 @@ extends Control
 @onready var right_model_root: Node3D = $MarginContainer/MainVBox/CarouselContainer/RightCharContainer/RightSubViewport/RightModelRoot
 
 @onready var left_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/LeftCharContainer/LeftSubViewport/AmbientLight3D
+@onready var center_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/CenterCharContainer/CenterSubViewport/CenterAmbientLight3D
 @onready var right_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/RightCharContainer/RightSubViewport/AmbientLight3D
 
 @onready var info_panel: PanelContainer = $MarginContainer/MainVBox/InfoPanel
@@ -137,6 +138,7 @@ func _setup_environments() -> void:
 	var env = load("res://assets/environments/character_select_env.tres")
 	if env:
 		left_env.environment = env
+		center_env.environment = env
 		right_env.environment = env
 
 
