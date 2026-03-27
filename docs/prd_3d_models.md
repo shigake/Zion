@@ -11,6 +11,7 @@ O jogo precisa de **~140 modelos 3D** para substituir toda a geometria procedura
 **Escala**: 1 unidade Godot = 1 metro. Personagem humano ~1.6 unidades de altura.
 **Rig**: Personagens e inimigos precisam de skeleton rig para animacoes.
 **Animacoes**: idle, walk, attack, hit, death (5 basicas). Podem ser procedurais (atual) ou baked.
+**Software obrigatorio**: Blender 3.0+ para renderizar, exportar e validar todos os modelos.
 
 ---
 

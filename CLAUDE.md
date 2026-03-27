@@ -27,6 +27,8 @@ GODOT="/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotE
 cd server && npm install && npm start
 ```
 
+**Nota**: Para desenvolvimento de modelos 3D, é obrigatório usar **Blender 3.0+** para renderizar e exportar assets.
+
 ## Structure
 
 ```
