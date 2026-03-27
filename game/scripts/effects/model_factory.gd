@@ -1097,66 +1097,12 @@ func _find_node_by_type(node: Node, type_name: String) -> Node:
 			return found
 	return null
 
-func _inject_animations(instance: Node) -> void:
-	## Injeta animacoes KayKit no modelo. Cria AnimationPlayer se nao existir.
-	## Requer Skeleton3D no modelo com bones compativeis com o rig KayKit.
-	var skeleton = _find_node_by_type(instance, "Skeleton3D") as Skeleton3D
-	if not skeleton:
-		return  # Sem esqueleto, nao pode animar
-
-	# Busca AnimationPlayer existente
-	var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
-
-	# Check if it has real animations (not just RESET/T-Pose)
-	if anim_player:
-		var real_anims = 0
-		for anim_name in anim_player.get_animation_list():
-			if anim_name != "RESET" and anim_name != "T-Pose":
-				real_anims += 1
-		if real_anims > 0:
-			return  # Already has animations, no need to inject
-
-	# Verificar compatibilidade de bones antes de injetar
-	# As animacoes KayKit esperam bones como "hips", "spine", "chest", "head"
-	# Se o skeleton nao tem esses bones, as animacoes nao vao funcionar
-	# e vao gerar centenas de warnings por frame, travando o jogo
-	var required_bones := ["hips", "spine", "chest", "head"]
-	var bone_names: PackedStringArray = PackedStringArray()
-	for i in range(skeleton.get_bone_count()):
-		bone_names.append(skeleton.get_bone_name(i).to_lower())
-	var compatible := false
-	for req in required_bones:
-		for bn in bone_names:
-			if bn.contains(req):
-				compatible = true
-				break
-		if compatible:
-			break
-	if not compatible:
-		return  # Skeleton incompativel, pular injecao de animacoes
-
-	# Carrega biblioteca de animacoes KayKit
-	var lib = _get_kaykit_anim_library()
-	if lib == null:
-		return
-
-	if not anim_player:
-		anim_player = AnimationPlayer.new()
-		anim_player.name = "InjectedAnimationPlayer"
-		skeleton.add_child(anim_player)
-		anim_player.owner = instance
-
-	# Adiciona todas as animacoes da biblioteca
-	var anim_lib: AnimationLibrary
-	if anim_player.has_animation_library(""):
-		anim_lib = anim_player.get_animation_library("")
-	else:
-		anim_lib = AnimationLibrary.new()
-		anim_player.add_animation_library("", anim_lib)
-
-	for anim_name in lib.get_animation_list():
-		if not anim_lib.has_animation(anim_name):
-			anim_lib.add_animation(anim_name, lib.get_animation(anim_name))
+func _inject_animations(_instance: Node) -> void:
+	## DESABILITADO: as animacoes KayKit tem tracks com paths incompativeis
+	## (Rig_Medium/Skeleton3D:bone) que nao correspondem a hierarquia real dos modelos.
+	## Isso gera milhares de warnings por frame no AnimationMixer, travando o jogo.
+	## O procedural_animator.gd ja cuida de todas as animacoes de gameplay.
+	return
 
 func _try_load_glb(path: String, model_scale := Vector3.ONE, inject_anims := false) -> Node3D:
 	## Tenta carregar modelo 3D (.glb, .fbx, .gltf). Retorna null se nao encontrar.
