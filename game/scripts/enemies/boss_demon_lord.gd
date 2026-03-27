@@ -197,14 +197,14 @@ func _ground_slam(radius: float) -> void:
 			var dist = global_position.distance_to(player.global_position)
 			if dist <= radius:
 				if player.has_method("take_damage"):
-					player.take_damage(int(damage * 0.6))
+					player.take_damage(int(damage * 0.6), global_position)
 
 func _lava_floor_damage() -> void:
 	# Dano periodico em todos os players (simulando lava floor)
 	var players = get_tree().get_nodes_in_group("players")
 	for player in players:
 		if is_instance_valid(player) and player.has_method("take_damage"):
-			player.take_damage(int(damage * 0.1))
+			player.take_damage(int(damage * 0.1), global_position)
 
 func _die() -> void:
 	if is_dead:

@@ -181,7 +181,7 @@ func _sword_sweep() -> void:
 				to_player.y = 0
 				if facing.dot(to_player) > 0:  # Na frente
 					if player.has_method("take_damage"):
-						player.take_damage(int(damage * 0.6))
+						player.take_damage(int(damage * 0.6), global_position)
 
 func _fire_rain(count: int) -> void:
 	if not target or not is_instance_valid(target):

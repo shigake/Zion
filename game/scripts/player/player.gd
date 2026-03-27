@@ -146,9 +146,12 @@ func _physics_process(delta: float) -> void:
 @rpc("any_peer", "unreliable")
 func _sync_position(pos: Vector3) -> void:
 	if not is_local:
-		global_position = global_position.lerp(pos, 0.3)
+		# Registra posição no histórico para interpolação suave
+		MultiplayerManager.register_remote_position(player_id, pos)
+		# Usa interpolação preditiva para reduzir jitter
+		global_position = MultiplayerManager.get_interpolated_position(player_id, global_position)
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, source_pos: Vector3 = Vector3.ZERO) -> void:
 	if not can_be_hurt or is_dashing:
 		return
 	if _animator:
@@ -156,9 +159,11 @@ func take_damage(amount: int) -> void:
 	GameManager.take_damage(amount)
 	can_be_hurt = false
 	hurt_cooldown = 0.5
-	# Flash vermelho
+	# Flash vermelho no mesh
 	_set_color(Color(1, 0.2, 0.2))
 	hurt_flash_timer = 0.12
+	# Full damage feedback (shake, flash, freeze, indicator, vibration)
+	ScreenEffects.damage_feedback(amount, source_pos)
 
 func _set_color(color: Color) -> void:
 	var mat = mesh.material_override

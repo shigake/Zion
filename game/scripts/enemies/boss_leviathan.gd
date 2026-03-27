@@ -170,7 +170,7 @@ func _tentacle_slam(radius: float) -> void:
 			var dist = global_position.distance_to(player.global_position)
 			if dist <= radius:
 				if player.has_method("take_damage"):
-					player.take_damage(int(damage * 0.7))
+					player.take_damage(int(damage * 0.7), global_position)
 
 func _summon_jellyfish(count: int) -> void:
 	for i in range(count):

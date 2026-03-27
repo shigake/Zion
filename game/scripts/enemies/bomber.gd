@@ -44,7 +44,7 @@ func _explode() -> void:
 			continue
 		var dist = global_position.distance_to(player.global_position)
 		if dist <= explosion_radius and player.has_method("take_damage"):
-			player.take_damage(damage)
+			player.take_damage(damage, global_position)
 
 	# Spawn explosion particles
 	ParticleFactory.spawn_explosion_particles(global_position + Vector3(0, 0.3, 0))

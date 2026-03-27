@@ -14,6 +14,13 @@ extends CanvasLayer
 var event_display_timer: float = 0.0
 var achievement_check_timer: float = 0.0
 
+# Damage feedback on HP bar
+var _ghost_hp: float = -1.0  # Ghost bar value (delayed HP loss indicator)
+var _ghost_hp_delay: float = 0.0  # Timer before ghost starts draining
+var _hp_punch_timer: float = 0.0  # HP bar shake timer
+var _hp_bar_original_pos: Vector2 = Vector2.ZERO
+var _prev_hp: int = -1  # Track HP changes for flash
+
 # Weapon/Item icon containers and boss HP bar (created in _ready)
 var weapon_container: HBoxContainer
 var item_container: HBoxContainer
@@ -86,6 +93,13 @@ func _ready() -> void:
 	hp_bg.set_border_width_all(1)
 	hp_bg.border_color = Color(0.3, 0.1, 0.1)
 	hp_bar.add_theme_stylebox_override("background", hp_bg)
+
+	# Ghost HP bar (white bar behind the green one showing recent damage)
+	_hp_bar_original_pos = hp_bar.position
+	_prev_hp = GameManager.player_hp
+
+	# Connect damage feedback signal
+	ScreenEffects.player_took_damage.connect(_on_player_took_damage)
 
 	# Custom XP bar colors
 	var xp_fill = StyleBoxFlat.new()
@@ -222,8 +236,44 @@ func _process(delta: float) -> void:
 
 func _update_hp() -> void:
 	var max_hp = int(GameManager.player_max_hp * GameManager.max_hp_mult)
+	var current_hp = GameManager.player_hp
 	hp_bar.max_value = max_hp
-	hp_bar.value = GameManager.player_hp
+	hp_bar.value = current_hp
+
+	# Detect damage taken (HP went down)
+	if _prev_hp > 0 and current_hp < _prev_hp:
+		# Initialize ghost at previous HP if not already active
+		if _ghost_hp < 0 or _ghost_hp < float(_prev_hp):
+			_ghost_hp = float(_prev_hp)
+		_ghost_hp_delay = 0.4  # Wait before draining ghost
+		# Flash HP bar red briefly
+		var fill_style = hp_bar.get_theme_stylebox("fill") as StyleBoxFlat
+		if fill_style:
+			fill_style.bg_color = Color(1.0, 0.15, 0.15)
+	_prev_hp = current_hp
+
+	# Ghost HP drain (delayed white bar effect via fill color transition)
+	if _ghost_hp > 0:
+		if _ghost_hp_delay > 0:
+			_ghost_hp_delay -= get_process_delta_time()
+		else:
+			_ghost_hp = lerpf(_ghost_hp, float(current_hp), get_process_delta_time() * 4.0)
+			if absf(_ghost_hp - float(current_hp)) < 1.0:
+				_ghost_hp = -1.0  # Done
+
+	# Lerp HP bar fill color back to green
+	var fill_style = hp_bar.get_theme_stylebox("fill") as StyleBoxFlat
+	if fill_style:
+		fill_style.bg_color = fill_style.bg_color.lerp(Color(0.2, 0.8, 0.3), get_process_delta_time() * 5.0)
+
+	# HP bar punch (shake) animation
+	if _hp_punch_timer > 0:
+		_hp_punch_timer -= get_process_delta_time()
+		var offset_x = randf_range(-3.0, 3.0) * (_hp_punch_timer / 0.2)
+		var offset_y = randf_range(-2.0, 2.0) * (_hp_punch_timer / 0.2)
+		hp_bar.position = _hp_bar_original_pos + Vector2(offset_x, offset_y)
+	else:
+		hp_bar.position = _hp_bar_original_pos
 
 func _update_xp() -> void:
 	xp_bar.max_value = GameManager.player_xp_to_next
@@ -247,6 +297,14 @@ func _on_level_up(_new_level: int) -> void:
 
 func _on_game_over() -> void:
 	pass
+
+func _on_player_took_damage() -> void:
+	# HP bar punch effect
+	_hp_punch_timer = 0.2
+	# Scale bounce on HP bar
+	var tween = create_tween()
+	hp_bar.scale = Vector2(1.08, 1.15)
+	tween.tween_property(hp_bar, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 
 func _on_achievement_unlocked(_id: String, name: String) -> void:
 	achievement_label.text = LocaleManager.tr_key("achievement_label") % name

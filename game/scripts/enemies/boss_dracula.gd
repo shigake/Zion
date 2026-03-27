@@ -215,7 +215,7 @@ func take_damage(amount: int, type: String = "physical") -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and not is_dead:
 		if body.has_method("take_damage"):
-			body.take_damage(damage)
+			body.take_damage(damage, global_position)
 			# Lifedrain: cura 10% do dano causado (fase 1+), mais em fase 3
 			var drain_pct = 0.1
 			if phase == 3:
