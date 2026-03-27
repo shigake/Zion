@@ -14,39 +14,53 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.06, 0.07, 0.05, 1)
+color = Color(0.04, 0.04, 0.06, 1)
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -350.0
-offset_top = -250.0
-offset_right = 350.0
-offset_bottom = 250.0
-theme_override_constants/separation = 12
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
-[node name="Title" type="Label" parent="VBox"]
+[node name="MainVBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="MarginContainer/MainVBox"]
 layout_mode = 2
 text = "ESCOLHA SEU PERSONAGEM"
 horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.92, 0.92, 0.96, 1)
 
-[node name="GridRow" type="HBoxContainer" parent="VBox"]
+[node name="ContentHBox" type="HBoxContainer" parent="MarginContainer/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+theme_override_constants/separation = 8
+
+[node name="GridRow" type="HBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel"]
 layout_mode = 2
 size_flags_vertical = 3
 alignment = 1
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="LeftArrow" type="Button" parent="VBox/GridRow"]
+[node name="LeftArrow" type="Button" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel/GridRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(40, 0)
+custom_minimum_size = Vector2(28, 0)
 size_flags_vertical = 4
 text = "<"
 
-[node name="GridContainer" type="GridContainer" parent="VBox/GridRow"]
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel/GridRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -54,27 +68,93 @@ columns = 4
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="RightArrow" type="Button" parent="VBox/GridRow"]
+[node name="RightArrow" type="Button" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel/GridRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(40, 0)
+custom_minimum_size = Vector2(28, 0)
 size_flags_vertical = 4
 text = ">"
 
-[node name="PageLabel" type="Label" parent="VBox"]
+[node name="PageLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel"]
 layout_mode = 2
 horizontal_alignment = 1
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.5, 0.5, 0.55, 1)
 
-[node name="InfoLabel" type="Label" parent="VBox"]
+[node name="RightPanel" type="PanelContainer" parent="MarginContainer/MainVBox/ContentHBox"]
 layout_mode = 2
-text = "Selecione um personagem"
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.7
+
+[node name="PreviewVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/RightPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(400, 500)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.976, 0.22, 0, -0.22, 0.976, 0, 1.0, 2.2)
+fov = 35.0
+
+[node name="PreviewLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.7, 0.7, 0, -0.7, 0.7, 0, 3, 2)
+light_energy = 1.6
+shadow_enabled = true
+
+[node name="FillLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, -0.7, -0.7, 0, 0.7, -0.7, -2, 1, -1)
+light_color = Color(0.6, 0.7, 0.9, 1)
+light_energy = 0.5
+
+[node name="RimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.9, -0.44, 0, 0.44, 0.9, 1.5, 2, -1)
+light_color = Color(0.4, 0.45, 0.6, 1)
+light_energy = 0.4
+
+[node name="ModelRoot" type="Node3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
+
+[node name="InfoVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CharNameLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/InfoVBox"]
+layout_mode = 2
 horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 
-[node name="StartButton" type="Button" parent="VBox"]
+[node name="WeaponLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/InfoVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 45)
-text = "PROXIMO"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 1)
 
-[node name="BackButton" type="Button" parent="VBox"]
+[node name="PassiveLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/InfoVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 35)
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.65, 0.75, 0.55, 1)
+
+[node name="BottomHBox" type="HBoxContainer" parent="MarginContainer/MainVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="MarginContainer/MainVBox/BottomHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 40)
 text = "VOLTAR"
+
+[node name="StartButton" type="Button" parent="MarginContainer/MainVBox/BottomHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 40)
+text = "PROXIMO"
