@@ -233,10 +233,34 @@ func take_damage(amount: int) -> void:
 			ScreenEffects.shake(0.3)
 			return
 		player_hp = 0
+		# Multiplayer: spawn tombstone instead of game over
+		if MultiplayerManager.is_online and MultiplayerManager.get_player_count() > 1:
+			_spawn_tombstone()
+			LogManager.info("Game", "Player died in MP at %.1fs, tombstone spawned" % game_time)
+			player_died.emit()
+			return
 		is_game_over = true
 		LogManager.info("Game", "Player died at %.1fs, kills: %d, level: %d" % [game_time, total_kills, player_level])
 		player_died.emit()
 		game_over.emit()
+
+func _spawn_tombstone() -> void:
+	var players = get_tree().get_nodes_in_group("players")
+	var death_pos = Vector3.ZERO
+	if not players.is_empty():
+		death_pos = players[0].global_position
+	var tombstone_script = preload("res://scripts/player/tombstone.gd")
+	var tombstone = Node3D.new()
+	tombstone.set_script(tombstone_script)
+	tombstone.name = "Tombstone_%d" % MultiplayerManager.local_player_id
+	tombstone.dead_peer_id = MultiplayerManager.local_player_id
+	tombstone.global_position = death_pos
+	tombstone.player_revived.connect(_on_player_revived)
+	get_tree().current_scene.call_deferred("add_child", tombstone)
+
+func _on_player_revived(_peer_id: int) -> void:
+	is_game_over = false
+	LogManager.info("Game", "Player revived via tombstone")
 
 func heal(amount: int) -> void:
 	var heal_amount = amount
