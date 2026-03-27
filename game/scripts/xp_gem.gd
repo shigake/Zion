@@ -44,7 +44,12 @@ func _physics_process(delta: float) -> void:
 		if global_position.distance_to(attract_target.global_position) < 0.5:
 			_collect()
 
+var _collected := false
+
 func _collect() -> void:
+	if _collected or not is_inside_tree():
+		return
+	_collected = true
 	ParticleFactory.spawn_collect_particles(global_position, Color(0.2, 0.6, 1.0))
 	AudioManager.play_sfx("collect_xp")
 	GameManager.add_xp(xp_value)

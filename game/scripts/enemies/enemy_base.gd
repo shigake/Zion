@@ -261,8 +261,8 @@ func _die() -> void:
 		# Mutation: explosive enemies
 		if MutationManager.is_active("explosive_enemies") and not is_in_group("boss"):
 			_mutation_explode(pos)
-		_spawn_xp_gem()
-		_spawn_crystal()
+		_spawn_xp_gem(pos)
+		_spawn_crystal(pos)
 		# Gasoline item: fire ground on enemy death
 		if GameManager.fire_ground_active:
 			_spawn_fire_ground(pos)
@@ -274,22 +274,22 @@ func _die() -> void:
 	else:
 		queue_free()
 
-func _spawn_xp_gem() -> void:
+func _spawn_xp_gem(pos: Vector3) -> void:
 	var gem_scene = preload("res://scenes/xp_gem.tscn")
 	var gem = gem_scene.instantiate()
-	gem.global_position = global_position + Vector3(0, 0.3, 0)
 	gem.xp_value = xp_drop
-	get_tree().current_scene.call_deferred("add_child", gem)
+	get_tree().current_scene.add_child(gem)
+	gem.global_position = pos + Vector3(0, 0.3, 0)
 
-func _spawn_crystal() -> void:
+func _spawn_crystal(pos: Vector3) -> void:
 	# 30% chance de dropar cristal
 	if randf() > 0.3:
 		return
 	var crystal_scene = preload("res://scenes/crystal_pickup.tscn")
 	var crystal = crystal_scene.instantiate()
-	crystal.global_position = global_position + Vector3(0.3, 0.3, 0.3)
 	crystal.crystal_value = maxi(1, xp_drop)
-	get_tree().current_scene.call_deferred("add_child", crystal)
+	get_tree().current_scene.add_child(crystal)
+	crystal.global_position = pos + Vector3(0.3, 0.3, 0.3)
 
 func _spawn_fire_ground(pos: Vector3) -> void:
 	var fire_scene = preload("res://scripts/effects/fire_ground_effect.gd")

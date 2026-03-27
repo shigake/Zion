@@ -68,7 +68,12 @@ func _physics_process(delta: float) -> void:
 		if global_position.distance_to(attract_target.global_position) < 0.5:
 			_collect()
 
+var _collected := false
+
 func _collect() -> void:
+	if _collected or not is_inside_tree():
+		return
+	_collected = true
 	AudioManager.play_sfx("collect_crystal")
 	ParticleFactory.spawn_collect_particles(global_position, Color(0.7, 0.3, 0.9))
 	GameManager.crystals_this_run += crystal_value

@@ -82,11 +82,15 @@ func _setup_and_emit(particles: GPUParticles3D, pos: Vector3, cleanup_time: floa
 		_particle_pool.append(particles)
 		return
 
-	particles.global_position = pos
-	particles.emitting = true
-
 	if not particles.get_parent():
 		scene.add_child(particles)
+
+	if not particles.is_inside_tree():
+		_particle_pool.append(particles)
+		return
+
+	particles.global_position = pos
+	particles.emitting = true
 
 	# Schedule return to pool
 	_active_particles[particles] = cleanup_time

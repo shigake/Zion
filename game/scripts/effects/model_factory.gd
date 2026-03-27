@@ -1346,8 +1346,6 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		var skel_path = KAYKIT_SKELETONS + skel_file
 		var loaded = _try_load_glb(skel_path, s)
 		if loaded:
-			if LogManager:
-				LogManager.info("ModelFactory", "loaded KayKit skeleton for '%s'" % clean_name)
 			return loaded
 	# Try legacy path
 	var file_name = clean_name.to_snake_case()
@@ -1355,12 +1353,8 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 	var glb_path = "res://assets/models/%s/%s.glb" % [folder, file_name]
 	var loaded = _try_load_glb(glb_path, s)
 	if loaded:
-		if LogManager:
-			LogManager.info("ModelFactory", "loaded GLB for enemy '%s' -> %s" % [clean_name, glb_path])
 		return loaded
 	# Fallback to procedural
-	if LogManager:
-		LogManager.debug("ModelFactory", "GLB not found for '%s', using procedural fallback" % clean_name)
 	match clean_name:
 		"Slime", "SlimeBig": return create_slime_model()
 		"Bat": return create_bat_model()
