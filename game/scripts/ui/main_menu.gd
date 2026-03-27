@@ -17,6 +17,9 @@ extends Control
 @onready var gradient_overlay: ColorRect = $GradientOverlay
 
 var _model_node: Node3D = null
+var _dance_tween: Tween = null
+var _dance_base_pos: Vector3 = Vector3.ZERO
+var _dance_time: float = 0.0
 
 # Colors
 const COLOR_BG := Color(0.04, 0.04, 0.06)
@@ -339,7 +342,8 @@ func _setup_3d_background() -> void:
 	_model_node = ModelFactory.get_model_for_character(random_char)
 	if _model_node:
 		_model_node.position = Vector3(1.5, 0, 0)
-		_model_node.scale = Vector3(0.5, 0.5, 0.5)  # Metade do tamanho
+		_model_node.scale = Vector3(0.5, 0.5, 0.5)
+		_dance_base_pos = _model_node.position
 		world.add_child(_model_node)
 
 
@@ -372,8 +376,10 @@ func _setup_gamepad_focus() -> void:
 # ---------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
-	if _model_node and is_instance_valid(_model_node):
-		_model_node.rotation.y += delta * 0.5
+	if not _model_node:
+		return
+	_dance_time += delta
+	_animate_piseiro()
 
 
 func _update_version() -> void:
@@ -387,6 +393,41 @@ func _update_version() -> void:
 func _update_crystals() -> void:
 	var count: int = SaveManager.get_crystals()
 	crystals_label.text = LocaleManager.tr_key("crystals") % count
+
+
+# ---------------------------------------------------------------------------
+# Piseiro Dance Animation
+# ---------------------------------------------------------------------------
+
+func _animate_piseiro() -> void:
+	## Piseiro dance: bouncy rhythmic steps with hip sway (~130 BPM).
+	## Two-step pattern: quick-quick with a bounce on each beat.
+	var bpm := 130.0
+	var beat := _dance_time * bpm / 60.0  # current beat number
+
+	# Bounce: double-time bounce (2x per beat), sharp down + smooth up
+	var bounce_phase := fmod(beat * 2.0, 1.0)
+	var bounce_y := abs(sin(bounce_phase * PI)) * 0.06
+
+	# Side-to-side stepping: shifts weight left/right each beat
+	var step_phase := sin(beat * PI)
+	var step_x := step_phase * 0.04
+
+	# Hip rotation: sway synced with steps
+	var hip_rot_z := sin(beat * PI) * deg_to_rad(6.0)
+
+	# Slight forward/back sway (the "gingado")
+	var sway_z := sin(beat * PI * 0.5) * 0.02
+
+	# Upper body counter-rotation for natural feel
+	var upper_rot_y := sin(beat * PI) * deg_to_rad(10.0)
+
+	# Foot shuffle: quick alternating lean
+	var shuffle_rot_x := sin(beat * 2.0 * PI) * deg_to_rad(3.0)
+
+	# Apply to model
+	_model_node.position = _dance_base_pos + Vector3(step_x, bounce_y, sway_z)
+	_model_node.rotation = Vector3(shuffle_rot_x, upper_rot_y, hip_rot_z)
 
 
 # ---------------------------------------------------------------------------
