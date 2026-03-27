@@ -8,7 +8,7 @@ class_name EnemyProjectile
 @export var damage: int = 8
 @export var damage_type: String = "physical"
 @export var lifetime: float = 5.0
-@export var gravity: float = 0.0  ## Gravidade (para projeteis em arco)
+@export var proj_gravity: float = 0.0  ## Gravidade (para projeteis em arco)
 @export var projectile_color: Color = Color(1.0, 0.3, 0.1)
 @export var projectile_radius: float = 0.12
 
@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Aplicar gravidade (para projeteis em arco)
-	_velocity.y -= gravity * delta
+	_velocity.y -= proj_gravity * delta
 
 	global_position += _velocity * delta
 
@@ -74,7 +74,7 @@ static func create(
 	p_damage: int = 8,
 	p_type: String = "physical",
 	p_color: Color = Color(1.0, 0.3, 0.1),
-	p_gravity: float = 0.0,
+	p_proj_gravity: float = 0.0,
 	p_radius: float = 0.12,
 	p_lifetime: float = 5.0
 ) -> EnemyProjectile:
@@ -85,7 +85,7 @@ static func create(
 	proj.damage = p_damage
 	proj.damage_type = p_type
 	proj.projectile_color = p_color
-	proj.gravity = p_gravity
+	proj.proj_gravity = p_proj_gravity
 	proj.projectile_radius = p_radius
 	proj.lifetime = p_lifetime
 	return proj

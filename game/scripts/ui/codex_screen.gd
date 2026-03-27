@@ -21,6 +21,8 @@ var detail_model_root: Node3D
 var current_model: Node3D = null
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_populate_grid()
 	GamepadUI.notify_menu_opened()
@@ -244,7 +246,7 @@ func _populate_grid() -> void:
 				icon_rect.custom_minimum_size = Vector2(32, 32)
 				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				icon_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				icon_rect.alignment = TextureRect.ALIGNMENT_CENTER
+				icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				if not is_unlocked:
 					icon_rect.modulate = Color(0.3, 0.3, 0.3)

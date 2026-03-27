@@ -11,6 +11,9 @@ var tab_controls: Dictionary = {}  # tab_index -> Array of {key, default, node, 
 # Lifecycle
 # ---------------------------------------------------------------------------
 func _ready() -> void:
+	# Safety: garante que nao esta pausado
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	GamepadUI.notify_menu_opened()
 
@@ -21,7 +24,7 @@ func _save(key: String, value: Variant) -> void:
 	SaveManager.data[key] = value
 	SaveManager.save_game()
 
-func _get(key: String, default: Variant = null) -> Variant:
+func _load_setting(key: String, default: Variant = null) -> Variant:
 	return SaveManager.data.get(key, default)
 
 # ---------------------------------------------------------------------------
@@ -53,7 +56,7 @@ func _add_toggle(parent: Control, label_text: String, key: String, default_val: 
 	hbox.add_child(label)
 
 	var btn := CheckButton.new()
-	btn.button_pressed = _get(key, default_val)
+	btn.button_pressed = _load_setting(key, default_val)
 	btn.toggled.connect(func(pressed: bool) -> void:
 		_save(key, pressed)
 		if callback.is_valid():
@@ -83,7 +86,7 @@ func _add_slider(parent: Control, label_text: String, key: String, min_val: floa
 	slider.min_value = min_val
 	slider.max_value = max_val
 	slider.step = step_val
-	slider.value = _get(key, default_val)
+	slider.value = _load_setting(key, default_val)
 	value_label.text = str(snapped(slider.value, step_val))
 	slider.value_changed.connect(func(val: float) -> void:
 		_save(key, val)
@@ -110,7 +113,7 @@ func _add_dropdown(parent: Control, label_text: String, key: String, options: Ar
 	option_btn.custom_minimum_size = Vector2(160, 0)
 	for i in range(options.size()):
 		option_btn.add_item(str(options[i]), i)
-	option_btn.selected = _get(key, default_idx)
+	option_btn.selected = _load_setting(key, default_idx)
 	option_btn.item_selected.connect(func(idx: int) -> void:
 		_save(key, idx)
 		if callback.is_valid():
@@ -220,16 +223,15 @@ func _build_tab_video() -> void:
 	_add_dropdown(vbox, "Modo de janela", "video_window_mode",
 		["Janela", "Tela cheia", "Sem bordas"], 0,
 		func(idx: int) -> void:
-			match idx:
-				0:
-					DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
-					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-				1:
-					DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
-					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-				2:
-					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-					DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true),
+			if idx == 0:
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			elif idx == 1:
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+			elif idx == 2:
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true),
 		t)
 
 	# Resolution — detect screen and build list
