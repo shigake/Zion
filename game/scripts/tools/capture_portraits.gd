@@ -40,11 +40,11 @@ func _capture_character(char_id: String) -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(viewport)
 
-	# Camera - full body slightly elevated angle
+	# Camera - full body centered, far enough to see entire character
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.5, 1.4, 2.2)
-	camera.look_at(Vector3(0, 0.6, 0))
-	camera.fov = 25
+	camera.position = Vector3(0.3, 1.0, 4.0)
+	camera.look_at(Vector3(0, 0.5, 0))
+	camera.fov = 18
 	viewport.add_child(camera)
 
 	# Key light

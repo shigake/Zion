@@ -418,9 +418,9 @@ func _update_preview(char_id: String, data: Dictionary) -> void:
 	# Load new model
 	var model = ModelFactory.get_model_for_character(char_id)
 	if model:
-		model.position = Vector3(0, -0.3, 0)
+		model.position = Vector3(0, -0.5, 0)
 		model.rotation = Vector3(0, PI, 0)  # Facing camera
-		model.scale = Vector3(0.125, 0.125, 0.125)  # 75% menor que o original
+		model.scale = Vector3(0.25, 0.25, 0.25)  # Pequeno para caber no viewport
 		model_root.add_child(model)
 		_preview_model = model
 
