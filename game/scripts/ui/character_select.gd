@@ -311,7 +311,7 @@ func _load_3d_model(char_id: String) -> void:
 	var model = ModelFactory.get_model_for_character(char_id)
 	if model:
 		model.position = Vector3(0, 0, 0)
-		model.scale = Vector3(1.0, 1.0, 1.0)
+		model.scale = Vector3(0.7, 0.7, 0.7)
 		_model_root.add_child(model)
 		_preview_model = model
 
@@ -320,7 +320,7 @@ func _load_3d_model(char_id: String) -> void:
 		var char_color = data.get("color", Color(0.5, 0.5, 0.5))
 		ModelFactory.apply_model_materials(model, char_color)
 
-		# Add idle animation
+		# Add idle animation (arms down + gentle breathing)
 		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
 		_animator.setup(model)
 		_model_root.add_child(_animator)
@@ -395,9 +395,7 @@ func _update_selection() -> void:
 				s.bg_color = Color(0.06, 0.06, 0.1, 0.9)
 
 func _process(_delta: float) -> void:
-	# Slowly rotate model
-	if _preview_model and is_instance_valid(_preview_model):
-		_preview_model.rotation.y += _delta * 0.3
+	pass
 
 func _select_character(idx: int) -> void:
 	current_index = idx

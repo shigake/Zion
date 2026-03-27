@@ -58,21 +58,23 @@ func _find_skeleton() -> void:
 
 func _set_arms_down() -> void:
 	## Rotate upper arms down from T-pose to a natural resting position.
+	## KayKit rig: T-pose arms point along local X axis.
+	## Rotate around Z axis to bring them down to sides.
 	if not _skeleton:
 		return
 	if "upperarm.l" in _bone_ids:
 		var idx = _bone_ids["upperarm.l"]
 		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.FORWARD, deg_to_rad(70)))
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.BACK, deg_to_rad(65)))
 	if "upperarm.r" in _bone_ids:
 		var idx = _bone_ids["upperarm.r"]
 		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.FORWARD, deg_to_rad(-70)))
-	# Slight bend in lower arms
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.BACK, deg_to_rad(-65)))
+	# Slight bend in lower arms (elbows slightly forward)
 	if "lowerarm.l" in _bone_ids:
 		var idx = _bone_ids["lowerarm.l"]
 		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(15)))
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.UP, deg_to_rad(20)))
 	if "lowerarm.r" in _bone_ids:
 		var idx = _bone_ids["lowerarm.r"]
 		var rest = _bone_rest[idx]
@@ -84,20 +86,20 @@ func _animate_skeleton(delta: float) -> void:
 		return
 	match state:
 		State.IDLE:
-			# Subtle arm sway
-			var sway = sin(_time * 2.0) * deg_to_rad(3)
-			_rotate_bone("upperarm.l", Vector3.FORWARD, 70 + rad_to_deg(sway))
-			_rotate_bone("upperarm.r", Vector3.FORWARD, -70 - rad_to_deg(sway))
+			# Subtle arm sway (arms at sides, gentle breathing motion)
+			var sway = sin(_time * 2.0) * 3.0
+			_rotate_bone("upperarm.l", Vector3.BACK, 65 + sway)
+			_rotate_bone("upperarm.r", Vector3.BACK, -65 - sway)
 		State.WALK:
-			# Arm swing (opposite to legs)
+			# Arm swing (opposite to legs, forward/backward)
 			var swing = sin(_time * 10.0)
-			var arm_angle = swing * 30.0  # degrees of swing
-			_rotate_bone("upperarm.l", Vector3.FORWARD, 70 + arm_angle)
-			_rotate_bone("upperarm.r", Vector3.FORWARD, -70 - arm_angle)
-			# Lower arm follows with slight delay
-			var lower_swing = sin(_time * 10.0 - 0.5) * 15.0
-			_rotate_bone("lowerarm.l", Vector3.RIGHT, 15 + maxf(0, lower_swing))
-			_rotate_bone("lowerarm.r", Vector3.RIGHT, 15 + maxf(0, -lower_swing))
+			var arm_angle = swing * 25.0
+			_rotate_bone("upperarm.l", Vector3.BACK, 65 + arm_angle)
+			_rotate_bone("upperarm.r", Vector3.BACK, -65 - arm_angle)
+			# Lower arm bend follows swing
+			var lower_swing = sin(_time * 10.0 - 0.5) * 12.0
+			_rotate_bone("lowerarm.l", Vector3.UP, 20 + maxf(0, lower_swing))
+			_rotate_bone("lowerarm.r", Vector3.UP, 20 + maxf(0, -lower_swing))
 			# Leg swing
 			_rotate_bone("upperleg.l", Vector3.RIGHT, swing * 25.0)
 			_rotate_bone("upperleg.r", Vector3.RIGHT, -swing * 25.0)
