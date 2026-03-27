@@ -28,7 +28,9 @@ var synergy_container: VBoxContainer = null
 var _synergy_update_timer: float = 0.0
 var _prev_synergy_hash: String = ""
 
-# Separate achievement label
+# Separate achievement notification container (icon + label)
+var achievement_container: HBoxContainer = null
+var achievement_icon: TextureRect = null
 var achievement_label: Label = null
 
 # Multiplayer ally HP bars
@@ -122,18 +124,31 @@ func _ready() -> void:
 	event_label.add_theme_font_size_override("font_size", 28)
 	event_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 
-	# Separate achievement label (below event label)
+	# Separate achievement notification (icon + label, below event label)
+	achievement_container = HBoxContainer.new()
+	achievement_container.name = "AchievementContainer"
+	achievement_container.visible = false
+	achievement_container.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	achievement_container.offset_top = 80  # Below event label
+	achievement_container.offset_left = -300
+	achievement_container.offset_right = 300
+	achievement_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	achievement_container.add_theme_constant_override("separation", 8)
+
+	achievement_icon = TextureRect.new()
+	achievement_icon.custom_minimum_size = Vector2(32, 32)
+	achievement_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	achievement_icon.visible = false
+	achievement_container.add_child(achievement_icon)
+
 	achievement_label = Label.new()
 	achievement_label.name = "AchievementLabel"
-	achievement_label.visible = false
 	achievement_label.add_theme_font_size_override("font_size", 24)
 	achievement_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	achievement_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	achievement_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	achievement_label.offset_top = 80  # Below event label
-	achievement_label.offset_left = -300
-	achievement_label.offset_right = 300
-	add_child(achievement_label)
+	achievement_container.add_child(achievement_label)
+
+	add_child(achievement_container)
 
 	# Synergy indicator area (bottom-left, below weapon icons)
 	synergy_container = VBoxContainer.new()
@@ -229,13 +244,23 @@ func _on_game_over() -> void:
 
 func _on_achievement_unlocked(_id: String, name: String) -> void:
 	achievement_label.text = LocaleManager.tr_key("achievement_label") % name
-	achievement_label.visible = true
-	achievement_label.modulate = Color(1.0, 0.85, 0.2)
-	achievement_label.scale = Vector2(1.5, 1.5)
+
+	# Load achievement icon SVG if available
+	var icon_path = "res://assets/icons/achievements/%s.svg" % _id
+	var icon_tex = load(icon_path) if ResourceLoader.exists(icon_path) else null
+	if icon_tex:
+		achievement_icon.texture = icon_tex
+		achievement_icon.visible = true
+	else:
+		achievement_icon.visible = false
+
+	achievement_container.visible = true
+	achievement_container.modulate = Color(1.0, 0.85, 0.2)
+	achievement_container.scale = Vector2(1.5, 1.5)
 	var tween = create_tween()
-	tween.tween_property(achievement_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(achievement_container, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 	tween.tween_interval(3.0)
-	tween.tween_callback(func(): achievement_label.visible = false)
+	tween.tween_callback(func(): achievement_container.visible = false)
 
 func _on_event_started(event_name: String) -> void:
 	var locale_key = "event_" + event_name
