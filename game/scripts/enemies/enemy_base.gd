@@ -267,6 +267,8 @@ func _die() -> void:
 			_mutation_explode(pos)
 		_spawn_xp_gem(pos)
 		_spawn_crystal(pos)
+		_spawn_health_pickup(pos)
+		_spawn_magnet_pickup(pos)
 		# Gasoline item: fire ground on enemy death
 		if GameManager.fire_ground_active:
 			_spawn_fire_ground(pos)
@@ -301,6 +303,40 @@ func _spawn_crystal(pos: Vector3) -> void:
 	crystal.crystal_value = value
 	get_tree().current_scene.add_child(crystal)
 	crystal.global_position = pos + Vector3(0.3, 0.3, 0.3)
+
+func _spawn_health_pickup(pos: Vector3) -> void:
+	# 5% base chance (10% com lucky coin, 8% when low HP)
+	var base_chance = 0.05
+	# Chance aumenta quando jogador tem pouca vida (< 40% HP)
+	var hp_ratio = float(GameManager.player_hp) / float(maxi(1, GameManager.get_effective_max_hp()))
+	if hp_ratio < 0.4:
+		base_chance += 0.03
+	# Luck multiplier
+	var drop_chance = base_chance * GameManager.luck_mult
+	if randf() > drop_chance:
+		return
+	var hp_scene = preload("res://scenes/health_pickup.tscn")
+	var hp_pickup = hp_scene.instantiate()
+	# Cura escala com level do jogador e max HP
+	var base_heal = maxi(5, int(GameManager.get_effective_max_hp() * 0.08))
+	if GameManager.master_key_active:
+		base_heal *= 2
+	hp_pickup.heal_value = base_heal
+	get_tree().current_scene.add_child(hp_pickup)
+	hp_pickup.global_position = pos + Vector3(-0.3, 0.3, 0.2)
+
+func _spawn_magnet_pickup(pos: Vector3) -> void:
+	# 1% base chance (raro, mas impactante), dobra com master key
+	var base_chance = 0.01
+	if GameManager.master_key_active:
+		base_chance = 0.02
+	var drop_chance = base_chance * GameManager.luck_mult
+	if randf() > drop_chance:
+		return
+	var magnet_scene = preload("res://scenes/magnet_pickup.tscn")
+	var magnet = magnet_scene.instantiate()
+	get_tree().current_scene.add_child(magnet)
+	magnet.global_position = pos + Vector3(0.2, 0.3, -0.3)
 
 func _spawn_fire_ground(pos: Vector3) -> void:
 	var fire_scene = preload("res://scripts/effects/fire_ground_effect.gd")

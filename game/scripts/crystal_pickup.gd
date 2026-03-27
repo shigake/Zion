@@ -13,6 +13,7 @@ var attract_target: Node3D = null
 
 func _ready() -> void:
 	add_to_group("crystals")
+	add_to_group("pickups")
 	body_entered.connect(_on_body_entered)
 	# Apply glow shader to crystal mesh
 	if mesh:
