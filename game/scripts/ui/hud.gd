@@ -163,6 +163,11 @@ func _ready() -> void:
 	minimap.offset_bottom = -10.0
 	add_child(minimap)
 
+	# Touch controls (mobile only — joystick + dash button)
+	var touch_controls_scene = preload("res://scenes/ui/touch_controls.tscn")
+	var touch_controls = touch_controls_scene.instantiate()
+	add_child(touch_controls)
+
 	# Multiplayer ally HP bars (top-left, below main HP bar)
 	if MultiplayerManager.is_online:
 		ally_hp_container = VBoxContainer.new()
