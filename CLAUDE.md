@@ -60,18 +60,18 @@ Zion/
 └── game/                        # Projeto Godot 4
     ├── project.godot            # Config (autoloads, layers, display)
     ├── VERSION                  # Versao atual (sem "v")
-    ├── scenes/ (82 .tscn)       # Cenas
+    ├── scenes/ (93 .tscn)       # Cenas
     │   ├── enemies/             # 11 genericos + 10 bosses
     │   ├── stages/              # 10 stages com props procedurais
     │   ├── weapons/             # 28 armas
     │   ├── ui/                  # HUD, menus, shop, leaderboard, debug overlay
     │   └── player/              # Cena do jogador
-    ├── scripts/ (120+ .gd)      # GDScript
-    │   ├── autoload/            # 19 singletons (ver lista abaixo)
+    ├── scripts/ (143 .gd)       # GDScript
+    │   ├── autoload/            # 24 singletons (ver lista abaixo)
     │   ├── player/              # Player controller
     │   ├── enemies/             # Base + spawner + 10 bosses + especiais
     │   ├── weapons/             # 28 armas + projectiles + behaviors
-    │   ├── ui/                  # 13 telas + debug overlay (F3/F4)
+    │   ├── ui/                  # 20 telas + debug overlay (F3/F4)
     │   ├── stages/              # 10 stages + 10 props + camera + events
     │   ├── effects/             # Particulas, shaders, procedural anims
     │   └── tests/               # Testes
@@ -80,11 +80,13 @@ Zion/
 
 ## Architecture
 
-### Autoload Singletons (19 + 4 effects)
-LogManager, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry
+### Autoload Singletons (24 + 5 effects)
+LogManager, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry, PlatformHelper, MultiMeshManager, AutoTester, GamepadUI, MutationManager
 
 Adicionalmente registrados como autoload (mas ficam em scripts/effects/):
 ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
+
+DebugOverlay fica em scripts/ui/ (registrado como autoload)
 
 ### Key Systems
 - **Multiplayer**: Host-client via ENet (Steam Networking Sockets pronto via SteamManager stub)
@@ -96,6 +98,9 @@ ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
 - **Logging**: LogManager (5 niveis, arquivo + console, crash reports JSON, rotacao)
 - **Telemetria**: Telemetry client → servidor HTTP (runs, crashes, events, balance)
 - **Debug overlay**: F3 (overlay tempo real), F4 (filtro de logs)
+- **Mutations/Ascension**: MutationManager — 6 difficulty modifiers that increase crystal rewards
+- **Cross-Combo**: Multiplayer cross-player elemental synergies via SynergySystem
+- **Revive System**: Tombstone-based revival in multiplayer with sacrifice debuff
 
 ### Physics Layers
 1. Players
@@ -153,7 +158,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Fases 0-2 do PRD substancialmente implementadas. Fases 3-6 parcialmente (conteudo das 10 fases existe, multiplayer basico existe, mas falta polish).
+Fases 0-3 do PRD substancialmente implementadas. Sistema de mutacoes (Modo Ascensao), cross-combo multiplayer, e revive com sacrificio implementados. Fases 4-6 parcialmente (conteudo das 10 fases existe, multiplayer avancado existe, falta polish e audio).
 
 Ver `docs/prd.md` para roadmap completo e `docs/prd_missing_features.md` para checklist detalhado.
 
@@ -163,3 +168,4 @@ Ver `docs/prd.md` para roadmap completo e `docs/prd_missing_features.md` para ch
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
 - **MultiMesh**: para renderizar hordas grandes com performance
 - **Multiplayer HUD**: falta ping e setas direcionais dos aliados
+- **Art Direction**: concept art de referencia para personagens e fases (ver docs/prd_art_direction.md)
