@@ -238,6 +238,8 @@ func _populate_grid() -> void:
 		var card_btn = Button.new()
 		card_btn.custom_minimum_size = CARD_SIZE
 		card_btn.flat = true
+		card_btn.focus_mode = Control.FOCUS_ALL
+		card_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 		var card_style = StyleBoxFlat.new()
 		card_style.bg_color = Color(0.12, 0.12, 0.18) if is_seen else Color(0.08, 0.08, 0.1)
