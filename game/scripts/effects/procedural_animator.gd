@@ -10,16 +10,19 @@ var state: State = State.IDLE
 var target_node: Node3D = null
 var _time: float = 0.0
 var _original_scale: Vector3 = Vector3.ONE
+var _original_y: float = 0.0
 var _hit_active: bool = false
 var _death_active: bool = false
 var _is_glb_model: bool = false
 var _anim_player: AnimationPlayer = null
 var _anim_map: Dictionary = {}  # Maps "idle", "walk", "run", "attack" to actual animation names
+var _move_dir: Vector3 = Vector3.ZERO  # Current movement direction for rotation
 
 func setup(node: Node3D) -> void:
 	target_node = node
 	if target_node:
 		_original_scale = target_node.scale
+		_original_y = target_node.position.y
 		_is_glb_model = target_node.has_meta("glb_model")
 		if _is_glb_model:
 			_find_animation_player()
@@ -90,6 +93,9 @@ func _play_anim(action: String) -> void:
 		return
 	_anim_player.play(anim_name)
 
+func set_move_direction(dir: Vector3) -> void:
+	_move_dir = dir
+
 func _process(delta: float) -> void:
 	if not target_node or not is_instance_valid(target_node):
 		return
@@ -100,24 +106,44 @@ func _process(delta: float) -> void:
 
 	if _is_glb_model:
 		if _anim_player:
-			# GLB models use skeleton animations — only add subtle bob on top
 			match state:
 				State.IDLE:
-					target_node.position.y = sin(_time * 3.0) * 0.01
+					target_node.position.y = _original_y + sin(_time * 3.0) * 0.01
 				State.WALK:
-					target_node.position.y = sin(_time * 8.0) * 0.015
-		# GLB without AnimationPlayer uses _bob_tween — no extra processing needed
+					target_node.position.y = _original_y + sin(_time * 8.0) * 0.015
+		# Rotate GLB model to face movement direction
+		if state == State.WALK and _move_dir.length() > 0.1:
+			var target_angle = atan2(_move_dir.x, _move_dir.z)
+			target_node.rotation.y = lerp_angle(target_node.rotation.y, target_angle, delta * 12.0)
 		return
 
 	match state:
 		State.IDLE:
-			# Gentle vertical bob
-			target_node.position.y = sin(_time * 3.0) * 0.03
-			target_node.rotation.z = 0.0
+			# Gentle breathing: vertical bob + subtle scale pulse
+			var breath = sin(_time * 3.0)
+			target_node.position.y = _original_y + breath * 0.03
+			target_node.scale = _original_scale * (1.0 + breath * 0.01)
+			target_node.rotation.x = lerp(target_node.rotation.x, 0.0, delta * 8.0)
+			target_node.rotation.z = lerp(target_node.rotation.z, 0.0, delta * 8.0)
 		State.WALK:
-			# Faster bob + slight lean
-			target_node.position.y = sin(_time * 8.0) * 0.05
-			target_node.rotation.z = sin(_time * 8.0) * 0.05
+			# Energetic walk: faster bob + lean into movement + arm swing
+			var walk_cycle = sin(_time * 10.0)
+			target_node.position.y = _original_y + abs(walk_cycle) * 0.07
+			# Lean forward slightly
+			target_node.rotation.x = lerp(target_node.rotation.x, deg_to_rad(-8.0), delta * 6.0)
+			# Side-to-side sway
+			target_node.rotation.z = walk_cycle * 0.08
+			# Squash on landing, stretch on jump
+			var squash = 1.0 - abs(walk_cycle) * 0.04
+			target_node.scale = Vector3(
+				_original_scale.x * (1.0 + abs(walk_cycle) * 0.03),
+				_original_scale.y * squash,
+				_original_scale.z
+			)
+			# Rotate to face movement direction
+			if _move_dir.length() > 0.1:
+				var target_angle = atan2(_move_dir.x, _move_dir.z)
+				target_node.rotation.y = lerp_angle(target_node.rotation.y, target_angle, delta * 12.0)
 
 func play_hit() -> void:
 	if not target_node or not is_instance_valid(target_node) or _death_active:

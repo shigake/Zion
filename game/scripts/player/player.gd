@@ -137,6 +137,7 @@ func _physics_process(delta: float) -> void:
 	# Update procedural animation
 	if _animator:
 		_animator.set_walking(velocity.length() > 0.5)
+		_animator.set_move_direction(move_direction)
 
 	# Sync posicao no multiplayer
 	if MultiplayerManager.is_online:
