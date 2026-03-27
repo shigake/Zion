@@ -23,8 +23,8 @@ func _ready() -> void:
 	axe_mesh.visible = false
 	axe_area.monitoring = false
 	axe_area.body_entered.connect(_on_body_entered)
-	# 3D model
-	ModelFactory.attach_weapon_model(axe_mesh, "axe")
+	# Build procedural axe model (blade + handle)
+	_build_axe_model()
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -129,8 +129,8 @@ func _update_flight(delta: float, level: int) -> void:
 		axe_area.global_position = target_pos
 		axe_mesh.global_position = target_pos
 
-	# Spin the axe mesh
-	axe_mesh.rotation.y += delta * 20.0
+	# Spin the axe mesh (tumbling throw on Z axis)
+	axe_mesh.rotation.z += delta * 15.0
 
 func _end_flight() -> void:
 	is_flying = false
@@ -156,3 +156,42 @@ func _on_body_entered(body: Node3D) -> void:
 	var level = GameManager.get_weapon_level("axe")
 	var dmg = int(WeaponDB.get_damage("axe", level))
 	body.call_deferred("take_damage", dmg, "fire")
+
+func _build_axe_model() -> void:
+	## Procedural axe: metal blade + wood handle with fire glow on blade.
+	axe_mesh.mesh = null  # Clear any default mesh
+
+	# -- Blade material (metal + orange fire emission) --
+	var blade_mat = StandardMaterial3D.new()
+	blade_mat.albedo_color = Color(0.7, 0.7, 0.75)
+	blade_mat.metallic = 0.8
+	blade_mat.roughness = 0.3
+	blade_mat.emission_enabled = true
+	blade_mat.emission = Color(1.0, 0.5, 0.1)
+	blade_mat.emission_energy_multiplier = 0.8
+
+	# -- Handle material (wood brown) --
+	var handle_mat = StandardMaterial3D.new()
+	handle_mat.albedo_color = Color(0.45, 0.3, 0.15)
+	handle_mat.metallic = 0.0
+	handle_mat.roughness = 0.8
+
+	# Blade mesh
+	var blade_mesh = BoxMesh.new()
+	blade_mesh.size = Vector3(0.02, 0.2, 0.15)
+	var blade_mi = MeshInstance3D.new()
+	blade_mi.mesh = blade_mesh
+	blade_mi.material_override = blade_mat
+	blade_mi.position = Vector3(0, 0.1, 0)  # Offset blade above center
+	axe_mesh.add_child(blade_mi)
+
+	# Handle mesh
+	var handle_mesh = CylinderMesh.new()
+	handle_mesh.top_radius = 0.02
+	handle_mesh.bottom_radius = 0.02
+	handle_mesh.height = 0.25
+	var handle_mi = MeshInstance3D.new()
+	handle_mi.mesh = handle_mesh
+	handle_mi.material_override = handle_mat
+	handle_mi.position = Vector3(0, -0.05, 0)  # Handle below blade
+	axe_mesh.add_child(handle_mi)
