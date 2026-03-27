@@ -288,7 +288,7 @@ func _apply_stage_skin(enemy: Node3D) -> void:
 	if enemy is EnemyBase3D:
 		var colors: Array = skin_data["colors"]
 		enemy.enemy_color = colors[rng.randi() % colors.size()]
-	# Apply themed name (affects ModelFactory.get_model_for_enemy)
+	# Apply themed name (display only; model lookup uses scene_file_path)
 	var names: Dictionary = skin_data["names"]
 	var base_name: String = enemy.name
 	if names.has(base_name):

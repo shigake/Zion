@@ -975,8 +975,28 @@ const KAYKIT_GAME := "res://assets/models/downloaded/kaykit/mini-game-variety/Mo
 
 ## Escala dos modelos KayKit/Kenney para caber no jogo
 const CHARACTER_SCALE := Vector3(1.2, 1.2, 1.2)
-const ENEMY_SCALE := Vector3(1.0, 1.0, 1.0)
-const BOSS_SCALE := Vector3(2.0, 2.0, 2.0)
+const ENEMY_SCALE := Vector3(0.6, 0.6, 0.6)
+const BOSS_SCALE := Vector3(1.5, 1.5, 1.5)
+
+## Per-enemy scale overrides (KayKit/Kenney models vary in size)
+const ENEMY_SCALE_MAP := {
+	"Slime": Vector3(0.4, 0.4, 0.4),
+	"SlimeBig": Vector3(0.7, 0.7, 0.7),
+	"Bat": Vector3(0.35, 0.35, 0.35),
+	"Skeleton": Vector3(0.6, 0.6, 0.6),
+	"SkeletonArcher": Vector3(0.6, 0.6, 0.6),
+	"ZombieRunner": Vector3(0.6, 0.6, 0.6),
+	"Ghost": Vector3(0.5, 0.5, 0.5),
+	"Tank": Vector3(0.8, 0.8, 0.8),
+	"Bomber": Vector3(0.5, 0.5, 0.5),
+	"Swarm": Vector3(0.3, 0.3, 0.3),
+	"Mimic": Vector3(0.5, 0.5, 0.5),
+	"GhostWhite": Vector3(0.5, 0.5, 0.5),
+	"GhostGreen": Vector3(0.5, 0.5, 0.5),
+	"GhostBlue": Vector3(0.5, 0.5, 0.5),
+	"GhostRed": Vector3(0.5, 0.5, 0.5),
+	"ToothFairy": Vector3(0.35, 0.35, 0.35),
+}
 
 ## Paths to KayKit animation .glb files (Rig_Medium contains idle, walk, run, attack, etc.)
 const KAYKIT_ANIM_PATHS: Array[String] = [
@@ -1057,9 +1077,13 @@ func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 	for ext in [".glb", ".fbx", ".gltf"]:
 		var try_path = path.get_basename() + ext
 		if not ResourceLoader.exists(try_path):
+			if LogManager:
+				LogManager.debug("ModelFactory", "resource not found: %s" % try_path)
 			continue
 		var scene = load(try_path) as PackedScene
 		if scene == null:
+			if LogManager:
+				LogManager.warn("ModelFactory", "failed to load scene: %s" % try_path)
 			continue
 		var instance = scene.instantiate()
 		if instance == null:
@@ -1182,6 +1206,9 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		"ZombieRunner": "zombie", "Ghost": "ghost",
 		"Tank": "tank", "Bomber": "bomber",
 		"Swarm": "swarm", "Mimic": "mimic",
+		"GhostWhite": "ghost", "GhostGreen": "ghost",
+		"GhostBlue": "ghost", "GhostRed": "ghost",
+		"ToothFairy": "bat",
 		"BossNecromancer": "boss_necromancer",
 		"BossFairyQueen": "boss_fairy_queen",
 		"BossAlienCow": "boss_alien_cow",
@@ -1196,12 +1223,22 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 	# Try .glb model
 	var file_name = glb_map.get(clean_name, clean_name.to_snake_case())
 	var folder = "bosses" if clean_name.begins_with("Boss") else "enemies"
-	var s = BOSS_SCALE if clean_name.begins_with("Boss") else ENEMY_SCALE
+	var s: Vector3
+	if clean_name.begins_with("Boss"):
+		s = BOSS_SCALE
+	elif ENEMY_SCALE_MAP.has(clean_name):
+		s = ENEMY_SCALE_MAP[clean_name]
+	else:
+		s = ENEMY_SCALE
 	var glb_path = "res://assets/models/%s/%s.glb" % [folder, file_name]
 	var loaded = _try_load_glb(glb_path, s)
 	if loaded:
+		if LogManager:
+			LogManager.info("ModelFactory", "loaded GLB for enemy '%s' -> %s" % [clean_name, glb_path])
 		return loaded
 	# Fallback to procedural
+	if LogManager:
+		LogManager.debug("ModelFactory", "GLB not found for '%s', using procedural fallback" % clean_name)
 	match clean_name:
 		"Slime", "SlimeBig": return create_slime_model()
 		"Bat": return create_bat_model()

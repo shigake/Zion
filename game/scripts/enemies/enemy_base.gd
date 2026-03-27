@@ -35,8 +35,25 @@ func _ready() -> void:
 	# Substitui mesh simples por modelo procedural
 	_apply_procedural_model()
 
+func _get_base_enemy_type() -> String:
+	## Derive the base enemy type from the scene file path, not from `name`
+	## which may have been overwritten by stage skins (e.g. "Mushroom Slime").
+	## "res://scenes/enemies/slime.tscn" -> "Slime"
+	## "res://scenes/enemies/zombie_runner.tscn" -> "ZombieRunner"
+	if scene_file_path and not scene_file_path.is_empty():
+		var file = scene_file_path.get_file().get_basename()  # e.g. "zombie_runner"
+		# Convert snake_case to PascalCase
+		var parts = file.split("_")
+		var result = ""
+		for p in parts:
+			if p.length() > 0:
+				result += p[0].to_upper() + p.substr(1)
+		return result
+	return name
+
 func _apply_procedural_model() -> void:
-	var model = ModelFactory.get_model_for_enemy(name)
+	var enemy_type = _get_base_enemy_type()
+	var model = ModelFactory.get_model_for_enemy(enemy_type)
 	if model.get_child_count() > 0:
 		mesh.visible = false
 		model.name = "ProceduralModel"
