@@ -349,17 +349,28 @@ func _update_weapon_icons() -> void:
 		var panel := PanelContainer.new()
 		panel.custom_minimum_size = Vector2(24, 24)
 
-		var rect := ColorRect.new()
-		rect.custom_minimum_size = Vector2(24, 24)
-		rect.color = color
-		panel.add_child(rect)
+		var _icon_path := "res://assets/icons/weapons/%s.svg" % w.id
+		var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
+		var icon_node: Control
+		if _icon_tex:
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = _icon_tex
+			tex_rect.custom_minimum_size = Vector2(24, 24)
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon_node = tex_rect
+		else:
+			var rect := ColorRect.new()
+			rect.custom_minimum_size = Vector2(24, 24)
+			rect.color = color
+			icon_node = rect
+		panel.add_child(icon_node)
 
 		var lbl := Label.new()
 		lbl.text = str(w.level)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-		rect.add_child(lbl)
+		icon_node.add_child(lbl)
 
 		weapon_container.add_child(panel)
 
@@ -385,17 +396,28 @@ func _update_item_icons() -> void:
 		var panel := PanelContainer.new()
 		panel.custom_minimum_size = Vector2(24, 24)
 
-		var rect := ColorRect.new()
-		rect.custom_minimum_size = Vector2(24, 24)
-		rect.color = color
-		panel.add_child(rect)
+		var _icon_path := "res://assets/icons/items/%s.svg" % it.id
+		var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
+		var icon_node: Control
+		if _icon_tex:
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = _icon_tex
+			tex_rect.custom_minimum_size = Vector2(24, 24)
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon_node = tex_rect
+		else:
+			var rect := ColorRect.new()
+			rect.custom_minimum_size = Vector2(24, 24)
+			rect.color = color
+			icon_node = rect
+		panel.add_child(icon_node)
 
 		var lbl := Label.new()
 		lbl.text = str(it.level)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-		rect.add_child(lbl)
+		icon_node.add_child(lbl)
 
 		item_container.add_child(panel)
 

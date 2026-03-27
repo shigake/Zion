@@ -233,6 +233,21 @@ func _populate_grid() -> void:
 		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(swatch)
 
+		# SVG icon da arma
+		var icon_path := "res://assets/icons/weapons/%s.svg" % weapon_id
+		if ResourceLoader.exists(icon_path):
+			var icon_tex = load(icon_path)
+			if icon_tex:
+				var icon_rect = TextureRect.new()
+				icon_rect.texture = icon_tex
+				icon_rect.custom_minimum_size = Vector2(32, 32)
+				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				if not is_unlocked:
+					icon_rect.modulate = Color(0.3, 0.3, 0.3)
+				vbox.add_child(icon_rect)
+
 		# Icone + nome
 		var name_lbl = Label.new()
 		name_lbl.text = (type_icon + " " + data.get("name", weapon_id)) if is_unlocked else "???"
