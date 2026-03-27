@@ -14,7 +14,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.06, 0.07, 0.05, 1)
+color = Color(0.04, 0.04, 0.06, 1)
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -23,16 +23,22 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -350.0
-offset_top = -250.0
-offset_right = 350.0
-offset_bottom = 250.0
-theme_override_constants/separation = 12
+offset_left = -420.0
+offset_top = -290.0
+offset_right = 420.0
+offset_bottom = 290.0
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="VBox"]
 layout_mode = 2
-text = "ESCOLHA UMA FASE"
+theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 24
+text = "ESCOLHA A FASE"
 horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
 
 [node name="GridRow" type="HBoxContainer" parent="VBox"]
 layout_mode = 2
@@ -42,39 +48,74 @@ theme_override_constants/separation = 8
 
 [node name="LeftArrow" type="Button" parent="VBox/GridRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(40, 0)
+custom_minimum_size = Vector2(36, 0)
 size_flags_vertical = 4
 text = "<"
 
 [node name="GridContainer" type="GridContainer" parent="VBox/GridRow"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 4
 size_flags_vertical = 4
-columns = 4
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
+columns = 5
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
 
 [node name="RightArrow" type="Button" parent="VBox/GridRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(40, 0)
+custom_minimum_size = Vector2(36, 0)
 size_flags_vertical = 4
 text = ">"
 
 [node name="PageLabel" type="Label" parent="VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.55, 1)
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 
-[node name="InfoLabel" type="Label" parent="VBox"]
+[node name="Separator" type="HSeparator" parent="VBox"]
 layout_mode = 2
+theme_override_constants/separation = 2
+theme_override_styles/separator = null
+
+[node name="InfoPanel" type="PanelContainer" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 70)
+
+[node name="InfoVBox" type="VBoxContainer" parent="VBox/InfoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="InfoName" type="Label" parent="VBox/InfoPanel/InfoVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 1.0, 1)
+theme_override_font_sizes/font_size = 20
 text = "Selecione uma fase"
 horizontal_alignment = 1
 
-[node name="NextButton" type="Button" parent="VBox"]
+[node name="InfoDesc" type="Label" parent="VBox/InfoPanel/InfoVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 45)
-text = "PROXIMO"
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+theme_override_font_sizes/font_size = 13
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 2
 
-[node name="BackButton" type="Button" parent="VBox"]
+[node name="Spacer2" type="Control" parent="VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 35)
+custom_minimum_size = Vector2(0, 2)
+
+[node name="ButtonRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 42)
 text = "VOLTAR"
+
+[node name="NextButton" type="Button" parent="VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 42)
+text = "PROXIMO"
