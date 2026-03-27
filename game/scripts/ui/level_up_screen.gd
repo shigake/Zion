@@ -80,7 +80,7 @@ func _show_choices() -> void:
 	# Reroll button
 	if GameManager.rerolls > 0:
 		reroll_btn.visible = true
-		reroll_btn.text = LocaleManager.tr_key("reroll") % GameManager.rerolls
+		reroll_btn.text = LocaleManager.tr_key("reroll") % GameManager.rerolls + " [ESPAÇO]"
 	else:
 		reroll_btn.visible = false
 
@@ -123,6 +123,33 @@ func _setup_levelup_focus() -> void:
 			btn.focus_neighbor_bottom = focusable[i + 1].get_path()
 	if not focusable.is_empty():
 		focusable[0].grab_focus()
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Apenas processa se o painel de level up estiver visivel
+	if not panel.visible:
+		return
+
+	# Atalhos numericos para escolher opcoes (1, 2, 3)
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_1:
+				if options.size() > 0:
+					_choose(0)
+					get_viewport().set_input_as_handled()
+			KEY_2:
+				if options.size() > 1:
+					_choose(1)
+					get_viewport().set_input_as_handled()
+			KEY_3:
+				if options.size() > 2:
+					_choose(2)
+					get_viewport().set_input_as_handled()
+
+	# Atalho ESPAÇO para reroll
+	if event.is_action_pressed("level_up_reroll"):
+		if reroll_btn.visible:
+			_on_reroll()
+			get_viewport().set_input_as_handled()
 
 func _build_card(opt: Dictionary, index: int) -> void:
 	var card = PanelContainer.new()
@@ -211,6 +238,14 @@ func _build_card(opt: Dictionary, index: int) -> void:
 	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	desc_label.custom_minimum_size = Vector2(170, 0)
 	vbox.add_child(desc_label)
+
+	# Keyboard shortcut indicator
+	var shortcut_label = Label.new()
+	shortcut_label.text = "Pressione %d" % (index + 1)
+	shortcut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shortcut_label.add_theme_font_size_override("font_size", 10)
+	shortcut_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
+	vbox.add_child(shortcut_label)
 
 	# Clickable button overlay
 	var btn = Button.new()

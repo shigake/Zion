@@ -10,12 +10,15 @@ var grid: GridContainer
 var back_btn: Button
 var scroll: ScrollContainer
 var detail_panel: PanelContainer
-var detail_portrait: ColorRect
+var detail_portrait: Control
 var detail_name: Label
 var detail_type_lbl: Label
 var detail_dmg: Label
 var detail_desc: Label
 var detail_evo: Label
+var detail_viewport: SubViewport
+var detail_model_root: Node3D
+var current_model: Node3D = null
 
 func _ready() -> void:
 	_build_ui()
@@ -97,23 +100,43 @@ func _build_ui() -> void:
 	hint.name = "Hint"
 	dp_vbox.add_child(hint)
 
-	# Portrait (visual colorido da arma)
-	detail_portrait = ColorRect.new()
-	detail_portrait.custom_minimum_size = Vector2(220, 150)
-	detail_portrait.color = Color(0.12, 0.12, 0.18)
-	detail_portrait.visible = false
-	dp_vbox.add_child(detail_portrait)
+	# Portrait (SubViewport para modelo 3D da arma)
+	var svc = SubViewportContainer.new()
+	svc.custom_minimum_size = Vector2(220, 150)
+	svc.stretch = true
+	svc.visible = false
+	svc.name = "DetailPortrait"
+	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dp_vbox.add_child(svc)
+	detail_portrait = svc
 
-	# Icone grande
-	var portrait_icon = Label.new()
-	portrait_icon.name = "PortraitIcon"
-	portrait_icon.text = "?"
-	portrait_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	portrait_icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	portrait_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-	portrait_icon.add_theme_font_size_override("font_size", 72)
-	portrait_icon.add_theme_color_override("font_color", Color(1, 1, 1, 0.15))
-	detail_portrait.add_child(portrait_icon)
+	detail_viewport = SubViewport.new()
+	detail_viewport.size = Vector2(220, 150)
+	detail_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	svc.add_child(detail_viewport)
+
+	detail_model_root = Node3D.new()
+	detail_viewport.add_child(detail_model_root)
+
+	# Camera para visualizar o modelo
+	var cam = Camera3D.new()
+	cam.position = Vector3(0, 0.5, 1.5)
+	cam.look_at(Vector3(0, 0.3, 0), Vector3.UP)
+	detail_viewport.add_child(cam)
+	detail_viewport.cameras.push_front(cam)
+
+	# Luz ambiente
+	var ambient = WorldEnvironment.new()
+	var env = Environment.new()
+	ambient.environment = env
+	detail_viewport.add_child(ambient)
+
+	# Luz direcional
+	var light = DirectionalLight3D.new()
+	light.position = Vector3(2, 2, 2)
+	light.look_at(Vector3(0, 0, 0), Vector3.UP)
+	light.energy_multiplier = 1.5
+	detail_viewport.add_child(light)
 
 	detail_name = Label.new()
 	detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -184,6 +207,8 @@ func _populate_grid() -> void:
 		var card_btn = Button.new()
 		card_btn.custom_minimum_size = CARD_SIZE
 		card_btn.flat = true
+		card_btn.focus_mode = Control.FOCUS_ALL
+		card_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 		var card_style = StyleBoxFlat.new()
 		card_style.bg_color = Color(0.12, 0.12, 0.18) if is_unlocked else Color(0.08, 0.08, 0.1)
@@ -260,14 +285,10 @@ func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool
 						hint.visible = false
 
 	detail_portrait.visible = true
-	var icon_node = detail_portrait.get_node_or_null("PortraitIcon")
 
 	if is_unlocked:
-		detail_portrait.color = type_color.darkened(0.6)
-		if icon_node:
-			icon_node.text = type_icon
-			icon_node.add_theme_color_override("font_color", type_color.lightened(0.4))
-			icon_node.modulate.a = 0.85
+		# Carrega modelo 3D da arma
+		_load_weapon_model(weapon_id)
 
 		var weapon_type: String = data.get("type", "melee")
 		var element: String = data.get("element", "physical")
@@ -283,10 +304,11 @@ func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool
 		detail_evo.text = evo_text
 		detail_evo.visible = not evo_text.is_empty()
 	else:
-		detail_portrait.color = Color(0.1, 0.1, 0.14)
-		if icon_node:
-			icon_node.text = "?"
-			icon_node.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))
+		# Remove modelo anterior
+		if current_model:
+			current_model.queue_free()
+			current_model = null
+
 		detail_name.text = "???"
 		detail_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 		detail_type_lbl.text = ""
@@ -298,6 +320,27 @@ func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool
 	detail_type_lbl.visible = is_unlocked
 	detail_dmg.visible = is_unlocked
 	detail_desc.visible = true
+
+func _load_weapon_model(weapon_id: String) -> void:
+	# Remove modelo anterior
+	if current_model:
+		current_model.queue_free()
+		current_model = null
+
+	# Tenta carregar modelo da arma
+	var model_path = "res://scenes/weapons/%s.tscn" % weapon_id.to_lower()
+	if not ResourceLoader.exists(model_path):
+		return
+
+	var scene = load(model_path)
+	if scene:
+		current_model = scene.instantiate()
+		detail_model_root.add_child(current_model)
+
+		# Rotaciona e escala a arma para visualização
+		if current_model is Node3D:
+			current_model.rotation.y = 0.3
+			current_model.scale = Vector3.ONE * 1.5
 
 func _get_evolution_info(weapon_id: String) -> String:
 	for evo_id in EvolutionDB.evolutions:

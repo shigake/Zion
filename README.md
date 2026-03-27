@@ -9,6 +9,7 @@ Zion e um survivors roguelite 3D com tematicas variadas, **12 personagens jogave
 ## Requisitos
 
 - [Godot Engine 4.6+](https://godotengine.org/download) (versao com console recomendada para debug)
+- [Blender 3.0+](https://www.blender.org/download/) (obrigatorio para renderizar e exportar modelos 3D)
 - Windows 10/11 (64-bit)
 - Git
 
