@@ -4,36 +4,36 @@
 
 Formula: `DPS = (base_dmg + dmg_per_lvl * (lvl-1)) / max(0.05, base_cd + cd_per_lvl * (lvl-1))`
 
-| Weapon | Type | L1 DPS | L4 DPS | L8 DPS | Notes |
-|--------|------|--------|--------|--------|-------|
-| Katana | melee | 18.8 | 48.2 | **179.2** | cd drops to 0.24 |
-| Staff | ranged/homing | 5.3 | 14.2 | 36.3 | **too weak** |
-| Scythe | passive/area | ~20 | ~41 | ~62 | cd=0, ~2 hits/s |
-| Machinegun | ranged/rapid | 40.0 | 100.0 | 250.0 | rapid fire single |
-| Bazooka | ranged/AoE | 8.6 | 20.7 | 47.6 | AoE compensates |
-| Necro | summon | 3.0 | 19.4 | 94.7 | 2+7 summons at L8 |
-| Axe | melee/thrown | 9.0 | 21.3 | 55.8 | |
-| Shuriken | ranged/multi | 5.0 | 14.5 | 43.2 | multi-direction |
-| Drone | summon | 4.7 | 13.3 | 35.0 | autonomous |
-| Totem | summon/area | 1.6 | 4.1 | 10.0 | **very weak** |
-| Poison Bottle | area/DoT | 2.0 | 5.4 | 13.1 | **weak** |
-| Lightning Chain | ranged/chain | 6.0 | 14.6 | 34.5 | chains multiply |
-| Magic Book | passive | ~16 | ~37 | ~58 | cd=0, ~2 hits/s |
-| Whip | melee/area | 13.3 | 34.8 | 97.6 | wide area |
-| Lance | melee/long | 18.0 | 43.4 | **120.5** | cd drops to 0.44 |
-| Hammer | melee/AoE | 12.5 | 29.9 | 69.8 | AoE ground |
-| Nunchaku | melee/fast | 16.0 | 53.1 | **362.5** | **BROKEN** cd→0.08 |
-| Dual Katana | melee | 14.1 | 37.5 | 111.1 | |
-| Dual Pistol | ranged/rapid | 27.8 | 73.3 | 172.7 | rapid fire |
-| Flamethrower | area/cont | 1.6 | 4.9 | 12.4 | **very weak** |
-| Ice Staff | ranged/AoE | 5.0 | 11.6 | 26.7 | AoE + slow |
-| Crossbow | ranged/pierce | 12.2 | 28.7 | 64.5 | pierce |
-| Plasma Cannon | ranged/AoE | 8.0 | 18.5 | 42.8 | huge AoE |
-| Cloud Sword | melee/heavy | 17.5 | 39.6 | 90.5 | |
-| Elven Bow | ranged/pierce | 11.7 | 27.1 | 65.6 | ricochet |
-| Boxing Gloves | melee | 13.3 | 31.7 | 77.5 | |
-| Time Bomb | area/AoE | 7.0 | 15.3 | 32.3 | 3 bombs AoE |
-| Portal | special | 1.0 | 3.3 | 8.0 | **extremely weak** |
+| Weapon | Type | L1 DPS | L4 DPS | L8 DPS | Status |
+|--------|------|--------|--------|--------|--------|
+| Katana | melee | 18.8 | 39.3 | 113.2 | NERFED ✓ |
+| Staff | ranged/homing | 8.0 | 20.0 | 50.0 | BUFFED ✓ |
+| Scythe | passive/area | ~20 | ~41 | ~62 | OK |
+| Machinegun | ranged/rapid | 40.0 | 100.0 | 250.0 | OK (single target) |
+| Bazooka | ranged/AoE | 8.6 | 20.7 | 47.6 | OK (AoE) |
+| Necro | summon | 3.0 | 19.4 | 94.7 | OK (summons) |
+| Axe | melee/thrown | 9.0 | 21.3 | 55.8 | OK |
+| Shuriken | ranged/multi | 8.0 | 19.7 | 65.9 | BUFFED ✓ |
+| Drone | summon | 6.7 | 17.3 | 47.5 | BUFFED ✓ |
+| Totem | summon/area | 2.8 | 7.1 | 14.5 | BUFFED ✓ |
+| Poison Bottle | area/DoT | 3.2 | 7.8 | 20.0 | BUFFED ✓ |
+| Lightning Chain | ranged/chain | 6.0 | 14.6 | 34.5 | OK (chains) |
+| Magic Book | passive | ~16 | ~37 | ~58 | OK |
+| Whip | melee/area | 13.3 | 34.8 | 97.6 | OK (wide area) |
+| Lance | melee/long | 18.0 | 36.8 | 91.4 | NERFED ✓ |
+| Hammer | melee/AoE | 12.5 | 29.9 | 69.8 | OK |
+| Nunchaku | melee/fast | 16.0 | 44.7 | 131.8 | NERFED ✓ |
+| Dual Katana | melee | 14.1 | 37.5 | 111.1 | OK |
+| Dual Pistol | ranged/rapid | 27.8 | 73.3 | 172.7 | OK (single target) |
+| Flamethrower | area/cont | 3.2 | 7.8 | 20.0 | BUFFED ✓ |
+| Ice Staff | ranged/AoE | 7.0 | 16.5 | 36.2 | BUFFED ✓ |
+| Crossbow | ranged/pierce | 12.2 | 28.7 | 64.5 | OK |
+| Plasma Cannon | ranged/AoE | 8.0 | 18.5 | 42.8 | OK |
+| Cloud Sword | melee/heavy | 17.5 | 39.6 | 90.5 | OK |
+| Elven Bow | ranged/pierce | 11.7 | 27.1 | 65.6 | OK |
+| Boxing Gloves | melee | 13.3 | 31.7 | 77.5 | OK |
+| Time Bomb | area/AoE | 7.0 | 15.3 | 32.3 | OK (3 bombs) |
+| Portal | special | 2.4 | 6.4 | 14.5 | BUFFED ✓ |
 
 ## 2. Balance Issues Identified
 
@@ -196,18 +196,20 @@ With 4-6 weapons averaging 60-80 DPS each at L6-8:
 
 **Proposed fix**: Increase boss HP by 50%
 
-| Boss | Current HP | Proposed HP |
-|------|-----------|-------------|
-| Fairy Queen | 1500 | 2500 |
-| Alien Cow | 1500 | 2500 |
-| Sugar King | 1800 | 3000 |
-| Dracula | 1800 | 3000 |
-| Necromancer | 2000 | 3500 |
-| AI Overlord | 2000 | 3500 |
-| Demon Lord | 2000 | 3500 |
-| Emperor | 2000 | 3500 |
-| Leviathan | 2000 | 3500 |
-| Singularity | 2000 | 3500 |
+| Boss | Old HP | New HP | Kill Time (400 DPS) |
+|------|--------|--------|---------------------|
+| Fairy Queen | 1500 | 2500 | 6.3s |
+| Alien Cow | 1500 | 2500 | 6.3s |
+| Sugar King | 1800 | 3000 | 7.5s |
+| Dracula | 1800 | 3000 | 7.5s |
+| Necromancer | 2000 | 3500 | 8.8s |
+| AI Overlord | 2000 | 3500 | 8.8s |
+| Demon Lord | 2000 | 3500 | 8.8s |
+| Emperor | 2000 | 3500 | 8.8s |
+| Leviathan | 2000 | 3500 | 8.8s |
+| Singularity | 2000 | 3500 | 8.8s |
+
+All bosses APPLIED ✓
 
 ## 10. Evolution Damage Multipliers
 
