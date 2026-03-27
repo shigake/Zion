@@ -35,7 +35,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/                        # Game design documents (27 arquivos)
+├── docs/                        # Game design documents (18 arquivos)
 │   ├── gdd.md                   # Game Design Document
 │   ├── prd.md                   # Product Requirements (roadmap fases 0-6)
 │   ├── spec.md                  # Especificacao tecnica
@@ -46,22 +46,13 @@ Zion/
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
 │   ├── art_prompts.md           # Prompts de arte para assets
-│   ├── prd_balancing.md         # PRD de balanceamento
-│   ├── prd_missing_features.md  # Checklist de features faltantes
-│   ├── prd_visual_polish.md     # PRD de polish visual
-│   ├── prd_telemetry.md         # PRD do sistema de telemetria
 │   ├── prd_3d_models.md         # PRD de modelos 3D
 │   ├── prd_auto_tester.md       # PRD de testes automatizados
-│   ├── prd_ui_ux_fixes.md       # PRD de correcoes UI/UX
 │   ├── prd_art_direction.md     # PRD de direcao artistica
-│   ├── prd_ascension_mode.md    # PRD do modo ascensao (mutacoes)
-│   ├── prd_cross_combo.md       # PRD de cross-combo multiplayer
 │   ├── prd_docs_update.md       # PRD de atualizacao de docs
 │   ├── prd_icon_projectile_polish.md  # PRD de polish de icones/projeteis
 │   ├── prd_icons.md             # PRD de icones
-│   ├── prd_options_menu.md      # PRD do menu de opcoes
 │   ├── prd_projectiles_effects.md     # PRD de efeitos de projeteis
-│   ├── prd_revive_sacrifice.md  # PRD do sistema de revive
 │   └── prd_future.md            # Roadmap futuro
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
