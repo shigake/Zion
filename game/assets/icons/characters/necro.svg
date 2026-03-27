@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Hood -->
+  <path d="M12 56C12 56 10 24 14 16C18 8 26 4 32 4C38 4 46 8 50 16C54 24 52 56 52 56" fill="#4A148C"/>
+  <!-- Hood inner shadow -->
+  <path d="M16 52C16 52 14 26 18 18C22 10 28 8 32 8C36 8 42 10 46 18C50 26 48 52 48 52" fill="#311B92"/>
+  <!-- Face - pale -->
+  <ellipse cx="32" cy="34" rx="12" ry="14" fill="#E8EAF6"/>
+  <!-- Sunken cheeks -->
+  <ellipse cx="24" cy="38" rx="3" ry="4" fill="#C5CAE9" opacity="0.5"/>
+  <ellipse cx="40" cy="38" rx="3" ry="4" fill="#C5CAE9" opacity="0.5"/>
+  <!-- Eyes - glowing green -->
+  <ellipse cx="26" cy="32" rx="3" ry="2.5" fill="#1B5E20"/>
+  <ellipse cx="38" cy="32" rx="3" ry="2.5" fill="#1B5E20"/>
+  <circle cx="26" cy="32" r="1.5" fill="#69F0AE"/>
+  <circle cx="38" cy="32" r="1.5" fill="#69F0AE"/>
+  <!-- Eye glow effect -->
+  <circle cx="26" cy="32" r="4" fill="#69F0AE" opacity="0.2"/>
+  <circle cx="38" cy="32" r="4" fill="#69F0AE" opacity="0.2"/>
+  <circle cx="26" cy="32" r="6" fill="#69F0AE" opacity="0.08"/>
+  <circle cx="38" cy="32" r="6" fill="#69F0AE" opacity="0.08"/>
+  <!-- Dark circles under eyes -->
+  <path d="M23 35C24 36 28 36 29 35" stroke="#7986CB" stroke-width="0.8" fill="none"/>
+  <path d="M35 35C36 36 40 36 41 35" stroke="#7986CB" stroke-width="0.8" fill="none"/>
+  <!-- Nose -->
+  <path d="M32 36L31 39H33Z" fill="#C5CAE9"/>
+  <!-- Mouth - thin sinister -->
+  <path d="M28 42C30 43 34 43 36 42" stroke="#4A148C" stroke-width="1" fill="none"/>
+  <!-- Hood drape over shoulders -->
+  <path d="M6 58C6 50 16 46 32 46C48 46 58 50 58 58V64H6V58Z" fill="#4A148C"/>
+  <!-- Robe collar -->
+  <path d="M24 48L32 56L40 48" stroke="#311B92" stroke-width="1.5" fill="none"/>
+  <!-- Mystical runes on robe -->
+  <circle cx="18" cy="58" r="2" stroke="#69F0AE" stroke-width="0.5" fill="none" opacity="0.5"/>
+  <circle cx="46" cy="58" r="2" stroke="#69F0AE" stroke-width="0.5" fill="none" opacity="0.5"/>
+</svg>

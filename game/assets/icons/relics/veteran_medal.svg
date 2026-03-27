@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Ribbon -->
+  <polygon points="22,4 22,28 32,22 42,28 42,4" fill="#1565C0"/>
+  <!-- Ribbon stripes -->
+  <rect x="26" y="4" width="3" height="20" fill="#1E88E5" opacity="0.5"/>
+  <rect x="35" y="4" width="3" height="20" fill="#1E88E5" opacity="0.5"/>
+  <!-- Medal circle -->
+  <circle cx="32" cy="40" r="16" fill="#FFD700"/>
+  <circle cx="32" cy="40" r="13" fill="#FFC107"/>
+  <circle cx="32" cy="40" r="13" stroke="#FFD700" stroke-width="1.5" fill="none"/>
+  <!-- Star on medal -->
+  <polygon points="32,28 34.5,35 42,35 36,39.5 38,47 32,43 26,47 28,39.5 22,35 29.5,35" fill="#FFD700"/>
+  <!-- Medal highlight -->
+  <path d="M24 34 Q28 26 38 30" stroke="white" stroke-width="1" fill="none" opacity="0.3"/>
+  <!-- Medal outer border -->
+  <circle cx="32" cy="40" r="16" stroke="#B8860B" stroke-width="1.5" fill="none"/>
+</svg>

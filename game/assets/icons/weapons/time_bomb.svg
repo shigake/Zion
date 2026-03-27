@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Bomb body -->
+  <circle cx="32" cy="36" r="18" fill="#37474F" stroke="#263238" stroke-width="1"/>
+  <!-- Bomb highlight -->
+  <ellipse cx="26" cy="30" rx="6" ry="8" fill="#455A64" opacity="0.4"/>
+  <!-- Bomb top connector -->
+  <rect x="28" y="16" width="8" height="6" rx="2" fill="#455A64" stroke="#263238" stroke-width="0.5"/>
+  <!-- Fuse -->
+  <path d="M32 16 Q34 10, 38 8 Q42 6, 44 8" fill="none" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/>
+  <!-- Fuse spark/flame -->
+  <circle cx="44" cy="8" r="3" fill="#FF6B35" opacity="0.8"/>
+  <circle cx="44" cy="8" r="2" fill="#FFAB40"/>
+  <circle cx="44" cy="8" r="1" fill="#FFF176"/>
+  <!-- Spark particles -->
+  <circle cx="46" cy="4" r="0.8" fill="#FF6B35" opacity="0.6"/>
+  <circle cx="48" cy="6" r="0.6" fill="#FFAB40" opacity="0.5"/>
+  <!-- Clock face -->
+  <circle cx="32" cy="36" r="11" fill="#ECEFF1" stroke="#B0BEC5" stroke-width="0.8"/>
+  <!-- Clock hour marks -->
+  <line x1="32" y1="26" x2="32" y2="28" stroke="#546E7A" stroke-width="1"/>
+  <line x1="32" y1="44" x2="32" y2="46" stroke="#546E7A" stroke-width="1"/>
+  <line x1="22" y1="36" x2="24" y2="36" stroke="#546E7A" stroke-width="1"/>
+  <line x1="40" y1="36" x2="42" y2="36" stroke="#546E7A" stroke-width="1"/>
+  <!-- Small marks -->
+  <line x1="37.5" y1="27" x2="36.8" y2="28.5" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="41" y1="30.5" x2="39.5" y2="31.2" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="41" y1="41.5" x2="39.5" y2="40.8" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="37.5" y1="45" x2="36.8" y2="43.5" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="26.5" y1="27" x2="27.2" y2="28.5" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="23" y1="30.5" x2="24.5" y2="31.2" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="23" y1="41.5" x2="24.5" y2="40.8" stroke="#546E7A" stroke-width="0.5"/>
+  <line x1="26.5" y1="45" x2="27.2" y2="43.5" stroke="#546E7A" stroke-width="0.5"/>
+  <!-- Clock hands -->
+  <line x1="32" y1="36" x2="32" y2="28" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="36" x2="38" y2="33" stroke="#FF6B35" stroke-width="1" stroke-linecap="round"/>
+  <!-- Center dot -->
+  <circle cx="32" cy="36" r="1.5" fill="#FF6B35"/>
+  <!-- Fire glow -->
+  <circle cx="44" cy="8" r="6" fill="#FF6B35" opacity="0.12"/>
+</svg>

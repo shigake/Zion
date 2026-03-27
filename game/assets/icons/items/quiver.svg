@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Quiver body -->
+  <path d="M22 14 L20 56 Q20 60 26 60 L38 60 Q44 60 44 56 L42 14Z" fill="#8D6E63" stroke="#6D4C41" stroke-width="1.5"/>
+  <!-- Quiver opening -->
+  <ellipse cx="32" cy="14" rx="11" ry="4" fill="#A1887F" stroke="#6D4C41" stroke-width="1"/>
+  <!-- Leather strap -->
+  <path d="M24 20 L12 8 L14 6 L26 18" stroke="#6D4C41" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Decorative band -->
+  <rect x="20" y="30" width="24" height="4" rx="1" fill="#6D4C41"/>
+  <rect x="20" y="44" width="24" height="4" rx="1" fill="#6D4C41"/>
+  <!-- Stitch detail -->
+  <line x1="22" y1="32" x2="24" y2="32" stroke="#A1887F" stroke-width="0.5"/>
+  <line x1="26" y1="32" x2="28" y2="32" stroke="#A1887F" stroke-width="0.5"/>
+  <line x1="30" y1="32" x2="32" y2="32" stroke="#A1887F" stroke-width="0.5"/>
+  <line x1="34" y1="32" x2="36" y2="32" stroke="#A1887F" stroke-width="0.5"/>
+  <line x1="38" y1="32" x2="40" y2="32" stroke="#A1887F" stroke-width="0.5"/>
+  <!-- Arrows sticking out -->
+  <!-- Arrow 1 -->
+  <line x1="26" y1="14" x2="22" y2="0" stroke="#BDBDBD" stroke-width="1.5" stroke-linecap="round"/>
+  <polygon points="22,0 20,-4 22,-2 24,-4" fill="#BDBDBD"/>
+  <!-- Arrow 2 -->
+  <line x1="32" y1="12" x2="32" y2="-2" stroke="#BDBDBD" stroke-width="1.5" stroke-linecap="round"/>
+  <polygon points="32,-2 30,-6 32,-4 34,-6" fill="#BDBDBD"/>
+  <!-- Arrow 3 -->
+  <line x1="38" y1="14" x2="42" y2="0" stroke="#BDBDBD" stroke-width="1.5" stroke-linecap="round"/>
+  <polygon points="42,0 40,-4 42,-2 44,-4" fill="#BDBDBD"/>
+  <!-- Infinity symbol on band -->
+  <path d="M28 46 Q32 42 36 46 Q40 50 36 46 Q32 42 28 46" stroke="#A1887F" stroke-width="1.5" fill="none"/>
+  <!-- Arrow fletching -->
+  <path d="M25 12 L24 14 L27 13" fill="#795548" opacity="0.6"/>
+  <path d="M31 10 L30 12 L33 11" fill="#795548" opacity="0.6"/>
+  <path d="M37 12 L38 14 L39 12" fill="#795548" opacity="0.6"/>
+</svg>

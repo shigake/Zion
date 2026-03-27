@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Shadow -->
+  <rect x="12" y="12" width="42" height="42" rx="6" fill="#B8860B" opacity="0.3" transform="translate(2,2)"/>
+  <!-- Die body -->
+  <rect x="10" y="10" width="44" height="44" rx="6" fill="#FFD700"/>
+  <!-- Highlight -->
+  <rect x="10" y="10" width="44" height="22" rx="6" fill="#FFEB3B" opacity="0.4"/>
+  <!-- Shine -->
+  <path d="M14 16 Q14 14 16 14 L30 14 Q14 14 14 30 Z" fill="white" opacity="0.3"/>
+  <!-- Dots for 6 face -->
+  <circle cx="22" cy="22" r="3.5" fill="#B8860B"/>
+  <circle cx="22" cy="32" r="3.5" fill="#B8860B"/>
+  <circle cx="22" cy="42" r="3.5" fill="#B8860B"/>
+  <circle cx="42" cy="22" r="3.5" fill="#B8860B"/>
+  <circle cx="42" cy="32" r="3.5" fill="#B8860B"/>
+  <circle cx="42" cy="42" r="3.5" fill="#B8860B"/>
+  <!-- Border -->
+  <rect x="10" y="10" width="44" height="44" rx="6" stroke="#B8860B" stroke-width="1.5" fill="none"/>
+</svg>

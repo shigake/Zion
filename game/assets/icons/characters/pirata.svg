@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Hat -->
+  <path d="M8 24C8 24 16 8 32 8C48 8 56 24 56 24C56 24 48 20 32 20C16 20 8 24 8 24Z" fill="#5D4037"/>
+  <path d="M10 24C10 24 18 10 32 10C46 10 54 24 54 24" stroke="#3E2723" stroke-width="1"/>
+  <!-- Hat brim -->
+  <path d="M6 24C6 24 14 22 32 22C50 22 58 24 58 24C58 26 50 28 32 28C14 28 6 26 6 24Z" fill="#5D4037"/>
+  <!-- Skull on hat -->
+  <circle cx="32" cy="15" r="3" fill="#E0E0E0"/>
+  <rect x="30" y="18" width="4" height="2" fill="#E0E0E0"/>
+  <circle cx="31" cy="14.5" r="0.6" fill="#5D4037"/>
+  <circle cx="33" cy="14.5" r="0.6" fill="#5D4037"/>
+  <!-- Face -->
+  <ellipse cx="32" cy="38" rx="14" ry="14" fill="#FFCC80"/>
+  <!-- Eyepatch -->
+  <ellipse cx="24" cy="34" rx="4" ry="3.5" fill="#212121"/>
+  <path d="M28 34C34 30 40 28 46 26" stroke="#212121" stroke-width="1.5"/>
+  <path d="M20 34C16 32 14 28 14 26" stroke="#212121" stroke-width="1.5"/>
+  <!-- Good eye -->
+  <circle cx="38" cy="34" r="2.5" fill="white"/>
+  <circle cx="38" cy="34" r="1.2" fill="#4E342E"/>
+  <!-- Eyebrow -->
+  <path d="M34 30L42 29" stroke="#4E342E" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M32 37L30 40H34Z" fill="#E0A060"/>
+  <!-- Mouth - grin -->
+  <path d="M26 44C28 46 36 46 38 44" stroke="#5D4037" stroke-width="1.2" fill="none"/>
+  <!-- Gold tooth -->
+  <rect x="31" y="43" width="2" height="2" fill="#FFD700"/>
+  <!-- Stubble -->
+  <circle cx="24" cy="44" r="0.4" fill="#8D6E63"/>
+  <circle cx="26" cy="46" r="0.4" fill="#8D6E63"/>
+  <circle cx="38" cy="46" r="0.4" fill="#8D6E63"/>
+  <circle cx="40" cy="44" r="0.4" fill="#8D6E63"/>
+  <!-- Earring -->
+  <circle cx="48" cy="40" r="2.5" stroke="#FFD700" stroke-width="1.5" fill="none"/>
+  <circle cx="48" cy="42" r="1" fill="#FFD700"/>
+  <!-- Shoulders -->
+  <path d="M8 58C8 50 18 46 32 46C46 46 56 50 56 58V64H8V58Z" fill="#5D4037"/>
+  <!-- Coat collar -->
+  <path d="M24 48L32 54L40 48" stroke="#3E2723" stroke-width="2" fill="none"/>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <filter id="ds" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Ghostly glow -->
+  <path d="M14 8 Q8 8 8 18 Q8 30 32 30 L44 18" fill="#69F0AE" opacity="0.15" filter="url(#ds)"/>
+  <!-- Staff -->
+  <line x1="20" y1="22" x2="46" y2="58" stroke="#4A148C" stroke-width="4" stroke-linecap="round"/>
+  <line x1="20" y1="22" x2="46" y2="58" stroke="#6A1B9A" stroke-width="2" stroke-linecap="round"/>
+  <!-- Blade -->
+  <path d="M20 22 Q10 8 12 6 Q8 6 8 14 Q8 26 28 28 Z" fill="#4A148C"/>
+  <path d="M20 22 Q12 10 13 7 Q10 8 10 16 Q10 24 24 26 Z" fill="#6A1B9A" opacity="0.6"/>
+  <!-- Blade edge -->
+  <path d="M12 6 Q8 6 8 14 Q8 26 28 28" stroke="#69F0AE" stroke-width="1.5" fill="none" opacity="0.7"/>
+  <!-- Ghost wisps -->
+  <path d="M12 12 Q6 14 8 20" stroke="#69F0AE" stroke-width="1" fill="none" opacity="0.5"/>
+  <path d="M16 16 Q10 20 14 24" stroke="#69F0AE" stroke-width="1" fill="none" opacity="0.4"/>
+  <!-- Soul particles -->
+  <circle cx="10" cy="10" r="1.5" fill="#69F0AE" opacity="0.5"/>
+  <circle cx="6" cy="18" r="1" fill="#69F0AE" opacity="0.4"/>
+  <circle cx="14" cy="26" r="1" fill="#69F0AE" opacity="0.3"/>
+</svg>

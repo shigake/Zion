@@ -8,7 +8,7 @@ const ROWS := 3
 const PER_PAGE := COLUMNS * ROWS
 
 # Card dimensions
-const CARD_MIN_SIZE := Vector2(150, 85)
+const CARD_MIN_SIZE := Vector2(150, 130)
 
 # Colors
 const COLOR_BG_CARD := Color(0.09, 0.09, 0.12, 0.95)
@@ -220,6 +220,18 @@ func _create_card(char_id: String, data: Dictionary, char_color: Color, is_locke
 	color_bar.color = char_color if not is_locked else Color(0.3, 0.3, 0.3)
 	vbox.add_child(color_bar)
 
+	# Character portrait icon
+	var char_icon_path := "res://assets/icons/characters/%s.svg" % char_id
+	var char_icon_tex = load(char_icon_path)
+	if char_icon_tex:
+		var icon_center = CenterContainer.new()
+		var icon_rect = TextureRect.new()
+		icon_rect.texture = char_icon_tex
+		icon_rect.custom_minimum_size = Vector2(40, 40)
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_center.add_child(icon_rect)
+		vbox.add_child(icon_center)
+
 	# Character name
 	var name_lbl = Label.new()
 	name_lbl.text = data["name"]
@@ -231,17 +243,33 @@ func _create_card(char_id: String, data: Dictionary, char_color: Color, is_locke
 		name_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.93))
 	vbox.add_child(name_lbl)
 
-	# Weapon name
-	var weapon_name = WeaponDB.get_weapon(data["starting_weapon"])["name"]
+	# Weapon name with optional icon
+	var weapon_id: String = data["starting_weapon"]
+	var weapon_name = WeaponDB.get_weapon(weapon_id)["name"]
+	var weapon_icon_path := "res://assets/icons/weapons/%s.svg" % weapon_id
+	var weapon_icon_tex = load(weapon_icon_path)
+
+	var weapon_hbox = HBoxContainer.new()
+	weapon_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	weapon_hbox.add_theme_constant_override("separation", 4)
+
+	if weapon_icon_tex:
+		var wpn_icon = TextureRect.new()
+		wpn_icon.texture = weapon_icon_tex
+		wpn_icon.custom_minimum_size = Vector2(16, 16)
+		wpn_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		weapon_hbox.add_child(wpn_icon)
+
 	var weapon_lbl = Label.new()
 	weapon_lbl.text = weapon_name
-	weapon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	weapon_lbl.add_theme_font_size_override("font_size", 10)
 	if is_locked:
 		weapon_lbl.add_theme_color_override("font_color", Color(0.35, 0.35, 0.38))
 	else:
 		weapon_lbl.add_theme_color_override("font_color", COLOR_WEAPON_TEXT)
-	vbox.add_child(weapon_lbl)
+	weapon_hbox.add_child(weapon_lbl)
+
+	vbox.add_child(weapon_hbox)
 
 	# Lock info for locked characters
 	if is_locked:

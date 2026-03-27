@@ -177,7 +177,26 @@ func _show_stats() -> void:
 	for w in GameManager.player_weapons:
 		var data = WeaponDB.weapons.get(w.id, {})
 		var wname = data.get("name", w.id.capitalize())
-		_add_stat_line(vbox, wname, "Lv.%d" % w.level)
+		var whbox = HBoxContainer.new()
+		var wicon_path = "res://assets/icons/weapons/%s.svg" % w.id
+		var wicon_tex = load(wicon_path) if ResourceLoader.exists(wicon_path) else null
+		if wicon_tex:
+			var wicon = TextureRect.new()
+			wicon.texture = wicon_tex
+			wicon.custom_minimum_size = Vector2(20, 20)
+			wicon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			whbox.add_child(wicon)
+		var wlbl = Label.new()
+		wlbl.text = wname
+		wlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		wlbl.add_theme_font_size_override("font_size", 14)
+		whbox.add_child(wlbl)
+		var wval = Label.new()
+		wval.text = "Lv.%d" % w.level
+		wval.add_theme_font_size_override("font_size", 14)
+		wval.add_theme_color_override("font_color", Color(0.9, 0.9, 0.5))
+		whbox.add_child(wval)
+		vbox.add_child(whbox)
 
 	# Active synergies
 	var synergies = SynergySystem.active_synergies

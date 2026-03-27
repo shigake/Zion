@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <filter id="iw" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Fire glow -->
+  <ellipse cx="16" cy="24" rx="14" ry="18" fill="#FF6F00" opacity="0.15" filter="url(#iw)"/>
+  <!-- Main body -->
+  <rect x="32" y="26" width="22" height="10" rx="3" fill="#B71C1C"/>
+  <rect x="32" y="26" width="22" height="5" rx="3" fill="#D32F2F" opacity="0.4"/>
+  <!-- Barrel -->
+  <rect x="10" y="28" width="24" height="6" rx="2" fill="#424242"/>
+  <rect x="10" y="28" width="24" height="3" rx="2" fill="#616161" opacity="0.5"/>
+  <!-- Fuel tank -->
+  <ellipse cx="50" cy="31" rx="6" ry="8" fill="#B71C1C"/>
+  <ellipse cx="50" cy="31" rx="4" ry="6" fill="#D32F2F" opacity="0.4"/>
+  <!-- Nozzle -->
+  <path d="M10 28 L6 26 L6 36 L10 34 Z" fill="#616161"/>
+  <!-- Handle -->
+  <rect x="38" y="36" width="6" height="14" rx="2" fill="#424242"/>
+  <!-- Demonic horns on body -->
+  <path d="M36 26 Q34 18 30 16" stroke="#B71C1C" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M44 26 Q46 18 50 16" stroke="#B71C1C" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Flames shooting out -->
+  <path d="M6 30 Q-2 24 -4 28 Q-2 22 2 26 Q-4 18 0 14 Q2 20 4 18" fill="#FF6F00"/>
+  <path d="M4 32 Q-4 34 -6 30 Q-2 36 0 34 Q-6 40 -2 44 Q0 38 4 36" fill="#FF6F00"/>
+  <path d="M2 28 Q-6 26 -8 30 Q-4 24 0 28" fill="#FFEB3B" opacity="0.7"/>
+  <!-- Pentagram detail -->
+  <circle cx="42" cy="31" r="3" fill="none" stroke="#FF6F00" stroke-width="1" opacity="0.7"/>
+  <!-- Ember particles -->
+  <circle cx="-2" cy="18" r="1.5" fill="#FF6F00" opacity="0.6"/>
+  <circle cx="-6" cy="34" r="1" fill="#FFEB3B" opacity="0.5"/>
+  <circle cx="0" cy="42" r="1.2" fill="#FF6F00" opacity="0.5"/>
+</svg>

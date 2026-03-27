@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <filter id="vw" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Blood glow -->
+  <path d="M10 10 Q30 20 20 40 Q40 30 50 50" stroke="#B71C1C" stroke-width="8" fill="none" opacity="0.15" filter="url(#vw)"/>
+  <!-- Handle -->
+  <rect x="46" y="48" width="6" height="14" rx="2" fill="#4E342E" transform="rotate(-20,49,55)"/>
+  <rect x="48" y="46" width="2" height="4" rx="1" fill="#B71C1C"/>
+  <!-- Guard -->
+  <ellipse cx="49" cy="47" rx="5" ry="3" fill="#B71C1C" transform="rotate(-20,49,47)"/>
+  <!-- Whip body -->
+  <path d="M48 46 Q38 38 30 34 Q20 28 14 18 Q10 12 8 8" stroke="#B71C1C" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M48 46 Q38 38 30 34 Q20 28 14 18 Q10 12 8 8" stroke="#D32F2F" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Whip tip split -->
+  <path d="M8 8 Q4 2 2 4" stroke="#B71C1C" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M8 8 Q6 2 10 2" stroke="#B71C1C" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Blood drips -->
+  <path d="M24 30 Q24 36 22 40 Q22 42 24 42 Q26 42 26 40 Q24 36 24 30" fill="#B71C1C" opacity="0.8"/>
+  <path d="M16 22 Q16 28 14 32 Q14 34 16 34 Q18 34 18 32 Q16 28 16 22" fill="#B71C1C" opacity="0.7"/>
+  <path d="M36 38 Q36 42 35 44 Q35 45 36 45 Q37 45 37 44 Q36 42 36 38" fill="#B71C1C" opacity="0.6"/>
+  <!-- Blood splatter -->
+  <circle cx="10" cy="14" r="1.5" fill="#B71C1C" opacity="0.6"/>
+  <circle cx="20" cy="26" r="1" fill="#D32F2F" opacity="0.5"/>
+  <circle cx="30" cy="36" r="1.2" fill="#B71C1C" opacity="0.5"/>
+</svg>

@@ -193,24 +193,34 @@ func _build_card(opt: Dictionary, index: int) -> void:
 	badge.add_theme_color_override("font_color", type_color.lightened(0.3))
 	vbox.add_child(badge)
 
-	# Icon area with element color
+	# Icon area with SVG icon or fallback
 	var icon_container = CenterContainer.new()
 	icon_container.custom_minimum_size = Vector2(0, 70)
 	vbox.add_child(icon_container)
-	var icon_rect = ColorRect.new()
-	icon_rect.custom_minimum_size = Vector2(64, 64)
-	var element = _get_element(opt)
-	var elem_color = ELEMENT_COLORS.get(element, Color(0.5, 0.5, 0.5))
-	icon_rect.color = elem_color.darkened(0.4)
-	icon_container.add_child(icon_rect)
-	# Type icon overlay
-	var icon_label = Label.new()
-	icon_label.text = TYPE_ICONS.get(card_type, "?")
-	icon_label.add_theme_font_size_override("font_size", 28)
-	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon_label.anchors_preset = Control.PRESET_FULL_RECT
-	icon_rect.add_child(icon_label)
+	var _icon_category = "weapons" if opt_type == "weapon" else "items"
+	var _icon_path = "res://assets/icons/%s/%s.svg" % [_icon_category, opt["id"]]
+	var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
+	if _icon_tex:
+		var tex_rect = TextureRect.new()
+		tex_rect.texture = _icon_tex
+		tex_rect.custom_minimum_size = Vector2(64, 64)
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_container.add_child(tex_rect)
+	else:
+		var icon_rect = ColorRect.new()
+		icon_rect.custom_minimum_size = Vector2(64, 64)
+		var element = _get_element(opt)
+		var elem_color = ELEMENT_COLORS.get(element, Color(0.5, 0.5, 0.5))
+		icon_rect.color = elem_color.darkened(0.4)
+		icon_container.add_child(icon_rect)
+		# Type icon overlay
+		var icon_label = Label.new()
+		icon_label.text = TYPE_ICONS.get(card_type, "?")
+		icon_label.add_theme_font_size_override("font_size", 28)
+		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		icon_label.anchors_preset = Control.PRESET_FULL_RECT
+		icon_rect.add_child(icon_label)
 
 	# Name
 	var name_label = Label.new()
