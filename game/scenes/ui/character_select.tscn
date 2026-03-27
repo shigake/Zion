@@ -14,7 +14,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.04, 0.04, 0.06, 1)
+color = Color(0.02, 0.02, 0.04, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -37,112 +37,136 @@ horizontal_alignment = 1
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.92, 0.92, 0.96, 1)
 
-[node name="ContentHBox" type="HBoxContainer" parent="MarginContainer/MainVBox"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 16
-
-[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.5
-theme_override_constants/separation = 8
-
-[node name="GridRow" type="HBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel"]
+[node name="CarouselContainer" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 alignment = 1
-theme_override_constants/separation = 6
+theme_override_constants/separation = 24
 
-[node name="LeftArrow" type="Button" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel/GridRow"]
+[node name="LeftArrow" type="Button" parent="MarginContainer/MainVBox/CarouselContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(28, 0)
-size_flags_vertical = 4
-text = "<"
+custom_minimum_size = Vector2(48, 80)
+text = "◀"
+theme_override_font_sizes/font_size = 20
 
-[node name="GridContainer" type="GridContainer" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel/GridRow"]
+[node name="LeftCharContainer" type="SubViewportContainer" parent="MarginContainer/MainVBox/CarouselContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-columns = 4
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-
-[node name="RightArrow" type="Button" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel/GridRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(28, 0)
-size_flags_vertical = 4
-text = ">"
-
-[node name="PageLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/LeftPanel"]
-layout_mode = 2
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(0.5, 0.5, 0.55, 1)
-
-[node name="RightPanel" type="PanelContainer" parent="MarginContainer/MainVBox/ContentHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.7
-
-[node name="PreviewVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/RightPanel"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="SubViewportContainer" type="SubViewportContainer" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox"]
-layout_mode = 2
-size_flags_vertical = 3
+custom_minimum_size = Vector2(300, 450)
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer"]
+[node name="LeftSubViewport" type="SubViewport" parent="MarginContainer/MainVBox/CarouselContainer/LeftCharContainer"]
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(400, 500)
+size = Vector2i(300, 450)
 render_target_update_mode = 4
 
-[node name="Camera3D" type="Camera3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
-transform = Transform3D(1, 0, 0, 0, 0.99, 0.14, 0, -0.14, 0.99, 0, 0.5, 5.0)
-fov = 15.0
+[node name="Camera3D" type="Camera3D" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.99, 0.14, 0, -0.14, 0.99, 0, 0.6, 3.5)
+fov = 22.0
 
-[node name="PreviewLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
-transform = Transform3D(1, 0, 0, 0, 0.7, 0.7, 0, -0.7, 0.7, 0, 3, 2)
-light_energy = 1.6
+[node name="AmbientLight3D" type="WorldEnvironment" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
+environment = preload("res://assets/environments/character_select_env.tres")
+
+[node name="DimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 2, 1)
+light_energy = 0.3
+shadow_enabled = false
+
+[node name="LeftModelRoot" type="Node3D" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
+
+[node name="CenterCharContainer" type="SubViewportContainer" parent="MarginContainer/MainVBox/CarouselContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(400, 520)
+stretch = true
+
+[node name="CenterSubViewport" type="SubViewport" parent="MarginContainer/MainVBox/CarouselContainer/CenterCharContainer"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(400, 520)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 2.5)
+fov = 38.0
+
+[node name="Spotlight" type="OmniLight3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
+transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 3.5, 0)
+light_energy = 2.0
+omni_range = 8.0
+omni_attenuation = 1.0
 shadow_enabled = true
 
-[node name="FillLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
-transform = Transform3D(1, 0, 0, 0, -0.7, -0.7, 0, 0.7, -0.7, -2, 1, -1)
+[node name="FillLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.7, -0.7, 0, 0.7, 0.7, -1.5, 2, -1)
 light_color = Color(0.6, 0.7, 0.9, 1)
-light_energy = 0.5
-
-[node name="RimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
-transform = Transform3D(1, 0, 0, 0, 0.9, -0.44, 0, 0.44, 0.9, 1.5, 2, -1)
-light_color = Color(0.4, 0.45, 0.6, 1)
 light_energy = 0.4
+shadow_enabled = false
 
-[node name="ModelRoot" type="Node3D" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/SubViewportContainer/SubViewport"]
+[node name="CenterModelRoot" type="Node3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
 
-[node name="InfoVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox"]
+[node name="RightCharContainer" type="SubViewportContainer" parent="MarginContainer/MainVBox/CarouselContainer"]
 layout_mode = 2
-theme_override_constants/separation = 4
+custom_minimum_size = Vector2(300, 450)
+stretch = true
 
-[node name="CharNameLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/InfoVBox"]
+[node name="RightSubViewport" type="SubViewport" parent="MarginContainer/MainVBox/CarouselContainer/RightCharContainer"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(300, 450)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 2.0)
+fov = 40.0
+
+[node name="AmbientLight3D" type="WorldEnvironment" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
+environment = preload("res://assets/environments/character_select_env.tres")
+
+[node name="DimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 2, 1)
+light_energy = 0.3
+shadow_enabled = false
+
+[node name="RightModelRoot" type="Node3D" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
+
+[node name="RightArrow" type="Button" parent="MarginContainer/MainVBox/CarouselContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(48, 80)
+text = "▶"
+theme_override_font_sizes/font_size = 20
+
+[node name="InfoPanel" type="PanelContainer" parent="MarginContainer/MainVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 100)
+
+[node name="InfoVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/InfoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CharNameLabel" type="Label" parent="MarginContainer/MainVBox/InfoPanel/InfoVBox"]
 layout_mode = 2
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 
-[node name="WeaponLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/InfoVBox"]
+[node name="WeaponLabel" type="Label" parent="MarginContainer/MainVBox/InfoPanel/InfoVBox"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 1)
 
-[node name="PassiveLabel" type="Label" parent="MarginContainer/MainVBox/ContentHBox/RightPanel/PreviewVBox/InfoVBox"]
+[node name="PassiveLabel" type="Label" parent="MarginContainer/MainVBox/InfoPanel/InfoVBox"]
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.65, 0.75, 0.55, 1)
+
+[node name="LockLabel" type="Label" parent="MarginContainer/MainVBox/InfoPanel/InfoVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(1.0, 0.6, 0.6, 1)
 
 [node name="BottomHBox" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
