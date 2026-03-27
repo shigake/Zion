@@ -220,9 +220,11 @@ func _create_card(char_id: String, data: Dictionary, char_color: Color, is_locke
 	color_bar.color = char_color if not is_locked else Color(0.3, 0.3, 0.3)
 	vbox.add_child(color_bar)
 
-	# Character portrait icon
-	var char_icon_path := "res://assets/icons/characters/%s.svg" % char_id
-	var char_icon_tex = load(char_icon_path)
+	# Character portrait icon (prefer PNG from 3D render, fallback to SVG)
+	var char_icon_path := "res://assets/icons/characters/%s.png" % char_id
+	if not ResourceLoader.exists(char_icon_path):
+		char_icon_path = "res://assets/icons/characters/%s.svg" % char_id
+	var char_icon_tex = load(char_icon_path) if ResourceLoader.exists(char_icon_path) else null
 	if char_icon_tex:
 		var icon_center = CenterContainer.new()
 		var icon_rect = TextureRect.new()
