@@ -41,21 +41,22 @@ func _create_bomb_node(level: int) -> Node3D:
 	bomb.set_meta("fuse_time", FUSE_TIME)
 	bomb.set_meta("explosion_radius", EXPLOSION_RADIUS)
 
-	# Visual: esfera vermelha
+	# Child 0: Bomb body (dark red/black metallic sphere)
 	var mesh_inst = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
 	sphere.radius = 0.3
 	sphere.height = 0.6
 	mesh_inst.mesh = sphere
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.8, 0.1, 0.1, 1.0)
+	mat.albedo_color = Color(0.3, 0.05, 0.05, 1.0)
+	mat.metallic = 0.5
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.3, 0.0)
-	mat.emission_energy_multiplier = 1.5
+	mat.emission = Color(0.8, 0.1, 0.1)
+	mat.emission_energy_multiplier = 1.0
 	mesh_inst.material_override = mat
 	bomb.add_child(mesh_inst)
 
-	# Timer label 3D
+	# Child 1: Timer label 3D
 	var label = Label3D.new()
 	label.text = str(int(FUSE_TIME))
 	label.font_size = 32
@@ -63,6 +64,51 @@ func _create_bomb_node(level: int) -> Node3D:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.modulate = Color(1.0, 0.8, 0.0)
 	bomb.add_child(label)
+
+	# Child 2: Fuse cylinder on top of the bomb
+	var fuse_mesh = MeshInstance3D.new()
+	var fuse_cyl = CylinderMesh.new()
+	fuse_cyl.top_radius = 0.01
+	fuse_cyl.bottom_radius = 0.01
+	fuse_cyl.height = 0.15
+	fuse_mesh.mesh = fuse_cyl
+	var fuse_mat = StandardMaterial3D.new()
+	fuse_mat.albedo_color = Color(0.15, 0.1, 0.05, 1.0)
+	fuse_mesh.material_override = fuse_mat
+	fuse_mesh.position = Vector3(0.02, 0.35, 0)
+	fuse_mesh.rotation.z = 0.3  # Slight curve/tilt
+	bomb.add_child(fuse_mesh)
+
+	# Child 3: Fuse spark particles at fuse tip
+	var spark_particles = GPUParticles3D.new()
+	spark_particles.amount = 3
+	spark_particles.lifetime = 0.2
+	spark_particles.emitting = true
+	spark_particles.one_shot = false
+	spark_particles.position = Vector3(0.02 + sin(0.3) * 0.075, 0.35 + cos(0.3) * 0.075, 0)
+	var spark_mat = ParticleProcessMaterial.new()
+	spark_mat.direction = Vector3(0, 1, 0)
+	spark_mat.spread = 60.0
+	spark_mat.initial_velocity_min = 0.3
+	spark_mat.initial_velocity_max = 1.0
+	spark_mat.gravity = Vector3(0, -3, 0)
+	spark_mat.scale_min = 0.2
+	spark_mat.scale_max = 0.5
+	spark_mat.color = Color(1.0, 0.7, 0.1, 0.9)
+	spark_particles.process_material = spark_mat
+	# Draw pass: tiny orange/yellow spark
+	var spark_mesh = SphereMesh.new()
+	spark_mesh.radius = 0.01
+	spark_mesh.height = 0.02
+	var spark_draw_mat = StandardMaterial3D.new()
+	spark_draw_mat.albedo_color = Color(1.0, 0.6, 0.1, 0.9)
+	spark_draw_mat.emission_enabled = true
+	spark_draw_mat.emission = Color(1.0, 0.5, 0.0)
+	spark_draw_mat.emission_energy_multiplier = 5.0
+	spark_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	spark_mesh.surface_set_material(0, spark_draw_mat)
+	spark_particles.draw_pass_1 = spark_mesh
+	bomb.add_child(spark_particles)
 
 	# Fuse script via set_script
 	var script = GDScript.new()
@@ -94,17 +140,28 @@ func _process(delta: float) -> void:
 
 	fuse_timer += delta
 
-	# Atualiza label
+	# Update countdown label
 	var label = get_child(1) as Label3D
 	if label:
 		var remaining = max(0, fuse_time - fuse_timer)
 		label.text = str(int(ceil(remaining)))
 
-	# Pulsa a bomba
+	# Countdown pulse: emission oscillates, faster as timer approaches 0
 	var mesh_node = get_child(0) as MeshInstance3D
 	if mesh_node:
-		var pulse = 1.0 + sin(fuse_timer * 8.0) * 0.1
-		mesh_node.scale = Vector3.ONE * pulse
+		var progress = clamp(fuse_timer / fuse_time, 0.0, 1.0)
+		# Pulse speed increases as countdown approaches 0 (4 -> 16 Hz)
+		var pulse_speed = lerp(4.0, 16.0, progress)
+		var pulse_val = (sin(fuse_timer * pulse_speed) + 1.0) * 0.5  # 0..1
+		var emission_energy = lerp(0.5, 2.0, pulse_val)
+
+		var mat = mesh_node.material_override as StandardMaterial3D
+		if mat:
+			mat.emission_energy_multiplier = emission_energy
+
+		# Also pulse scale slightly
+		var scale_pulse = 1.0 + sin(fuse_timer * pulse_speed) * 0.08
+		mesh_node.scale = Vector3.ONE * scale_pulse
 
 	if fuse_timer >= fuse_time:
 		_explode()
@@ -125,12 +182,52 @@ func _explode() -> void:
 
 	ScreenEffects.shake(0.5)
 	AudioManager.play_sfx("hit")
-	ParticleFactory.spawn_hit_particles(pos, Color(1.0, 0.4, 0.0))
-	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.7, 0.1))
 
+	# Multi-layer explosion effect
+	# Layer 1: Core flash (white/yellow)
+	_spawn_explosion_layer(pos, 0.5, Color(1.0, 0.9, 0.6), 6.0, 0.15)
+	# Layer 2: Fire burst (orange)
+	ParticleFactory.spawn_explosion_particles(pos, explosion_radius)
+	ParticleFactory.spawn_hit_particles(pos, Color(1.0, 0.4, 0.0))
+	# Layer 3: Smoke/debris (dark)
+	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.7, 0.1))
+	ParticleFactory.spawn_death_particles(pos, Color(0.3, 0.15, 0.05))
+
+	# Expand bomb mesh as shockwave then free
 	var tween = create_tween()
 	var mesh_node = get_child(0) as MeshInstance3D
 	if mesh_node:
-		tween.tween_property(mesh_node, "scale", Vector3.ONE * 3.0, 0.15)
+		var mat = mesh_node.material_override as StandardMaterial3D
+		if mat:
+			mat.emission = Color(1.0, 0.7, 0.2)
+			mat.emission_energy_multiplier = 5.0
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		tween.set_parallel(true)
+		tween.tween_property(mesh_node, "scale", Vector3.ONE * 3.0, 0.2)
+		if mat:
+			tween.tween_property(mat, "albedo_color:a", 0.0, 0.2)
+		tween.set_parallel(false)
 	tween.tween_callback(queue_free)
+
+func _spawn_explosion_layer(pos: Vector3, radius: float, color: Color, energy: float, duration: float) -> void:
+	var flash = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = radius
+	sphere.height = radius * 2.0
+	flash.mesh = sphere
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.8)
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = energy
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	flash.material_override = mat
+	flash.global_position = pos
+	get_tree().current_scene.add_child(flash)
+	var tw = flash.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(flash, "scale", Vector3.ONE * 4.0, duration)
+	tw.tween_property(mat, "albedo_color:a", 0.0, duration)
+	tw.set_parallel(false)
+	tw.tween_callback(flash.queue_free)
 """
