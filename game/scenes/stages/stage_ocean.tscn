@@ -25,12 +25,12 @@ background_mode = 1
 background_color = Color(0.005, 0.03, 0.08, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.06, 0.18, 0.35, 1)
-ambient_light_energy = 0.6
+ambient_light_energy = 1.0
 ssao_enabled = true
 ssao_radius = 3.0
 ssao_intensity = 2.0
 tonemap_mode = 2
-tonemap_exposure = 1.0
+tonemap_exposure = 1.1
 tonemap_white = 5.0
 fog_enabled = true
 fog_light_color = Color(0.03, 0.1, 0.2, 1)
@@ -43,7 +43,7 @@ glow_bloom = 0.55
 glow_blend_mode = 0
 glow_hdr_threshold = 0.7
 adjustment_enabled = true
-adjustment_brightness = 0.9
+adjustment_brightness = 1.05
 adjustment_contrast = 1.2
 adjustment_saturation = 1.35
 
@@ -63,7 +63,7 @@ shadow_opacity = 0.5
 [node name="FillLight" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0.707, -0.707, 0, 0.707, -0.707, 0, -5, 0)
 light_color = Color(0.08, 0.25, 0.45, 1)
-light_energy = 0.4
+light_energy = 0.55
 shadow_enabled = false
 
 [node name="Ground" type="MeshInstance3D" parent="."]
