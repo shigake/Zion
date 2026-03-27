@@ -1,0 +1,58 @@
+extends Area3D
+
+## Projetil cristal de gelo do Ice Staff — gira lentamente enquanto viaja.
+
+@export var speed: float = 10.0
+@export var damage: int = 10
+@export var lifetime: float = 4.0
+
+var direction: Vector3 = Vector3.FORWARD
+var timer: float = 0.0
+var damage_type: String = "ice"
+var _returning: bool = false
+var _spin_speed: float = 3.0
+
+func _ready() -> void:
+	body_entered.connect(_on_body_entered)
+
+func _physics_process(delta: float) -> void:
+	if _returning:
+		return
+	timer += delta
+	if timer >= lifetime:
+		_return_to_pool()
+		return
+
+	# Slow spin on travel axis
+	rotate_y(_spin_speed * delta)
+
+	if is_inside_tree():
+		global_position += direction * speed * delta
+
+func _on_body_entered(body: Node3D) -> void:
+	if _returning:
+		return
+	if body.has_method("take_damage") and body.is_in_group("enemies"):
+		body.call_deferred("take_damage", damage, damage_type)
+		# Don't free here — ice_staff.gd handles freeze_area via signal
+
+func _return_to_pool() -> void:
+	if _returning:
+		return
+	_returning = true
+	timer = 0.0
+	direction = Vector3.FORWARD
+	monitoring = false
+	call_deferred("_do_return")
+
+func _do_return() -> void:
+	if scene_file_path and not scene_file_path.is_empty():
+		ObjectPool.return_instance(self, scene_file_path)
+	else:
+		queue_free()
+
+func _reset_for_reuse() -> void:
+	_returning = false
+	monitoring = true
+	timer = 0.0
+	rotation = Vector3.ZERO
