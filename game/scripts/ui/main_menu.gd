@@ -65,6 +65,14 @@ func _ready() -> void:
 		multi_btn.modulate.a = 0.5
 
 	# --- Programmatic buttons (inserted before QuitButton) ---
+	# Daily Challenge
+	var daily_btn := _create_menu_button("Desafio diario")
+	daily_btn.pressed.connect(func():
+		AudioManager.play_sfx("menu_click")
+		get_tree().change_scene_to_file("res://scenes/ui/daily_challenge_screen.tscn")
+	)
+	buttons_container.add_child(daily_btn)
+
 	# Leaderboard
 	var leaderboard_btn := _create_menu_button(LocaleManager.tr_key("menu_leaderboard"))
 	leaderboard_btn.pressed.connect(func():
@@ -103,6 +111,7 @@ func _ready() -> void:
 	buttons_container.move_child(options_btn, btn_count - 2)
 
 	# Apply consistent styling to programmatic buttons
+	_style_button(daily_btn)
 	_style_button(leaderboard_btn)
 	_style_button(bestiary_btn)
 	_style_button(codex_btn)

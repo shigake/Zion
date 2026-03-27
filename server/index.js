@@ -66,6 +66,21 @@ db.exec(`
     data TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS daily_scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    character TEXT,
+    stage TEXT,
+    survived_seconds REAL,
+    total_kills INTEGER,
+    victory INTEGER DEFAULT 0,
+    mutations TEXT DEFAULT '[]',
+    version TEXT,
+    ip TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_daily_scores_date ON daily_scores(date);
 `);
 
 // Add new columns if missing (migration-safe)
@@ -504,6 +519,120 @@ app.get("/balance", (_req, res) => {
     }));
 
     res.json({ weapon_dps: weaponDps, character_win_rates: characterWinRates, stage_difficulty: stageDifficulty });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Daily Challenge endpoints
+// ---------------------------------------------------------------------------
+
+const insertDailyScore = db.prepare(`
+  INSERT INTO daily_scores (date, character, stage, survived_seconds, total_kills, victory, mutations, version, ip)
+  VALUES (@date, @character, @stage, @survived_seconds, @total_kills, @victory, @mutations, @version, @ip)
+`);
+
+// POST /daily-score — submit a daily challenge score
+app.post("/daily-score", rateLimit(60000, 10), (req, res) => {
+  try {
+    const b = req.body;
+    if (!b.date) return res.status(400).json({ error: "date is required" });
+    insertDailyScore.run({
+      date: b.date,
+      character: b.character || null,
+      stage: b.stage || null,
+      survived_seconds: b.survived_seconds ?? 0,
+      total_kills: b.total_kills ?? 0,
+      victory: b.victory ? 1 : 0,
+      mutations: JSON.stringify(b.mutations || []),
+      version: b.version || null,
+      ip: req.ip || null,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Error inserting daily score:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /daily-leaderboard — leaderboard for a specific date
+app.get("/daily-leaderboard", (req, res) => {
+  try {
+    const date = req.query.date;
+    if (!date) return res.status(400).json({ error: "date query param required (YYYY-MM-DD)" });
+
+    const scores = db.prepare(`
+      SELECT character, stage, survived_seconds, total_kills, victory, mutations, version, created_at
+      FROM daily_scores
+      WHERE date = @date
+      ORDER BY total_kills DESC, survived_seconds DESC
+      LIMIT 50
+    `).all({ date });
+
+    const parsed = scores.map(s => ({
+      ...s,
+      mutations: JSON.parse(s.mutations || "[]"),
+    }));
+
+    // Stats
+    const stats = db.prepare(`
+      SELECT COUNT(*) AS total_runs,
+        AVG(survived_seconds) AS avg_time,
+        AVG(total_kills) AS avg_kills,
+        MAX(total_kills) AS max_kills,
+        MAX(survived_seconds) AS max_time,
+        SUM(victory) AS total_victories
+      FROM daily_scores WHERE date = @date
+    `).get({ date });
+
+    res.json({
+      date,
+      total_entries: stats?.total_runs || 0,
+      stats: {
+        avg_time: Math.round((stats?.avg_time || 0) * 100) / 100,
+        avg_kills: Math.round((stats?.avg_kills || 0) * 100) / 100,
+        max_kills: stats?.max_kills || 0,
+        max_time: Math.round((stats?.max_time || 0) * 100) / 100,
+        total_victories: stats?.total_victories || 0,
+      },
+      scores: parsed,
+    });
+  } catch (err) {
+    console.error("Error fetching daily leaderboard:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /daily-stats — aggregate daily challenge stats (streak data, popular stages, etc.)
+app.get("/daily-stats", (_req, res) => {
+  try {
+    const totalDays = db.prepare("SELECT COUNT(DISTINCT date) AS count FROM daily_scores").get().count;
+    const totalRuns = db.prepare("SELECT COUNT(*) AS count FROM daily_scores").get().count;
+    const avgKills = db.prepare("SELECT AVG(total_kills) AS avg FROM daily_scores").get().avg || 0;
+    const winRate = db.prepare("SELECT AVG(victory) AS rate FROM daily_scores").get().rate || 0;
+
+    const popularCharacters = db.prepare(`
+      SELECT character, COUNT(*) AS picks FROM daily_scores
+      WHERE character IS NOT NULL GROUP BY character ORDER BY picks DESC LIMIT 5
+    `).all();
+
+    const recentDays = db.prepare(`
+      SELECT date, COUNT(*) AS runs, AVG(total_kills) AS avg_kills, SUM(victory) AS victories
+      FROM daily_scores GROUP BY date ORDER BY date DESC LIMIT 7
+    `).all().map(r => ({
+      ...r,
+      avg_kills: Math.round(r.avg_kills * 100) / 100,
+    }));
+
+    res.json({
+      total_days: totalDays,
+      total_runs: totalRuns,
+      avg_kills: Math.round(avgKills * 100) / 100,
+      win_rate: Math.round(winRate * 10000) / 100,
+      popular_characters: popularCharacters,
+      recent_days: recentDays,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

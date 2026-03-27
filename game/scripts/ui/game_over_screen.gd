@@ -29,6 +29,14 @@ func _ready() -> void:
 func _show() -> void:
 	GameManager.end_run()
 	AchievementManager.check_achievements()
+	# Submit daily challenge score
+	if GameManager.game_mode == "daily":
+		DailyChallenge.submit_daily_score(
+			GameManager.game_time,
+			GameManager.total_kills,
+			GameManager.selected_character
+		)
+		_submit_daily_score_online()
 	# Auto crash report if player died very fast (possible bug)
 	if not GameManager.is_victory and GameManager.game_time < 30.0:
 		LogManager.report_crash("GameOver", "Player died very fast (%.1fs)" % GameManager.game_time)
@@ -155,3 +163,34 @@ func _on_retry() -> void:
 func _on_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+
+# ---------------------------------------------------------------------------
+# Daily Challenge online score submission
+# ---------------------------------------------------------------------------
+
+func _submit_daily_score_online() -> void:
+	var url := Telemetry.server_url + "/daily-score"
+	var body := {
+		"date": DailyChallenge.get_today_string(),
+		"character": GameManager.selected_character,
+		"stage": GameManager.selected_stage,
+		"survived_seconds": GameManager.game_time,
+		"total_kills": GameManager.total_kills,
+		"victory": GameManager.is_victory,
+		"mutations": MutationManager.get_active_ids(),
+		"version": "",
+	}
+	# Read version
+	var file := FileAccess.open("res://VERSION", FileAccess.READ)
+	if file:
+		body["version"] = file.get_as_text().strip_edges()
+
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_result, _code, _headers, _body):
+		http.queue_free()
+	)
+	var json_body := JSON.stringify(body)
+	var headers := ["Content-Type: application/json"]
+	http.request(url, headers, HTTPClient.METHOD_POST, json_body)
