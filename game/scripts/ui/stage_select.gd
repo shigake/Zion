@@ -238,7 +238,7 @@ func _create_stage_card(stage_id: String) -> Button:
 
 	# Stage icon
 	var stage_icon_path := "res://assets/icons/stages/%s.svg" % stage_id
-	var stage_icon_tex = load(stage_icon_path)
+	var stage_icon_tex = load(stage_icon_path) if ResourceLoader.exists(stage_icon_path) else null
 	if stage_icon_tex:
 		btn.icon = stage_icon_tex
 		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
