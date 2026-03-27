@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/character_hp_bar.gd" id="2"]
 
 [node name="HUD" type="CanvasLayer"]
 layer = 1
@@ -22,11 +23,17 @@ layout_mode = 2
 text = "Lv. 1"
 
 [node name="HPBar" type="ProgressBar" parent="MarginContainer/VBox"]
+visible = false
 layout_mode = 2
 custom_minimum_size = Vector2(250, 22)
 max_value = 100.0
 value = 100.0
 show_percentage = false
+
+[node name="CharacterHPBar" type="Control" parent="MarginContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 36)
+script = ExtResource("2")
 
 [node name="XPBar" type="ProgressBar" parent="MarginContainer/VBox"]
 layout_mode = 2

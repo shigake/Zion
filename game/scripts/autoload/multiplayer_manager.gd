@@ -3,7 +3,8 @@ extends Node
 ## Gerencia multiplayer online: lobby, conexões, spawn de jogadores.
 ## Arquitetura: Host-Client (listen server) via ENet (fallback sem Steam).
 ## Para Steam: substituir ENet por Steam Networking Sockets via GodotSteam.
-## Host Migration: quando host desconecta, próximo peer assume.
+## Host Migration: quando host desconecta, próximo peer assume com estado sincronizado.
+## Inclui: ping RPC, interpolação de posição, reconexão automática.
 
 signal player_connected(peer_id: int)
 signal player_disconnected(peer_id: int)
@@ -13,9 +14,18 @@ signal connection_succeeded()
 signal all_players_loaded()
 signal host_migrated(new_host_id: int)
 signal player_hp_updated(peer_id: int, hp: int, max_hp: int)
+signal host_migration_started()
+signal host_migration_completed(new_host_id: int)
+signal reconnection_attempted(attempt: int, max_attempts: int)
+signal reconnection_succeeded()
+signal reconnection_failed()
+signal ping_updated(ping_ms: int)
 
 const DEFAULT_PORT := 7777
 const MAX_PLAYERS := 4
+const PING_INTERVAL := 2.0          # Mede ping a cada 2 segundos
+const MAX_RECONNECT_ATTEMPTS := 3   # Máximo de tentativas de reconexão
+const RECONNECT_INTERVAL := 2.0     # Intervalo entre tentativas (segundos)
 
 enum NetworkBackend { ENET, STEAM }
 
@@ -24,13 +34,50 @@ var players: Dictionary = {}
 var local_player_id: int = 0
 var is_online: bool = false
 var backend: int = NetworkBackend.ENET
-var current_host_id: int = 1  # Track who is the current host
+var current_host_id: int = 1  # Quem é o host atual
+
+# --- Ping ---
+var _ping_ms: int = 0               # Último ping medido em milissegundos
+var _ping_timer: float = 0.0        # Timer para medir ping periodicamente
+var _ping_send_time: int = 0        # Timestamp de envio do ping (usec)
+
+# --- Reconexão ---
+var _reconnect_attempts: int = 0
+var _reconnect_timer: float = 0.0
+var _reconnecting: bool = false
+var _last_address: String = ""
+var _last_port: int = DEFAULT_PORT
+
+# --- Host Migration ---
+var _migration_in_progress: bool = false
+
+# --- Interpolação de posição (Task 4) ---
+# peer_id -> Array de {pos: Vector3, time: float} (últimas 3 posições)
+var _remote_positions: Dictionary = {}
+const MAX_POSITION_HISTORY := 3
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
+
+func _process(delta: float) -> void:
+	if not is_online:
+		return
+
+	# --- Ping periódico (clients medem RTT para o server) ---
+	_ping_timer += delta
+	if _ping_timer >= PING_INTERVAL:
+		_ping_timer = 0.0
+		_measure_ping()
+
+	# --- Reconexão automática ---
+	if _reconnecting:
+		_reconnect_timer += delta
+		if _reconnect_timer >= RECONNECT_INTERVAL:
+			_reconnect_timer = 0.0
+			_try_reconnect()
 
 func _create_server_peer(port: int) -> Array:
 	# Returns [peer, error]. Override for Steam networking when available.
@@ -67,6 +114,7 @@ func create_server(port: int = DEFAULT_PORT) -> Error:
 	multiplayer.multiplayer_peer = peer
 	local_player_id = 1
 	is_online = true
+	_last_port = port
 	_register_player(1, GameManager.selected_character)
 	server_created.emit()
 	LogManager.info("MP", "Server created on port %d" % port)
@@ -82,16 +130,52 @@ func join_server(address: String = "127.0.0.1", port: int = DEFAULT_PORT) -> Err
 		return error
 	multiplayer.multiplayer_peer = peer
 	is_online = true
+	_last_address = address
+	_last_port = port
 	LogManager.info("MP", "Connecting to %s:%d..." % [address, port])
 	return OK
 
 func disconnect_from_game() -> void:
+	_reconnecting = false
+	_reconnect_attempts = 0
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
 	players.clear()
+	_remote_positions.clear()
 	local_player_id = 0
 	is_online = false
+
+## Tenta reconectar a um servidor após desconexão.
+## Usado após host migration ou perda de conexão.
+func reconnect_to_game(address: String = "", port: int = 0) -> void:
+	if address != "":
+		_last_address = address
+	if port > 0:
+		_last_port = port
+	_reconnecting = true
+	_reconnect_attempts = 0
+	_reconnect_timer = 0.0
+	LogManager.info("MP", "Iniciando reconexão para %s:%d" % [_last_address, _last_port])
+	_try_reconnect()
+
+func _try_reconnect() -> void:
+	_reconnect_attempts += 1
+	LogManager.info("MP", "Tentativa de reconexão %d/%d" % [_reconnect_attempts, MAX_RECONNECT_ATTEMPTS])
+	reconnection_attempted.emit(_reconnect_attempts, MAX_RECONNECT_ATTEMPTS)
+
+	# Limpa peer anterior
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer.close()
+		multiplayer.multiplayer_peer = null
+
+	var error = join_server(_last_address, _last_port)
+	if error != OK:
+		if _reconnect_attempts >= MAX_RECONNECT_ATTEMPTS:
+			_reconnecting = false
+			LogManager.error("MP", "Reconexão falhou após %d tentativas" % MAX_RECONNECT_ATTEMPTS)
+			reconnection_failed.emit()
+		# Senão, _process vai tentar novamente após RECONNECT_INTERVAL
 
 # ---- RPCs ----
 @rpc("any_peer", "reliable")
@@ -132,6 +216,7 @@ func _on_peer_connected(id: int) -> void:
 func _on_peer_disconnected(id: int) -> void:
 	LogManager.info("MP", "Peer disconnected: %d" % id)
 	players.erase(id)
+	clear_remote_position(id)
 	player_disconnected.emit(id)
 
 	# Host migration: se o host desconectou, promover próximo peer
@@ -142,15 +227,32 @@ func _on_connected_to_server() -> void:
 	local_player_id = multiplayer.get_unique_id()
 	is_online = true
 	_register_player(local_player_id, GameManager.selected_character)
-	# Tell everyone about us
+	# Avisa todos sobre nós
 	register_player_info.rpc(local_player_id, GameManager.selected_character)
-	# Sync initial HP
+	# Sync HP inicial
 	sync_player_hp.rpc(local_player_id, GameManager.player_hp, GameManager.get_effective_max_hp())
-	connection_succeeded.emit()
-	LogManager.info("MP", "Connected as %d" % local_player_id)
+
+	# Se estava reconectando, sinaliza sucesso
+	if _reconnecting:
+		_reconnecting = false
+		_reconnect_attempts = 0
+		reconnection_succeeded.emit()
+		LogManager.info("MP", "Reconexão bem-sucedida como %d" % local_player_id)
+	else:
+		connection_succeeded.emit()
+		LogManager.info("MP", "Connected as %d" % local_player_id)
 
 func _on_connection_failed() -> void:
 	LogManager.error("MP", "Connection failed!")
+	# Se estava reconectando, verifica se deve tentar novamente
+	if _reconnecting:
+		if _reconnect_attempts >= MAX_RECONNECT_ATTEMPTS:
+			_reconnecting = false
+			is_online = false
+			reconnection_failed.emit()
+			LogManager.error("MP", "Reconexão falhou após %d tentativas" % MAX_RECONNECT_ATTEMPTS)
+		# Senão, _process vai tentar novamente
+		return
 	is_online = false
 	connection_failed.emit()
 
@@ -163,7 +265,7 @@ func _register_player(id: int, character_id: String) -> void:
 		"max_hp": 100,
 	}
 
-# ---- Host Migration ----
+# ---- Host Migration (melhorado com sync de estado) ----
 
 func _trigger_host_migration() -> void:
 	if not is_online:
@@ -174,24 +276,100 @@ func _trigger_host_migration() -> void:
 		LogManager.info("MP", "Host still alive, no migration needed")
 		return
 
+	_migration_in_progress = true
+	host_migration_started.emit()
+	LogManager.info("MP", "Host migration em andamento...")
+
 	# Client: procura o próximo peer para promover
 	var remaining_peers = players.keys()
 	if remaining_peers.is_empty():
-		LogManager.error("MP", "No peers remaining, game disconnected")
+		LogManager.error("MP", "Nenhum peer restante, jogo desconectado")
+		_migration_in_progress = false
 		return
 
-	# Primeiro peer restante se torna o novo host
+	# Primeiro peer restante (menor ID) se torna o novo host
 	remaining_peers.sort()
 	var new_host = remaining_peers[0]
 
-	LogManager.info("MP", "Host migration: %d is new host" % new_host)
-	_announce_new_host.rpc(new_host)
+	LogManager.info("MP", "Host migration: %d é o novo host" % new_host)
+
+	# Se nós somos o novo host, criamos o servidor
+	if new_host == local_player_id:
+		_become_new_host()
+	else:
+		# Aguarda o novo host anunciar
+		_announce_new_host.rpc(new_host)
+
+func _become_new_host() -> void:
+	## Quando este peer se torna o novo host, coleta o estado do jogo
+	## e distribui para os demais clients.
+	LogManager.info("MP", "Assumindo papel de host")
+	current_host_id = local_player_id
+
+	# Coleta estado do jogo para sincronizar
+	var game_state := {
+		"game_time": GameManager.game_time,
+		"enemies_alive": GameManager.enemies_alive,
+		"total_kills": GameManager.total_kills,
+		"crystals_this_run": GameManager.crystals_this_run,
+		"player_level": GameManager.player_level,
+		"player_xp": GameManager.player_xp,
+		"player_xp_to_next": GameManager.player_xp_to_next,
+		"max_enemies": GameManager.max_enemies,
+		"events_triggered": GameManager.events_triggered,
+	}
+
+	# Anuncia para todos os peers restantes
+	for pid in players:
+		if pid != local_player_id:
+			_receive_host_migration.rpc_id(pid, local_player_id, game_state)
+
+	_migration_in_progress = false
+	host_migrated.emit(local_player_id)
+	host_migration_completed.emit(local_player_id)
 
 @rpc("any_peer", "reliable")
 func _announce_new_host(new_host_id: int) -> void:
 	current_host_id = new_host_id
+	if new_host_id == local_player_id:
+		_become_new_host()
+	else:
+		host_migrated.emit(new_host_id)
+	LogManager.info("MP", "Novo host anunciado: %d" % new_host_id)
+
+@rpc("any_peer", "reliable")
+func _receive_host_migration(new_host_id: int, game_state: Dictionary) -> void:
+	## Recebe estado do jogo do novo host durante migração.
+	current_host_id = new_host_id
+	_migration_in_progress = false
+
+	# Aplica estado sincronizado
+	if "game_time" in game_state:
+		GameManager.game_time = game_state["game_time"]
+	if "enemies_alive" in game_state:
+		GameManager.enemies_alive = game_state["enemies_alive"]
+	if "total_kills" in game_state:
+		GameManager.total_kills = game_state["total_kills"]
+	if "crystals_this_run" in game_state:
+		GameManager.crystals_this_run = game_state["crystals_this_run"]
+	if "player_level" in game_state:
+		GameManager.player_level = game_state["player_level"]
+	if "player_xp" in game_state:
+		GameManager.player_xp = game_state["player_xp"]
+	if "player_xp_to_next" in game_state:
+		GameManager.player_xp_to_next = game_state["player_xp_to_next"]
+	if "max_enemies" in game_state:
+		GameManager.max_enemies = game_state["max_enemies"]
+	if "events_triggered" in game_state:
+		GameManager.events_triggered = game_state["events_triggered"]
+
+	LogManager.info("MP", "Estado do jogo sincronizado do novo host %d" % new_host_id)
 	host_migrated.emit(new_host_id)
-	LogManager.info("MP", "New host announced: %d" % new_host_id)
+	host_migration_completed.emit(new_host_id)
+
+## Verifica se há migração de host em andamento
+func is_migrating() -> bool:
+	return _migration_in_progress
 
 # ---- HP Sync ----
 
@@ -245,3 +423,99 @@ func get_player_colors() -> Dictionary:
 		result[pid] = colors[i % 4]
 		i += 1
 	return result
+
+# ---- Ping RPC (mede latência via round-trip) ----
+
+## Retorna o último ping medido em milissegundos.
+func get_ping() -> int:
+	return _ping_ms
+
+## Retorna a cor correspondente ao nível de ping.
+## Verde (<50ms), Amarelo (50-100ms), Vermelho (>100ms).
+func get_ping_color() -> Color:
+	if _ping_ms < 50:
+		return Color(0.2, 0.9, 0.3)   # Verde — ótimo
+	elif _ping_ms < 100:
+		return Color(0.95, 0.85, 0.2)  # Amarelo — aceitável
+	else:
+		return Color(0.95, 0.2, 0.2)   # Vermelho — ruim
+
+func _measure_ping() -> void:
+	## Envia ping para o servidor e mede o tempo de resposta.
+	if not is_online:
+		return
+	if multiplayer.is_server():
+		_ping_ms = 0  # Host tem ping 0
+		return
+	_ping_send_time = Time.get_ticks_usec()
+	_ping_request.rpc_id(1)  # Envia para o server (ID 1)
+
+@rpc("any_peer", "unreliable")
+func _ping_request() -> void:
+	## Server recebe ping e responde imediatamente.
+	var sender = multiplayer.get_remote_sender_id()
+	_ping_response.rpc_id(sender)
+
+@rpc("authority", "unreliable")
+func _ping_response() -> void:
+	## Client recebe resposta e calcula RTT.
+	var now = Time.get_ticks_usec()
+	_ping_ms = (now - _ping_send_time) / 1000  # Converte usec -> ms
+	ping_updated.emit(_ping_ms)
+
+# ---- Interpolação de posição para jogadores remotos (Task 4) ----
+
+## Registra uma nova posição recebida de um peer remoto.
+## Armazena histórico para interpolação suave.
+func register_remote_position(peer_id: int, pos: Vector3) -> void:
+	if peer_id not in _remote_positions:
+		_remote_positions[peer_id] = []
+
+	var history: Array = _remote_positions[peer_id]
+	history.append({
+		"pos": pos,
+		"time": Time.get_ticks_msec() / 1000.0,
+	})
+
+	# Mantém apenas as últimas MAX_POSITION_HISTORY posições
+	while history.size() > MAX_POSITION_HISTORY:
+		history.pop_front()
+
+## Retorna a posição interpolada de um peer remoto.
+## Usa as últimas posições recebidas para suavizar movimento e reduzir jitter.
+func get_interpolated_position(peer_id: int, current_pos: Vector3) -> Vector3:
+	if peer_id not in _remote_positions:
+		return current_pos
+
+	var history: Array = _remote_positions[peer_id]
+	if history.is_empty():
+		return current_pos
+
+	# Se temos apenas 1 posição, interpola direto
+	if history.size() == 1:
+		return current_pos.lerp(history[0]["pos"], 0.25)
+
+	# Com 2+ posições, prediz o próximo ponto baseado na velocidade
+	var latest = history[history.size() - 1]
+	var previous = history[history.size() - 2]
+	var dt = latest["time"] - previous["time"]
+
+	if dt <= 0.0:
+		return current_pos.lerp(latest["pos"], 0.25)
+
+	# Calcula velocidade entre as últimas 2 posições
+	var velocity = (latest["pos"] - previous["pos"]) / dt
+
+	# Tempo desde a última posição recebida
+	var now = Time.get_ticks_msec() / 1000.0
+	var elapsed = now - latest["time"]
+
+	# Posição prevista = última posição + velocidade * tempo decorrido
+	var predicted = latest["pos"] + velocity * clampf(elapsed, 0.0, 0.2)
+
+	# Interpola suavemente entre posição atual e prevista
+	return current_pos.lerp(predicted, 0.3)
+
+## Limpa dados de posição de um peer (chamado ao desconectar)
+func clear_remote_position(peer_id: int) -> void:
+	_remote_positions.erase(peer_id)

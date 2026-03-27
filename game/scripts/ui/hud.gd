@@ -3,9 +3,9 @@ extends CanvasLayer
 ## HUD: HP, XP, level, timer, kills, dash cooldown.
 
 @onready var hp_bar: ProgressBar = $MarginContainer/VBox/HPBar
+@onready var character_hp_bar: Control = $MarginContainer/VBox/CharacterHPBar
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 @onready var level_label: Label = $MarginContainer/VBox/LevelLabel
-var themed_hp: Control = null
 @onready var time_label: Label = $TopRight/TimeLabel
 @onready var kill_label: Label = $TopRight/KillLabel
 @onready var dash_label: Label = $BottomCenter/DashVBox/DashLabel
@@ -82,17 +82,10 @@ func _ready() -> void:
 	# Achievement notification
 	AchievementManager.achievement_unlocked.connect(_on_achievement_unlocked)
 
-	# Themed HP bar (replaces the basic ProgressBar)
+	# Character-themed HP bar — inicializa com personagem selecionado
 	hp_bar.visible = false
-	var themed_script = preload("res://scripts/ui/themed_hp_bar.gd")
-	themed_hp = Control.new()
-	themed_hp.set_script(themed_script)
-	themed_hp.custom_minimum_size = Vector2(260, 28)
-	# Insert in the VBox where HPBar was
-	var vbox = $MarginContainer/VBox
-	vbox.add_child(themed_hp)
-	vbox.move_child(themed_hp, hp_bar.get_index())
-
+	character_hp_bar.set_character(GameManager.selected_character)
+	character_hp_bar.set_hp(float(GameManager.player_hp), float(GameManager.player_max_hp * GameManager.max_hp_mult))
 	_prev_hp = GameManager.player_hp
 
 	# Connect damage feedback signal
@@ -241,37 +234,9 @@ func _update_hp() -> void:
 	var max_hp = int(GameManager.player_max_hp * GameManager.max_hp_mult)
 	var current_hp = GameManager.player_hp
 
-	# Update themed HP bar
-	if themed_hp and themed_hp.has_method("update_hp"):
-		themed_hp.update_hp(current_hp, max_hp)
-
-	# Keep hidden ProgressBar in sync for anything else that reads it
-	hp_bar.max_value = max_hp
-	hp_bar.value = current_hp
+	# Atualiza a barra de HP temática por personagem
+	character_hp_bar.set_hp(float(current_hp), float(max_hp))
 	_prev_hp = current_hp
-
-	# Ghost HP drain (delayed white bar effect via fill color transition)
-	if _ghost_hp > 0:
-		if _ghost_hp_delay > 0:
-			_ghost_hp_delay -= get_process_delta_time()
-		else:
-			_ghost_hp = lerpf(_ghost_hp, float(current_hp), get_process_delta_time() * 4.0)
-			if absf(_ghost_hp - float(current_hp)) < 1.0:
-				_ghost_hp = -1.0  # Done
-
-	# Lerp HP bar fill color back to green
-	var fill_style = hp_bar.get_theme_stylebox("fill") as StyleBoxFlat
-	if fill_style:
-		fill_style.bg_color = fill_style.bg_color.lerp(Color(0.2, 0.8, 0.3), get_process_delta_time() * 5.0)
-
-	# HP bar punch (shake) animation
-	if _hp_punch_timer > 0:
-		_hp_punch_timer -= get_process_delta_time()
-		var offset_x = randf_range(-3.0, 3.0) * (_hp_punch_timer / 0.2)
-		var offset_y = randf_range(-2.0, 2.0) * (_hp_punch_timer / 0.2)
-		hp_bar.position = _hp_bar_original_pos + Vector2(offset_x, offset_y)
-	else:
-		hp_bar.position = _hp_bar_original_pos
 
 func _update_xp() -> void:
 	xp_bar.max_value = GameManager.player_xp_to_next
@@ -297,12 +262,12 @@ func _on_game_over() -> void:
 	pass
 
 func _on_player_took_damage() -> void:
-	# HP bar punch effect
-	_hp_punch_timer = 0.2
-	# Scale bounce on HP bar
+	# Punch effect na barra temática
+	character_hp_bar.trigger_punch()
+	# Scale bounce na barra temática
 	var tween = create_tween()
-	hp_bar.scale = Vector2(1.08, 1.15)
-	tween.tween_property(hp_bar, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	character_hp_bar.scale = Vector2(1.08, 1.15)
+	tween.tween_property(character_hp_bar, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 
 func _on_achievement_unlocked(_id: String, name: String) -> void:
 	achievement_label.text = LocaleManager.tr_key("achievement_label") % name
