@@ -5,6 +5,7 @@ extends CanvasLayer
 @onready var hp_bar: ProgressBar = $MarginContainer/VBox/HPBar
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 @onready var level_label: Label = $MarginContainer/VBox/LevelLabel
+var themed_hp: Control = null
 @onready var time_label: Label = $TopRight/TimeLabel
 @onready var kill_label: Label = $TopRight/KillLabel
 @onready var dash_label: Label = $BottomCenter/DashVBox/DashLabel
@@ -81,38 +82,40 @@ func _ready() -> void:
 	# Achievement notification
 	AchievementManager.achievement_unlocked.connect(_on_achievement_unlocked)
 
-	# Custom HP bar colors
-	var hp_fill = StyleBoxFlat.new()
-	hp_fill.bg_color = Color(0.2, 0.8, 0.3)
-	hp_fill.set_corner_radius_all(4)
-	hp_bar.add_theme_stylebox_override("fill", hp_fill)
+	# Themed HP bar (replaces the basic ProgressBar)
+	hp_bar.visible = false
+	var themed_script = preload("res://scripts/ui/themed_hp_bar.gd")
+	themed_hp = Control.new()
+	themed_hp.set_script(themed_script)
+	themed_hp.custom_minimum_size = Vector2(260, 28)
+	# Insert in the VBox where HPBar was
+	var vbox = $MarginContainer/VBox
+	vbox.add_child(themed_hp)
+	vbox.move_child(themed_hp, hp_bar.get_index())
 
-	var hp_bg = StyleBoxFlat.new()
-	hp_bg.bg_color = Color(0.15, 0.05, 0.05)
-	hp_bg.set_corner_radius_all(4)
-	hp_bg.set_border_width_all(1)
-	hp_bg.border_color = Color(0.3, 0.1, 0.1)
-	hp_bar.add_theme_stylebox_override("background", hp_bg)
-
-	# Ghost HP bar (white bar behind the green one showing recent damage)
-	_hp_bar_original_pos = hp_bar.position
 	_prev_hp = GameManager.player_hp
 
 	# Connect damage feedback signal
-	ScreenEffects.player_took_damage.connect(_on_player_took_damage)
+	if ScreenEffects.has_signal("player_took_damage"):
+		ScreenEffects.player_took_damage.connect(_on_player_took_damage)
 
-	# Custom XP bar colors
+	# XP bar — slimmer, with glow fill and level badge
+	xp_bar.custom_minimum_size = Vector2(260, 10)
 	var xp_fill = StyleBoxFlat.new()
-	xp_fill.bg_color = Color(0.3, 0.5, 1.0)
-	xp_fill.set_corner_radius_all(4)
+	xp_fill.bg_color = Color(0.3, 0.6, 1.0)
+	xp_fill.set_corner_radius_all(5)
 	xp_bar.add_theme_stylebox_override("fill", xp_fill)
 
 	var xp_bg = StyleBoxFlat.new()
-	xp_bg.bg_color = Color(0.05, 0.05, 0.15)
-	xp_bg.set_corner_radius_all(4)
+	xp_bg.bg_color = Color(0.03, 0.03, 0.1, 0.8)
+	xp_bg.set_corner_radius_all(5)
 	xp_bg.set_border_width_all(1)
-	xp_bg.border_color = Color(0.1, 0.1, 0.3)
+	xp_bg.border_color = Color(0.15, 0.2, 0.4, 0.5)
 	xp_bar.add_theme_stylebox_override("background", xp_bg)
+
+	# Level label styling — integrate above XP bar
+	level_label.theme_override_font_sizes = { "font_size": 13 }
+	level_label.theme_override_colors = { "font_color": Color(0.6, 0.8, 1.0, 0.9) }
 
 	# Boss HP bar styling (red)
 	var boss_fill = StyleBoxFlat.new()
@@ -237,19 +240,14 @@ func _process(delta: float) -> void:
 func _update_hp() -> void:
 	var max_hp = int(GameManager.player_max_hp * GameManager.max_hp_mult)
 	var current_hp = GameManager.player_hp
+
+	# Update themed HP bar
+	if themed_hp and themed_hp.has_method("update_hp"):
+		themed_hp.update_hp(current_hp, max_hp)
+
+	# Keep hidden ProgressBar in sync for anything else that reads it
 	hp_bar.max_value = max_hp
 	hp_bar.value = current_hp
-
-	# Detect damage taken (HP went down)
-	if _prev_hp > 0 and current_hp < _prev_hp:
-		# Initialize ghost at previous HP if not already active
-		if _ghost_hp < 0 or _ghost_hp < float(_prev_hp):
-			_ghost_hp = float(_prev_hp)
-		_ghost_hp_delay = 0.4  # Wait before draining ghost
-		# Flash HP bar red briefly
-		var fill_style = hp_bar.get_theme_stylebox("fill") as StyleBoxFlat
-		if fill_style:
-			fill_style.bg_color = Color(1.0, 0.15, 0.15)
 	_prev_hp = current_hp
 
 	# Ghost HP drain (delayed white bar effect via fill color transition)
