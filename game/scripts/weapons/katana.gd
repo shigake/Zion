@@ -16,10 +16,12 @@ var _trail: Node3D = null
 func _ready() -> void:
 	slash_mesh.visible = false
 	slash_area.body_entered.connect(_on_body_entered)
-	# Weapon trail
+	# Weapon trail — bright white-to-light-blue gradient
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.8, 0.9, 1.0, 0.6)
-	_trail.max_points = 10
+	_trail.trail_color = Color(1.0, 1.0, 1.0, 0.8)
+	_trail.trail_color_tip = Color(0.6, 0.8, 1.0, 0.9)
+	_trail.max_points = 14
+	_trail.trail_width = 0.2
 	slash_mesh.add_child(_trail)
 	# 3D model
 	ModelFactory.attach_weapon_model(slash_mesh, "katana")
@@ -78,3 +80,5 @@ func _on_body_entered(body: Node3D) -> void:
 		var dmg = int(WeaponDB.get_damage("katana", level))
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
+		# Impact sparks at hit position
+		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 5)

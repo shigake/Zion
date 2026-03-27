@@ -62,6 +62,13 @@ func _attack(level: int) -> void:
 	ScreenEffects.shake(0.3)
 	AudioManager.play_sfx("hit")
 
+	# Shockwave ring (TorusMesh expanding)
+	_spawn_shockwave_ring(area_scale)
+	# Debris particles
+	ParticleFactory.spawn_hammer_debris(global_position, 12)
+	# Dust cloud
+	ParticleFactory.spawn_hammer_dust(global_position, 8)
+
 func _on_body_entered(body: Node3D) -> void:
 	if body in hit_enemies:
 		return
@@ -70,3 +77,34 @@ func _on_body_entered(body: Node3D) -> void:
 		var dmg = int(WeaponDB.get_damage("hammer", level))
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
+
+func _spawn_shockwave_ring(area_scale: float) -> void:
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.2
+	torus.outer_radius = 0.35
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.7, 0.45, 0.2, 0.6)
+	mat.emission_enabled = true
+	mat.emission = Color(0.8, 0.5, 0.2)
+	mat.emission_energy_multiplier = 1.5
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.no_depth_test = true
+	torus.surface_set_material(0, mat)
+	ring.mesh = torus
+	ring.global_position = global_position + Vector3(0, 0.05, 0)
+	ring.rotation.x = 0  # Flat on ground
+	scene.add_child(ring)
+	# Expand from small to area_radius, then fade out
+	ring.scale = Vector3(0.3, 0.1, 0.3)
+	var target_scale = Vector3(area_scale, 0.1, area_scale)
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(ring, "scale", target_scale, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.25).set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	tween.tween_callback(ring.queue_free)

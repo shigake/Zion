@@ -16,10 +16,11 @@ var _trail: Node3D = null
 func _ready() -> void:
 	slash_mesh.visible = false
 	slash_area.body_entered.connect(_on_body_entered)
-	# Weapon trail
+	# Weapon trail — wider blue energy glow
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.4, 0.6, 1.0, 0.7)
-	_trail.max_points = 14
+	_trail.trail_color = Color(0.4, 0.6, 1.0, 0.85)
+	_trail.max_points = 18
+	_trail.trail_width = 0.25
 	slash_mesh.add_child(_trail)
 	# 3D model
 	ModelFactory.attach_weapon_model(slash_mesh, "cloud_sword", Vector3(0.5, 0.5, 0.5))
@@ -72,7 +73,11 @@ func _attack(level: int) -> void:
 
 	# Screen shake — golpe pesado
 	ScreenEffects.shake(0.4)
+	ScreenEffects.flash(0.05, 0.1)
 	AudioManager.play_sfx("hit")
+
+	# Ground dust at player position
+	ParticleFactory.spawn_ground_dust(global_position, 8)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body in hit_enemies:

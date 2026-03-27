@@ -64,3 +64,12 @@ func slow_motion(duration: float = 0.5, scale: float = 0.3) -> void:
 	Engine.time_scale = scale
 	await get_tree().create_timer(duration * scale).timeout
 	Engine.time_scale = 1.0
+
+## Brief white flash overlay (e.g. on heavy swing)
+func flash(duration: float = 0.05, alpha: float = 0.1) -> void:
+	if not _vignette_rect:
+		return
+	var original_color = _vignette_rect.color
+	_vignette_rect.color = Color(1.0, 1.0, 1.0, alpha)
+	await get_tree().create_timer(duration).timeout
+	_vignette_rect.color = original_color

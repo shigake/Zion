@@ -16,10 +16,11 @@ var _trail: Node3D = null
 
 func _ready() -> void:
 	scythe_area.body_entered.connect(_on_body_entered)
-	# Weapon trail
+	# Weapon trail — darker purple with ghostly wisps, slower fade
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.6, 0.2, 0.8, 0.6)
-	_trail.max_points = 20
+	_trail.trail_color = Color(0.45, 0.1, 0.65, 0.7)
+	_trail.max_points = 25
+	_trail.trail_width = 0.18
 	scythe_mesh.add_child(_trail)
 	# 3D model
 	ModelFactory.attach_weapon_model(scythe_mesh, "scythe")
@@ -76,3 +77,33 @@ func _on_body_entered(body: Node3D) -> void:
 	var heal_amount = int(dmg * lifesteal)
 	if heal_amount > 0:
 		GameManager.heal(heal_amount)
+		# Soul wisps: green dots travel from enemy to player
+		_spawn_soul_wisps(body.global_position)
+
+func _spawn_soul_wisps(from_pos: Vector3) -> void:
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var player_pos = global_position + Vector3(0, 0.5, 0)
+	for i in range(3):
+		var wisp = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.04
+		sphere.height = 0.08
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.2, 1.0, 0.3, 0.8)
+		mat.emission_enabled = true
+		mat.emission = Color(0.2, 1.0, 0.3)
+		mat.emission_energy_multiplier = 3.0
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sphere.surface_set_material(0, mat)
+		wisp.mesh = sphere
+		# Offset each wisp slightly
+		var offset = Vector3(randf_range(-0.3, 0.3), randf_range(0.2, 0.7), randf_range(-0.3, 0.3))
+		wisp.global_position = from_pos + offset
+		scene.add_child(wisp)
+		# Tween from enemy to player
+		var tween = create_tween()
+		tween.tween_property(wisp, "global_position", player_pos, 0.4 + i * 0.08).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+		tween.tween_callback(wisp.queue_free)
