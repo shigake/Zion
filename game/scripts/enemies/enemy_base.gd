@@ -154,6 +154,10 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	hp -= final_damage
 	GameManager.total_damage_dealt += final_damage
 	AchievementManager.on_attack()
+	# Cross-combo check (multiplayer)
+	if MultiplayerManager.is_online and damage_type != "physical":
+		var peer = MultiplayerManager.local_player_id
+		SynergySystem.try_cross_combo(global_position, damage_type, peer, final_damage)
 	_hit_count += 1
 
 	# Damage number - color by type (crits are yellow and larger)
@@ -394,6 +398,9 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	fire.global_position = pos
 	fire.monitoring = true
 	get_tree().current_scene.call_deferred("add_child", fire)
+	# Register as elemental zone for cross-combo
+	var owner_peer = MultiplayerManager.local_player_id if MultiplayerManager.is_online else 1
+	SynergySystem.register_elemental_zone(pos, "fire", owner_peer, 5.0)
 
 func _apply_furious_boss_mutation() -> void:
 	if is_in_group("boss") and MutationManager.is_active("furious_bosses"):

@@ -199,3 +199,106 @@ func reset() -> void:
 	_dark_aura_timer = 0.0
 	_steam_cloud_timer = 0.0
 	_conductor_timer = 0.0
+	_cross_combo_cooldowns.clear()
+	_elemental_zones.clear()
+
+# ================================================================
+# Cross-Combo (Multiplayer Synergies)
+# ================================================================
+
+## Registered elemental zones: Array of {position, element, owner_peer, expire_time}
+var _elemental_zones: Array[Dictionary] = []
+## Cooldown per peer pair to avoid spam
+var _cross_combo_cooldowns: Dictionary = {}  # "peerA_peerB" -> expire_time
+
+const CROSS_COMBO_MULTIPLIER := 1.5
+const CROSS_COMBO_COOLDOWN := 2.0
+const CROSS_COMBO_RADIUS := 4.0
+
+## Cross-combo element combinations and their effects
+const CROSS_COMBOS: Dictionary = {
+	"fire_ice": {"name": "Steam Cloud", "color": Color(0.8, 0.8, 0.8)},
+	"ice_fire": {"name": "Steam Cloud", "color": Color(0.8, 0.8, 0.8)},
+	"electric_poison": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
+	"poison_electric": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
+	"fire_dark": {"name": "Shadow Flame", "color": Color(0.6, 0.1, 0.8)},
+	"dark_fire": {"name": "Shadow Flame", "color": Color(0.6, 0.1, 0.8)},
+	"ice_electric": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0)},
+	"electric_ice": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0)},
+	"fire_electric": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2)},
+	"electric_fire": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2)},
+	"dark_ice": {"name": "Frozen Abyss", "color": Color(0.2, 0.1, 0.5)},
+	"ice_dark": {"name": "Frozen Abyss", "color": Color(0.2, 0.1, 0.5)},
+}
+
+func register_elemental_zone(pos: Vector3, element: String, owner_peer: int, duration: float = 3.0) -> void:
+	## Called by weapons that create persistent AoE areas.
+	if element == "physical":
+		return
+	_elemental_zones.append({
+		"position": pos,
+		"element": element,
+		"owner_peer": owner_peer,
+		"expire_time": Time.get_ticks_msec() / 1000.0 + duration,
+	})
+
+func try_cross_combo(hit_pos: Vector3, hit_element: String, hitter_peer: int, base_damage: int) -> void:
+	## Called when a projectile/attack deals damage. Checks if it overlaps
+	## an allied elemental zone to trigger a cross-combo.
+	if not MultiplayerManager.is_online:
+		return
+	if hit_element == "physical":
+		return
+
+	var now = Time.get_ticks_msec() / 1000.0
+	# Clean expired zones
+	_elemental_zones = _elemental_zones.filter(func(z): return z["expire_time"] > now)
+
+	for zone in _elemental_zones:
+		if zone["owner_peer"] == hitter_peer:
+			continue  # Same player, not a cross-combo
+		if hit_pos.distance_to(zone["position"]) > CROSS_COMBO_RADIUS:
+			continue
+		var combo_key = hit_element + "_" + zone["element"]
+		if combo_key not in CROSS_COMBOS:
+			continue
+		# Check cooldown between this peer pair
+		var cd_key = "%d_%d" % [mini(hitter_peer, zone["owner_peer"]), maxi(hitter_peer, zone["owner_peer"])]
+		if cd_key in _cross_combo_cooldowns and _cross_combo_cooldowns[cd_key] > now:
+			continue
+		# Trigger cross-combo!
+		_cross_combo_cooldowns[cd_key] = now + CROSS_COMBO_COOLDOWN
+		var combo = CROSS_COMBOS[combo_key]
+		_execute_cross_combo(hit_pos, combo, base_damage)
+		break
+
+func _execute_cross_combo(pos: Vector3, combo: Dictionary, base_damage: int) -> void:
+	var combo_damage = int(base_damage * CROSS_COMBO_MULTIPLIER)
+	var combo_color: Color = combo.get("color", Color.WHITE)
+
+	# AoE damage to enemies
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for e in enemies:
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
+			if e.has_method("take_damage"):
+				e.call_deferred("take_damage", combo_damage, "fire")
+
+	# Visual effects
+	ParticleFactory.spawn_explosion_particles(pos, 3.0)
+	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), combo_color, 15)
+	ScreenEffects.shake(0.1)
+
+	# Floating label "CROSS-COMBO!"
+	var label = Label3D.new()
+	label.text = "CROSS-COMBO!"
+	label.font_size = 48
+	label.outline_size = 8
+	label.modulate = combo_color
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.global_position = pos + Vector3(0, 2.0, 0)
+	get_tree().current_scene.call_deferred("add_child", label)
+	# Fade out and remove
+	var tween = get_tree().create_tween()
+	tween.tween_property(label, "global_position", pos + Vector3(0, 3.5, 0), 1.5)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 1.5)
+	tween.tween_callback(label.queue_free)
