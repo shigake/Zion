@@ -91,14 +91,14 @@ fov = 35.0
 [node name="CenterAmbientLight3D" type="WorldEnvironment" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
 
 [node name="Spotlight" type="SpotLight3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
-transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 3.5, 0.5)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 3.5, 0)
 light_energy = 4.0
 spot_range = 8.0
-spot_angle = 25.0
+spot_angle = 30.0
 shadow_enabled = true
 
 [node name="FillLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/CenterSubViewport"]
-transform = Transform3D(1, 0, 0, 0, 0.7, -0.7, 0, 0.7, 0.7, -1.5, 2, -1)
+transform = Transform3D(1, 0, 0, 0, 0.7, 0.7, 0, -0.7, 0.7, -1.5, 2, 2)
 light_color = Color(0.6, 0.7, 0.9, 1)
 light_energy = 2.0
 shadow_enabled = false
