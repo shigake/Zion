@@ -224,6 +224,7 @@ func _populate_grid() -> void:
 
 		var vbox = VBoxContainer.new()
 		vbox.add_theme_constant_override("separation", 3)
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		card_btn.add_child(vbox)
 
 		# Type color swatch
@@ -242,7 +243,8 @@ func _populate_grid() -> void:
 				icon_rect.texture = icon_tex
 				icon_rect.custom_minimum_size = Vector2(32, 32)
 				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-				icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				icon_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				icon_rect.alignment = TextureRect.ALIGNMENT_CENTER
 				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				if not is_unlocked:
 					icon_rect.modulate = Color(0.3, 0.3, 0.3)
