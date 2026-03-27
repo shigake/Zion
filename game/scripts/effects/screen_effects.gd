@@ -120,7 +120,12 @@ func _update_damage_indicators(delta: float) -> void:
 		_damage_indicators.remove_at(to_remove[i])
 
 func shake(amount: float = 0.15) -> void:
-	shake_amount = maxf(shake_amount, amount)
+	# Respect gfx_screen_shake setting: 0=Off, 1=Light, 2=Normal, 3=Strong
+	var setting: int = SaveManager.data.get("gfx_screen_shake", 2)
+	if setting == 0:
+		return
+	var multiplier := [0.0, 0.4, 1.0, 1.6][setting]
+	shake_amount = maxf(shake_amount, amount * multiplier)
 
 func hit_freeze(duration: float = 0.05) -> void:
 	Engine.time_scale = 0.1
