@@ -61,9 +61,9 @@ func _ready() -> void:
 	GameManager.game_over.connect(_on_game_over)
 	event_label.visible = false
 
-	# Setup weapon icons container (bottom-left)
-	weapon_container = $WeaponIcons
-	item_container = $ItemIcons
+	# Setup weapon icons container (bottom-left) and item icons (bottom-right)
+	weapon_container = $WeaponPanel/WeaponIcons
+	item_container = $ItemPanel/ItemIcons
 	boss_hp_bar = $BossHPBar
 	boss_hp_bar.visible = false
 
@@ -436,7 +436,14 @@ func _update_weapon_icons() -> void:
 		var color = type_colors.get(weapon_type, Color.WHITE)
 
 		var panel := PanelContainer.new()
-		panel.custom_minimum_size = Vector2(24, 24)
+		panel.custom_minimum_size = Vector2(32, 32)
+		# Type-colored border
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.08, 0.08, 0.12, 0.85)
+		style.border_color = color
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
+		panel.add_theme_stylebox_override("panel", style)
 
 		var _icon_path := "res://assets/icons/weapons/%s.svg" % w.id
 		var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
@@ -444,21 +451,24 @@ func _update_weapon_icons() -> void:
 		if _icon_tex:
 			var tex_rect := TextureRect.new()
 			tex_rect.texture = _icon_tex
-			tex_rect.custom_minimum_size = Vector2(24, 24)
+			tex_rect.custom_minimum_size = Vector2(28, 28)
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon_node = tex_rect
 		else:
 			var rect := ColorRect.new()
-			rect.custom_minimum_size = Vector2(24, 24)
+			rect.custom_minimum_size = Vector2(28, 28)
 			rect.color = color
 			icon_node = rect
 		panel.add_child(icon_node)
 
+		# Level badge (bottom-right corner)
 		var lbl := Label.new()
 		lbl.text = str(w.level)
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lbl.theme_override_font_sizes = { "font_size": 9 }
+		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		lbl.offset_left = -12
+		lbl.offset_top = -14
+		lbl.theme_override_colors = { "font_color": Color(1, 0.9, 0.3) }
 		icon_node.add_child(lbl)
 
 		weapon_container.add_child(panel)
@@ -483,7 +493,14 @@ func _update_item_icons() -> void:
 		var color = data.get("color", Color.WHITE)
 
 		var panel := PanelContainer.new()
-		panel.custom_minimum_size = Vector2(24, 24)
+		panel.custom_minimum_size = Vector2(32, 32)
+		# Item-colored border
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.08, 0.08, 0.12, 0.85)
+		style.border_color = Color(0.3, 0.7, 0.9)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
+		panel.add_theme_stylebox_override("panel", style)
 
 		var _icon_path := "res://assets/icons/items/%s.svg" % it.id
 		var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
@@ -491,21 +508,24 @@ func _update_item_icons() -> void:
 		if _icon_tex:
 			var tex_rect := TextureRect.new()
 			tex_rect.texture = _icon_tex
-			tex_rect.custom_minimum_size = Vector2(24, 24)
+			tex_rect.custom_minimum_size = Vector2(28, 28)
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon_node = tex_rect
 		else:
 			var rect := ColorRect.new()
-			rect.custom_minimum_size = Vector2(24, 24)
+			rect.custom_minimum_size = Vector2(28, 28)
 			rect.color = color
 			icon_node = rect
 		panel.add_child(icon_node)
 
+		# Level badge (bottom-right corner)
 		var lbl := Label.new()
 		lbl.text = str(it.level)
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lbl.theme_override_font_sizes = { "font_size": 9 }
+		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		lbl.offset_left = -12
+		lbl.offset_top = -14
+		lbl.theme_override_colors = { "font_color": Color(0.5, 0.9, 1.0) }
 		icon_node.add_child(lbl)
 
 		item_container.add_child(panel)
