@@ -978,13 +978,85 @@ const CHARACTER_SCALE := Vector3(1.2, 1.2, 1.2)
 const ENEMY_SCALE := Vector3(1.0, 1.0, 1.0)
 const BOSS_SCALE := Vector3(2.0, 2.0, 2.0)
 
+## Paths to KayKit animation .glb files (Rig_Medium contains idle, walk, run, attack, etc.)
+const KAYKIT_ANIM_PATHS: Array[String] = [
+	"res://assets/models/downloaded/kaykit/adventurers/KayKit_Adventurers_2.0_FREE/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+	"res://assets/models/downloaded/kaykit/skeletons/KayKit_Skeletons_1.1_FREE/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+]
+
+var _cached_anim_lib: AnimationLibrary = null
+
+func _get_kaykit_anim_library() -> AnimationLibrary:
+	## Loads and caches animations from KayKit animation .glb files.
+	if _cached_anim_lib:
+		return _cached_anim_lib
+	for anim_path in KAYKIT_ANIM_PATHS:
+		if not ResourceLoader.exists(anim_path):
+			continue
+		var scene = load(anim_path) as PackedScene
+		if scene == null:
+			continue
+		var instance = scene.instantiate()
+		if instance == null:
+			continue
+		var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
+		if anim_player:
+			_cached_anim_lib = AnimationLibrary.new()
+			for anim_name in anim_player.get_animation_list():
+				if anim_name == "RESET":
+					continue
+				_cached_anim_lib.add_animation(anim_name, anim_player.get_animation(anim_name).duplicate())
+			instance.queue_free()
+			if _cached_anim_lib.get_animation_list().size() > 0:
+				return _cached_anim_lib
+			_cached_anim_lib = null
+		else:
+			instance.queue_free()
+	return null
+
+func _find_node_by_type(node: Node, type_name: String) -> Node:
+	## Recursively finds the first child node of the given type name.
+	for child in node.get_children():
+		if child.get_class() == type_name:
+			return child
+		var found = _find_node_by_type(child, type_name)
+		if found:
+			return found
+	return null
+
+func _inject_animations(instance: Node) -> void:
+	## If glb instance has an AnimationPlayer with no real animations (only RESET),
+	## try to inject animations from KayKit external animation files.
+	var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
+	if not anim_player:
+		return
+	# Check if it has real animations (not just RESET)
+	var real_anims = 0
+	for anim_name in anim_player.get_animation_list():
+		if anim_name != "RESET":
+			real_anims += 1
+	if real_anims > 0:
+		return  # Already has animations, no need to inject
+	# Load external animations
+	var lib = _get_kaykit_anim_library()
+	if lib == null:
+		return
+	# Add animations from library to the AnimationPlayer
+	for anim_name in lib.get_animation_list():
+		if not anim_player.has_animation(anim_name):
+			var anim_lib: AnimationLibrary
+			if anim_player.has_animation_library(""):
+				anim_lib = anim_player.get_animation_library("")
+			else:
+				anim_lib = AnimationLibrary.new()
+				anim_player.add_animation_library("", anim_lib)
+			anim_lib.add_animation(anim_name, lib.get_animation(anim_name))
+
 func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 	## Tenta carregar modelo 3D (.glb, .fbx, .gltf). Retorna null se nao encontrar.
 	for ext in [".glb", ".fbx", ".gltf"]:
 		var try_path = path.get_basename() + ext
-		var exists = ResourceLoader.exists(try_path)
-		print("[ModelFactory] Trying: %s -> exists=%s" % [try_path, exists])
-		if not exists:
+		if not ResourceLoader.exists(try_path):
 			continue
 		var scene = load(try_path) as PackedScene
 		if scene == null:
@@ -992,6 +1064,8 @@ func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 		var instance = scene.instantiate()
 		if instance == null:
 			continue
+		# Try to inject external animations if the model has a skeleton but no anims
+		_inject_animations(instance)
 		var root = Node3D.new()
 		root.set_meta("glb_model", true)
 		instance.scale = model_scale
