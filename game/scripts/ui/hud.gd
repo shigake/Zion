@@ -33,12 +33,18 @@ var achievement_container: HBoxContainer = null
 var achievement_icon: TextureRect = null
 var achievement_label: Label = null
 
-# Multiplayer ally HP bars
+# Multiplayer ally HP bars (painel top-right com barras coloridas)
+var ally_hp_panel: PanelContainer = null
 var ally_hp_container: VBoxContainer = null
 var ping_label: Label = null
-var ally_arrows: Dictionary = {}  # peer_id -> Label
+var ally_arrows: Dictionary = {}  # peer_id -> Label (setas direcionais na borda da tela)
 var _prev_ally_hash: String = ""
 var _ally_bars: Dictionary = {}  # peer_id -> ProgressBar
+var _ally_name_labels: Dictionary = {}  # peer_id -> Label
+var _ally_hp_labels: Dictionary = {}  # peer_id -> Label (texto HP numérico)
+
+# Host migration overlay
+var migration_label: Label = null
 
 # Minimap
 var minimap: Control = null
@@ -183,17 +189,17 @@ func _ready() -> void:
 	var touch_controls = touch_controls_scene.instantiate()
 	add_child(touch_controls)
 
-	# Multiplayer ally HP bars (top-left, below main HP bar)
+	# Multiplayer ally HP bars (painel top-right com barras coloridas)
 	if MultiplayerManager.is_online:
-		ally_hp_container = VBoxContainer.new()
-		ally_hp_container.position = Vector2(20, 120)
-		add_child(ally_hp_container)
-		# Ping display
-		ping_label = Label.new()
-		ping_label.add_theme_font_size_override("font_size", 12)
-		ping_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		ping_label.position = Vector2(get_viewport().get_visible_rect().size.x - 100, 10)
-		add_child(ping_label)
+		_setup_ally_hp_panel()
+		_setup_ping_label()
+		_setup_migration_label()
+		# Conecta sinais de host migration
+		MultiplayerManager.host_migration_started.connect(_on_host_migration_started)
+		MultiplayerManager.host_migration_completed.connect(_on_host_migration_completed)
+		MultiplayerManager.reconnection_attempted.connect(_on_reconnection_attempted)
+		MultiplayerManager.reconnection_succeeded.connect(_on_reconnection_succeeded)
+		MultiplayerManager.reconnection_failed.connect(_on_reconnection_failed)
 
 func _process(delta: float) -> void:
 	_update_hp()
@@ -651,3 +657,29 @@ func _update_synergies(delta: float) -> void:
 		lbl.add_theme_font_size_override("font_size", 14)
 		lbl.add_theme_color_override("font_color", info["color"])
 		synergy_container.add_child(lbl)
+
+# ---- Multiplayer HUD stubs (sinais conectados mas funcoes pendentes) ----
+
+func _setup_ally_hp_panel() -> void:
+	pass  # TODO: painel com barras de HP dos aliados
+
+func _setup_ping_label() -> void:
+	pass  # TODO: label de ping no canto
+
+func _setup_migration_label() -> void:
+	pass  # TODO: label de host migration
+
+func _on_host_migration_started() -> void:
+	pass
+
+func _on_host_migration_completed(_data: Variant = null) -> void:
+	pass
+
+func _on_reconnection_attempted() -> void:
+	pass
+
+func _on_reconnection_succeeded() -> void:
+	pass
+
+func _on_reconnection_failed() -> void:
+	pass

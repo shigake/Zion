@@ -76,8 +76,8 @@ func _spawn_portal_effect(pos: Vector3) -> void:
 
 	# Container for multi-layer portal
 	var container = Node3D.new()
-	container.global_position = pos + Vector3(0, 0.5, 0)
 	get_tree().current_scene.call_deferred("add_child", container)
+	container.position = pos + Vector3(0, 0.5, 0)
 
 	# --- Outer ring ---
 	var outer_ring = MeshInstance3D.new()

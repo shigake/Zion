@@ -50,8 +50,8 @@ func _spawn_ricochet_flash() -> void:
 	flash.material_override = flash_mat
 	flash.scale = Vector3.ZERO
 
-	flash.global_position = global_position
 	get_tree().current_scene.add_child(flash)
+	flash.global_position = global_position
 
 	# Scale up then down: 0 -> 0.3 -> 0 in 0.15s
 	var tween = flash.create_tween()

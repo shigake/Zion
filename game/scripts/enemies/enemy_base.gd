@@ -175,11 +175,13 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	dmg_label.outline_size = 6
 	dmg_label.modulate = dmg_color
 	dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	dmg_label.global_position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
+	dmg_label.position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
 	dmg_label.visible = true
 	dmg_label.set_process(true)
 	if not dmg_label.get_parent():
 		get_tree().current_scene.call_deferred("add_child", dmg_label)
+	elif dmg_label.is_inside_tree():
+		dmg_label.global_position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
 
 	# Hit particles + screen shake
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color.WHITE)

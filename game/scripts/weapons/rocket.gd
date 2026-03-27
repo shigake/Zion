@@ -37,8 +37,8 @@ func _explode() -> void:
 
 	# --- Multi-layer explosion ---
 	var explosion_root = Node3D.new()
-	explosion_root.global_position = global_position
 	get_tree().current_scene.add_child(explosion_root)
+	explosion_root.global_position = global_position
 
 	_create_flash(explosion_root)
 	_create_fireball(explosion_root)
