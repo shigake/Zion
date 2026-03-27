@@ -539,14 +539,20 @@ func _update_dash() -> void:
 
 func _update_ally_hp() -> void:
 	if not ally_hp_container or not MultiplayerManager.is_online:
+		if ally_hp_panel:
+			ally_hp_panel.visible = false
 		return
-	var players = get_tree().get_nodes_in_group("players")
-	if players.size() <= 1:
+	var players_list = get_tree().get_nodes_in_group("players")
+	if players_list.size() <= 1:
+		if ally_hp_panel:
+			ally_hp_panel.visible = false
 		return
+	if ally_hp_panel:
+		ally_hp_panel.visible = true
 
 	# Build a hash of ally player IDs to detect structural changes
 	var ally_hash := ""
-	for p in players:
+	for p in players_list:
 		if not is_instance_valid(p) or not "player_id" in p:
 			continue
 		if p.is_local:
@@ -557,63 +563,115 @@ func _update_ally_hp() -> void:
 	if ally_hash != _prev_ally_hash:
 		_prev_ally_hash = ally_hash
 		_ally_bars.clear()
+		_ally_name_labels.clear()
+		_ally_hp_labels.clear()
 		for child in ally_hp_container.get_children():
 			child.queue_free()
 
 		var colors = MultiplayerManager.get_player_colors()
-		for p in players:
+		for p in players_list:
 			if not is_instance_valid(p) or not "player_id" in p:
 				continue
 			if p.is_local:
 				continue
-			var hbox = HBoxContainer.new()
+
+			var pid = p.player_id
+			var color = colors.get(pid, Color.GREEN)
+
+			# Container vertical por aliado
+			var ally_vbox = VBoxContainer.new()
+			ally_vbox.add_theme_constant_override("separation", 1)
+
+			# Linha 1: nome + HP numerico
+			var top_hbox = HBoxContainer.new()
+			top_hbox.add_theme_constant_override("separation", 4)
+
+			# Indicador de cor (bolinha)
+			var color_dot = ColorRect.new()
+			color_dot.custom_minimum_size = Vector2(8, 8)
+			color_dot.color = color
+			top_hbox.add_child(color_dot)
+
 			var name_lbl = Label.new()
-			name_lbl.text = "P%d" % p.player_id
-			name_lbl.add_theme_font_size_override("font_size", 12)
-			name_lbl.custom_minimum_size = Vector2(30, 0)
-			hbox.add_child(name_lbl)
+			# Tenta pegar nome do personagem
+			var char_name = "P%d" % pid
+			if pid in MultiplayerManager.players:
+				var char_id = MultiplayerManager.players[pid].get("character", "")
+				if char_id != "":
+					char_name = char_id.capitalize()
+			name_lbl.text = char_name
+			name_lbl.add_theme_font_size_override("font_size", 11)
+			name_lbl.add_theme_color_override("font_color", color)
+			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			top_hbox.add_child(name_lbl)
+			_ally_name_labels[pid] = name_lbl
+
+			var hp_lbl = Label.new()
+			var ally_hp = MultiplayerManager.get_player_hp(pid)
+			var ally_max_hp = MultiplayerManager.get_player_max_hp(pid)
+			hp_lbl.text = "%d/%d" % [ally_hp, ally_max_hp]
+			hp_lbl.add_theme_font_size_override("font_size", 10)
+			hp_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+			hp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			top_hbox.add_child(hp_lbl)
+			_ally_hp_labels[pid] = hp_lbl
+
+			ally_vbox.add_child(top_hbox)
+
+			# Linha 2: barra de HP
 			var bar = ProgressBar.new()
-			bar.custom_minimum_size = Vector2(100, 12)
-			var ally_max_hp = MultiplayerManager.get_player_max_hp(p.player_id)
-			var ally_hp = MultiplayerManager.get_player_hp(p.player_id)
+			bar.custom_minimum_size = Vector2(140, 10)
 			bar.max_value = ally_max_hp
 			bar.value = ally_hp
 			bar.show_percentage = false
+
 			var fill = StyleBoxFlat.new()
-			fill.bg_color = colors.get(p.player_id, Color.GREEN)
-			fill.set_corner_radius_all(2)
+			fill.bg_color = color
+			fill.set_corner_radius_all(3)
 			bar.add_theme_stylebox_override("fill", fill)
-			hbox.add_child(bar)
-			ally_hp_container.add_child(hbox)
-			_ally_bars[p.player_id] = bar
+
+			var bar_bg = StyleBoxFlat.new()
+			bar_bg.bg_color = Color(0.1, 0.1, 0.15, 0.9)
+			bar_bg.set_corner_radius_all(3)
+			bar_bg.set_border_width_all(1)
+			bar_bg.border_color = color * Color(1, 1, 1, 0.3)
+			bar.add_theme_stylebox_override("background", bar_bg)
+
+			ally_vbox.add_child(bar)
+			ally_hp_container.add_child(ally_vbox)
+			_ally_bars[pid] = bar
 	else:
-		# Just update bar values without rebuilding
-		for p in players:
+		# Just update bar values and HP text without rebuilding
+		for p in players_list:
 			if not is_instance_valid(p) or not "player_id" in p:
 				continue
 			if p.is_local:
 				continue
-			if p.player_id in _ally_bars and is_instance_valid(_ally_bars[p.player_id]):
-				var ally_max_hp = MultiplayerManager.get_player_max_hp(p.player_id)
-				var ally_hp = MultiplayerManager.get_player_hp(p.player_id)
-				_ally_bars[p.player_id].max_value = ally_max_hp
-				_ally_bars[p.player_id].value = ally_hp
+			var pid = p.player_id
+			var ally_max_hp = MultiplayerManager.get_player_max_hp(pid)
+			var ally_hp = MultiplayerManager.get_player_hp(pid)
+			if pid in _ally_bars and is_instance_valid(_ally_bars[pid]):
+				_ally_bars[pid].max_value = ally_max_hp
+				# Interpola suavemente o valor da barra
+				_ally_bars[pid].value = lerpf(_ally_bars[pid].value, float(ally_hp), 0.15)
+			if pid in _ally_hp_labels and is_instance_valid(_ally_hp_labels[pid]):
+				_ally_hp_labels[pid].text = "%d/%d" % [ally_hp, ally_max_hp]
+				# Vermelho se HP < 25%
+				if ally_max_hp > 0 and float(ally_hp) / float(ally_max_hp) < 0.25:
+					_ally_hp_labels[pid].add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+				else:
+					_ally_hp_labels[pid].add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
 
 func _update_ping() -> void:
 	if not ping_label or not MultiplayerManager.is_online:
 		return
-	# Get approximate round-trip time
-	var peer = multiplayer.multiplayer_peer
-	if peer and not multiplayer.is_server():
-		# ENet peer has get_peer method
-		var rtt = 0
-		if peer.has_method("get_peer"):
-			var enet_peer = peer.get_peer(1)
-			if enet_peer:
-				rtt = enet_peer.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME)
-		ping_label.text = "Ping: %dms" % rtt
-	else:
+	if multiplayer.is_server():
 		ping_label.text = "Host"
+		ping_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.5))
+	else:
+		var rtt = MultiplayerManager.get_ping()
+		ping_label.text = "Ping: %dms" % rtt
+		ping_label.add_theme_color_override("font_color", MultiplayerManager.get_ping_color())
 
 func _update_ally_arrows() -> void:
 	if not MultiplayerManager.is_online:
@@ -625,16 +683,22 @@ func _update_ally_arrows() -> void:
 	var local_player = get_tree().get_first_node_in_group("players")
 	if not local_player or not is_instance_valid(local_player):
 		return
-	var players = get_tree().get_nodes_in_group("players")
+	var players_in_group = get_tree().get_nodes_in_group("players")
 	var colors = MultiplayerManager.get_player_colors()
-	for p in players:
+	for p in players_in_group:
 		if not is_instance_valid(p) or p == local_player:
 			continue
 		var pid = p.player_id if "player_id" in p else 0
-		# Check if ally is off-screen
+		# Distancia 3D entre jogadores
+		var dist_3d = local_player.global_position.distance_to(p.global_position)
+		# Checa se o aliado esta atras da camera
+		var behind_camera = camera.global_transform.basis.z.dot(p.global_position - camera.global_position) > 0
 		var screen_pos = camera.unproject_position(p.global_position)
+		# Se esta atras da camera, inverte a posicao na tela
+		if behind_camera:
+			screen_pos = viewport_size - screen_pos
 		var margin = 40.0
-		var is_offscreen = screen_pos.x < margin or screen_pos.x > viewport_size.x - margin or screen_pos.y < margin or screen_pos.y > viewport_size.y - margin
+		var is_offscreen = behind_camera or screen_pos.x < margin or screen_pos.x > viewport_size.x - margin or screen_pos.y < margin or screen_pos.y > viewport_size.y - margin
 		if not is_offscreen:
 			if pid in ally_arrows and is_instance_valid(ally_arrows[pid]):
 				ally_arrows[pid].visible = false
@@ -642,8 +706,11 @@ func _update_ally_arrows() -> void:
 		# Create or reuse arrow label
 		if pid not in ally_arrows or not is_instance_valid(ally_arrows[pid]):
 			var arrow = Label.new()
-			arrow.add_theme_font_size_override("font_size", 24)
+			arrow.add_theme_font_size_override("font_size", 18)
 			arrow.add_theme_color_override("font_color", colors.get(pid, Color.GREEN))
+			arrow.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+			arrow.add_theme_constant_override("shadow_offset_x", 1)
+			arrow.add_theme_constant_override("shadow_offset_y", 1)
 			add_child(arrow)
 			ally_arrows[pid] = arrow
 		var arrow: Label = ally_arrows[pid]
@@ -654,13 +721,19 @@ func _update_ally_arrows() -> void:
 			clampf(screen_pos.y, margin, viewport_size.y - margin)
 		)
 		arrow.position = clamped
-		# Direction arrow character
+		# Direction arrow character (unicode arrows mais bonitos)
 		var dir = (screen_pos - viewport_size / 2).normalized()
+		var arrow_char: String
 		if absf(dir.x) > absf(dir.y):
-			arrow.text = ">" if dir.x > 0 else "<"
+			arrow_char = "►" if dir.x > 0 else "◄"
 		else:
-			arrow.text = "v" if dir.y > 0 else "^"
-		arrow.text += " P%d" % pid
+			arrow_char = "▼" if dir.y > 0 else "▲"
+		# Mostra distancia estimada
+		var dist_text = "%dm" % int(dist_3d) if dist_3d >= 10 else "%.0fm" % dist_3d
+		arrow.text = "%s P%d %s" % [arrow_char, pid, dist_text]
+		# Opacidade baseada na distancia (mais longe = mais opaco/visivel)
+		var alpha = clampf(remap(dist_3d, 5.0, 50.0, 0.5, 1.0), 0.5, 1.0)
+		arrow.modulate.a = alpha
 
 # --------------- Synergy Display ---------------
 
@@ -699,28 +772,154 @@ func _update_synergies(delta: float) -> void:
 		lbl.add_theme_color_override("font_color", info["color"])
 		synergy_container.add_child(lbl)
 
-# ---- Multiplayer HUD stubs (sinais conectados mas funcoes pendentes) ----
+# ---- Multiplayer HUD (ally HP, ping, host migration, reconexão) ----
 
 func _setup_ally_hp_panel() -> void:
-	pass  # TODO: painel com barras de HP dos aliados
+	## Painel top-right com barras de HP dos aliados (coloridas por jogador).
+	ally_hp_panel = PanelContainer.new()
+	ally_hp_panel.name = "AllyHPPanel"
+	ally_hp_panel.anchor_left = 1.0
+	ally_hp_panel.anchor_top = 0.0
+	ally_hp_panel.anchor_right = 1.0
+	ally_hp_panel.anchor_bottom = 0.0
+	ally_hp_panel.offset_left = -180.0
+	ally_hp_panel.offset_top = 60.0
+	ally_hp_panel.offset_right = -10.0
+	ally_hp_panel.offset_bottom = 200.0
+	ally_hp_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.05, 0.1, 0.75)
+	panel_style.set_corner_radius_all(6)
+	panel_style.set_border_width_all(1)
+	panel_style.border_color = Color(0.2, 0.3, 0.5, 0.6)
+	panel_style.set_content_margin_all(8)
+	ally_hp_panel.add_theme_stylebox_override("panel", panel_style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	# Titulo
+	var title = Label.new()
+	title.text = "Aliados"
+	title.add_theme_font_size_override("font_size", 11)
+	title.add_theme_color_override("font_color", Color(0.6, 0.7, 0.9, 0.8))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	ally_hp_container = VBoxContainer.new()
+	ally_hp_container.add_theme_constant_override("separation", 4)
+	vbox.add_child(ally_hp_container)
+
+	ally_hp_panel.add_child(vbox)
+	add_child(ally_hp_panel)
 
 func _setup_ping_label() -> void:
-	pass  # TODO: label de ping no canto
+	## Label de ping (abaixo do painel de aliados ou top-right).
+	ping_label = Label.new()
+	ping_label.name = "PingLabel"
+	ping_label.anchor_left = 1.0
+	ping_label.anchor_top = 0.0
+	ping_label.anchor_right = 1.0
+	ping_label.anchor_bottom = 0.0
+	ping_label.offset_left = -100.0
+	ping_label.offset_top = 8.0
+	ping_label.offset_right = -10.0
+	ping_label.offset_bottom = 28.0
+	ping_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	ping_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	ping_label.add_theme_font_size_override("font_size", 11)
+	ping_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.5))
+	add_child(ping_label)
 
 func _setup_migration_label() -> void:
-	pass  # TODO: label de host migration
+	## Overlay central exibido durante host migration / reconexão.
+	migration_label = Label.new()
+	migration_label.name = "MigrationLabel"
+	migration_label.set_anchors_preset(Control.PRESET_CENTER)
+	migration_label.offset_left = -200.0
+	migration_label.offset_top = -30.0
+	migration_label.offset_right = 200.0
+	migration_label.offset_bottom = 30.0
+	migration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	migration_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	migration_label.add_theme_font_size_override("font_size", 22)
+	migration_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	migration_label.visible = false
+	add_child(migration_label)
+
+	# Fundo escuro semi-transparente atrás da label
+	var bg = ColorRect.new()
+	bg.name = "MigrationBG"
+	bg.color = Color(0.0, 0.0, 0.0, 0.5)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.visible = false
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
+	bg.move_to_front()
+	migration_label.move_to_front()
+
+var _migration_bg: ColorRect :
+	get:
+		return get_node_or_null("MigrationBG")
+
+func _show_migration_overlay(text: String) -> void:
+	if migration_label:
+		migration_label.text = text
+		migration_label.visible = true
+		migration_label.modulate = Color.WHITE
+		# Animação de pulso
+		var tween = create_tween().set_loops()
+		tween.tween_property(migration_label, "modulate:a", 0.4, 0.6)
+		tween.tween_property(migration_label, "modulate:a", 1.0, 0.6)
+		migration_label.set_meta("pulse_tween", tween)
+	if _migration_bg:
+		_migration_bg.visible = true
+
+func _hide_migration_overlay() -> void:
+	if migration_label:
+		# Para o pulso
+		if migration_label.has_meta("pulse_tween"):
+			var tw = migration_label.get_meta("pulse_tween") as Tween
+			if tw and tw.is_valid():
+				tw.kill()
+		migration_label.visible = false
+	if _migration_bg:
+		_migration_bg.visible = false
+
+func _flash_migration_message(text: String, color: Color, duration: float = 3.0) -> void:
+	## Exibe mensagem temporária (sucesso/falha) e esconde o overlay.
+	if migration_label:
+		# Para qualquer pulso
+		if migration_label.has_meta("pulse_tween"):
+			var tw = migration_label.get_meta("pulse_tween") as Tween
+			if tw and tw.is_valid():
+				tw.kill()
+		migration_label.text = text
+		migration_label.modulate = color
+		migration_label.visible = true
+	if _migration_bg:
+		_migration_bg.visible = true
+	# Fade out após duration
+	var tween = create_tween()
+	tween.tween_interval(duration)
+	tween.tween_callback(_hide_migration_overlay)
 
 func _on_host_migration_started() -> void:
-	pass
+	_show_migration_overlay("Migrando host...")
 
-func _on_host_migration_completed(_data: Variant = null) -> void:
-	pass
+func _on_host_migration_completed(_new_host_id: Variant = null) -> void:
+	var is_new_host = (typeof(_new_host_id) == TYPE_INT and _new_host_id == MultiplayerManager.local_player_id)
+	var msg = "Voce e o novo host!" if is_new_host else "Host migrado com sucesso"
+	_flash_migration_message(msg, Color(0.3, 0.95, 0.4), 3.0)
 
-func _on_reconnection_attempted() -> void:
-	pass
+func _on_reconnection_attempted(attempt: Variant = null, max_attempts: Variant = null) -> void:
+	var a = attempt if typeof(attempt) == TYPE_INT else 0
+	var m = max_attempts if typeof(max_attempts) == TYPE_INT else MultiplayerManager.MAX_RECONNECT_ATTEMPTS
+	_show_migration_overlay("Reconectando... (%d/%d)" % [a, m])
 
 func _on_reconnection_succeeded() -> void:
-	pass
+	_flash_migration_message("Reconectado!", Color(0.3, 0.95, 0.4), 2.5)
 
 func _on_reconnection_failed() -> void:
-	pass
+	_flash_migration_message("Falha na reconexao", Color(0.95, 0.3, 0.3), 4.0)
