@@ -969,6 +969,9 @@ func create_mimic_model() -> Node3D:
 
 # ===================== GLB LOADER =====================
 
+# Cache de PackedScenes carregadas para evitar load() sincrono repetido
+var _scene_cache: Dictionary = {}  # path -> PackedScene (ou null se nao existe)
+
 const KENNEY_NATURE := "res://assets/models/downloaded/kenney/nature-kit/Models/GLTF format/"
 const KENNEY_DUNGEON := "res://assets/models/downloaded/kenney/mini-dungeon/Models/GLB format/"
 const KAYKIT_GAME := "res://assets/models/downloaded/kaykit/mini-game-variety/Models/gltf/"
@@ -1146,17 +1149,36 @@ func _inject_animations(instance: Node) -> void:
 
 func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 	## Tenta carregar modelo 3D (.glb, .fbx, .gltf). Retorna null se nao encontrar.
+	## Usa cache para evitar load() sincrono repetido (principal causa de lag no spawn).
 	for ext in [".glb", ".fbx", ".gltf"]:
 		var try_path = path.get_basename() + ext
+		# Verificar cache primeiro
+		if _scene_cache.has(try_path):
+			var cached = _scene_cache[try_path]
+			if cached == null:
+				continue  # Ja sabemos que nao existe
+			var instance = cached.instantiate()
+			if instance == null:
+				continue
+			_inject_animations(instance)
+			var root = Node3D.new()
+			root.set_meta("glb_model", true)
+			instance.scale = model_scale
+			root.add_child(instance)
+			return root
+		# Nao esta no cache — carregar e cachear
 		if not ResourceLoader.exists(try_path):
+			_scene_cache[try_path] = null  # Cachear ausencia
 			if LogManager:
 				LogManager.debug("ModelFactory", "resource not found: %s" % try_path)
 			continue
 		var scene = load(try_path) as PackedScene
 		if scene == null:
+			_scene_cache[try_path] = null  # Cachear falha
 			if LogManager:
 				LogManager.warn("ModelFactory", "failed to load scene: %s" % try_path)
 			continue
+		_scene_cache[try_path] = scene  # Cachear sucesso
 		var instance = scene.instantiate()
 		if instance == null:
 			continue
@@ -1179,11 +1201,20 @@ func load_prop(file_name: String, source: String = "nature") -> Node3D:
 		"game": base_path = KAYKIT_GAME
 		_: base_path = KENNEY_NATURE
 	var path = base_path + file_name
+	# Usar cache para evitar load() sincrono repetido
+	if _scene_cache.has(path):
+		var cached = _scene_cache[path]
+		if cached == null:
+			return null
+		return cached.instantiate()
 	if not ResourceLoader.exists(path):
+		_scene_cache[path] = null
 		return null
 	var scene = load(path) as PackedScene
 	if scene == null:
+		_scene_cache[path] = null
 		return null
+	_scene_cache[path] = scene
 	var instance = scene.instantiate()
 	return instance
 
