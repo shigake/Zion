@@ -64,21 +64,17 @@ func _set_arms_down() -> void:
 		return
 	if "upperarm.l" in _bone_ids:
 		var idx = _bone_ids["upperarm.l"]
-		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.BACK, deg_to_rad(65)))
+		_skeleton.set_bone_pose_rotation(idx, Quaternion(Vector3.FORWARD, deg_to_rad(-65)))
 	if "upperarm.r" in _bone_ids:
 		var idx = _bone_ids["upperarm.r"]
-		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.BACK, deg_to_rad(-65)))
-	# Slight bend in lower arms (elbows slightly forward)
+		_skeleton.set_bone_pose_rotation(idx, Quaternion(Vector3.FORWARD, deg_to_rad(65)))
+	# Slight bend in lower arms
 	if "lowerarm.l" in _bone_ids:
 		var idx = _bone_ids["lowerarm.l"]
-		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.UP, deg_to_rad(20)))
+		_skeleton.set_bone_pose_rotation(idx, Quaternion(Vector3.RIGHT, deg_to_rad(20)))
 	if "lowerarm.r" in _bone_ids:
 		var idx = _bone_ids["lowerarm.r"]
-		var rest = _bone_rest[idx]
-		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(15)))
+		_skeleton.set_bone_pose_rotation(idx, Quaternion(Vector3.RIGHT, deg_to_rad(-20)))
 
 func _animate_skeleton(delta: float) -> void:
 	## Procedurally animate skeleton bones for walk/idle.
@@ -86,34 +82,33 @@ func _animate_skeleton(delta: float) -> void:
 		return
 	match state:
 		State.IDLE:
-			# Subtle arm sway (arms at sides, gentle breathing motion)
+			# Subtle arm sway (arms at sides)
 			var sway = sin(_time * 2.0) * 3.0
-			_rotate_bone("upperarm.l", Vector3.BACK, 65 + sway)
-			_rotate_bone("upperarm.r", Vector3.BACK, -65 - sway)
+			_set_bone_rot("upperarm.l", Vector3.FORWARD, -65 - sway)
+			_set_bone_rot("upperarm.r", Vector3.FORWARD, 65 + sway)
 		State.WALK:
-			# Arm swing (opposite to legs, forward/backward)
+			# Arm swing forward/backward
 			var swing = sin(_time * 10.0)
-			var arm_angle = swing * 25.0
-			_rotate_bone("upperarm.l", Vector3.BACK, 65 + arm_angle)
-			_rotate_bone("upperarm.r", Vector3.BACK, -65 - arm_angle)
-			# Lower arm bend follows swing
-			var lower_swing = sin(_time * 10.0 - 0.5) * 12.0
-			_rotate_bone("lowerarm.l", Vector3.UP, 20 + maxf(0, lower_swing))
-			_rotate_bone("lowerarm.r", Vector3.UP, 20 + maxf(0, -lower_swing))
+			_set_bone_rot("upperarm.l", Vector3.FORWARD, -65 - swing * 25.0)
+			_set_bone_rot("upperarm.r", Vector3.FORWARD, 65 + swing * 25.0)
+			# Lower arm bend
+			var ls = sin(_time * 10.0 - 0.5) * 12.0
+			_set_bone_rot("lowerarm.l", Vector3.RIGHT, 20 + maxf(0, ls))
+			_set_bone_rot("lowerarm.r", Vector3.RIGHT, -(20 + maxf(0, -ls)))
 			# Leg swing
-			_rotate_bone("upperleg.l", Vector3.RIGHT, swing * 25.0)
-			_rotate_bone("upperleg.r", Vector3.RIGHT, -swing * 25.0)
-			_rotate_bone("lowerleg.l", Vector3.RIGHT, maxf(0, -swing) * 30.0)
-			_rotate_bone("lowerleg.r", Vector3.RIGHT, maxf(0, swing) * 30.0)
+			_set_bone_rot("upperleg.l", Vector3.RIGHT, swing * 25.0)
+			_set_bone_rot("upperleg.r", Vector3.RIGHT, -swing * 25.0)
+			_set_bone_rot("lowerleg.l", Vector3.RIGHT, maxf(0, -swing) * 30.0)
+			_set_bone_rot("lowerleg.r", Vector3.RIGHT, maxf(0, swing) * 30.0)
 			# Torso twist
-			_rotate_bone("spine", Vector3.UP, swing * 5.0)
+			_set_bone_rot("spine", Vector3.UP, swing * 5.0)
 
-func _rotate_bone(bone_name: String, axis: Vector3, degrees: float) -> void:
+func _set_bone_rot(bone_name: String, axis: Vector3, degrees: float) -> void:
+	## Set absolute bone pose rotation (not relative to rest).
 	if bone_name not in _bone_ids:
 		return
 	var idx = _bone_ids[bone_name]
-	var rest = _bone_rest[idx]
-	_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(axis, deg_to_rad(degrees)))
+	_skeleton.set_bone_pose_rotation(idx, Quaternion(axis, deg_to_rad(degrees)))
 
 func _find_animation_player() -> void:
 	## Searches the model tree for an AnimationPlayer and maps common animation names.

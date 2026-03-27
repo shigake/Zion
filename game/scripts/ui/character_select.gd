@@ -73,7 +73,7 @@ func _build_ui() -> void:
 
 	# Camera
 	var camera = Camera3D.new()
-	camera.transform = Transform3D(Basis(), Vector3(0, 0.8, 3.2))
+	camera.transform = Transform3D(Basis(), Vector3(0, 0.5, 2.5))
 	camera.fov = 30
 	_viewport.add_child(camera)
 
@@ -311,7 +311,7 @@ func _load_3d_model(char_id: String) -> void:
 	var model = ModelFactory.get_model_for_character(char_id)
 	if model:
 		model.position = Vector3(0, 0, 0)
-		model.scale = Vector3(0.7, 0.7, 0.7)
+		model.scale = Vector3(0.5, 0.5, 0.5)
 		_model_root.add_child(model)
 		_preview_model = model
 
