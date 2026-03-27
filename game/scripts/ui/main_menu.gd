@@ -325,7 +325,7 @@ func _setup_3d_background() -> void:
 	env.ambient_light_energy = 0.4
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.0, 0.0, 0.0, 0.0)
-	env.tonemap_mode = Environment.TONE_MAP_ACES
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.glow_enabled = true
 	env.glow_intensity = 0.3
 	env.glow_bloom = 0.1

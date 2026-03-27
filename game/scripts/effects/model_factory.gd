@@ -1001,15 +1001,17 @@ const ENEMY_SCALE_MAP := {
 ## Paths to KayKit animation .glb files (Rig_Medium contains idle, walk, run, attack, etc.)
 const KAYKIT_ANIM_PATHS: Array[String] = [
 	"res://assets/models/downloaded/kaykit/adventurers/KayKit_Adventurers_2.0_FREE/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+	"res://assets/models/downloaded/kaykit/adventurers/KayKit_Adventurers_2.0_FREE/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
 	"res://assets/models/downloaded/kaykit/skeletons/KayKit_Skeletons_1.1_FREE/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
 ]
 
 var _cached_anim_lib: AnimationLibrary = null
 
 func _get_kaykit_anim_library() -> AnimationLibrary:
-	## Loads and caches animations from KayKit animation .glb files.
+	## Loads and caches animations from ALL KayKit animation .glb files.
 	if _cached_anim_lib:
 		return _cached_anim_lib
+	_cached_anim_lib = AnimationLibrary.new()
 	for anim_path in KAYKIT_ANIM_PATHS:
 		if not ResourceLoader.exists(anim_path):
 			continue
@@ -1021,17 +1023,15 @@ func _get_kaykit_anim_library() -> AnimationLibrary:
 			continue
 		var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
 		if anim_player:
-			_cached_anim_lib = AnimationLibrary.new()
 			for anim_name in anim_player.get_animation_list():
 				if anim_name == "RESET":
 					continue
-				_cached_anim_lib.add_animation(anim_name, anim_player.get_animation(anim_name).duplicate())
-			instance.queue_free()
-			if _cached_anim_lib.get_animation_list().size() > 0:
-				return _cached_anim_lib
-			_cached_anim_lib = null
-		else:
-			instance.queue_free()
+				if not _cached_anim_lib.has_animation(anim_name):
+					_cached_anim_lib.add_animation(anim_name, anim_player.get_animation(anim_name).duplicate())
+		instance.queue_free()
+	if _cached_anim_lib.get_animation_list().size() > 0:
+		return _cached_anim_lib
+	_cached_anim_lib = null
 	return null
 
 func _find_node_by_type(node: Node, type_name: String) -> Node:
@@ -1049,7 +1049,16 @@ func _inject_animations(instance: Node) -> void:
 	## try to inject animations from KayKit external animation files.
 	var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
 	if not anim_player:
-		return
+		# No AnimationPlayer but has Skeleton3D — create one and attach to skeleton
+		var skeleton = _find_node_by_type(instance, "Skeleton3D") as Skeleton3D
+		if not skeleton:
+			return
+		anim_player = AnimationPlayer.new()
+		anim_player.name = "InjectedAnimationPlayer"
+		skeleton.add_child(anim_player)
+		anim_player.owner = instance
+		if LogManager:
+			LogManager.info("ModelFactory", "Created AnimationPlayer for model with %d-bone skeleton" % skeleton.get_bone_count())
 	# Check if it has real animations (not just RESET)
 	var real_anims = 0
 	for anim_name in anim_player.get_animation_list():
@@ -1171,6 +1180,19 @@ func get_model_for_character(char_id: String) -> Node3D:
 	var glb_path = "res://assets/models/characters/%s.glb" % char_id
 	var loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
 	if loaded:
+		if LogManager:
+			LogManager.info("ModelFactory", "Loaded GLB for character '%s'. Children: %d" % [char_id, loaded.get_child_count()])
+			# Check animation state
+			var ap = _find_node_by_type(loaded, "AnimationPlayer") as AnimationPlayer
+			if ap:
+				LogManager.info("ModelFactory", "  AnimPlayer anims: %s" % str(ap.get_animation_list()))
+			else:
+				LogManager.info("ModelFactory", "  No AnimationPlayer found in model")
+			var skel = _find_node_by_type(loaded, "Skeleton3D") as Skeleton3D
+			if skel:
+				LogManager.info("ModelFactory", "  Skeleton bones: %d" % skel.get_bone_count())
+			else:
+				LogManager.info("ModelFactory", "  No Skeleton3D found in model")
 		return loaded
 	# Fallback to procedural
 	match char_id:

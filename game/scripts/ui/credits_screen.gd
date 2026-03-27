@@ -169,7 +169,7 @@ func _setup_3d_scene() -> void:
 	env.glow_enabled = true
 	env.glow_intensity = 0.8
 	env.glow_bloom = 0.3
-	env.tonemap_mode = Environment.TONE_MAP_ACES
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 
 	var world_env = WorldEnvironment.new()
 	world_env.environment = env
