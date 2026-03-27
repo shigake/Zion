@@ -41,7 +41,10 @@ func _show() -> void:
 		time_label.text = LocaleManager.tr_key("time") % time_str
 	kills_label.text = LocaleManager.tr_key("kills_stat") % GameManager.total_kills
 	level_label.text = LocaleManager.tr_key("level_stat") % GameManager.player_level
+	var crystal_mult = MutationManager.get_crystal_multiplier()
 	crystals_label.text = LocaleManager.tr_key("crystals_earned") % GameManager.crystals_this_run
+	if crystal_mult > 1.0:
+		crystals_label.text += " (x%.1f mutacoes)" % crystal_mult
 
 	# DPS
 	var dps: float = 0.0

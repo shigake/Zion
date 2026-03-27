@@ -28,6 +28,9 @@ func _ready() -> void:
 	max_hp = int(max_hp * hp_mult)
 	hp = max_hp
 	add_to_group("enemies")
+	# Mutation: furious bosses — start at 75% HP (phase 2)
+	# Applied after boss subclass _ready() via deferred call
+	call_deferred("_apply_furious_boss_mutation")
 	# Desativa colisao fisica com player para evitar empurrar o jogador
 	# Dano por contato e detectado via Area3D (Hitbox)
 	collision_mask = 0
@@ -89,6 +92,8 @@ func _physics_process(delta: float) -> void:
 		# Veteran relic: enemies 15% faster
 		if GameManager.veteran_relic_active:
 			effective_speed *= 1.15
+		# Mutation: speed demons
+		effective_speed *= MutationManager.get_enemy_speed_modifier()
 		# Separacao: repulsao de inimigos proximos
 		var separation = _get_separation_vector()
 		var final_dir = (direction * effective_speed + separation).normalized()
@@ -249,6 +254,9 @@ func _die() -> void:
 			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 15)
 		ScreenEffects.shake(0.06)
 		SynergySystem.apply_on_kill_synergies(pos)
+		# Mutation: explosive enemies
+		if MutationManager.is_active("explosive_enemies") and not is_in_group("boss"):
+			_mutation_explode(pos)
 		_spawn_xp_gem()
 		_spawn_crystal()
 		# Gasoline item: fire ground on enemy death
@@ -386,6 +394,22 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	fire.global_position = pos
 	fire.monitoring = true
 	get_tree().current_scene.call_deferred("add_child", fire)
+
+func _apply_furious_boss_mutation() -> void:
+	if is_in_group("boss") and MutationManager.is_active("furious_bosses"):
+		hp = int(max_hp * 0.75)
+
+func _mutation_explode(pos: Vector3) -> void:
+	## Mutation "explosive_enemies": AoE damage on death (like Bomber)
+	var explosion_damage = maxi(1, max_hp / 2)
+	var explosion_radius = 1.5
+	ParticleFactory.spawn_explosion_particles(pos + Vector3(0, 0.3, 0))
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for e in enemies:
+		if e == self or not is_instance_valid(e) or e.is_dead:
+			continue
+		if pos.distance_to(e.global_position) <= explosion_radius and e.has_method("take_damage"):
+			e.call_deferred("take_damage", explosion_damage, "fire")
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and body.has_method("take_damage"):

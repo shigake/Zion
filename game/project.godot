@@ -49,6 +49,7 @@ AutoTester="*res://scripts/autoload/auto_tester.gd"
 GamepadUI="*res://scripts/autoload/gamepad_ui.gd"
 DebugOverlay="*res://scripts/ui/debug_overlay.gd"
 Telemetry="*res://scripts/autoload/telemetry.gd"
+MutationManager="*res://scripts/autoload/mutation_manager.gd"
 
 [display]
 

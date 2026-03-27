@@ -115,6 +115,8 @@ func get_all_evolution_ids() -> Array:
 
 func check_evolution_available() -> String:
 	## Retorna o ID da evolucao disponivel, ou "" se nenhuma.
+	if not MutationManager.can_evolve():
+		return ""
 	for evo_id in evolutions:
 		if evo_id in evolved_weapons:
 			continue

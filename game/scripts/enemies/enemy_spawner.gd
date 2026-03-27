@@ -51,6 +51,8 @@ func _process(delta: float) -> void:
 	# Hyper mode: 2x spawn rate
 	if GameManager.game_mode == "hyper":
 		mult *= 2.0
+	# Mutation: endless horde
+	mult *= MutationManager.get_spawn_modifier()
 	var interval = maxf(0.15, base_spawn_interval / mult)
 
 	# Boss Rush: spawn bosses sequentially instead of normal enemies

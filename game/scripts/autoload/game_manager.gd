@@ -242,6 +242,8 @@ func heal(amount: int) -> void:
 	var heal_amount = amount
 	if selected_character == "chef":
 		heal_amount *= 2
+	# Mutation: weakened healing
+	heal_amount = int(heal_amount * MutationManager.get_heal_modifier())
 	var effective_max = get_effective_max_hp()
 	player_hp = mini(player_hp + heal_amount, effective_max)
 	# Sync HP com aliados no multiplayer
@@ -568,8 +570,8 @@ func get_accuracy_spread() -> float:
 	return 1.0 / maxf(0.1, accuracy_mult)
 
 func end_run() -> void:
-	# Cristais = kills / 5 (minimo)
-	crystals_this_run = maxi(total_kills / 5, 10)
+	# Cristais = kills / 5 (minimo), com multiplicador de mutacoes
+	crystals_this_run = maxi(int(maxi(total_kills / 5, 10) * MutationManager.get_crystal_multiplier()), 10)
 	LogManager.info("Game", "Run ended: %s on %s, time: %.1fs, kills: %d, crystals: %d, victory: %s" % [
 		selected_character, selected_stage, game_time, total_kills, crystals_this_run, str(is_victory)
 	])

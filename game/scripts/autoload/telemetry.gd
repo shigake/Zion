@@ -44,6 +44,8 @@ func _send_run_data() -> void:
 		"evolutions": EvolutionDB.evolved_weapons.duplicate(),
 		"events": GameManager.events_triggered.duplicate(),
 		"crystals_earned": GameManager.crystals_this_run,
+		"mutations_active": MutationManager.get_active_ids(),
+		"crystal_multiplier": MutationManager.get_crystal_multiplier(),
 		"fps_avg": LogManager.get_session_stats().get("avg_fps", 0),
 		"fps_min": LogManager.get_session_stats().get("min_fps", 0),
 		"peak_enemies": GameManager.peak_enemies,

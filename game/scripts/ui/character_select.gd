@@ -277,7 +277,7 @@ func _on_start() -> void:
 	var center_char_id = all_character_ids[current_index]
 	if SaveManager.is_character_unlocked(center_char_id):
 		GameManager.selected_character = center_char_id
-		get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")
+		get_tree().change_scene_to_file("res://scenes/ui/mutations_panel.tscn")
 
 
 func _on_back() -> void:

@@ -36,8 +36,8 @@ func _build_mutation_cards() -> void:
 		child.queue_free()
 
 	var mutations = MutationManager.get_all_mutations()
-	for mutation in mutations:
-		var card = _create_card(mutation)
+	for mutation_id in mutations:
+		var card = _create_card(mutations[mutation_id])
 		mutation_grid.add_child(card)
 
 func _create_card(mutation: Dictionary) -> PanelContainer:
@@ -90,7 +90,7 @@ func _create_card(mutation: Dictionary) -> PanelContainer:
 	# Toggle checkbox
 	var checkbox = CheckBox.new()
 	checkbox.text = "Ativar"
-	checkbox.button_pressed = MutationManager.is_mutation_active(mutation["id"]) if mutation.has("id") else false
+	checkbox.button_pressed = MutationManager.is_active(mutation["id"]) if mutation.has("id") else false
 	var mutation_id = mutation.get("id", "")
 	checkbox.toggled.connect(func(is_active: bool): _on_mutation_toggled(mutation_id, is_active))
 	vbox.add_child(checkbox)
