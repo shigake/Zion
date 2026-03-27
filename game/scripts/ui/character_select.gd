@@ -1,26 +1,29 @@
 extends Control
 
-## Tela de selecao de personagem — design moderno com cards e icones SVG.
-## Grid de personagens na parte inferior, card grande no centro com detalhes.
+## Tela de selecao de personagem — estilo Genshin Impact.
+## Modelo 3D grande no centro, strip de personagens na direita, info overlay.
 
 var all_character_ids: Array[String] = []
 var current_index: int = 0
+var _preview_model: Node3D = null
+var _animator = null
 
-# UI refs (created in _ready)
-var _title: Label
-var _char_grid: HBoxContainer
-var _center_card: PanelContainer
-var _card_icon: TextureRect
-var _card_name: Label
-var _card_passive: Label
-var _card_weapon_icon: TextureRect
-var _card_weapon_name: Label
-var _card_lock: Label
+# UI refs
+var _viewport_container: SubViewportContainer
+var _viewport: SubViewport
+var _model_root: Node3D
+var _bg_gradient: ColorRect
+var _char_strip: VBoxContainer
+var _char_buttons: Array[Button] = []
+var _name_label: Label
+var _passive_label: Label
+var _weapon_label: Label
+var _weapon_icon: TextureRect
+var _element_badge: Label
+var _lock_label: Label
 var _start_btn: Button
 var _back_btn: Button
-var _char_buttons: Array[Button] = []
-var _card_color_bar: ColorRect
-var _stats_container: VBoxContainer
+var _char_icon_large: TextureRect
 
 func _ready() -> void:
 	_load_character_list()
@@ -42,183 +45,205 @@ func _find_first_unlocked() -> void:
 	current_index = 0
 
 func _build_ui() -> void:
-	# Main layout
-	var margin = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
-	margin.add_theme_constant_override("margin_top", 24)
-	margin.add_theme_constant_override("margin_bottom", 24)
-	add_child(margin)
+	# Background gradient (changes with character color)
+	_bg_gradient = ColorRect.new()
+	_bg_gradient.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bg_gradient.color = Color(0.03, 0.03, 0.06)
+	add_child(_bg_gradient)
 
-	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 16)
-	margin.add_child(vbox)
+	# Dark overlay for contrast
+	var overlay = ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0, 0, 0, 0.3)
+	add_child(overlay)
 
-	# Title
-	_title = Label.new()
-	_title.text = "Escolha seu personagem"
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title.add_theme_font_size_override("font_size", 26)
-	_title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.92))
-	vbox.add_child(_title)
+	# 3D model viewport (center-left, takes 60% of screen)
+	_viewport_container = SubViewportContainer.new()
+	_viewport_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_viewport_container.anchor_right = 0.65
+	_viewport_container.stretch = true
+	_viewport_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_viewport_container)
 
-	# Center area (card + stats)
-	var center_hbox = HBoxContainer.new()
-	center_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	center_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	center_hbox.add_theme_constant_override("separation", 32)
-	vbox.add_child(center_hbox)
+	_viewport = SubViewport.new()
+	_viewport.transparent_bg = true
+	_viewport.size = Vector2i(832, 720)
+	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_viewport_container.add_child(_viewport)
 
-	# Build center character card
-	_build_center_card(center_hbox)
+	# Camera
+	var camera = Camera3D.new()
+	camera.transform = Transform3D(Basis(), Vector3(0, 0.8, 3.2))
+	camera.fov = 30
+	_viewport.add_child(camera)
 
-	# Build stats panel
-	_build_stats_panel(center_hbox)
+	# Lights
+	var key_light = DirectionalLight3D.new()
+	key_light.transform = Transform3D(Basis(Vector3(1,0,0), deg_to_rad(-30)) * Basis(Vector3(0,1,0), deg_to_rad(30)), Vector3(0, 3, 2))
+	key_light.light_energy = 2.5
+	key_light.shadow_enabled = true
+	_viewport.add_child(key_light)
 
-	# Character grid (bottom)
-	var grid_scroll = ScrollContainer.new()
-	grid_scroll.custom_minimum_size = Vector2(0, 100)
-	grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	grid_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(grid_scroll)
+	var fill_light = DirectionalLight3D.new()
+	fill_light.transform = Transform3D(Basis(Vector3(1,0,0), deg_to_rad(-15)) * Basis(Vector3(0,1,0), deg_to_rad(-45)), Vector3(-2, 2, 1))
+	fill_light.light_energy = 1.0
+	fill_light.light_color = Color(0.7, 0.8, 1.0)
+	_viewport.add_child(fill_light)
 
-	_char_grid = HBoxContainer.new()
-	_char_grid.alignment = BoxContainer.ALIGNMENT_CENTER
-	_char_grid.add_theme_constant_override("separation", 8)
-	grid_scroll.add_child(_char_grid)
+	var rim_light = DirectionalLight3D.new()
+	rim_light.transform = Transform3D(Basis(Vector3(1,0,0), deg_to_rad(-10)) * Basis(Vector3(0,1,0), deg_to_rad(180)), Vector3(0, 2, -2))
+	rim_light.light_energy = 1.5
+	rim_light.light_color = Color(0.6, 0.7, 1.0)
+	_viewport.add_child(rim_light)
 
-	_build_character_grid()
+	# Model root (ground level, centered)
+	_model_root = Node3D.new()
+	_model_root.name = "ModelRoot"
+	_viewport.add_child(_model_root)
 
-	# Bottom buttons
-	var btn_hbox = HBoxContainer.new()
-	btn_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_hbox.add_theme_constant_override("separation", 20)
-	vbox.add_child(btn_hbox)
+	# Ground circle (subtle disc under character)
+	var ground = MeshInstance3D.new()
+	var disc = CylinderMesh.new()
+	disc.top_radius = 0.8
+	disc.bottom_radius = 0.8
+	disc.height = 0.02
+	disc.radial_segments = 32
+	ground.mesh = disc
+	ground.position.y = -0.01
+	var ground_mat = StandardMaterial3D.new()
+	ground_mat.albedo_color = Color(0.15, 0.15, 0.2, 0.5)
+	ground_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ground_mat.emission_enabled = true
+	ground_mat.emission = Color(0.2, 0.3, 0.5)
+	ground_mat.emission_energy_multiplier = 0.5
+	ground.material_override = ground_mat
+	_model_root.add_child(ground)
 
-	_back_btn = _create_button("Voltar", Color(0.15, 0.12, 0.12))
-	_back_btn.pressed.connect(_on_back)
-	btn_hbox.add_child(_back_btn)
+	# --- Right side panel (character info + strip) ---
+	var right_panel = PanelContainer.new()
+	right_panel.anchor_left = 0.65
+	right_panel.anchor_right = 1.0
+	right_panel.anchor_top = 0.0
+	right_panel.anchor_bottom = 1.0
+	right_panel.offset_left = 0
+	right_panel.offset_right = 0
+	var rp_style = StyleBoxFlat.new()
+	rp_style.bg_color = Color(0.03, 0.03, 0.05, 0.92)
+	rp_style.border_width_left = 1
+	rp_style.border_color = Color(0.15, 0.15, 0.25, 0.5)
+	rp_style.content_margin_left = 20
+	rp_style.content_margin_right = 16
+	rp_style.content_margin_top = 20
+	rp_style.content_margin_bottom = 16
+	right_panel.add_theme_stylebox_override("panel", rp_style)
+	add_child(right_panel)
 
-	_start_btn = _create_button("Jogar", Color(0.12, 0.2, 0.35))
-	_start_btn.pressed.connect(_on_start)
-	btn_hbox.add_child(_start_btn)
+	var right_vbox = VBoxContainer.new()
+	right_vbox.add_theme_constant_override("separation", 8)
+	right_panel.add_child(right_vbox)
 
-func _build_center_card(parent: Control) -> void:
-	_center_card = PanelContainer.new()
-	_center_card.custom_minimum_size = Vector2(280, 360)
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.06, 0.1, 0.95)
-	style.set_corner_radius_all(16)
-	style.set_border_width_all(2)
-	style.border_color = Color(0.2, 0.2, 0.3, 0.6)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 16
-	style.content_margin_bottom = 16
-	_center_card.add_theme_stylebox_override("panel", style)
-	parent.add_child(_center_card)
+	# Character name (large)
+	_name_label = Label.new()
+	_name_label.add_theme_font_size_override("font_size", 28)
+	_name_label.add_theme_color_override("font_color", Color.WHITE)
+	right_vbox.add_child(_name_label)
 
-	var card_vbox = VBoxContainer.new()
-	card_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	card_vbox.add_theme_constant_override("separation", 12)
-	_center_card.add_child(card_vbox)
+	# Element badge
+	_element_badge = Label.new()
+	_element_badge.add_theme_font_size_override("font_size", 12)
+	_element_badge.add_theme_color_override("font_color", Color(0.6, 0.65, 0.8))
+	right_vbox.add_child(_element_badge)
 
-	# Color accent bar at top
-	_card_color_bar = ColorRect.new()
-	_card_color_bar.custom_minimum_size = Vector2(0, 4)
-	_card_color_bar.color = Color.WHITE
-	card_vbox.add_child(_card_color_bar)
-
-	# Large character icon
-	_card_icon = TextureRect.new()
-	_card_icon.custom_minimum_size = Vector2(140, 140)
-	_card_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_card_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	card_vbox.add_child(_card_icon)
-
-	# Character name
-	_card_name = Label.new()
-	_card_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_card_name.add_theme_font_size_override("font_size", 22)
-	_card_name.add_theme_color_override("font_color", Color.WHITE)
-	card_vbox.add_child(_card_name)
+	# Separator
+	var sep1 = HSeparator.new()
+	sep1.add_theme_constant_override("separation", 8)
+	right_vbox.add_child(sep1)
 
 	# Passive ability
-	_card_passive = Label.new()
-	_card_passive.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_card_passive.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_card_passive.add_theme_font_size_override("font_size", 12)
-	_card_passive.add_theme_color_override("font_color", Color(0.6, 0.8, 0.55))
-	card_vbox.add_child(_card_passive)
+	var passive_title = Label.new()
+	passive_title.text = "Habilidade passiva"
+	passive_title.add_theme_font_size_override("font_size", 10)
+	passive_title.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
+	right_vbox.add_child(passive_title)
 
-	# Lock label
-	_card_lock = Label.new()
-	_card_lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_card_lock.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_card_lock.add_theme_font_size_override("font_size", 11)
-	_card_lock.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
-	_card_lock.visible = false
-	card_vbox.add_child(_card_lock)
-
-func _build_stats_panel(parent: Control) -> void:
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(240, 0)
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.07, 0.8)
-	style.set_corner_radius_all(12)
-	style.set_border_width_all(1)
-	style.border_color = Color(0.15, 0.15, 0.2, 0.5)
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 16
-	style.content_margin_bottom = 16
-	panel.add_theme_stylebox_override("panel", style)
-	parent.add_child(panel)
-
-	_stats_container = VBoxContainer.new()
-	_stats_container.add_theme_constant_override("separation", 14)
-	panel.add_child(_stats_container)
-
-	# Section title
-	var title = Label.new()
-	title.text = "Detalhes"
-	title.add_theme_font_size_override("font_size", 16)
-	title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
-	_stats_container.add_child(title)
+	_passive_label = Label.new()
+	_passive_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_passive_label.add_theme_font_size_override("font_size", 13)
+	_passive_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.6))
+	right_vbox.add_child(_passive_label)
 
 	# Weapon row
+	var weapon_title = Label.new()
+	weapon_title.text = "Arma inicial"
+	weapon_title.add_theme_font_size_override("font_size", 10)
+	weapon_title.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
+	right_vbox.add_child(weapon_title)
+
 	var weapon_row = HBoxContainer.new()
 	weapon_row.add_theme_constant_override("separation", 8)
-	_stats_container.add_child(weapon_row)
+	right_vbox.add_child(weapon_row)
 
-	_card_weapon_icon = TextureRect.new()
-	_card_weapon_icon.custom_minimum_size = Vector2(32, 32)
-	_card_weapon_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	weapon_row.add_child(_card_weapon_icon)
+	_weapon_icon = TextureRect.new()
+	_weapon_icon.custom_minimum_size = Vector2(28, 28)
+	_weapon_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	weapon_row.add_child(_weapon_icon)
 
-	var weapon_vbox = VBoxContainer.new()
-	weapon_vbox.add_theme_constant_override("separation", 0)
-	weapon_row.add_child(weapon_vbox)
+	_weapon_label = Label.new()
+	_weapon_label.add_theme_font_size_override("font_size", 14)
+	_weapon_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.6))
+	weapon_row.add_child(_weapon_label)
 
-	var weapon_label_title = Label.new()
-	weapon_label_title.text = "Arma inicial"
-	weapon_label_title.add_theme_font_size_override("font_size", 10)
-	weapon_label_title.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
-	weapon_vbox.add_child(weapon_label_title)
+	# Lock label
+	_lock_label = Label.new()
+	_lock_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_lock_label.add_theme_font_size_override("font_size", 12)
+	_lock_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
+	_lock_label.visible = false
+	right_vbox.add_child(_lock_label)
 
-	_card_weapon_name = Label.new()
-	_card_weapon_name.add_theme_font_size_override("font_size", 14)
-	_card_weapon_name.add_theme_color_override("font_color", Color(0.9, 0.85, 0.6))
-	weapon_vbox.add_child(_card_weapon_name)
+	# Spacer
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_vbox.add_child(spacer)
 
-func _build_character_grid() -> void:
-	for child in _char_grid.get_children():
-		child.queue_free()
+	# Character strip (scrollable grid of small icons)
+	var strip_label = Label.new()
+	strip_label.text = "Personagens"
+	strip_label.add_theme_font_size_override("font_size", 10)
+	strip_label.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
+	right_vbox.add_child(strip_label)
+
+	var strip_scroll = ScrollContainer.new()
+	strip_scroll.custom_minimum_size = Vector2(0, 180)
+	strip_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	strip_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	right_vbox.add_child(strip_scroll)
+
+	# Grid (3 columns)
+	var grid = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	strip_scroll.add_child(grid)
+
+	_build_character_strip(grid)
+
+	# Bottom buttons
+	var btn_row = HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 12)
+	btn_row.alignment = BoxContainer.ALIGNMENT_END
+	right_vbox.add_child(btn_row)
+
+	_back_btn = _make_btn("Voltar", Color(0.12, 0.1, 0.1))
+	_back_btn.pressed.connect(_on_back)
+	btn_row.add_child(_back_btn)
+
+	_start_btn = _make_btn("Jogar", Color(0.15, 0.25, 0.4))
+	_start_btn.pressed.connect(_on_start)
+	btn_row.add_child(_start_btn)
+
+func _build_character_strip(grid: GridContainer) -> void:
 	_char_buttons.clear()
-
 	for i in range(all_character_ids.size()):
 		var char_id = all_character_ids[i]
 		var data = CharacterDB.get_character(char_id)
@@ -226,68 +251,79 @@ func _build_character_grid() -> void:
 		var char_color = data.get("color", Color(0.5, 0.5, 0.5))
 
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(72, 80)
-		btn.tooltip_text = data.get("name", char_id)
+		btn.custom_minimum_size = Vector2(68, 68)
 
-		# Style
-		var normal = StyleBoxFlat.new()
-		normal.bg_color = Color(0.08, 0.08, 0.12, 0.9)
-		normal.set_corner_radius_all(10)
-		normal.set_border_width_all(2)
-		normal.border_color = Color(0.15, 0.15, 0.2) if is_locked else char_color.darkened(0.3)
-		btn.add_theme_stylebox_override("normal", normal)
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.06, 0.06, 0.1, 0.9)
+		style.set_corner_radius_all(8)
+		style.set_border_width_all(2)
+		style.border_color = Color(0.12, 0.12, 0.18) if is_locked else char_color.darkened(0.4)
+		btn.add_theme_stylebox_override("normal", style)
 
-		var hover = normal.duplicate()
-		hover.bg_color = Color(0.12, 0.12, 0.18, 0.95)
-		hover.border_color = char_color if not is_locked else Color(0.25, 0.25, 0.3)
+		var hover = style.duplicate()
+		hover.bg_color = Color(0.1, 0.1, 0.16)
+		hover.border_color = char_color if not is_locked else Color(0.2, 0.2, 0.28)
 		btn.add_theme_stylebox_override("hover", hover)
 		btn.add_theme_stylebox_override("focus", hover.duplicate())
+		btn.add_theme_stylebox_override("pressed", style.duplicate())
 
-		var pressed_style = normal.duplicate()
-		pressed_style.bg_color = Color(0.15, 0.15, 0.22)
-		btn.add_theme_stylebox_override("pressed", pressed_style)
-
-		# Content: icon + name
-		var vbox = VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		btn.add_child(vbox)
-
-		# Character icon
+		# Icon
 		var icon_path = "res://assets/icons/characters/%s.svg" % char_id
 		if ResourceLoader.exists(icon_path):
 			var tex = TextureRect.new()
 			tex.texture = load(icon_path)
-			tex.custom_minimum_size = Vector2(40, 40)
+			tex.custom_minimum_size = Vector2(44, 44)
 			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			tex.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			tex.set_anchors_preset(Control.PRESET_CENTER)
+			tex.offset_left = -22
+			tex.offset_top = -22
+			tex.offset_right = 22
+			tex.offset_bottom = 22
 			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			if is_locked:
-				tex.modulate = Color(0.3, 0.3, 0.3)
-			vbox.add_child(tex)
+				tex.modulate = Color(0.25, 0.25, 0.25)
+			btn.add_child(tex)
 
-		# Name label
-		var name_lbl = Label.new()
-		name_lbl.text = data.get("name", char_id).substr(0, 6)
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 9)
-		name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7) if is_locked else Color(0.85, 0.85, 0.9))
-		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.add_child(name_lbl)
-
-		# Lock icon
 		if is_locked:
 			var lock = Label.new()
 			lock.text = "🔒"
-			lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			lock.add_theme_font_size_override("font_size", 8)
+			lock.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+			lock.offset_left = -16
+			lock.offset_top = -16
+			lock.add_theme_font_size_override("font_size", 10)
 			lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			vbox.add_child(lock)
+			btn.add_child(lock)
 
 		var idx = i
 		btn.pressed.connect(func(): _select_character(idx))
-		_char_grid.add_child(btn)
+		grid.add_child(btn)
 		_char_buttons.append(btn)
+
+func _load_3d_model(char_id: String) -> void:
+	# Clear previous model
+	if _preview_model:
+		_preview_model.queue_free()
+		_preview_model = null
+	if _animator:
+		_animator.queue_free()
+		_animator = null
+
+	var model = ModelFactory.get_model_for_character(char_id)
+	if model:
+		model.position = Vector3(0, 0, 0)
+		model.scale = Vector3(1.0, 1.0, 1.0)
+		_model_root.add_child(model)
+		_preview_model = model
+
+		# Apply character color materials
+		var data = CharacterDB.get_character(char_id)
+		var char_color = data.get("color", Color(0.5, 0.5, 0.5))
+		ModelFactory.apply_model_materials(model, char_color)
+
+		# Add idle animation
+		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
+		_animator.setup(model)
+		_model_root.add_child(_animator)
 
 func _update_selection() -> void:
 	var char_id = all_character_ids[current_index]
@@ -295,92 +331,101 @@ func _update_selection() -> void:
 	var is_locked = not SaveManager.is_character_unlocked(char_id)
 	var char_color = data.get("color", Color(0.5, 0.5, 0.5))
 
-	# Update center card
-	_card_name.text = data.get("name", char_id).to_upper()
-	_card_passive.text = data.get("passive", "")
-	_card_color_bar.color = char_color
+	# Load 3D model
+	_load_3d_model(char_id)
 
-	# Character icon
-	var icon_path = "res://assets/icons/characters/%s.svg" % char_id
-	if ResourceLoader.exists(icon_path):
-		_card_icon.texture = load(icon_path)
-		_card_icon.modulate = Color(0.35, 0.35, 0.35) if is_locked else Color.WHITE
-	else:
-		_card_icon.texture = null
+	# Update background tint
+	_bg_gradient.color = Color(
+		char_color.r * 0.08,
+		char_color.g * 0.08,
+		char_color.b * 0.08
+	)
 
-	# Weapon info
+	# Update ground disc color
+	var ground = _model_root.get_node_or_null("CylinderMesh")
+	for child in _model_root.get_children():
+		if child is MeshInstance3D and child.mesh is CylinderMesh:
+			var mat = child.material_override as StandardMaterial3D
+			if mat:
+				mat.emission = char_color.darkened(0.5)
+
+	# Update info
+	_name_label.text = data.get("name", char_id).to_upper()
+	_name_label.add_theme_color_override("font_color", char_color.lightened(0.3))
+	_passive_label.text = data.get("passive", "")
+
+	# Weapon
 	var weapon_id = data.get("starting_weapon", "katana")
 	var weapon_data = WeaponDB.get_weapon(weapon_id)
-	_card_weapon_name.text = weapon_data.get("name", "???")
+	_weapon_label.text = weapon_data.get("name", "???")
 	var weapon_icon_path = "res://assets/icons/weapons/%s.svg" % weapon_id
 	if ResourceLoader.exists(weapon_icon_path):
-		_card_weapon_icon.texture = load(weapon_icon_path)
-	else:
-		_card_weapon_icon.texture = null
+		_weapon_icon.texture = load(weapon_icon_path)
 
-	# Lock state
+	# Element
+	var element = weapon_data.get("element", "physical")
+	var element_names = {"physical": "Fisico", "fire": "Fogo", "ice": "Gelo", "electric": "Eletrico", "dark": "Dark", "poison": "Veneno"}
+	_element_badge.text = "Elemento: %s" % element_names.get(element, element)
+
+	# Lock
 	if is_locked:
-		_card_lock.text = "🔒 %s" % data.get("unlock_description", "???")
-		_card_lock.visible = true
+		_lock_label.text = "🔒 %s" % data.get("unlock_description", "???")
+		_lock_label.visible = true
 		_start_btn.disabled = true
 		_start_btn.text = "Bloqueado"
 	else:
-		_card_lock.visible = false
+		_lock_label.visible = false
 		_start_btn.disabled = false
 		_start_btn.text = "Jogar"
 
-	# Update card border to character color
-	var card_style = _center_card.get_theme_stylebox("panel") as StyleBoxFlat
-	if card_style:
-		card_style.border_color = char_color.darkened(0.2) if not is_locked else Color(0.2, 0.2, 0.3, 0.6)
-
-	# Highlight selected button in grid
+	# Highlight selected in strip
 	for i in range(_char_buttons.size()):
 		var btn = _char_buttons[i]
-		var btn_style = btn.get_theme_stylebox("normal") as StyleBoxFlat
-		if btn_style:
+		var s = btn.get_theme_stylebox("normal") as StyleBoxFlat
+		if s:
 			if i == current_index:
-				btn_style.border_color = char_color
-				btn_style.bg_color = Color(0.12, 0.12, 0.2, 0.95)
+				s.border_color = char_color
+				s.bg_color = Color(char_color.r * 0.15, char_color.g * 0.15, char_color.b * 0.15, 0.95)
 			else:
 				var cid = all_character_ids[i]
 				var cdata = CharacterDB.get_character(cid)
 				var clocked = not SaveManager.is_character_unlocked(cid)
-				var ccolor = cdata.get("color", Color(0.5, 0.5, 0.5))
-				btn_style.border_color = Color(0.15, 0.15, 0.2) if clocked else ccolor.darkened(0.3)
-				btn_style.bg_color = Color(0.08, 0.08, 0.12, 0.9)
+				var cc = cdata.get("color", Color(0.5, 0.5, 0.5))
+				s.border_color = Color(0.12, 0.12, 0.18) if clocked else cc.darkened(0.4)
+				s.bg_color = Color(0.06, 0.06, 0.1, 0.9)
+
+func _process(_delta: float) -> void:
+	# Slowly rotate model
+	if _preview_model and is_instance_valid(_preview_model):
+		_preview_model.rotation.y += _delta * 0.3
 
 func _select_character(idx: int) -> void:
 	current_index = idx
 	_update_selection()
 
-func _create_button(text: String, base_color: Color) -> Button:
+func _make_btn(text: String, base_color: Color) -> Button:
 	var btn = Button.new()
 	btn.text = text
-	btn.custom_minimum_size = Vector2(140, 44)
-
-	var normal = StyleBoxFlat.new()
-	normal.bg_color = base_color
-	normal.set_corner_radius_all(8)
-	normal.set_border_width_all(1)
-	normal.border_color = base_color.lightened(0.2)
-	normal.content_margin_left = 16
-	normal.content_margin_right = 16
-	normal.content_margin_top = 10
-	normal.content_margin_bottom = 10
-	btn.add_theme_stylebox_override("normal", normal)
-
-	var hover = normal.duplicate()
-	hover.bg_color = base_color.lightened(0.15)
-	hover.border_color = base_color.lightened(0.4)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("focus", hover.duplicate())
-	btn.add_theme_stylebox_override("pressed", normal.duplicate())
-
-	btn.add_theme_font_size_override("font_size", 15)
+	btn.custom_minimum_size = Vector2(100, 38)
+	var s = StyleBoxFlat.new()
+	s.bg_color = base_color
+	s.set_corner_radius_all(6)
+	s.set_border_width_all(1)
+	s.border_color = base_color.lightened(0.25)
+	s.content_margin_left = 14
+	s.content_margin_right = 14
+	s.content_margin_top = 8
+	s.content_margin_bottom = 8
+	btn.add_theme_stylebox_override("normal", s)
+	var h = s.duplicate()
+	h.bg_color = base_color.lightened(0.15)
+	h.border_color = base_color.lightened(0.4)
+	btn.add_theme_stylebox_override("hover", h)
+	btn.add_theme_stylebox_override("focus", h.duplicate())
+	btn.add_theme_stylebox_override("pressed", s.duplicate())
+	btn.add_theme_font_size_override("font_size", 14)
 	btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.92))
 	btn.add_theme_color_override("font_hover_color", Color.WHITE)
-
 	return btn
 
 func _unhandled_input(event: InputEvent) -> void:
