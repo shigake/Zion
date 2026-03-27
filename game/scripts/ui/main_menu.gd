@@ -407,7 +407,7 @@ func _animate_piseiro() -> void:
 
 	# Bounce: double-time bounce (2x per beat), sharp down + smooth up
 	var bounce_phase := fmod(beat * 2.0, 1.0)
-	var bounce_y := abs(sin(bounce_phase * PI)) * 0.06
+	var bounce_y: float = abs(sin(bounce_phase * PI)) * 0.06
 
 	# Side-to-side stepping: shifts weight left/right each beat
 	var step_phase := sin(beat * PI)

@@ -32,7 +32,7 @@ var console_log_level: Level = Level.INFO
 ## Maximo de arquivos de log mantidos (rotacao)
 var max_log_files: int = 10
 ## Maximo de linhas no buffer antes de flush forcado
-var max_buffer_size: int = 50
+var max_buffer_size: int = 5
 ## Maximo de crash reports mantidos
 var max_crash_reports: int = 20
 
@@ -80,8 +80,18 @@ func _ready() -> void:
 	_log_system_info()
 
 
+func _exit_tree() -> void:
+	_write_session_footer()
+	_flush()
+	if _log_file:
+		_log_file.close()
+		_log_file = null
+
 func _process(_delta: float) -> void:
 	_frame_count += 1
+	# Flush buffer a cada 5 segundos (300 frames a ~60fps)
+	if _frame_count % 300 == 0:
+		_flush()
 	# Sample FPS a cada 60 frames
 	if _frame_count % 60 == 0:
 		var fps = Engine.get_frames_per_second()
