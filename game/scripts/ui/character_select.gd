@@ -1,284 +1,409 @@
 extends Control
 
-## Tela de selecao de personagem — carousel 3D com spotlight.
-## Layout: esquerda (escuro) — centro (spotlight) — direita (escuro)
-## Navegacao com setas esquerda/direita.
-
-@onready var left_arrow: Button = $MarginContainer/MainVBox/CarouselContainer/LeftArrow
-@onready var right_arrow: Button = $MarginContainer/MainVBox/CarouselContainer/RightArrow
-@onready var start_btn: Button = $MarginContainer/MainVBox/BottomHBox/StartButton
-@onready var back_btn: Button = $MarginContainer/MainVBox/BottomHBox/BackButton
-
-@onready var char_name_label: Label = $MarginContainer/MainVBox/InfoPanel/InfoVBox/CharNameLabel
-@onready var weapon_label: Label = $MarginContainer/MainVBox/InfoPanel/InfoVBox/WeaponLabel
-@onready var passive_label: Label = $MarginContainer/MainVBox/InfoPanel/InfoVBox/PassiveLabel
-@onready var lock_label: Label = $MarginContainer/MainVBox/InfoPanel/InfoVBox/LockLabel
-
-@onready var left_model_root: Node3D = $MarginContainer/MainVBox/CarouselContainer/LeftCharContainer/LeftSubViewport/LeftModelRoot
-@onready var center_model_root: Node3D = $MarginContainer/MainVBox/CarouselContainer/CenterCharContainer/CenterSubViewport/CenterModelRoot
-@onready var right_model_root: Node3D = $MarginContainer/MainVBox/CarouselContainer/RightCharContainer/RightSubViewport/RightModelRoot
-
-@onready var left_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/LeftCharContainer/LeftSubViewport/AmbientLight3D
-@onready var center_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/CenterCharContainer/CenterSubViewport/CenterAmbientLight3D
-@onready var right_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/RightCharContainer/RightSubViewport/AmbientLight3D
-
-@onready var info_panel: PanelContainer = $MarginContainer/MainVBox/InfoPanel
+## Tela de selecao de personagem — design moderno com cards e icones SVG.
+## Grid de personagens na parte inferior, card grande no centro com detalhes.
 
 var all_character_ids: Array[String] = []
 var current_index: int = 0
-var _preview_models: Dictionary = {}  # side -> model node
 
-const PRISON_GRID_SCALE := 2.0
+# UI refs (created in _ready)
+var _title: Label
+var _char_grid: HBoxContainer
+var _center_card: PanelContainer
+var _card_icon: TextureRect
+var _card_name: Label
+var _card_passive: Label
+var _card_weapon_icon: TextureRect
+var _card_weapon_name: Label
+var _card_lock: Label
+var _start_btn: Button
+var _back_btn: Button
+var _char_buttons: Array[Button] = []
+var _card_color_bar: ColorRect
+var _stats_container: VBoxContainer
 
 func _ready() -> void:
-	start_btn.pressed.connect(_on_start)
-	back_btn.pressed.connect(_on_back)
-	left_arrow.pressed.connect(_prev_character)
-	right_arrow.pressed.connect(_next_character)
-
-	_style_buttons()
-	_style_arrows()
-	_style_info_panel()
 	_load_character_list()
-	_setup_environments()
-
-	# Start with first unlocked character
 	_find_first_unlocked()
-	_update_carousel()
-
+	_build_ui()
+	_update_selection()
 	GamepadUI.notify_menu_opened()
-
-
-func _style_buttons() -> void:
-	for btn in [start_btn, back_btn]:
-		var normal = StyleBoxFlat.new()
-		var hover = StyleBoxFlat.new()
-		var pressed = StyleBoxFlat.new()
-
-		var is_start = (btn == start_btn)
-		var base_color = Color(0.18, 0.22, 0.35) if is_start else Color(0.12, 0.12, 0.15)
-
-		for s in [normal, hover, pressed]:
-			s.corner_radius_top_left = 6
-			s.corner_radius_top_right = 6
-			s.corner_radius_bottom_left = 6
-			s.corner_radius_bottom_right = 6
-			s.border_width_top = 1
-			s.border_width_left = 1
-			s.border_width_right = 1
-			s.border_width_bottom = 1
-			s.content_margin_left = 16
-			s.content_margin_right = 16
-			s.content_margin_top = 8
-			s.content_margin_bottom = 8
-
-		normal.bg_color = base_color
-		normal.border_color = base_color.lightened(0.2)
-		hover.bg_color = base_color.lightened(0.15)
-		hover.border_color = base_color.lightened(0.35)
-		pressed.bg_color = base_color.darkened(0.1)
-		pressed.border_color = base_color.lightened(0.1)
-
-		btn.add_theme_stylebox_override("normal", normal)
-		btn.add_theme_stylebox_override("hover", hover)
-		btn.add_theme_stylebox_override("pressed", pressed)
-		btn.add_theme_stylebox_override("focus", hover.duplicate())
-		btn.add_theme_font_size_override("font_size", 14)
-		btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
-		btn.add_theme_color_override("font_hover_color", Color.WHITE)
-
-
-func _style_arrows() -> void:
-	for btn in [left_arrow, right_arrow]:
-		var normal = StyleBoxFlat.new()
-		normal.bg_color = Color(0.08, 0.08, 0.1, 0.8)
-		normal.corner_radius_top_left = 6
-		normal.corner_radius_top_right = 6
-		normal.corner_radius_bottom_left = 6
-		normal.corner_radius_bottom_right = 6
-		normal.border_width_top = 1
-		normal.border_width_left = 1
-		normal.border_width_right = 1
-		normal.border_width_bottom = 1
-		normal.border_color = Color(0.2, 0.2, 0.25)
-
-		var hover = normal.duplicate()
-		hover.bg_color = Color(0.12, 0.12, 0.16, 0.9)
-		hover.border_color = Color(0.35, 0.35, 0.45)
-
-		btn.add_theme_stylebox_override("normal", normal)
-		btn.add_theme_stylebox_override("hover", hover)
-		btn.add_theme_stylebox_override("pressed", hover.duplicate())
-		btn.add_theme_stylebox_override("focus", hover.duplicate())
-		btn.add_theme_font_size_override("font_size", 20)
-		btn.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
-		btn.add_theme_color_override("font_hover_color", Color(0.8, 0.8, 0.95))
-
-
-func _style_info_panel() -> void:
-	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.05, 0.05, 0.07, 0.85)
-	panel_style.corner_radius_top_left = 10
-	panel_style.corner_radius_top_right = 10
-	panel_style.corner_radius_bottom_left = 10
-	panel_style.corner_radius_bottom_right = 10
-	panel_style.border_width_top = 1
-	panel_style.border_width_left = 1
-	panel_style.border_width_right = 1
-	panel_style.border_width_bottom = 1
-	panel_style.border_color = Color(0.12, 0.12, 0.16, 0.6)
-	panel_style.content_margin_left = 12
-	panel_style.content_margin_right = 12
-	panel_style.content_margin_top = 12
-	panel_style.content_margin_bottom = 12
-	info_panel.add_theme_stylebox_override("panel", panel_style)
-
-
-func _setup_environments() -> void:
-	var env = load("res://assets/environments/character_select_env.tres")
-	if env:
-		left_env.environment = env
-		center_env.environment = env
-		right_env.environment = env
-
 
 func _load_character_list() -> void:
 	all_character_ids.clear()
 	for char_id in CharacterDB.get_all_character_ids():
 		all_character_ids.append(char_id)
 
-
 func _find_first_unlocked() -> void:
 	for i in range(all_character_ids.size()):
 		if SaveManager.is_character_unlocked(all_character_ids[i]):
 			current_index = i
 			return
-	# Fallback to first character
 	current_index = 0
 
+func _build_ui() -> void:
+	# Main layout
+	var margin = MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 40)
+	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_bottom", 24)
+	add_child(margin)
 
-func _update_carousel() -> void:
-	# Clear old models
-	for side in ["left", "center", "right"]:
-		if side in _preview_models and _preview_models[side]:
-			_preview_models[side].queue_free()
-		_preview_models[side] = null
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 16)
+	margin.add_child(vbox)
 
-	# Get indices for left, center, right
-	var left_idx = (current_index - 1) % all_character_ids.size()
-	var center_idx = current_index
-	var right_idx = (current_index + 1) % all_character_ids.size()
+	# Title
+	_title = Label.new()
+	_title.text = "Escolha seu personagem"
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.add_theme_font_size_override("font_size", 26)
+	_title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.92))
+	vbox.add_child(_title)
 
-	var left_char_id = all_character_ids[left_idx]
-	var center_char_id = all_character_ids[center_idx]
-	var right_char_id = all_character_ids[right_idx]
+	# Center area (card + stats)
+	var center_hbox = HBoxContainer.new()
+	center_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	center_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	center_hbox.add_theme_constant_override("separation", 32)
+	vbox.add_child(center_hbox)
 
-	var left_locked = not SaveManager.is_character_unlocked(left_char_id)
-	var center_locked = not SaveManager.is_character_unlocked(center_char_id)
-	var right_locked = not SaveManager.is_character_unlocked(right_char_id)
+	# Build center character card
+	_build_center_card(center_hbox)
 
-	# Load models
-	_load_character_preview(left_char_id, left_model_root, "left", left_locked)
-	_load_character_preview(center_char_id, center_model_root, "center", center_locked)
-	_load_character_preview(right_char_id, right_model_root, "right", right_locked)
+	# Build stats panel
+	_build_stats_panel(center_hbox)
 
-	# Update info panel (center character)
-	_update_info_panel(center_char_id, center_locked)
+	# Character grid (bottom)
+	var grid_scroll = ScrollContainer.new()
+	grid_scroll.custom_minimum_size = Vector2(0, 100)
+	grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	grid_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(grid_scroll)
 
+	_char_grid = HBoxContainer.new()
+	_char_grid.alignment = BoxContainer.ALIGNMENT_CENTER
+	_char_grid.add_theme_constant_override("separation", 8)
+	grid_scroll.add_child(_char_grid)
 
-func _load_character_preview(char_id: String, parent: Node3D, side: String, is_locked: bool) -> void:
-	var model = ModelFactory.get_model_for_character(char_id)
-	if not model:
-		return
+	_build_character_grid()
 
-	# Set position and scale
-	model.position = Vector3(0, 0, 0)
-	model.rotation = Vector3(0, 0, 0)  # Face camera directly (no rotation)
+	# Bottom buttons
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_hbox.add_theme_constant_override("separation", 20)
+	vbox.add_child(btn_hbox)
 
-	if side == "center":
-		model.scale = Vector3(0.65, 0.65, 0.65)  # Spotlight character - maior
-	else:
-		model.scale = Vector3(0.4, 0.4, 0.4)  # Side characters smaller
+	_back_btn = _create_button("Voltar", Color(0.15, 0.12, 0.12))
+	_back_btn.pressed.connect(_on_back)
+	btn_hbox.add_child(_back_btn)
 
-	parent.add_child(model)
-	_preview_models[side] = model
+	_start_btn = _create_button("Jogar", Color(0.12, 0.2, 0.35))
+	_start_btn.pressed.connect(_on_start)
+	btn_hbox.add_child(_start_btn)
 
-	# Apply materials
+func _build_center_card(parent: Control) -> void:
+	_center_card = PanelContainer.new()
+	_center_card.custom_minimum_size = Vector2(280, 360)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.06, 0.1, 0.95)
+	style.set_corner_radius_all(16)
+	style.set_border_width_all(2)
+	style.border_color = Color(0.2, 0.2, 0.3, 0.6)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	_center_card.add_theme_stylebox_override("panel", style)
+	parent.add_child(_center_card)
+
+	var card_vbox = VBoxContainer.new()
+	card_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card_vbox.add_theme_constant_override("separation", 12)
+	_center_card.add_child(card_vbox)
+
+	# Color accent bar at top
+	_card_color_bar = ColorRect.new()
+	_card_color_bar.custom_minimum_size = Vector2(0, 4)
+	_card_color_bar.color = Color.WHITE
+	card_vbox.add_child(_card_color_bar)
+
+	# Large character icon
+	_card_icon = TextureRect.new()
+	_card_icon.custom_minimum_size = Vector2(140, 140)
+	_card_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_card_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card_vbox.add_child(_card_icon)
+
+	# Character name
+	_card_name = Label.new()
+	_card_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_card_name.add_theme_font_size_override("font_size", 22)
+	_card_name.add_theme_color_override("font_color", Color.WHITE)
+	card_vbox.add_child(_card_name)
+
+	# Passive ability
+	_card_passive = Label.new()
+	_card_passive.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_card_passive.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_card_passive.add_theme_font_size_override("font_size", 12)
+	_card_passive.add_theme_color_override("font_color", Color(0.6, 0.8, 0.55))
+	card_vbox.add_child(_card_passive)
+
+	# Lock label
+	_card_lock = Label.new()
+	_card_lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_card_lock.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_card_lock.add_theme_font_size_override("font_size", 11)
+	_card_lock.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
+	_card_lock.visible = false
+	card_vbox.add_child(_card_lock)
+
+func _build_stats_panel(parent: Control) -> void:
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(240, 0)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.07, 0.8)
+	style.set_corner_radius_all(12)
+	style.set_border_width_all(1)
+	style.border_color = Color(0.15, 0.15, 0.2, 0.5)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	panel.add_theme_stylebox_override("panel", style)
+	parent.add_child(panel)
+
+	_stats_container = VBoxContainer.new()
+	_stats_container.add_theme_constant_override("separation", 14)
+	panel.add_child(_stats_container)
+
+	# Section title
+	var title = Label.new()
+	title.text = "Detalhes"
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+	_stats_container.add_child(title)
+
+	# Weapon row
+	var weapon_row = HBoxContainer.new()
+	weapon_row.add_theme_constant_override("separation", 8)
+	_stats_container.add_child(weapon_row)
+
+	_card_weapon_icon = TextureRect.new()
+	_card_weapon_icon.custom_minimum_size = Vector2(32, 32)
+	_card_weapon_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	weapon_row.add_child(_card_weapon_icon)
+
+	var weapon_vbox = VBoxContainer.new()
+	weapon_vbox.add_theme_constant_override("separation", 0)
+	weapon_row.add_child(weapon_vbox)
+
+	var weapon_label_title = Label.new()
+	weapon_label_title.text = "Arma inicial"
+	weapon_label_title.add_theme_font_size_override("font_size", 10)
+	weapon_label_title.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
+	weapon_vbox.add_child(weapon_label_title)
+
+	_card_weapon_name = Label.new()
+	_card_weapon_name.add_theme_font_size_override("font_size", 14)
+	_card_weapon_name.add_theme_color_override("font_color", Color(0.9, 0.85, 0.6))
+	weapon_vbox.add_child(_card_weapon_name)
+
+func _build_character_grid() -> void:
+	for child in _char_grid.get_children():
+		child.queue_free()
+	_char_buttons.clear()
+
+	for i in range(all_character_ids.size()):
+		var char_id = all_character_ids[i]
+		var data = CharacterDB.get_character(char_id)
+		var is_locked = not SaveManager.is_character_unlocked(char_id)
+		var char_color = data.get("color", Color(0.5, 0.5, 0.5))
+
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(72, 80)
+		btn.tooltip_text = data.get("name", char_id)
+
+		# Style
+		var normal = StyleBoxFlat.new()
+		normal.bg_color = Color(0.08, 0.08, 0.12, 0.9)
+		normal.set_corner_radius_all(10)
+		normal.set_border_width_all(2)
+		normal.border_color = Color(0.15, 0.15, 0.2) if is_locked else char_color.darkened(0.3)
+		btn.add_theme_stylebox_override("normal", normal)
+
+		var hover = normal.duplicate()
+		hover.bg_color = Color(0.12, 0.12, 0.18, 0.95)
+		hover.border_color = char_color if not is_locked else Color(0.25, 0.25, 0.3)
+		btn.add_theme_stylebox_override("hover", hover)
+		btn.add_theme_stylebox_override("focus", hover.duplicate())
+
+		var pressed_style = normal.duplicate()
+		pressed_style.bg_color = Color(0.15, 0.15, 0.22)
+		btn.add_theme_stylebox_override("pressed", pressed_style)
+
+		# Content: icon + name
+		var vbox = VBoxContainer.new()
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(vbox)
+
+		# Character icon
+		var icon_path = "res://assets/icons/characters/%s.svg" % char_id
+		if ResourceLoader.exists(icon_path):
+			var tex = TextureRect.new()
+			tex.texture = load(icon_path)
+			tex.custom_minimum_size = Vector2(40, 40)
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			if is_locked:
+				tex.modulate = Color(0.3, 0.3, 0.3)
+			vbox.add_child(tex)
+
+		# Name label
+		var name_lbl = Label.new()
+		name_lbl.text = data.get("name", char_id).substr(0, 6)
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_size_override("font_size", 9)
+		name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7) if is_locked else Color(0.85, 0.85, 0.9))
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(name_lbl)
+
+		# Lock icon
+		if is_locked:
+			var lock = Label.new()
+			lock.text = "🔒"
+			lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lock.add_theme_font_size_override("font_size", 8)
+			lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vbox.add_child(lock)
+
+		var idx = i
+		btn.pressed.connect(func(): _select_character(idx))
+		_char_grid.add_child(btn)
+		_char_buttons.append(btn)
+
+func _update_selection() -> void:
+	var char_id = all_character_ids[current_index]
 	var data = CharacterDB.get_character(char_id)
+	var is_locked = not SaveManager.is_character_unlocked(char_id)
 	var char_color = data.get("color", Color(0.5, 0.5, 0.5))
-	ModelFactory.apply_model_materials(model, char_color)
 
-	# Add prison grid overlay if locked
-	if is_locked:
-		_add_prison_grid(model)
+	# Update center card
+	_card_name.text = data.get("name", char_id).to_upper()
+	_card_passive.text = data.get("passive", "")
+	_card_color_bar.color = char_color
 
-
-func _add_prison_grid(model: Node3D) -> void:
-	## Add a prison grid in front of the character
-	var grid = MeshInstance3D.new()
-
-	# Create grid mesh (simple plane with grid pattern)
-	var mesh = PlaneMesh.new()
-	mesh.size = Vector2(2.0, 2.5) * PRISON_GRID_SCALE
-	mesh.subdivide_depth = 10
-	mesh.subdivide_width = 8
-
-	grid.mesh = mesh
-	grid.position.z = -0.1  # In front of character
-
-	# Dark metal material for prison
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.1, 0.1, 0.12, 0.7)
-	mat.metallic = 0.8
-	mat.roughness = 0.3
-	mat.emission = Color(0.08, 0.08, 0.1)
-	mat.emission_energy = 0.5
-	grid.set_surface_override_material(0, mat)
-
-	model.add_child(grid)
-
-
-func _update_info_panel(char_id: String, is_locked: bool) -> void:
-	var data = CharacterDB.get_character(char_id)
-
-	char_name_label.text = data.get("name", char_id).to_upper()
-
-	var weapon_data = WeaponDB.get_weapon(data.get("starting_weapon", "katana"))
-	weapon_label.text = "Arma: %s" % weapon_data.get("name", "???")
-
-	passive_label.text = data.get("passive", "")
-
-	if is_locked:
-		lock_label.text = "🔒 %s" % data.get("unlock_description", "???")
-		lock_label.visible = true
-		start_btn.disabled = true
+	# Character icon
+	var icon_path = "res://assets/icons/characters/%s.svg" % char_id
+	if ResourceLoader.exists(icon_path):
+		_card_icon.texture = load(icon_path)
+		_card_icon.modulate = Color(0.35, 0.35, 0.35) if is_locked else Color.WHITE
 	else:
-		lock_label.visible = false
-		start_btn.disabled = false
+		_card_icon.texture = null
 
+	# Weapon info
+	var weapon_id = data.get("starting_weapon", "katana")
+	var weapon_data = WeaponDB.get_weapon(weapon_id)
+	_card_weapon_name.text = weapon_data.get("name", "???")
+	var weapon_icon_path = "res://assets/icons/weapons/%s.svg" % weapon_id
+	if ResourceLoader.exists(weapon_icon_path):
+		_card_weapon_icon.texture = load(weapon_icon_path)
+	else:
+		_card_weapon_icon.texture = null
 
-func _prev_character() -> void:
-	current_index = (current_index - 1) % all_character_ids.size()
-	_update_carousel()
+	# Lock state
+	if is_locked:
+		_card_lock.text = "🔒 %s" % data.get("unlock_description", "???")
+		_card_lock.visible = true
+		_start_btn.disabled = true
+		_start_btn.text = "Bloqueado"
+	else:
+		_card_lock.visible = false
+		_start_btn.disabled = false
+		_start_btn.text = "Jogar"
 
+	# Update card border to character color
+	var card_style = _center_card.get_theme_stylebox("panel") as StyleBoxFlat
+	if card_style:
+		card_style.border_color = char_color.darkened(0.2) if not is_locked else Color(0.2, 0.2, 0.3, 0.6)
 
-func _next_character() -> void:
-	current_index = (current_index + 1) % all_character_ids.size()
-	_update_carousel()
+	# Highlight selected button in grid
+	for i in range(_char_buttons.size()):
+		var btn = _char_buttons[i]
+		var btn_style = btn.get_theme_stylebox("normal") as StyleBoxFlat
+		if btn_style:
+			if i == current_index:
+				btn_style.border_color = char_color
+				btn_style.bg_color = Color(0.12, 0.12, 0.2, 0.95)
+			else:
+				var cid = all_character_ids[i]
+				var cdata = CharacterDB.get_character(cid)
+				var clocked = not SaveManager.is_character_unlocked(cid)
+				var ccolor = cdata.get("color", Color(0.5, 0.5, 0.5))
+				btn_style.border_color = Color(0.15, 0.15, 0.2) if clocked else ccolor.darkened(0.3)
+				btn_style.bg_color = Color(0.08, 0.08, 0.12, 0.9)
 
+func _select_character(idx: int) -> void:
+	current_index = idx
+	_update_selection()
+
+func _create_button(text: String, base_color: Color) -> Button:
+	var btn = Button.new()
+	btn.text = text
+	btn.custom_minimum_size = Vector2(140, 44)
+
+	var normal = StyleBoxFlat.new()
+	normal.bg_color = base_color
+	normal.set_corner_radius_all(8)
+	normal.set_border_width_all(1)
+	normal.border_color = base_color.lightened(0.2)
+	normal.content_margin_left = 16
+	normal.content_margin_right = 16
+	normal.content_margin_top = 10
+	normal.content_margin_bottom = 10
+	btn.add_theme_stylebox_override("normal", normal)
+
+	var hover = normal.duplicate()
+	hover.bg_color = base_color.lightened(0.15)
+	hover.border_color = base_color.lightened(0.4)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("focus", hover.duplicate())
+	btn.add_theme_stylebox_override("pressed", normal.duplicate())
+
+	btn.add_theme_font_size_override("font_size", 15)
+	btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.92))
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+
+	return btn
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+		current_index = (current_index - 1) % all_character_ids.size()
+		_update_selection()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+		current_index = (current_index + 1) % all_character_ids.size()
+		_update_selection()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_on_start()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
 		_on_back()
 		get_viewport().set_input_as_handled()
 
-
 func _on_start() -> void:
-	var center_char_id = all_character_ids[current_index]
-	if SaveManager.is_character_unlocked(center_char_id):
-		GameManager.selected_character = center_char_id
+	var char_id = all_character_ids[current_index]
+	if SaveManager.is_character_unlocked(char_id):
+		GameManager.selected_character = char_id
 		get_tree().change_scene_to_file("res://scenes/ui/mutations_panel.tscn")
-
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
