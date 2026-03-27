@@ -24,7 +24,7 @@ const MUTATIONS: Dictionary = {
 		"name": "Weakened healing",
 		"description": "All healing reduced by 50%",
 		"icon": "💔",
-		"crystal_bonus": 0.20,
+		"crystal_bonus": 0.25,
 		"max_level": 1,
 	},
 	"speed_demons": {
@@ -32,7 +32,7 @@ const MUTATIONS: Dictionary = {
 		"name": "Speed demons",
 		"description": "Enemies move 30% faster",
 		"icon": "⚡",
-		"crystal_bonus": 0.15,
+		"crystal_bonus": 0.25,
 		"max_level": 1,
 	},
 	"endless_horde": {
@@ -40,7 +40,7 @@ const MUTATIONS: Dictionary = {
 		"name": "Endless horde",
 		"description": "Enemy spawn rate increased by 50%",
 		"icon": "💀",
-		"crystal_bonus": 0.35,
+		"crystal_bonus": 0.30,
 		"max_level": 1,
 	},
 	"no_evolution": {
@@ -48,7 +48,7 @@ const MUTATIONS: Dictionary = {
 		"name": "No evolution",
 		"description": "Weapons cannot evolve past their base form",
 		"icon": "🚫",
-		"crystal_bonus": 0.40,
+		"crystal_bonus": 0.30,
 		"max_level": 1,
 	},
 }

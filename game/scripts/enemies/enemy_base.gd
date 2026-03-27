@@ -277,17 +277,24 @@ func _die() -> void:
 func _spawn_xp_gem(pos: Vector3) -> void:
 	var gem_scene = preload("res://scenes/xp_gem.tscn")
 	var gem = gem_scene.instantiate()
-	gem.xp_value = xp_drop
+	var value = xp_drop
+	if GameManager.master_key_active:
+		value *= 2
+	gem.xp_value = value
 	get_tree().current_scene.add_child(gem)
 	gem.global_position = pos + Vector3(0, 0.3, 0)
 
 func _spawn_crystal(pos: Vector3) -> void:
-	# 30% chance de dropar cristal
-	if randf() > 0.3:
+	# 30% chance de dropar cristal (50% with master key)
+	var drop_chance = 0.5 if GameManager.master_key_active else 0.3
+	if randf() > drop_chance:
 		return
 	var crystal_scene = preload("res://scenes/crystal_pickup.tscn")
 	var crystal = crystal_scene.instantiate()
-	crystal.crystal_value = maxi(1, xp_drop)
+	var value = maxi(1, xp_drop)
+	if GameManager.master_key_active:
+		value *= 2
+	crystal.crystal_value = value
 	get_tree().current_scene.add_child(crystal)
 	crystal.global_position = pos + Vector3(0.3, 0.3, 0.3)
 

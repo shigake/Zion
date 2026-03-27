@@ -388,23 +388,23 @@ func _spawn_miniboss() -> void:
 	var mb_config: Dictionary
 	match stage:
 		"forest":
-			mb_config = {"hp": 600, "dmg": 30, "spd": 6.0, "color": Color(0.1, 0.0, 0.2), "name": "Shadow Treant"}
+			mb_config = {"hp": 600, "dmg": 25, "spd": 5.0, "color": Color(0.1, 0.0, 0.2), "name": "Shadow Treant"}
 		"farm":
-			mb_config = {"hp": 800, "dmg": 35, "spd": 8.0, "color": Color(0.5, 0.5, 0.5), "name": "Mad Bull"}
+			mb_config = {"hp": 700, "dmg": 28, "spd": 5.5, "color": Color(0.5, 0.5, 0.5), "name": "Mad Bull"}
 		"tokyo":
-			mb_config = {"hp": 700, "dmg": 30, "spd": 7.0, "color": Color(0.2, 0.2, 0.3), "name": "Mecha Ninja"}
+			mb_config = {"hp": 750, "dmg": 30, "spd": 5.0, "color": Color(0.2, 0.2, 0.3), "name": "Mecha Ninja"}
 		"volcano":
-			mb_config = {"hp": 1000, "dmg": 40, "spd": 3.0, "color": Color(0.6, 0.1, 0.0), "name": "Cerberus"}
+			mb_config = {"hp": 850, "dmg": 32, "spd": 4.0, "color": Color(0.6, 0.1, 0.0), "name": "Cerberus"}
 		"ocean":
-			mb_config = {"hp": 800, "dmg": 35, "spd": 4.0, "color": Color(0.1, 0.3, 0.5), "name": "Baby Kraken"}
+			mb_config = {"hp": 800, "dmg": 30, "spd": 4.5, "color": Color(0.1, 0.3, 0.5), "name": "Baby Kraken"}
 		"arena":
-			mb_config = {"hp": 900, "dmg": 45, "spd": 5.0, "color": Color(0.7, 0.5, 0.1), "name": "Champion Gladiator"}
+			mb_config = {"hp": 900, "dmg": 35, "spd": 4.5, "color": Color(0.7, 0.5, 0.1), "name": "Champion Gladiator"}
 		"space":
-			mb_config = {"hp": 850, "dmg": 30, "spd": 3.5, "color": Color(0.3, 0.6, 0.2), "name": "Alien Queen"}
+			mb_config = {"hp": 950, "dmg": 32, "spd": 4.0, "color": Color(0.3, 0.6, 0.2), "name": "Alien Queen"}
 		"castle":
-			mb_config = {"hp": 700, "dmg": 35, "spd": 6.0, "color": Color(0.5, 0.0, 0.2), "name": "Vampiress"}
+			mb_config = {"hp": 1000, "dmg": 35, "spd": 5.0, "color": Color(0.5, 0.0, 0.2), "name": "Vampiress"}
 		"candy":
-			mb_config = {"hp": 1200, "dmg": 25, "spd": 2.0, "color": Color(0.9, 0.6, 0.7), "name": "Triple Layer Cake"}
+			mb_config = {"hp": 1100, "dmg": 30, "spd": 3.5, "color": Color(0.9, 0.6, 0.7), "name": "Triple Layer Cake"}
 		_:
 			mb_config = {"hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15), "name": "Giant Zombie"}
 

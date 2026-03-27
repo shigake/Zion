@@ -78,6 +78,7 @@ var summon_damage_mult: float = 1.0
 var attack_size_mult: float = 1.0
 var explosion_damage_mult: float = 1.0
 var fire_ground_active: bool = false
+var master_key_active: bool = false
 var weapon_level_bonus: int = 0
 var accuracy_mult: float = 1.0
 var low_hp_damage_bonus: float = 0.0
@@ -199,7 +200,10 @@ func take_damage(amount: int) -> void:
 		AchievementManager._run_dodges += 1
 		return  # Dodged!
 	AudioManager.play_sfx("player_hurt")
-	var reduced = maxi(1, amount - perm_armor)
+	# Armor: percentage-based damage reduction (diminishing returns)
+	# Formula: reduction = armor / (armor + 50), caps around ~60% at max armor
+	var armor_reduction := perm_armor / float(perm_armor + 50)
+	var reduced = maxi(1, int(amount * (1.0 - armor_reduction)))
 	# Thorns: reflect damage to nearest enemy
 	if thorns_mult > 0.0:
 		var reflected = int(reduced * thorns_mult)
@@ -356,6 +360,7 @@ func _recalculate_item_bonuses() -> void:
 	attack_size_mult = 1.0
 	explosion_damage_mult = 1.0
 	fire_ground_active = false
+	master_key_active = false
 	weapon_level_bonus = 0
 	accuracy_mult = 1.0
 
@@ -447,6 +452,7 @@ func reset() -> void:
 	attack_size_mult = 1.0
 	explosion_damage_mult = 1.0
 	fire_ground_active = false
+	master_key_active = false
 	weapon_level_bonus = 0
 	accuracy_mult = 1.0
 	low_hp_damage_bonus = 0.0
@@ -531,19 +537,21 @@ func _apply_character_bonuses() -> void:
 	# Necro: +1 summon (applied via extra_projectiles which summon weapons use)
 	if selected_character == "necro":
 		extra_projectiles += 1
-	# Vampiro: lifesteal natural
+	# Vampiro: lifesteal natural + 10% attack speed
 	if selected_character == "vampiro":
-		lifesteal += 0.03
+		lifesteal += 0.05
+		attack_speed_mult += 0.10
 	# Chef: cura 2x (tracked in heal function)
 	# Engenheiro: cooldown reduction
 	if selected_character == "engenheiro":
 		cooldown_mult = maxf(0.3, cooldown_mult - 0.15)
-	# Gladiador: armor
+	# Gladiador: armor + 15% max HP
 	if selected_character == "gladiador":
-		perm_armor += 5
-	# Mystery: all weapons at level 1 (added by stage script after reset)
+		perm_armor += 8
+		max_hp_mult += 0.15
+	# Mystery: starts with 3 random weapons (not all)
 	if selected_character == "mystery":
-		MAX_WEAPONS = 23  # Allow all weapons
+		MAX_WEAPONS = 8  # Higher cap but not unlimited
 
 func _apply_relic() -> void:
 	if selected_relic.is_empty():
@@ -578,7 +586,7 @@ func _apply_relic() -> void:
 		"show_event_direction":
 			pass  # Compass visual handled by HUD
 		"double_chest":
-			xp_mult += 1.0  # 2x XP from all sources
+			master_key_active = true  # Doubles XP gem and crystal drops from enemies
 
 func get_effective_damage_mult() -> float:
 	var mult = perm_damage_mult

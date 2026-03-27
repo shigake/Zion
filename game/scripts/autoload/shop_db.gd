@@ -24,8 +24,8 @@ var upgrades: Dictionary = {
 	"damage": {
 		"name": "Dano Base",
 		"description": "+5% dano por level",
-		"base_cost": 60,
-		"cost_per_level": 35,
+		"base_cost": 50,
+		"cost_per_level": 28,
 		"max_level": 10,
 		"stat": "damage",
 		"value_per_level": 0.05,
@@ -42,8 +42,8 @@ var upgrades: Dictionary = {
 	"xp_bonus": {
 		"name": "XP Bonus",
 		"description": "+10% XP por level",
-		"base_cost": 40,
-		"cost_per_level": 20,
+		"base_cost": 60,
+		"cost_per_level": 35,
 		"max_level": 8,
 		"stat": "xp_bonus",
 		"value_per_level": 0.10,
@@ -87,8 +87,8 @@ var upgrades: Dictionary = {
 	"weapon_slots": {
 		"name": "Slots de Arma",
 		"description": "+1 slot de arma",
-		"base_cost": 300,
-		"cost_per_level": 200,
+		"base_cost": 500,
+		"cost_per_level": 350,
 		"max_level": 2,
 		"stat": "weapon_slots",
 		"value_per_level": 1,
