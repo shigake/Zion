@@ -65,7 +65,6 @@ transform = Transform3D(1, 0, 0, 0, 0.99, 0.14, 0, -0.14, 0.99, 0, 0.6, 3.5)
 fov = 22.0
 
 [node name="AmbientLight3D" type="WorldEnvironment" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
-environment = preload("res://assets/environments/character_select_env.tres")
 
 [node name="DimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/LeftSubViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 2, 1)
@@ -120,7 +119,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 2.0)
 fov = 40.0
 
 [node name="AmbientLight3D" type="WorldEnvironment" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
-environment = preload("res://assets/environments/character_select_env.tres")
 
 [node name="DimLight" type="DirectionalLight3D" parent="MarginContainer/MainVBox/CarouselContainer/RightSubViewport"]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 2, 1)

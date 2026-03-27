@@ -18,6 +18,9 @@ extends Control
 @onready var center_model_root: Node3D = $MarginContainer/MainVBox/CarouselContainer/CenterCharContainer/CenterSubViewport/CenterModelRoot
 @onready var right_model_root: Node3D = $MarginContainer/MainVBox/CarouselContainer/RightCharContainer/RightSubViewport/RightModelRoot
 
+@onready var left_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/LeftCharContainer/LeftSubViewport/AmbientLight3D
+@onready var right_env: WorldEnvironment = $MarginContainer/MainVBox/CarouselContainer/RightCharContainer/RightSubViewport/AmbientLight3D
+
 @onready var info_panel: PanelContainer = $MarginContainer/MainVBox/InfoPanel
 
 var all_character_ids: Array[String] = []
@@ -36,6 +39,7 @@ func _ready() -> void:
 	_style_arrows()
 	_style_info_panel()
 	_load_character_list()
+	_setup_environments()
 
 	# Start with first unlocked character
 	_find_first_unlocked()
@@ -127,6 +131,13 @@ func _style_info_panel() -> void:
 	panel_style.content_margin_top = 12
 	panel_style.content_margin_bottom = 12
 	info_panel.add_theme_stylebox_override("panel", panel_style)
+
+
+func _setup_environments() -> void:
+	var env = load("res://assets/environments/character_select_env.tres")
+	if env:
+		left_env.environment = env
+		right_env.environment = env
 
 
 func _load_character_list() -> void:
