@@ -54,13 +54,31 @@ func _show_page(page: int) -> void:
 		var relic_id = item["id"]
 		var data = item["data"]
 
+		var card = HBoxContainer.new()
+		card.custom_minimum_size = Vector2(140, 70)
+		card.add_theme_constant_override("separation", 6)
+		card.alignment = BoxContainer.ALIGNMENT_CENTER
+
+		# Relic icon
+		if relic_id != "":
+			var icon_path = "res://assets/icons/relics/%s.svg" % relic_id
+			var icon_tex = load(icon_path) if ResourceLoader.exists(icon_path) else null
+			if icon_tex:
+				var tex_rect = TextureRect.new()
+				tex_rect.texture = icon_tex
+				tex_rect.custom_minimum_size = Vector2(48, 48)
+				tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				card.add_child(tex_rect)
+
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(140, 70)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.custom_minimum_size = Vector2(0, 70)
 		btn.text = data["name"]
 
 		var b = btn  # capture for lambda
 		b.pressed.connect(func(): _select_relic(relic_id, data, b))
-		grid.add_child(btn)
+		card.add_child(btn)
+		grid.add_child(card)
 
 	# Preenche slots vazios para manter layout 4x3
 	var filled = end_idx - start_idx
@@ -92,7 +110,13 @@ func _next_page() -> void:
 func _setup_grid_focus() -> void:
 	var buttons: Array[Button] = []
 	for child in grid.get_children():
-		if child is Button and not child.disabled:
+		# Buttons are now inside HBoxContainer cards
+		if child is HBoxContainer:
+			for sub in child.get_children():
+				if sub is Button and not sub.disabled:
+					sub.focus_mode = Control.FOCUS_ALL
+					buttons.append(sub)
+		elif child is Button and not child.disabled:
 			child.focus_mode = Control.FOCUS_ALL
 			buttons.append(child)
 	for i in range(buttons.size()):
