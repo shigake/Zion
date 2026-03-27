@@ -194,9 +194,9 @@ func _load_character_preview(char_id: String, parent: Node3D, side: String, is_l
 	model.rotation = Vector3(0, 0, 0)  # Face camera directly (no rotation)
 
 	if side == "center":
-		model.scale = Vector3(0.5, 0.5, 0.5)  # Spotlight character
+		model.scale = Vector3(0.65, 0.65, 0.65)  # Spotlight character - maior
 	else:
-		model.scale = Vector3(0.35, 0.35, 0.35)  # Side characters smaller
+		model.scale = Vector3(0.4, 0.4, 0.4)  # Side characters smaller
 
 	parent.add_child(model)
 	_preview_models[side] = model
