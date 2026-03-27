@@ -33,7 +33,7 @@ var evolutions: Dictionary = {
 		"description": "Explosao gigante + mushroom cloud",
 		"weapon_required": "bazooka",
 		"item_required": "magnet",  # adapter: explosion pulls enemies
-		"evolved_damage_mult": 3.5,
+		"evolved_damage_mult": 2.5,
 		"special": "nuke",
 	},
 	"ragnarok_axe": {
@@ -65,7 +65,7 @@ var evolutions: Dictionary = {
 		"description": "Invocacoes ganham aura de morte",
 		"weapon_required": "necro",
 		"item_required": "grimoire",
-		"evolved_damage_mult": 3.0,
+		"evolved_damage_mult": 2.5,
 		"special": "death_aura",
 	},
 	"inferno_walker": {
