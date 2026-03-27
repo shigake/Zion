@@ -17,6 +17,9 @@ var _is_glb_model: bool = false
 var _anim_player: AnimationPlayer = null
 var _anim_map: Dictionary = {}  # Maps "idle", "walk", "run", "attack" to actual animation names
 var _move_dir: Vector3 = Vector3.ZERO  # Current movement direction for rotation
+var _skeleton: Skeleton3D = null
+var _bone_ids: Dictionary = {}  # bone name -> bone index
+var _bone_rest: Dictionary = {}  # bone index -> rest Transform3D
 
 func setup(node: Node3D) -> void:
 	target_node = node
@@ -25,12 +28,90 @@ func setup(node: Node3D) -> void:
 		_original_y = target_node.position.y
 		_is_glb_model = target_node.has_meta("glb_model")
 		if _is_glb_model:
+			_find_skeleton()
 			_find_animation_player()
 			if _anim_player:
 				_play_anim("idle")
 			else:
-				# No AnimationPlayer found — start a gentle idle bob tween
 				_start_idle_bob()
+
+func _find_skeleton() -> void:
+	## Find the Skeleton3D in the model and cache bone indices for procedural animation.
+	if not target_node:
+		return
+	_skeleton = _find_child_by_type(target_node, "Skeleton3D") as Skeleton3D
+	if not _skeleton:
+		return
+	# Cache bone indices by common names (KayKit uses: upperarm.l, lowerarm.l, etc)
+	var bone_names_to_find := [
+		"upperarm.l", "upperarm.r", "lowerarm.l", "lowerarm.r",
+		"upperleg.l", "upperleg.r", "lowerleg.l", "lowerleg.r",
+		"hips", "spine", "chest", "head",
+	]
+	for i in range(_skeleton.get_bone_count()):
+		var bn = _skeleton.get_bone_name(i)
+		if bn in bone_names_to_find:
+			_bone_ids[bn] = i
+			_bone_rest[i] = _skeleton.get_bone_rest(i)
+	# Set arms down in rest pose (T-pose -> natural arms-down)
+	_set_arms_down()
+
+func _set_arms_down() -> void:
+	## Rotate upper arms down from T-pose to a natural resting position.
+	if not _skeleton:
+		return
+	if "upperarm.l" in _bone_ids:
+		var idx = _bone_ids["upperarm.l"]
+		var rest = _bone_rest[idx]
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.FORWARD, deg_to_rad(70)))
+	if "upperarm.r" in _bone_ids:
+		var idx = _bone_ids["upperarm.r"]
+		var rest = _bone_rest[idx]
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.FORWARD, deg_to_rad(-70)))
+	# Slight bend in lower arms
+	if "lowerarm.l" in _bone_ids:
+		var idx = _bone_ids["lowerarm.l"]
+		var rest = _bone_rest[idx]
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(15)))
+	if "lowerarm.r" in _bone_ids:
+		var idx = _bone_ids["lowerarm.r"]
+		var rest = _bone_rest[idx]
+		_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(15)))
+
+func _animate_skeleton(delta: float) -> void:
+	## Procedurally animate skeleton bones for walk/idle.
+	if not _skeleton or _bone_ids.is_empty():
+		return
+	match state:
+		State.IDLE:
+			# Subtle arm sway
+			var sway = sin(_time * 2.0) * deg_to_rad(3)
+			_rotate_bone("upperarm.l", Vector3.FORWARD, 70 + rad_to_deg(sway))
+			_rotate_bone("upperarm.r", Vector3.FORWARD, -70 - rad_to_deg(sway))
+		State.WALK:
+			# Arm swing (opposite to legs)
+			var swing = sin(_time * 10.0)
+			var arm_angle = swing * 30.0  # degrees of swing
+			_rotate_bone("upperarm.l", Vector3.FORWARD, 70 + arm_angle)
+			_rotate_bone("upperarm.r", Vector3.FORWARD, -70 - arm_angle)
+			# Lower arm follows with slight delay
+			var lower_swing = sin(_time * 10.0 - 0.5) * 15.0
+			_rotate_bone("lowerarm.l", Vector3.RIGHT, 15 + maxf(0, lower_swing))
+			_rotate_bone("lowerarm.r", Vector3.RIGHT, 15 + maxf(0, -lower_swing))
+			# Leg swing
+			_rotate_bone("upperleg.l", Vector3.RIGHT, swing * 25.0)
+			_rotate_bone("upperleg.r", Vector3.RIGHT, -swing * 25.0)
+			_rotate_bone("lowerleg.l", Vector3.RIGHT, maxf(0, -swing) * 30.0)
+			_rotate_bone("lowerleg.r", Vector3.RIGHT, maxf(0, swing) * 30.0)
+			# Torso twist
+			_rotate_bone("spine", Vector3.UP, swing * 5.0)
+
+func _rotate_bone(bone_name: String, axis: Vector3, degrees: float) -> void:
+	if bone_name not in _bone_ids:
+		return
+	var idx = _bone_ids[bone_name]
+	var rest = _bone_rest[idx]
+	_skeleton.set_bone_pose_rotation(idx, rest.basis.get_rotation_quaternion() * Quaternion(axis, deg_to_rad(degrees)))
 
 func _find_animation_player() -> void:
 	## Searches the model tree for an AnimationPlayer and maps common animation names.
@@ -105,12 +186,13 @@ func _process(delta: float) -> void:
 	_time += delta
 
 	if _is_glb_model:
-		if _anim_player:
-			match state:
-				State.IDLE:
-					target_node.position.y = _original_y + sin(_time * 3.0) * 0.01
-				State.WALK:
-					target_node.position.y = _original_y + sin(_time * 8.0) * 0.015
+		match state:
+			State.IDLE:
+				target_node.position.y = _original_y + sin(_time * 3.0) * 0.01
+			State.WALK:
+				target_node.position.y = _original_y + abs(sin(_time * 10.0)) * 0.02
+		# Animate skeleton bones (arms, legs, torso)
+		_animate_skeleton(delta)
 		# Rotate GLB model to face movement direction
 		if state == State.WALK and _move_dir.length() > 0.1:
 			var target_angle = atan2(_move_dir.x, _move_dir.z)
