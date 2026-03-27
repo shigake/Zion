@@ -11,9 +11,25 @@ extends CharacterBody3D
 var target: Node3D = null
 var timer: float = 0.0
 var attack_timer: float = 0.0
+var _animator = null
 
 func _ready() -> void:
 	add_to_group("player_summons")
+	_apply_skeleton_model()
+
+func _apply_skeleton_model() -> void:
+	var mesh_node = get_node_or_null("Mesh")
+	var model = ModelFactory.create_skeleton_model()
+	if model and model.get_child_count() > 0:
+		if mesh_node:
+			mesh_node.visible = false
+		model.name = "ProceduralModel"
+		model.scale = Vector3(0.5, 0.5, 0.5)
+		add_child(model)
+		ModelFactory.apply_model_materials(model, Color(0.7, 0.85, 0.6))
+		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
+		_animator.setup(model)
+		add_child(_animator)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:
@@ -35,9 +51,17 @@ func _physics_process(delta: float) -> void:
 		if dist > attack_range:
 			velocity = dir * speed
 			move_and_slide()
+			if _animator:
+				_animator.set_walking(true)
+				_animator.set_move_direction(dir)
 		elif attack_timer <= 0:
 			_attack()
 			attack_timer = attack_cooldown
+			if _animator:
+				_animator.play_hit()
+	else:
+		if _animator:
+			_animator.set_walking(false)
 
 func _find_target() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
