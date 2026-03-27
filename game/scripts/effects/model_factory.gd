@@ -1229,31 +1229,7 @@ func apply_model_materials(root: Node3D, base_color: Color) -> void:
 				VisualSetup.apply_cel_shader_to_mesh(child, base_color)
 
 func get_model_for_character(char_id: String) -> Node3D:
-	# Try loading .glb model from KayKit Adventurers
-	var file_name: String = CHARACTER_GLB_MAP.get(char_id, "")
-	var loaded: Node3D = null
-	if file_name != "":
-		var glb_path = KAYKIT_ADVENTURERS + file_name
-		loaded = _try_load_glb(glb_path, CHARACTER_SCALE, true)
-	if loaded == null:
-		var glb_path = "res://assets/models/characters/%s.glb" % char_id
-		loaded = _try_load_glb(glb_path, CHARACTER_SCALE, true)
-	if loaded:
-		if LogManager:
-			LogManager.info("ModelFactory", "Loaded GLB for character '%s'. Children: %d" % [char_id, loaded.get_child_count()])
-			# Check animation state
-			var ap = _find_node_by_type(loaded, "AnimationPlayer") as AnimationPlayer
-			if ap:
-				LogManager.info("ModelFactory", "  AnimPlayer anims: %s" % str(ap.get_animation_list()))
-			else:
-				LogManager.info("ModelFactory", "  No AnimationPlayer found in model")
-			var skel = _find_node_by_type(loaded, "Skeleton3D") as Skeleton3D
-			if skel:
-				LogManager.info("ModelFactory", "  Skeleton bones: %d" % skel.get_bone_count())
-			else:
-				LogManager.info("ModelFactory", "  No Skeleton3D found in model")
-		return loaded
-	# Fallback to procedural
+	# Procedural models — each character has unique silhouette and accessories
 	match char_id:
 		"ronin": return create_ronin_model()
 		"soldado": return create_soldado_model()

@@ -311,7 +311,7 @@ func _load_3d_model(char_id: String) -> void:
 	var model = ModelFactory.get_model_for_character(char_id)
 	if model:
 		model.position = Vector3(0, 0, 0)
-		model.scale = Vector3(0.5, 0.5, 0.5)
+		model.scale = Vector3(0.8, 0.8, 0.8)
 		_model_root.add_child(model)
 		_preview_model = model
 
