@@ -46,9 +46,9 @@ func _ready() -> void:
 	# Arma inicial e configurada pelo base_stage via CharacterDB.
 	# Fallback: usa a arma inicial do personagem selecionado (ou katana se nao encontrar).
 	if GameManager.player_weapons.is_empty():
-		var char_data = CharacterDB.get_character(GameManager.selected_character)
+		var cdata = CharacterDB.get_character(GameManager.selected_character)
 		var start_weapon = "katana"
-		if not char_data.is_empty() and "starting_weapon" in char_data:
+		if not cdata.is_empty() and "starting_weapon" in cdata:
 			start_weapon = char_data["starting_weapon"]
 		GameManager.add_weapon(start_weapon)
 		_spawn_weapon(start_weapon)

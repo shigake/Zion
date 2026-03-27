@@ -25,6 +25,9 @@ func setup(node: Node3D) -> void:
 			_find_animation_player()
 			if _anim_player:
 				_play_anim("idle")
+			else:
+				# No AnimationPlayer found — start a gentle idle bob tween
+				_start_idle_bob()
 
 func _find_animation_player() -> void:
 	## Searches the model tree for an AnimationPlayer and maps common animation names.
@@ -56,6 +59,16 @@ func _find_animation_player() -> void:
 	if "idle" not in _anim_map and anim_list.size() > 0:
 		_anim_map["idle"] = anim_list[0]
 
+var _bob_tween: Tween = null
+
+func _start_idle_bob() -> void:
+	## GLB model without AnimationPlayer — use a looping bob tween for idle feel
+	if not target_node or not is_instance_valid(target_node):
+		return
+	_bob_tween = target_node.create_tween().set_loops()
+	_bob_tween.tween_property(target_node, "position:y", 0.06, 0.8).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_bob_tween.tween_property(target_node, "position:y", 0.0, 0.8).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
 func _find_child_by_type(node: Node, type_name: String) -> Node:
 	## Recursively finds the first child node of the given type.
 	for child in node.get_children():
@@ -85,13 +98,15 @@ func _process(delta: float) -> void:
 
 	_time += delta
 
-	if _is_glb_model and _anim_player:
-		# GLB models use skeleton animations — only add subtle bob on top
-		match state:
-			State.IDLE:
-				target_node.position.y = sin(_time * 3.0) * 0.01
-			State.WALK:
-				target_node.position.y = sin(_time * 8.0) * 0.015
+	if _is_glb_model:
+		if _anim_player:
+			# GLB models use skeleton animations — only add subtle bob on top
+			match state:
+				State.IDLE:
+					target_node.position.y = sin(_time * 3.0) * 0.01
+				State.WALK:
+					target_node.position.y = sin(_time * 8.0) * 0.015
+		# GLB without AnimationPlayer uses _bob_tween — no extra processing needed
 		return
 
 	match state:

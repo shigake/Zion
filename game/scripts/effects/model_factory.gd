@@ -998,18 +998,21 @@ const ENEMY_SCALE_MAP := {
 	"ToothFairy": Vector3(0.35, 0.35, 0.35),
 }
 
-## Paths to KayKit animation .glb files (Rig_Medium contains idle, walk, run, attack, etc.)
+## Paths to KayKit animation .glb files (General = idle/death/hit, MovementBasic = walk/run)
 const KAYKIT_ANIM_PATHS: Array[String] = [
 	"res://assets/models/downloaded/kaykit/adventurers/KayKit_Adventurers_2.0_FREE/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+	"res://assets/models/downloaded/kaykit/adventurers/KayKit_Adventurers_2.0_FREE/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
 	"res://assets/models/downloaded/kaykit/skeletons/KayKit_Skeletons_1.1_FREE/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+	"res://assets/models/downloaded/kaykit/skeletons/KayKit_Skeletons_1.1_FREE/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
 ]
 
 var _cached_anim_lib: AnimationLibrary = null
 
 func _get_kaykit_anim_library() -> AnimationLibrary:
-	## Loads and caches animations from KayKit animation .glb files.
+	## Loads and caches ALL animations from KayKit .glb files (General + MovementBasic).
 	if _cached_anim_lib:
 		return _cached_anim_lib
+	_cached_anim_lib = AnimationLibrary.new()
 	for anim_path in KAYKIT_ANIM_PATHS:
 		if not ResourceLoader.exists(anim_path):
 			continue
@@ -1021,17 +1024,15 @@ func _get_kaykit_anim_library() -> AnimationLibrary:
 			continue
 		var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
 		if anim_player:
-			_cached_anim_lib = AnimationLibrary.new()
 			for anim_name in anim_player.get_animation_list():
-				if anim_name == "RESET":
+				if anim_name == "RESET" or anim_name == "T-Pose":
 					continue
-				_cached_anim_lib.add_animation(anim_name, anim_player.get_animation(anim_name).duplicate())
-			instance.queue_free()
-			if _cached_anim_lib.get_animation_list().size() > 0:
-				return _cached_anim_lib
-			_cached_anim_lib = null
-		else:
-			instance.queue_free()
+				if not _cached_anim_lib.has_animation(anim_name):
+					_cached_anim_lib.add_animation(anim_name, anim_player.get_animation(anim_name).duplicate())
+		instance.queue_free()
+	if _cached_anim_lib.get_animation_list().size() > 0:
+		return _cached_anim_lib
+	_cached_anim_lib = null
 	return null
 
 func _find_node_by_type(node: Node, type_name: String) -> Node:
@@ -1045,31 +1046,46 @@ func _find_node_by_type(node: Node, type_name: String) -> Node:
 	return null
 
 func _inject_animations(instance: Node) -> void:
-	## If glb instance has an AnimationPlayer with no real animations (only RESET),
-	## try to inject animations from KayKit external animation files.
+	## Injeta animacoes KayKit no modelo. Cria AnimationPlayer se nao existir.
+	## Requer Skeleton3D no modelo (mesmo rig "Rig_Medium" com 23 bones).
+	var skeleton = _find_node_by_type(instance, "Skeleton3D") as Skeleton3D
+	if not skeleton:
+		return  # Sem esqueleto, nao pode animar
+
+	# Busca AnimationPlayer existente
 	var anim_player = _find_node_by_type(instance, "AnimationPlayer") as AnimationPlayer
-	if not anim_player:
-		return
-	# Check if it has real animations (not just RESET)
-	var real_anims = 0
-	for anim_name in anim_player.get_animation_list():
-		if anim_name != "RESET":
-			real_anims += 1
-	if real_anims > 0:
-		return  # Already has animations, no need to inject
-	# Load external animations
+
+	# Verifica se ja tem animacoes reais
+	if anim_player:
+		var real_anims = 0
+		for anim_name in anim_player.get_animation_list():
+			if anim_name != "RESET" and anim_name != "T-Pose":
+				real_anims += 1
+		if real_anims > 0:
+			return  # Ja tem animacoes, nao precisa injetar
+
+	# Carrega biblioteca de animacoes KayKit
 	var lib = _get_kaykit_anim_library()
 	if lib == null:
 		return
-	# Add animations from library to the AnimationPlayer
+
+	# Cria AnimationPlayer se nao existe
+	if not anim_player:
+		anim_player = AnimationPlayer.new()
+		anim_player.name = "AnimationPlayer"
+		# Adiciona como irmao do Skeleton3D (mesmo nivel na arvore)
+		skeleton.get_parent().add_child(anim_player)
+
+	# Adiciona todas as animacoes da biblioteca
+	var anim_lib: AnimationLibrary
+	if anim_player.has_animation_library(""):
+		anim_lib = anim_player.get_animation_library("")
+	else:
+		anim_lib = AnimationLibrary.new()
+		anim_player.add_animation_library("", anim_lib)
+
 	for anim_name in lib.get_animation_list():
-		if not anim_player.has_animation(anim_name):
-			var anim_lib: AnimationLibrary
-			if anim_player.has_animation_library(""):
-				anim_lib = anim_player.get_animation_library("")
-			else:
-				anim_lib = AnimationLibrary.new()
-				anim_player.add_animation_library("", anim_lib)
+		if not anim_lib.has_animation(anim_name):
 			anim_lib.add_animation(anim_name, lib.get_animation(anim_name))
 
 func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
