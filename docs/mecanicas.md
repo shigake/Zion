@@ -13,6 +13,26 @@ Armas do mesmo elemento combinam para efeitos extras:
 | **Fogo + Gelo** | Steam cloud (dano + cegueira nos inimigos) |
 | **Eletrico + Agua** | Condutor (dano em area massivo) |
 
+### Cross-Combo (Multiplayer)
+- Armas com elemento criam "zonas elementais" persistentes
+- Quando projetil de um aliado com elemento diferente atinge a zona, dispara Cross-Combo
+- 1.5x dano em AoE + efeito visual
+- Combinacoes: Fogo+Gelo (Steam Cloud), Eletrico+Veneno (Toxic Shock), etc.
+- Cooldown de 2 segundos por par de jogadores
+
+### Reviver com Sacrificio (Multiplayer)
+- Jogador morto deixa uma Lapide na posicao de morte
+- Aliados podem reviver ficando 5 segundos perto da lapide
+- Jogador renasce com 50% HP
+- Aliado que reviveu recebe -30% HP maximo por 30 segundos
+- Lapide desaparece apos 60 segundos (morte permanente)
+
+### Mutacoes (Modo Ascensao)
+- Modificadores de dificuldade opcionais ativados antes da run
+- 6 mutacoes: Inimigos Explosivos, Chefes Furiosos, Cura Enfraquecida, Speed Demons, Horda Infinita, Sem Evolucao
+- Cada mutacao aumenta o multiplicador de cristais ganhos
+- Maximo teorico: x2.65 cristais com todas as mutacoes ativas
+
 ---
 
 ## Sistema de Reliquias

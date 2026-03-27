@@ -73,3 +73,33 @@
 ### Merchant Event
 - [x] NPC visual com area de interacao
 - [x] UI de compra com 3 itens aleatorios por cristais
+
+### Mutacoes / Modo Ascensao
+- [x] MutationManager singleton com 6 mutacoes
+- [x] UI de mutacoes (painel entre character select e stage select)
+- [x] Inimigos Explosivos (AoE na morte)
+- [x] Chefes Furiosos (comecam na fase 2)
+- [x] Cura Enfraquecida (-50% heal)
+- [x] Speed Demons (+30% velocidade inimigos)
+- [x] Horda Infinita (+50% spawn rate)
+- [x] Sem Evolucao (bloqueia evolucoes)
+- [x] Multiplicador de cristais na tela de resultado
+- [x] Telemetria com mutations_active
+
+### Cross-Combo Multiplayer
+- [x] Sistema de zonas elementais registradas por armas
+- [x] Detecao de cross-combo quando projetil de um jogador atinge zona de outro
+- [x] 12 combinacoes elementais com efeitos visuais
+- [x] Cooldown de 2s por par de jogadores
+- [x] Label flutuante "CROSS-COMBO!" com fade out
+- [x] Integrado no enemy_base.take_damage
+
+### Reviver com Sacrificio
+- [x] Tombstone spawna na posicao de morte no multiplayer
+- [x] Area3D de interacao (raio 2.5 unidades)
+- [x] Timer de revive (5 segundos continuo)
+- [x] Progress bar visual
+- [x] Revive com 50% HP
+- [x] Debuff no sacrificador (-30% max HP por 30s)
+- [x] Despawn da lapide apos 60 segundos
+- [x] Integrado com sistema de revive existente (upgrade da loja)
