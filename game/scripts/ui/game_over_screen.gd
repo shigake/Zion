@@ -160,6 +160,13 @@ func _on_retry() -> void:
 	var scene = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
 	get_tree().change_scene_to_file(scene)
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not panel.visible:
+		return
+	if event.is_action_pressed("ui_cancel"):
+		_on_menu()
+		get_viewport().set_input_as_handled()
+
 func _on_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

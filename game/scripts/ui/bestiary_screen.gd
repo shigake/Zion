@@ -175,7 +175,7 @@ func _build_ui() -> void:
 	cam.position = Vector3(0, 1.2, 2.5)
 	cam.look_at(Vector3(0, 0.8, 0), Vector3.UP)
 	detail_viewport.add_child(cam)
-	detail_viewport.cameras.push_front(cam)
+	cam.current = true
 
 	# Luz ambiente
 	var ambient = WorldEnvironment.new()
@@ -187,7 +187,7 @@ func _build_ui() -> void:
 	var light = DirectionalLight3D.new()
 	light.position = Vector3(2, 3, 2)
 	light.look_at(Vector3(0, 0, 0), Vector3.UP)
-	light.energy_multiplier = 1.5
+	light.light_energy = 1.5
 	detail_viewport.add_child(light)
 
 	detail_name = Label.new()

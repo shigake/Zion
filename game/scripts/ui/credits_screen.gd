@@ -325,6 +325,7 @@ func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_back()
+		get_viewport().set_input_as_handled()
