@@ -1158,20 +1158,22 @@ func _inject_animations(instance: Node) -> void:
 		if not anim_lib.has_animation(anim_name):
 			anim_lib.add_animation(anim_name, lib.get_animation(anim_name))
 
-func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
+func _try_load_glb(path: String, model_scale := Vector3.ONE, inject_anims := false) -> Node3D:
 	## Tenta carregar modelo 3D (.glb, .fbx, .gltf). Retorna null se nao encontrar.
 	## Usa cache para evitar load() sincrono repetido (principal causa de lag no spawn).
+	## inject_anims: so ativar para modelos de personagem (player), nunca para inimigos.
 	for ext in [".glb", ".fbx", ".gltf"]:
 		var try_path = path.get_basename() + ext
 		# Verificar cache primeiro
 		if _scene_cache.has(try_path):
 			var cached = _scene_cache[try_path]
 			if cached == null:
-				continue  # Ja sabemos que nao existe
+				continue
 			var instance = cached.instantiate()
 			if instance == null:
 				continue
-			_inject_animations(instance)
+			if inject_anims:
+				_inject_animations(instance)
 			var root = Node3D.new()
 			root.set_meta("glb_model", true)
 			instance.scale = model_scale
@@ -1179,22 +1181,22 @@ func _try_load_glb(path: String, model_scale := Vector3.ONE) -> Node3D:
 			return root
 		# Nao esta no cache — carregar e cachear
 		if not ResourceLoader.exists(try_path):
-			_scene_cache[try_path] = null  # Cachear ausencia
+			_scene_cache[try_path] = null
 			if LogManager:
 				LogManager.debug("ModelFactory", "resource not found: %s" % try_path)
 			continue
 		var scene = load(try_path) as PackedScene
 		if scene == null:
-			_scene_cache[try_path] = null  # Cachear falha
+			_scene_cache[try_path] = null
 			if LogManager:
 				LogManager.warn("ModelFactory", "failed to load scene: %s" % try_path)
 			continue
-		_scene_cache[try_path] = scene  # Cachear sucesso
+		_scene_cache[try_path] = scene
 		var instance = scene.instantiate()
 		if instance == null:
 			continue
-		# Try to inject external animations if the model has a skeleton but no anims
-		_inject_animations(instance)
+		if inject_anims:
+			_inject_animations(instance)
 		var root = Node3D.new()
 		root.set_meta("glb_model", true)
 		instance.scale = model_scale
@@ -1286,10 +1288,10 @@ func get_model_for_character(char_id: String) -> Node3D:
 	var loaded: Node3D = null
 	if file_name != "":
 		var glb_path = KAYKIT_ADVENTURERS + file_name
-		loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
+		loaded = _try_load_glb(glb_path, CHARACTER_SCALE, true)
 	if loaded == null:
 		var glb_path = "res://assets/models/characters/%s.glb" % char_id
-		loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
+		loaded = _try_load_glb(glb_path, CHARACTER_SCALE, true)
 	if loaded:
 		if LogManager:
 			LogManager.info("ModelFactory", "Loaded GLB for character '%s'. Children: %d" % [char_id, loaded.get_child_count()])
