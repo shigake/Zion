@@ -47,9 +47,15 @@ var _warning_count: int = 0
 var _fatal_count: int = 0
 var _entries: Array[Dictionary] = []  # In-memory ring buffer (last 500)
 var _max_memory_entries: int = 500
+var _entries_index: int = 0  # Write position for ring buffer
+var _entries_full: bool = false  # Whether ring buffer has wrapped
 var _fps_samples: Array[float] = []
+var _fps_index: int = 0  # Write position for FPS ring buffer
+var _fps_full: bool = false
+var _max_fps_samples: int = 300
 var _min_fps: float = 9999.0
 var _frame_count: int = 0
+var _low_fps_cooldown: int = 0  # Prevent spam when FPS is low
 
 # Signals
 signal log_entry_added(entry: Dictionary)
@@ -66,8 +72,7 @@ func _ready() -> void:
 	_open_log_file()
 	_write_session_header()
 
-	# Conectar ao tree para capturar erros nao tratados
-	get_tree().node_added.connect(_on_node_added)
+	# node_added desconectado — overhead desnecessario para um callback vazio
 
 	# Capture Godot's error output by reading the log file Godot writes
 	# Note: in debug builds, errors show in console. We track them manually.
@@ -95,14 +100,22 @@ func _process(_delta: float) -> void:
 	# Sample FPS a cada 60 frames
 	if _frame_count % 60 == 0:
 		var fps = Engine.get_frames_per_second()
-		_fps_samples.append(fps)
-		if _fps_samples.size() > 300:
-			_fps_samples.remove_at(0)
+		# Ring buffer para FPS samples (sem remove_at(0))
+		if _fps_full:
+			_fps_samples[_fps_index] = fps
+		else:
+			_fps_samples.append(fps)
+		_fps_index = (_fps_index + 1) % _max_fps_samples
+		if _fps_index == 0 and not _fps_full:
+			_fps_full = true
 		if fps < _min_fps:
 			_min_fps = fps
-		# Aviso se FPS muito baixo
-		if fps < 20.0:
+		# Aviso se FPS muito baixo (com cooldown de 10s para evitar spam)
+		if fps < 20.0 and _low_fps_cooldown <= 0:
 			warn("Performance", "Low FPS: %.0f" % fps)
+			_low_fps_cooldown = 600  # ~10s a 60fps
+		if _low_fps_cooldown > 0:
+			_low_fps_cooldown -= 60
 
 
 func _notification(what: int) -> void:
@@ -160,21 +173,32 @@ func report_crash(module: String, description: String, extra_data: Dictionary = 
 ## Retorna as ultimas N entradas do log
 func get_recent_entries(count: int = 50, min_level: Level = Level.DEBUG) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var start = maxi(0, _entries.size() - count)
-	for i in range(start, _entries.size()):
-		if _entries[i]["level"] >= min_level:
-			result.append(_entries[i])
+	var total = _entries.size()
+	if total == 0:
+		return result
+	# Iterar do mais antigo ao mais novo no ring buffer
+	var ordered: Array[Dictionary] = []
+	if _entries_full:
+		for i in range(total):
+			ordered.append(_entries[(_entries_index + i) % total])
+	else:
+		ordered = _entries
+	var start = maxi(0, ordered.size() - count)
+	for i in range(start, ordered.size()):
+		if ordered[i]["level"] >= min_level:
+			result.append(ordered[i])
 	return result
 
 
 ## Retorna estatisticas da sessao
 func get_session_stats() -> Dictionary:
 	var avg_fps := 0.0
-	if not _fps_samples.is_empty():
+	var fps_count = _fps_samples.size()
+	if fps_count > 0:
 		var total := 0.0
 		for s in _fps_samples:
 			total += s
-		avg_fps = total / _fps_samples.size()
+		avg_fps = total / fps_count
 
 	return {
 		"session_id": _session_id,
@@ -207,7 +231,8 @@ func export_session_log() -> String:
 	text += "Start: %s\n" % _session_start
 	text += "Entries: %d (errors: %d, warnings: %d)\n" % [_entries.size(), _error_count, _warning_count]
 	text += "========================\n\n"
-	for entry in _entries:
+	var ordered = get_recent_entries(_entries.size())
+	for entry in ordered:
 		text += _format_entry(entry) + "\n"
 	return text
 
@@ -229,10 +254,14 @@ func _log(level: Level, module: String, message: String) -> void:
 		"message": message,
 	}
 
-	# Ring buffer em memoria
-	_entries.append(entry)
-	if _entries.size() > _max_memory_entries:
-		_entries.remove_at(0)
+	# Ring buffer em memoria (sem remove_at(0) — O(1) em vez de O(n))
+	if _entries_full:
+		_entries[_entries_index] = entry
+	else:
+		_entries.append(entry)
+	_entries_index = (_entries_index + 1) % _max_memory_entries
+	if _entries_index == 0 and not _entries_full:
+		_entries_full = true
 
 	# Console output
 	if level >= console_log_level:
@@ -462,9 +491,6 @@ func _count_nodes(node: Node) -> int:
 func _on_crash(reason: String) -> void:
 	fatal("Crash", reason)
 
-
-func _on_node_added(_node: Node) -> void:
-	pass  # Placeholder para monitoramento futuro
 
 
 func _get_timestamp() -> String:
