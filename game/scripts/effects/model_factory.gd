@@ -979,6 +979,64 @@ const KAYKIT_ADVENTURERS := "res://assets/models/downloaded/kaykit/adventurers/K
 const KAYKIT_SKELETONS := "res://assets/models/downloaded/kaykit/skeletons/KayKit_Skeletons_1.1_FREE/characters/gltf/"
 const KENNEY_DUNGEON_CHARS := "res://assets/models/downloaded/kenney/mini-dungeon/Models/GLB format/"
 
+# ===================== QUATERNIUS PATHS =====================
+const QUAT_MONSTERS := "res://assets/models/quaternius/monsters/FBX/"
+const QUAT_WEAPONS := "res://assets/models/quaternius/weapons/FBX/"
+const QUAT_CHARACTERS := "res://assets/models/quaternius/characters/Universal Base Characters[Standard]/Base Characters/Godot - UE/"
+
+## Mapa inimigo -> arquivo Quaternius FBX (Godot importa como PackedScene)
+const QUAT_ENEMY_MAP := {
+	"Bat":            "Bat.fbx",
+	"Skeleton":       "Skeleton.fbx",
+	"SkeletonArcher": "Skeleton.fbx",
+	"Slime":          "Slime.fbx",
+	"SlimeBig":       "Slime.fbx",
+	"BossDemonLord":  "Dragon.fbx",
+	"BossDracula":    "Dragon.fbx",
+	"BossLeviathan":  "Dragon.fbx",
+}
+
+## Mapa inimigo -> escala Quaternius (podem diferir dos KayKit)
+const QUAT_ENEMY_SCALE_MAP := {
+	"Bat":            Vector3(0.3, 0.3, 0.3),
+	"Skeleton":       Vector3(0.5, 0.5, 0.5),
+	"SkeletonArcher": Vector3(0.5, 0.5, 0.5),
+	"Slime":          Vector3(0.35, 0.35, 0.35),
+	"SlimeBig":       Vector3(0.6, 0.6, 0.6),
+	"BossDemonLord":  Vector3(1.2, 1.2, 1.2),
+	"BossDracula":    Vector3(1.2, 1.2, 1.2),
+	"BossLeviathan":  Vector3(1.4, 1.4, 1.4),
+}
+
+## Mapa arma -> arquivo Quaternius FBX
+const QUAT_WEAPON_MAP := {
+	"katana":    "Sword.fbx",
+	"axe":       "Axe.fbx",
+	"scythe":    "Scythe.fbx",
+	"hammer":    "Hammer_Double.fbx",
+	"bow":       "Bow_Wooden.fbx",
+	"spear":     "Spear.fbx",
+	"dagger":    "Dagger.fbx",
+	"claymore":  "Claymore.fbx",
+	"sword":     "Sword.fbx",
+}
+
+## Mapa personagem -> arquivo Quaternius base character
+const QUAT_CHARACTER_MAP := {
+	"ronin":      "Superhero_Male_FullBody.gltf",
+	"soldado":    "Superhero_Male_FullBody.gltf",
+	"mago":       "Superhero_Male_FullBody.gltf",
+	"berserker":  "Superhero_Male_FullBody.gltf",
+	"ninja":      "Superhero_Female_FullBody.gltf",
+	"necro":      "Superhero_Male_FullBody.gltf",
+	"pirata":     "Superhero_Male_FullBody.gltf",
+	"engenheiro": "Superhero_Male_FullBody.gltf",
+	"vampiro":    "Superhero_Male_FullBody.gltf",
+	"gladiador":  "Superhero_Male_FullBody.gltf",
+	"chef":       "Superhero_Male_FullBody.gltf",
+	"mystery":    "Superhero_Female_FullBody.gltf",
+}
+
 ## Mapa personagem -> arquivo .glb KayKit Adventurers
 const CHARACTER_GLB_MAP := {
 	"ronin":      "Rogue_Hooded.glb",
@@ -1178,7 +1236,14 @@ func load_prop(file_name: String, source: String = "nature") -> Node3D:
 	return instance
 
 func get_weapon_model(weapon_id: String) -> Node3D:
-	## Carrega modelo 3D de uma arma
+	## Carrega modelo 3D de uma arma. Tenta Quaternius primeiro.
+	var quat_weapon_file: String = QUAT_WEAPON_MAP.get(weapon_id, "")
+	if quat_weapon_file != "":
+		var quat_path = QUAT_WEAPONS + quat_weapon_file
+		var quat_loaded = _try_load_glb(quat_path, Vector3(0.4, 0.4, 0.4))
+		if quat_loaded:
+			return quat_loaded
+	# Fallback to legacy weapon path
 	var glb_path = "res://assets/models/weapons/%s.glb" % weapon_id
 	return _try_load_glb(glb_path, Vector3(0.4, 0.4, 0.4))
 
@@ -1228,8 +1293,45 @@ func apply_model_materials(root: Node3D, base_color: Color) -> void:
 			else:
 				VisualSetup.apply_cel_shader_to_mesh(child, base_color)
 
+func _apply_character_tint(model_root: Node3D, char_id: String) -> void:
+	## Tints a Quaternius base character model with the character's color.
+	## Uses CharacterDB color and applies via cel-shader or material override.
+	var char_color := Color.WHITE
+	if CharacterDB and CharacterDB.CHARACTERS.has(char_id):
+		char_color = CharacterDB.CHARACTERS[char_id].get("color", Color.WHITE)
+	# Apply tint to all MeshInstance3D children recursively
+	_tint_meshes_recursive(model_root, char_color)
+
+func _tint_meshes_recursive(node: Node, tint_color: Color) -> void:
+	## Recursively applies a color tint to all MeshInstance3D nodes.
+	## Preserves original textures by blending with albedo_color.
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			# Iterate over surface materials and tint them
+			for surf_idx in range(mi.mesh.get_surface_count() if mi.mesh else 0):
+				var orig_mat = mi.get_active_material(surf_idx)
+				if orig_mat is StandardMaterial3D:
+					var mat = orig_mat.duplicate() as StandardMaterial3D
+					mat.albedo_color = mat.albedo_color.lerp(tint_color, 0.45)
+					mi.set_surface_override_material(surf_idx, mat)
+				elif orig_mat == null:
+					var mat = StandardMaterial3D.new()
+					mat.albedo_color = tint_color
+					mi.set_surface_override_material(surf_idx, mat)
+		_tint_meshes_recursive(child, tint_color)
+
 func get_model_for_character(char_id: String) -> Node3D:
-	# Procedural models — each character has unique silhouette and accessories
+	# Try Quaternius base character FIRST (modular mesh with Skeleton3D)
+	var quat_char_file: String = QUAT_CHARACTER_MAP.get(char_id, "")
+	if quat_char_file != "":
+		var quat_path = QUAT_CHARACTERS + quat_char_file
+		var quat_model = _try_load_glb(quat_path, CHARACTER_SCALE, true)
+		if quat_model:
+			# Tint the base mesh with character color to differentiate
+			_apply_character_tint(quat_model, char_id)
+			return quat_model
+	# Fallback: procedural models — each character has unique silhouette and accessories
 	match char_id:
 		"ronin": return create_ronin_model()
 		"soldado": return create_soldado_model()
@@ -1262,7 +1364,15 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		s = ENEMY_SCALE_MAP[clean_name]
 	else:
 		s = ENEMY_SCALE
-	# Try KayKit Skeletons first
+	# Try Quaternius monsters FIRST (higher quality models)
+	var quat_file: String = QUAT_ENEMY_MAP.get(clean_name, "")
+	if quat_file != "":
+		var quat_scale: Vector3 = QUAT_ENEMY_SCALE_MAP.get(clean_name, s)
+		var quat_path = QUAT_MONSTERS + quat_file
+		var loaded_quat = _try_load_glb(quat_path, quat_scale)
+		if loaded_quat:
+			return loaded_quat
+	# Try KayKit Skeletons second
 	var skel_file: String = ENEMY_GLB_MAP.get(clean_name, "")
 	if skel_file != "":
 		var skel_path = KAYKIT_SKELETONS + skel_file
