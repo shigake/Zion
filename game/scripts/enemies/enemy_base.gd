@@ -74,7 +74,7 @@ const SEPARATION_FORCE := 3.0
 const MAX_NEIGHBORS_CHECK := 8
 
 func _physics_process(delta: float) -> void:
-	if is_dead or GameManager.paused:
+	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
 	# Knockback decay
@@ -160,6 +160,8 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		SynergySystem.try_cross_combo(global_position, damage_type, peer, final_damage)
 	_hit_count += 1
 
+	if not is_inside_tree():
+		return
 	# Damage number - color by type (crits are yellow and larger)
 	var dmg_color: Color
 	if is_crit:
