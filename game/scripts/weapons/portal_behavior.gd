@@ -34,21 +34,86 @@ func _ready() -> void:
 	add_child(exit_mesh)
 
 func _create_portal_mesh(albedo: Color, emission: Color) -> MeshInstance3D:
-	var mesh_inst = MeshInstance3D.new()
-	var mesh = CylinderMesh.new()
-	mesh.top_radius = portal_radius
-	mesh.bottom_radius = portal_radius
-	mesh.height = 0.05
-	mesh_inst.mesh = mesh
+	# Container for multi-layer portal
+	var container = MeshInstance3D.new()
+
+	# Outer ring (torus)
+	var outer_torus = TorusMesh.new()
+	outer_torus.inner_radius = portal_radius * 0.5
+	outer_torus.outer_radius = portal_radius
+	container.mesh = outer_torus
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = albedo
+	mat.albedo_color = Color(albedo.r, albedo.g, albedo.b, 0.7)
 	mat.emission_enabled = true
 	mat.emission = emission
-	mat.emission_energy_multiplier = 2.0
+	mat.emission_energy_multiplier = 3.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color.a = 0.7
-	mesh_inst.material_override = mat
-	return mesh_inst
+	container.material_override = mat
+	container.rotation.x = PI / 2.0
+
+	# Inner ring (smaller torus, child of container)
+	var inner_ring = MeshInstance3D.new()
+	var inner_torus = TorusMesh.new()
+	inner_torus.inner_radius = portal_radius * 0.2
+	inner_torus.outer_radius = portal_radius * 0.5
+	inner_ring.mesh = inner_torus
+	var inner_mat = StandardMaterial3D.new()
+	inner_mat.albedo_color = Color(albedo.r * 1.3, albedo.g * 0.5, albedo.b * 1.2, 0.6)
+	inner_mat.emission_enabled = true
+	inner_mat.emission = Color(emission.r * 1.2, emission.g * 0.8, emission.b * 1.1)
+	inner_mat.emission_energy_multiplier = 2.5
+	inner_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	inner_ring.material_override = inner_mat
+	inner_ring.set_meta("inner_ring", true)
+	container.add_child(inner_ring)
+
+	# Center void sphere
+	var void_sphere_inst = MeshInstance3D.new()
+	var void_sphere = SphereMesh.new()
+	void_sphere.radius = portal_radius * 0.15
+	void_sphere.height = portal_radius * 0.3
+	void_sphere_inst.mesh = void_sphere
+	var void_mat = StandardMaterial3D.new()
+	void_mat.albedo_color = Color(0.05, 0.0, 0.1, 0.9)
+	void_mat.emission_enabled = true
+	void_mat.emission = Color(0.2, 0.0, 0.5)
+	void_mat.emission_energy_multiplier = 1.0
+	void_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	void_sphere_inst.material_override = void_mat
+	container.add_child(void_sphere_inst)
+
+	# Suction particles
+	var suction = GPUParticles3D.new()
+	suction.amount = 8
+	suction.lifetime = 0.6
+	suction.emitting = true
+	suction.one_shot = false
+	var s_mat = ParticleProcessMaterial.new()
+	s_mat.direction = Vector3(0, 0, 0)
+	s_mat.spread = 180.0
+	s_mat.initial_velocity_min = -2.0
+	s_mat.initial_velocity_max = -1.0
+	s_mat.gravity = Vector3(0, 0, 0)
+	s_mat.scale_min = 0.2
+	s_mat.scale_max = 0.5
+	s_mat.color = Color(emission.r, emission.g, emission.b, 0.7)
+	s_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	s_mat.emission_sphere_radius = portal_radius
+	suction.process_material = s_mat
+	var dot_mesh = SphereMesh.new()
+	dot_mesh.radius = 0.02
+	dot_mesh.height = 0.04
+	var dot_mat = StandardMaterial3D.new()
+	dot_mat.albedo_color = Color(emission.r, emission.g, emission.b, 0.8)
+	dot_mat.emission_enabled = true
+	dot_mat.emission = emission
+	dot_mat.emission_energy_multiplier = 4.0
+	dot_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dot_mesh.surface_set_material(0, dot_mat)
+	suction.draw_pass_1 = dot_mesh
+	container.add_child(suction)
+
+	return container
 
 func _process(delta: float) -> void:
 	if GameManager.paused:
@@ -59,11 +124,18 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 
-	# Rotate portal visuals
+	# Rotate portal visuals (outer ring rotates with parent)
 	if entry_mesh:
 		entry_mesh.rotation.y += delta * 2.0
+		# Inner ring rotates opposite direction
+		for child in entry_mesh.get_children():
+			if child is MeshInstance3D and child.has_meta("inner_ring"):
+				child.rotation.y -= delta * 5.0  # Net -3.0 relative since parent adds 2.0
 	if exit_mesh:
 		exit_mesh.rotation.y -= delta * 2.0
+		for child in exit_mesh.get_children():
+			if child is MeshInstance3D and child.has_meta("inner_ring"):
+				child.rotation.y += delta * 5.0
 
 	# Fade out near end of lifetime
 	var remaining = portal_lifetime - timer

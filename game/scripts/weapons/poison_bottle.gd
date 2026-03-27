@@ -58,22 +58,92 @@ func _throw_bottle(level: int) -> void:
 	pool.name = "PoisonPool"
 	pool.global_position = target_pos
 
-	# Visual — flat green disc
+	# Visual — bubbling toxic slime pool
+	var pool_radius = 2.0 + (level - 1) * 0.3
 	var mesh_inst = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
-	disc.top_radius = 2.0 + (level - 1) * 0.3
-	disc.bottom_radius = 2.0 + (level - 1) * 0.3
-	disc.height = 0.05
+	disc.top_radius = pool_radius
+	disc.bottom_radius = pool_radius
+	disc.height = 0.08
 	mesh_inst.mesh = disc
-	mesh_inst.position = Vector3(0, 0.03, 0)
+	mesh_inst.position = Vector3(0, 0.04, 0)
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 0.8, 0.1, 0.6)
+	mat.albedo_color = Color(0.1, 0.45, 0.05, 0.7)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.roughness = 0.1
 	mat.emission_enabled = true
-	mat.emission = Color(0.1, 0.6, 0.0, 1.0)
-	mat.emission_energy_multiplier = 0.4
+	mat.emission = Color(0.2, 0.8, 0.1)
+	mat.emission_energy_multiplier = 0.5
 	mesh_inst.material_override = mat
 	pool.add_child(mesh_inst)
+
+	# Bubbles rising from pool surface
+	var bubbles = GPUParticles3D.new()
+	bubbles.name = "Bubbles"
+	bubbles.amount = 12
+	bubbles.lifetime = 1.0
+	bubbles.position = Vector3(0, 0.08, 0)
+	var bubble_mat = ParticleProcessMaterial.new()
+	bubble_mat.direction = Vector3(0, 1, 0)
+	bubble_mat.initial_velocity_min = 0.3
+	bubble_mat.initial_velocity_max = 0.8
+	bubble_mat.spread = 45.0
+	bubble_mat.gravity = Vector3(0, -0.2, 0)
+	bubble_mat.scale_min = 0.02
+	bubble_mat.scale_max = 0.06
+	bubble_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	bubble_mat.emission_sphere_radius = pool_radius * 0.8
+	bubbles.process_material = bubble_mat
+	var bubble_mesh = SphereMesh.new()
+	bubble_mesh.radius = 0.5
+	bubble_mesh.height = 1.0
+	var bubble_mesh_mat = StandardMaterial3D.new()
+	bubble_mesh_mat.albedo_color = Color(0.2, 0.9, 0.1, 0.5)
+	bubble_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bubble_mesh_mat.emission_enabled = true
+	bubble_mesh_mat.emission = Color(0.2, 0.8, 0.1)
+	bubble_mesh_mat.emission_energy_multiplier = 0.3
+	bubble_mesh.material = bubble_mesh_mat
+	bubbles.draw_pass_1 = bubble_mesh
+	pool.add_child(bubbles)
+
+	# Vapors — rising toxic mist
+	var vapors = GPUParticles3D.new()
+	vapors.name = "Vapors"
+	vapors.amount = 8
+	vapors.lifetime = 1.5
+	vapors.position = Vector3(0, 0.08, 0)
+	var vapor_mat = ParticleProcessMaterial.new()
+	vapor_mat.direction = Vector3(0, 1, 0)
+	vapor_mat.initial_velocity_min = 0.2
+	vapor_mat.initial_velocity_max = 0.2
+	vapor_mat.spread = 30.0
+	vapor_mat.gravity = Vector3(0, -0.1, 0)
+	vapor_mat.scale_min = 0.3
+	vapor_mat.scale_max = 0.8
+	vapor_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	vapor_mat.emission_sphere_radius = pool_radius * 0.6
+	var vapor_scale_curve = CurveTexture.new()
+	var curve = Curve.new()
+	curve.add_point(Vector2(0.0, 0.0))
+	curve.add_point(Vector2(0.3, 1.0))
+	curve.add_point(Vector2(0.7, 1.0))
+	curve.add_point(Vector2(1.0, 0.0))
+	vapor_scale_curve.curve = curve
+	vapor_mat.scale_curve = vapor_scale_curve
+	vapors.process_material = vapor_mat
+	var vapor_mesh = SphereMesh.new()
+	vapor_mesh.radius = 0.5
+	vapor_mesh.height = 1.0
+	var vapor_mesh_mat = StandardMaterial3D.new()
+	vapor_mesh_mat.albedo_color = Color(0.1, 0.6, 0.05, 0.15)
+	vapor_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	vapor_mesh_mat.emission_enabled = true
+	vapor_mesh_mat.emission = Color(0.1, 0.5, 0.05)
+	vapor_mesh_mat.emission_energy_multiplier = 0.2
+	vapor_mesh.material = vapor_mesh_mat
+	vapors.draw_pass_1 = vapor_mesh
+	pool.add_child(vapors)
 
 	# Damage area
 	var area = Area3D.new()

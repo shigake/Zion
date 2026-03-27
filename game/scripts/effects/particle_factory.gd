@@ -264,6 +264,162 @@ func spawn_level_up_particles(pos: Vector3) -> void:
 
 	_setup_and_emit(particles, pos, 2.0)
 
+## Katana impact sparks — small bright white particles outward from slash point
+func spawn_slash_sparks(pos: Vector3, count: int = 5) -> void:
+	var color = Color(1.0, 1.0, 1.0)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 120.0
+	mat.initial_velocity_min = 3.0
+	mat.initial_velocity_max = 6.0
+	mat.gravity = Vector3(0, -6, 0)
+	mat.scale_min = 0.02
+	mat.scale_max = 0.05
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.15
+	particles.explosiveness = 1.0
+
+	var draw_pass = SphereMesh.new()
+	draw_pass.radius = 0.03
+	draw_pass.height = 0.06
+	var draw_mat = StandardMaterial3D.new()
+	draw_mat.emission_enabled = true
+	draw_mat.albedo_color = color
+	draw_mat.emission = color
+	draw_mat.emission_energy_multiplier = 5.0
+	draw_pass.surface_set_material(0, draw_mat)
+	particles.draw_pass_1 = draw_pass
+
+	_setup_and_emit(particles, pos, 0.5)
+
+## Cloud sword ground dust — brown/gray particles rising then falling
+func spawn_ground_dust(pos: Vector3, count: int = 8) -> void:
+	var color = Color(0.55, 0.45, 0.35, 0.6)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 45.0
+	mat.initial_velocity_min = 1.0
+	mat.initial_velocity_max = 2.5
+	mat.gravity = Vector3(0, -3, 0)
+	mat.scale_min = 0.06
+	mat.scale_max = 0.15
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.5
+	particles.explosiveness = 0.9
+
+	var draw_pass = SphereMesh.new()
+	draw_pass.radius = 0.06
+	draw_pass.height = 0.12
+	var draw_mat = StandardMaterial3D.new()
+	draw_mat.emission_enabled = true
+	draw_mat.albedo_color = color
+	draw_mat.emission = Color(0.45, 0.35, 0.25)
+	draw_mat.emission_energy_multiplier = 0.5
+	draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	draw_pass.surface_set_material(0, draw_mat)
+	particles.draw_pass_1 = draw_pass
+
+	_setup_and_emit(particles, pos, 1.0)
+
+## Hammer debris — rocky bits flying outward
+func spawn_hammer_debris(pos: Vector3, count: int = 12) -> void:
+	var color = Color(0.5, 0.35, 0.2)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 60.0
+	mat.initial_velocity_min = 2.0
+	mat.initial_velocity_max = 5.0
+	mat.gravity = Vector3(0, -8, 0)
+	mat.scale_min = 0.03
+	mat.scale_max = 0.08
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.6
+	particles.explosiveness = 1.0
+
+	var draw_pass = BoxMesh.new()
+	draw_pass.size = Vector3(0.03, 0.03, 0.03)
+	var draw_mat = StandardMaterial3D.new()
+	draw_mat.emission_enabled = true
+	draw_mat.albedo_color = color
+	draw_mat.emission = Color(0.4, 0.3, 0.15)
+	draw_mat.emission_energy_multiplier = 1.0
+	draw_pass.surface_set_material(0, draw_mat)
+	particles.draw_pass_1 = draw_pass
+
+	_setup_and_emit(particles, pos, 1.5)
+
+## Hammer dust cloud — rising brown-gray mist
+func spawn_hammer_dust(pos: Vector3, count: int = 8) -> void:
+	var color = Color(0.5, 0.45, 0.4, 0.4)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 40.0
+	mat.initial_velocity_min = 0.5
+	mat.initial_velocity_max = 1.5
+	mat.gravity = Vector3(0, 0.5, 0)
+	mat.scale_min = 0.1
+	mat.scale_max = 0.3
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.8
+	particles.explosiveness = 0.8
+
+	var draw_pass = SphereMesh.new()
+	draw_pass.radius = 0.12
+	draw_pass.height = 0.24
+	var draw_mat = StandardMaterial3D.new()
+	draw_mat.emission_enabled = true
+	draw_mat.albedo_color = color
+	draw_mat.emission = Color(0.4, 0.35, 0.3)
+	draw_mat.emission_energy_multiplier = 0.3
+	draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	draw_pass.surface_set_material(0, draw_mat)
+	particles.draw_pass_1 = draw_pass
+
+	_setup_and_emit(particles, pos, 1.5)
+
+## Whip crack spark — small white spark on enemy hit
+func spawn_whip_spark(pos: Vector3) -> void:
+	var color = Color(1.0, 0.9, 0.7)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 90.0
+	mat.initial_velocity_min = 1.5
+	mat.initial_velocity_max = 3.0
+	mat.gravity = Vector3(0, -5, 0)
+	mat.scale_min = 0.02
+	mat.scale_max = 0.04
+	mat.color = color
+
+	particles.amount = 3
+	particles.lifetime = 0.12
+	particles.explosiveness = 1.0
+
+	var draw_pass = SphereMesh.new()
+	draw_pass.radius = 0.02
+	draw_pass.height = 0.04
+	var draw_mat = StandardMaterial3D.new()
+	draw_mat.emission_enabled = true
+	draw_mat.albedo_color = color
+	draw_mat.emission = color
+	draw_mat.emission_energy_multiplier = 6.0
+	draw_pass.surface_set_material(0, draw_mat)
+	particles.draw_pass_1 = draw_pass
+
+	_setup_and_emit(particles, pos, 0.5)
+
 func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	var color = Color(1.0, 0.5, 0.1)
 	var particles = _get_particle()

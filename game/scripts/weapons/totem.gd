@@ -61,10 +61,81 @@ func _place_totem(level: int) -> void:
 	area.monitoring = true
 	var shape = CollisionShape3D.new()
 	var sphere = SphereShape3D.new()
-	sphere.radius = 4.0 + (level - 1) * 0.5
+	var area_radius = 4.0 + (level - 1) * 0.5
+	sphere.radius = area_radius
 	shape.shape = sphere
 	area.add_child(shape)
 	totem.add_child(area)
+
+	# -- Aura ring at ground level --
+	var aura_ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.1
+	torus.outer_radius = area_radius
+	torus.rings = 32
+	torus.ring_segments = 24
+	aura_ring.mesh = torus
+	aura_ring.position = Vector3(0, 0.05, 0)
+	var aura_mat = StandardMaterial3D.new()
+	aura_mat.albedo_color = Color(0.2, 0.6, 1.0, 0.3)
+	aura_mat.emission_enabled = true
+	aura_mat.emission = Color(0.2, 0.6, 1.0)
+	aura_mat.emission_energy_multiplier = 1.0
+	aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	aura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	aura_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	aura_ring.material_override = aura_mat
+	totem.add_child(aura_ring)
+
+	# -- Energy orb on top of totem --
+	var energy_orb = MeshInstance3D.new()
+	var orb_sphere = SphereMesh.new()
+	orb_sphere.radius = 0.15
+	orb_sphere.height = 0.3
+	energy_orb.mesh = orb_sphere
+	energy_orb.position = Vector3(0, 1.4, 0)
+	var orb_mat = StandardMaterial3D.new()
+	orb_mat.albedo_color = Color(0.3, 0.8, 1.0, 0.9)
+	orb_mat.emission_enabled = true
+	orb_mat.emission = Color(0.3, 0.8, 1.0)
+	orb_mat.emission_energy_multiplier = 2.0
+	orb_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	orb_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	energy_orb.material_override = orb_mat
+	totem.add_child(energy_orb)
+
+	# -- Small electric arc particles (intermittent) --
+	var arc_particles = GPUParticles3D.new()
+	arc_particles.amount = 4
+	arc_particles.lifetime = 0.3
+	arc_particles.emitting = false
+	arc_particles.position = Vector3(0, 0.5, 0)
+
+	var arc_mat = ParticleProcessMaterial.new()
+	arc_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	arc_mat.emission_sphere_radius = area_radius * 0.8
+	arc_mat.direction = Vector3(0, 1, 0)
+	arc_mat.spread = 90.0
+	arc_mat.initial_velocity_min = 0.5
+	arc_mat.initial_velocity_max = 1.5
+	arc_mat.gravity = Vector3(0, -2, 0)
+	arc_mat.scale_min = 0.5
+	arc_mat.scale_max = 1.5
+	arc_mat.color = Color(0.5, 0.8, 1.0)
+	arc_particles.process_material = arc_mat
+
+	var arc_draw = SphereMesh.new()
+	arc_draw.radius = 0.03
+	arc_draw.height = 0.06
+	var arc_draw_mat = StandardMaterial3D.new()
+	arc_draw_mat.albedo_color = Color(0.6, 0.9, 1.0)
+	arc_draw_mat.emission_enabled = true
+	arc_draw_mat.emission = Color(0.5, 0.85, 1.0)
+	arc_draw_mat.emission_energy_multiplier = 3.0
+	arc_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	arc_draw.material = arc_draw_mat
+	arc_particles.draw_pass_1 = arc_draw
+	totem.add_child(arc_particles)
 
 	# Attach damage script behavior via timer
 	var damage = int(WeaponDB.get_damage("totem", level))
@@ -75,6 +146,9 @@ func _place_totem(level: int) -> void:
 	script_node.set_meta("damage", damage)
 	script_node.set_meta("lifetime", lifetime)
 	script_node.set_meta("area", area)
+	script_node.set_meta("aura_ring", aura_ring)
+	script_node.set_meta("energy_orb", energy_orb)
+	script_node.set_meta("arc_particles", arc_particles)
 	totem.add_child(script_node)
 
 	active_totems.append(totem)

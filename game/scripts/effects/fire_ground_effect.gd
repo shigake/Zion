@@ -23,3 +23,7 @@ func _process(delta: float) -> void:
 	for child in get_children():
 		if child is MeshInstance3D and child.material_override:
 			child.material_override.albedo_color.a = alpha * 0.5
+		if child is GPUParticles3D:
+			# Stop emitting near end of life so particles wind down naturally
+			if timer >= lifetime * 0.7:
+				child.emitting = false

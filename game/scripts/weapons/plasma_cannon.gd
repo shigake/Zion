@@ -16,6 +16,9 @@ var beam_direction: Vector3 = Vector3.FORWARD
 @onready var charge_mesh: MeshInstance3D = $ChargeMesh
 
 var hit_enemies: Array = []
+var energy_ring: MeshInstance3D = null
+var charge_particles: GPUParticles3D = null
+var beam_pulse_time: float = 0.0
 
 func _ready() -> void:
 	beam_mesh.visible = false
@@ -24,6 +27,58 @@ func _ready() -> void:
 	beam_area.body_entered.connect(_on_body_entered)
 	# 3D model
 	ModelFactory.attach_weapon_model(charge_mesh, "plasma_cannon")
+
+	# -- Energy ring orbiting the charge sphere --
+	energy_ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.05
+	torus.outer_radius = 0.15
+	energy_ring.mesh = torus
+	var ring_mat = StandardMaterial3D.new()
+	ring_mat.albedo_color = Color(0.3, 0.8, 1.0, 0.7)
+	ring_mat.emission_enabled = true
+	ring_mat.emission = Color(0.3, 0.8, 1.0)
+	ring_mat.emission_energy_multiplier = 4.0
+	ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	energy_ring.material_override = ring_mat
+	energy_ring.visible = false
+	charge_mesh.add_child(energy_ring)
+
+	# -- Convergence particles (move toward center) --
+	charge_particles = GPUParticles3D.new()
+	charge_particles.amount = 10
+	charge_particles.lifetime = 0.5
+	charge_particles.emitting = false
+
+	var conv_mat = ParticleProcessMaterial.new()
+	conv_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	conv_mat.emission_sphere_radius = 1.0
+	conv_mat.direction = Vector3(0, 0, 0)
+	conv_mat.spread = 0.0
+	conv_mat.initial_velocity_min = 0.0
+	conv_mat.initial_velocity_max = 0.0
+	conv_mat.radial_velocity_min = -3.0
+	conv_mat.radial_velocity_max = -2.0
+	conv_mat.gravity = Vector3.ZERO
+	conv_mat.scale_min = 0.3
+	conv_mat.scale_max = 0.8
+	conv_mat.color = Color(0.4, 0.85, 1.0)
+	charge_particles.process_material = conv_mat
+
+	var dot_mesh = SphereMesh.new()
+	dot_mesh.radius = 0.02
+	dot_mesh.height = 0.04
+	var dot_mat = StandardMaterial3D.new()
+	dot_mat.albedo_color = Color(0.4, 0.85, 1.0)
+	dot_mat.emission_enabled = true
+	dot_mat.emission = Color(0.3, 0.8, 1.0)
+	dot_mat.emission_energy_multiplier = 3.0
+	dot_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	dot_mesh.material = dot_mat
+	charge_particles.draw_pass_1 = dot_mesh
+	charge_particles.visible = false
+	charge_mesh.add_child(charge_particles)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -37,22 +92,44 @@ func _process(delta: float) -> void:
 
 	if is_charging:
 		charge_timer -= delta
-		# Pulsing charge effect
+		# Pulsing charge effect with scale oscillation (0.8x to 1.2x)
 		var progress = 1.0 - (charge_timer / charge_duration)
-		var pulse = 0.3 + progress * 0.7
+		var base_scale = 0.3 + progress * 0.7
+		var pulse_offset = sin(charge_timer * 12.0) * 0.2 * base_scale
+		var pulse = base_scale + pulse_offset
 		charge_mesh.scale = Vector3(pulse, pulse, pulse)
+
+		# Rotate energy ring continuously
+		if energy_ring:
+			energy_ring.visible = true
+			energy_ring.rotation.y += delta * 5.0
+			energy_ring.rotation.x += delta * 2.5
+		if charge_particles:
+			charge_particles.visible = true
+			charge_particles.emitting = true
 
 		if charge_timer <= 0:
 			is_charging = false
 			charge_mesh.visible = false
+			if energy_ring:
+				energy_ring.visible = false
+			if charge_particles:
+				charge_particles.emitting = false
+				charge_particles.visible = false
 			_fire_beam(level)
 	elif is_firing:
 		fire_timer -= delta
+		# Beam width pulsing
+		beam_pulse_time += delta
+		var area_scale = beam_area.scale.x  # base scale set in _fire_beam
+		var pulse_w = 1.0 + sin(beam_pulse_time * 20.0) * 0.15
+		beam_mesh.scale.x = area_scale * pulse_w
 
 		if fire_timer <= 0:
 			is_firing = false
 			beam_mesh.visible = false
 			beam_area.monitoring = false
+			beam_pulse_time = 0.0
 			hit_enemies.clear()
 	else:
 		attack_timer -= delta

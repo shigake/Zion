@@ -37,6 +37,12 @@ func _summon(level: int) -> void:
 	_spawn_summon_circle(player_pos + offset)
 
 func _spawn_summon_circle(pos: Vector3) -> void:
+	# Container node for circle + particles
+	var container = Node3D.new()
+	container.global_position = pos
+	get_tree().current_scene.add_child(container)
+
+	# Dark summoning circle disc
 	var circle = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
 	disc.top_radius = 1.0
@@ -44,14 +50,57 @@ func _spawn_summon_circle(pos: Vector3) -> void:
 	disc.height = 0.05
 	circle.mesh = disc
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 1.0, 0.3, 0.8)
+	mat.albedo_color = Color(0.15, 0.4, 0.2, 0.7)
 	mat.emission_enabled = true
-	mat.emission = Color(0.2, 1.0, 0.3)
-	mat.emission_energy_multiplier = 3.0
+	mat.emission = Color(0.1, 0.8, 0.3)
+	mat.emission_energy_multiplier = 2.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	circle.material_override = mat
-	circle.global_position = pos
-	get_tree().current_scene.add_child(circle)
-	var tween = circle.create_tween()
-	tween.tween_property(mat, "albedo_color", Color(0.2, 1.0, 0.3, 0.0), 0.5)
-	tween.tween_callback(circle.queue_free)
+	container.add_child(circle)
+
+	# Rising soul particles (green/purple wisps)
+	var soul_particles = GPUParticles3D.new()
+	soul_particles.amount = 6
+	soul_particles.lifetime = 1.0
+	soul_particles.emitting = true
+	soul_particles.one_shot = false
+	var soul_mat = ParticleProcessMaterial.new()
+	soul_mat.direction = Vector3(0, 1, 0)
+	soul_mat.spread = 40.0
+	soul_mat.initial_velocity_min = 0.5
+	soul_mat.initial_velocity_max = 1.5
+	soul_mat.gravity = Vector3(0, 0.5, 0)
+	soul_mat.scale_min = 0.3
+	soul_mat.scale_max = 0.8
+	soul_mat.color = Color(0.2, 0.9, 0.4, 0.6)
+	soul_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	soul_mat.emission_ring_radius = 0.8
+	soul_mat.emission_ring_inner_radius = 0.2
+	soul_mat.emission_ring_height = 0.05
+	soul_mat.emission_ring_axis = Vector3(0, 1, 0)
+	soul_particles.process_material = soul_mat
+	# Draw pass: small green/purple wisp sphere
+	var wisp_mesh = SphereMesh.new()
+	wisp_mesh.radius = 0.04
+	wisp_mesh.height = 0.08
+	var wisp_mat = StandardMaterial3D.new()
+	wisp_mat.albedo_color = Color(0.15, 0.6, 0.3, 0.5)
+	wisp_mat.emission_enabled = true
+	wisp_mat.emission = Color(0.1, 0.8, 0.3)
+	wisp_mat.emission_energy_multiplier = 3.0
+	wisp_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wisp_mesh.surface_set_material(0, wisp_mat)
+	soul_particles.draw_pass_1 = wisp_mesh
+	container.add_child(soul_particles)
+
+	# Rotation + fade out animation
+	var tween = container.create_tween()
+	tween.set_parallel(true)
+	# Rotate circle (PI/4 rad/s over ~1.5s total lifetime)
+	tween.tween_property(circle, "rotation:y", PI / 4.0 * 1.5, 1.5)
+	# Fade out the disc
+	tween.tween_property(mat, "albedo_color:a", 0.0, 1.5)
+	# Fade emission too
+	tween.tween_property(mat, "emission_energy_multiplier", 0.0, 1.5)
+	tween.set_parallel(false)
+	tween.tween_callback(container.queue_free)

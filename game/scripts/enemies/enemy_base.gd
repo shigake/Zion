@@ -290,7 +290,7 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	shape.radius = 1.5
 	col.shape = shape
 	fire.add_child(col)
-	# Visual
+	# Visual — base fire disc
 	var mesh_inst = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
 	disc.top_radius = 1.5
@@ -298,13 +298,91 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	disc.height = 0.05
 	mesh_inst.mesh = disc
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.3, 0.0, 0.5)
+	mat.albedo_color = Color(0.8, 0.2, 0.05, 0.5)
 	mat.emission_enabled = true
 	mat.emission = Color(1.0, 0.4, 0.0)
-	mat.emission_energy_multiplier = 2.0
+	mat.emission_energy_multiplier = 1.5
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mesh_inst.material_override = mat
 	fire.add_child(mesh_inst)
+
+	# Flames — rising fire particles
+	var flames = GPUParticles3D.new()
+	flames.name = "Flames"
+	flames.amount = 25
+	flames.lifetime = 0.6
+	flames.position = Vector3(0, 0.05, 0)
+	var flame_mat = ParticleProcessMaterial.new()
+	flame_mat.direction = Vector3(0, 1, 0)
+	flame_mat.initial_velocity_min = 0.5
+	flame_mat.initial_velocity_max = 1.5
+	flame_mat.spread = 20.0
+	flame_mat.gravity = Vector3(0, 0.5, 0)
+	flame_mat.scale_min = 0.5
+	flame_mat.scale_max = 1.0
+	flame_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	flame_mat.emission_sphere_radius = 1.2
+	# Scale curve: start big, shrink as they rise
+	var flame_scale_curve = CurveTexture.new()
+	var fcurve = Curve.new()
+	fcurve.add_point(Vector2(0.0, 1.0))
+	fcurve.add_point(Vector2(0.5, 0.5))
+	fcurve.add_point(Vector2(1.0, 0.0))
+	flame_scale_curve.curve = fcurve
+	flame_mat.scale_curve = flame_scale_curve
+	# Color gradient: yellow -> orange -> red
+	var flame_color_ramp = GradientTexture1D.new()
+	var flame_gradient = Gradient.new()
+	flame_gradient.set_offset(0, 0.0)
+	flame_gradient.set_color(0, Color(1.0, 0.9, 0.2, 0.9))
+	flame_gradient.add_point(0.5, Color(1.0, 0.5, 0.1, 0.7))
+	flame_gradient.set_offset(2, 1.0)
+	flame_gradient.set_color(2, Color(0.8, 0.1, 0.0, 0.0))
+	flame_color_ramp.gradient = flame_gradient
+	flame_mat.color_ramp = flame_color_ramp
+	flames.process_material = flame_mat
+	var flame_mesh = SphereMesh.new()
+	flame_mesh.radius = 0.08
+	flame_mesh.height = 0.16
+	var flame_mesh_mat = StandardMaterial3D.new()
+	flame_mesh_mat.albedo_color = Color(1.0, 0.6, 0.1, 0.8)
+	flame_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	flame_mesh_mat.emission_enabled = true
+	flame_mesh_mat.emission = Color(1.0, 0.5, 0.1)
+	flame_mesh_mat.emission_energy_multiplier = 2.0
+	flame_mesh.material = flame_mesh_mat
+	flames.draw_pass_1 = flame_mesh
+	fire.add_child(flames)
+
+	# Embers — small bright dots floating up
+	var embers = GPUParticles3D.new()
+	embers.name = "Embers"
+	embers.amount = 8
+	embers.lifetime = 1.2
+	embers.position = Vector3(0, 0.1, 0)
+	var ember_mat = ParticleProcessMaterial.new()
+	ember_mat.direction = Vector3(0, 1, 0)
+	ember_mat.initial_velocity_min = 0.3
+	ember_mat.initial_velocity_max = 0.8
+	ember_mat.spread = 40.0
+	ember_mat.gravity = Vector3(0, 0.3, 0)
+	ember_mat.scale_min = 0.02
+	ember_mat.scale_max = 0.05
+	ember_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	ember_mat.emission_sphere_radius = 1.0
+	embers.process_material = ember_mat
+	var ember_mesh = SphereMesh.new()
+	ember_mesh.radius = 0.02
+	ember_mesh.height = 0.04
+	var ember_mesh_mat = StandardMaterial3D.new()
+	ember_mesh_mat.albedo_color = Color(1.0, 0.7, 0.2, 0.9)
+	ember_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ember_mesh_mat.emission_enabled = true
+	ember_mesh_mat.emission = Color(1.0, 0.6, 0.1)
+	ember_mesh_mat.emission_energy_multiplier = 3.0
+	ember_mesh.material = ember_mesh_mat
+	embers.draw_pass_1 = ember_mesh
+	fire.add_child(embers)
 	fire.global_position = pos
 	fire.monitoring = true
 	get_tree().current_scene.call_deferred("add_child", fire)

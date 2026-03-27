@@ -74,24 +74,140 @@ func _spawn_portal_effect(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos, Color(0.4, 0.0, 0.8))
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 1, 0), Color(0.6, 0.1, 1.0))
 
-	# Portal visual temporario
-	var portal = MeshInstance3D.new()
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.8
-	torus.outer_radius = 1.5
-	portal.mesh = torus
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.5, 0.0, 1.0, 0.7)
-	mat.emission_enabled = true
-	mat.emission = Color(0.6, 0.1, 1.0)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	portal.material_override = mat
-	portal.global_position = pos + Vector3(0, 0.5, 0)
-	portal.rotation.x = PI / 2.0
-	get_tree().current_scene.call_deferred("add_child", portal)
+	# Container for multi-layer portal
+	var container = Node3D.new()
+	container.global_position = pos + Vector3(0, 0.5, 0)
+	get_tree().current_scene.call_deferred("add_child", container)
 
-	# Fade out e remove
-	var tween = portal.create_tween()
-	tween.tween_property(mat, "albedo_color:a", 0.0, 1.0)
-	tween.tween_callback(portal.queue_free)
+	# --- Outer ring ---
+	var outer_ring = MeshInstance3D.new()
+	var outer_torus = TorusMesh.new()
+	outer_torus.inner_radius = 0.8
+	outer_torus.outer_radius = 1.5
+	outer_ring.mesh = outer_torus
+	var outer_mat = StandardMaterial3D.new()
+	outer_mat.albedo_color = Color(0.5, 0.0, 1.0, 0.7)
+	outer_mat.emission_enabled = true
+	outer_mat.emission = Color(0.6, 0.1, 1.0)
+	outer_mat.emission_energy_multiplier = 3.0
+	outer_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	outer_ring.material_override = outer_mat
+	outer_ring.rotation.x = PI / 2.0
+	container.add_child(outer_ring)
+
+	# --- Inner ring (opposite rotation, slightly different purple) ---
+	var inner_ring = MeshInstance3D.new()
+	var inner_torus = TorusMesh.new()
+	inner_torus.inner_radius = 0.4
+	inner_torus.outer_radius = 0.8
+	inner_ring.mesh = inner_torus
+	var inner_mat = StandardMaterial3D.new()
+	inner_mat.albedo_color = Color(0.7, 0.0, 0.9, 0.6)
+	inner_mat.emission_enabled = true
+	inner_mat.emission = Color(0.8, 0.2, 1.0)
+	inner_mat.emission_energy_multiplier = 2.5
+	inner_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	inner_ring.material_override = inner_mat
+	inner_ring.rotation.x = PI / 2.0
+	container.add_child(inner_ring)
+
+	# --- Center void (dark sphere "black hole") ---
+	var void_center = MeshInstance3D.new()
+	var void_sphere = SphereMesh.new()
+	void_sphere.radius = 0.3
+	void_sphere.height = 0.6
+	void_center.mesh = void_sphere
+	var void_mat = StandardMaterial3D.new()
+	void_mat.albedo_color = Color(0.05, 0.0, 0.1, 0.9)
+	void_mat.emission_enabled = true
+	void_mat.emission = Color(0.2, 0.0, 0.5)
+	void_mat.emission_energy_multiplier = 1.0
+	void_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	void_center.material_override = void_mat
+	container.add_child(void_center)
+
+	# --- Suction particles (moving toward center) ---
+	var suction_particles = GPUParticles3D.new()
+	suction_particles.amount = 8
+	suction_particles.lifetime = 0.6
+	suction_particles.emitting = true
+	suction_particles.one_shot = false
+	var suction_mat = ParticleProcessMaterial.new()
+	suction_mat.direction = Vector3(0, 0, 0)
+	suction_mat.spread = 180.0
+	suction_mat.initial_velocity_min = -3.0
+	suction_mat.initial_velocity_max = -1.5
+	suction_mat.gravity = Vector3(0, 0, 0)
+	suction_mat.scale_min = 0.2
+	suction_mat.scale_max = 0.5
+	suction_mat.color = Color(0.7, 0.2, 1.0, 0.8)
+	suction_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	suction_mat.emission_sphere_radius = 1.5
+	suction_mat.attractor_interaction_enabled = true
+	suction_particles.process_material = suction_mat
+	# Draw pass: bright purple dots
+	var dot_mesh = SphereMesh.new()
+	dot_mesh.radius = 0.02
+	dot_mesh.height = 0.04
+	var dot_mat = StandardMaterial3D.new()
+	dot_mat.albedo_color = Color(0.8, 0.3, 1.0, 0.8)
+	dot_mat.emission_enabled = true
+	dot_mat.emission = Color(0.7, 0.2, 1.0)
+	dot_mat.emission_energy_multiplier = 4.0
+	dot_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dot_mesh.surface_set_material(0, dot_mat)
+	suction_particles.draw_pass_1 = dot_mesh
+	container.add_child(suction_particles)
+
+	# --- Animate rotations + fade out ---
+	# Store references for the rotation script
+	container.set_meta("outer_ring", outer_ring)
+	container.set_meta("inner_ring", inner_ring)
+	container.set_meta("outer_mat", outer_mat)
+	container.set_meta("inner_mat", inner_mat)
+	container.set_meta("void_mat", void_mat)
+	container.set_meta("elapsed", 0.0)
+
+	var script = GDScript.new()
+	script.source_code = _get_portal_anim_script()
+	script.reload()
+	container.set_script(script)
+
+func _get_portal_anim_script() -> String:
+	return """extends Node3D
+
+const PORTAL_DURATION := 1.5
+
+var elapsed: float = 0.0
+
+func _process(delta: float) -> void:
+	elapsed += delta
+
+	# Rotate outer ring (2.0 rad/s)
+	var outer = get_meta("outer_ring") as MeshInstance3D
+	if outer and is_instance_valid(outer):
+		outer.rotation.y += delta * 2.0
+
+	# Rotate inner ring opposite (-3.0 rad/s)
+	var inner = get_meta("inner_ring") as MeshInstance3D
+	if inner and is_instance_valid(inner):
+		inner.rotation.y -= delta * 3.0
+
+	# Fade out near end
+	if elapsed > PORTAL_DURATION - 0.5:
+		var fade = (PORTAL_DURATION - elapsed) / 0.5
+		fade = clamp(fade, 0.0, 1.0)
+
+		var o_mat = get_meta("outer_mat") as StandardMaterial3D
+		if o_mat:
+			o_mat.albedo_color.a = 0.7 * fade
+		var i_mat = get_meta("inner_mat") as StandardMaterial3D
+		if i_mat:
+			i_mat.albedo_color.a = 0.6 * fade
+		var v_mat = get_meta("void_mat") as StandardMaterial3D
+		if v_mat:
+			v_mat.albedo_color.a = 0.9 * fade
+
+	if elapsed >= PORTAL_DURATION:
+		queue_free()
+"""

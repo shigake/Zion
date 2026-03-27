@@ -5,6 +5,7 @@ extends Node3D
 var points: Array[Vector3] = []
 var max_points: int = 15
 var trail_color: Color = Color(1, 1, 1, 0.6)
+var trail_color_tip: Color = Color(-1, -1, -1)  # Set to override tip color for gradient; (-1,-1,-1) means same as trail_color
 var trail_width: float = 0.15
 var _mesh_instance: MeshInstance3D
 
@@ -34,10 +35,17 @@ func _update_mesh() -> void:
 	var im = ImmediateMesh.new()
 	im.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 
+	var use_gradient = trail_color_tip.r >= 0.0
 	for i in range(points.size()):
 		var t = float(i) / float(points.size() - 1)
 		var alpha = t * trail_color.a
-		im.surface_set_color(Color(trail_color.r, trail_color.g, trail_color.b, alpha))
+		var c: Color
+		if use_gradient:
+			c = trail_color.lerp(trail_color_tip, t)
+			c.a = alpha
+		else:
+			c = Color(trail_color.r, trail_color.g, trail_color.b, alpha)
+		im.surface_set_color(c)
 
 		var width = trail_width * t
 		var up = Vector3.UP * width

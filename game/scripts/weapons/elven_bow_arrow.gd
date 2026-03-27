@@ -32,6 +32,39 @@ func _physics_process(delta: float) -> void:
 		has_ricocheted = true
 		var angle = randf_range(-PI, PI)
 		direction = direction.rotated(Vector3.UP, angle).normalized()
+		_spawn_ricochet_flash()
+
+func _spawn_ricochet_flash() -> void:
+	# Brief bright green flash on bounce
+	var flash = MeshInstance3D.new()
+	var flash_mesh = SphereMesh.new()
+	flash_mesh.radius = 0.01
+	flash_mesh.height = 0.02
+	flash.mesh = flash_mesh
+
+	var flash_mat = StandardMaterial3D.new()
+	flash_mat.albedo_color = Color(0.3, 1.0, 0.3)
+	flash_mat.emission_enabled = true
+	flash_mat.emission = Color(0.2, 1.0, 0.3)
+	flash_mat.emission_energy_multiplier = 4.0
+	flash.material_override = flash_mat
+	flash.scale = Vector3.ZERO
+
+	flash.global_position = global_position
+	get_tree().current_scene.add_child(flash)
+
+	# Scale up then down: 0 -> 0.3 -> 0 in 0.15s
+	var tween = flash.create_tween()
+	tween.tween_property(flash, "scale", Vector3(0.3, 0.3, 0.3) * 30.0, 0.075).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(flash, "scale", Vector3.ZERO, 0.075).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_callback(flash.queue_free)
+
+	# Green flash light
+	var light = OmniLight3D.new()
+	light.light_color = Color(0.2, 1.0, 0.3)
+	light.light_energy = 3.0
+	light.omni_range = 2.0
+	flash.add_child(light)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):

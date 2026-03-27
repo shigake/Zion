@@ -3,7 +3,7 @@ extends Node3D
 ## Cajado de Gelo — projetil lento que congela inimigos em area ao impactar.
 
 var attack_timer: float = 0.0
-var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
+var projectile_scene: PackedScene = preload("res://scenes/weapons/ice_staff_projectile.tscn")
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -54,7 +54,7 @@ func _fire(level: int) -> void:
 
 	var dmg = int(WeaponDB.get_damage("ice_staff", level))
 
-	# Create ice projectile — uses bullet scene but with custom on-hit
+	# Create ice crystal projectile
 	var bullet = ObjectPool.get_instance(projectile_scene)
 	bullet.global_position = player_pos + Vector3(0, 0.5, 0)
 	bullet.direction = direction.normalized()
@@ -81,6 +81,12 @@ func _freeze_area(pos: Vector3, level: int) -> void:
 	# Ice explosion particles
 	ParticleFactory.spawn_hit_particles(pos, Color(0.4, 0.8, 1.0))
 
+	# Spawn ice crystals growing from ground
+	_spawn_freeze_crystals(pos, freeze_duration)
+
+	# Spawn frost mist
+	_spawn_frost_mist(pos, freeze_duration)
+
 	# Find all enemies in radius and slow them
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	for e in enemies:
@@ -93,3 +99,92 @@ func _freeze_area(pos: Vector3, level: int) -> void:
 			# Apply slow effect if enemy supports it
 			if e.has_method("apply_slow"):
 				e.call_deferred("apply_slow", 0.4, freeze_duration)
+
+func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
+	var crystal_mat = StandardMaterial3D.new()
+	crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	crystal_mat.albedo_color = Color(0.4, 0.75, 1.0, 0.5)
+	crystal_mat.emission_enabled = true
+	crystal_mat.emission = Color(0.3, 0.7, 1.0)
+	crystal_mat.emission_energy_multiplier = 1.2
+
+	var num_crystals = randi_range(5, 8)
+	var container = Node3D.new()
+	container.global_position = pos
+	get_tree().current_scene.call_deferred("add_child", container)
+
+	for i in range(num_crystals):
+		var crystal = MeshInstance3D.new()
+		var mesh = BoxMesh.new()
+		var h = randf_range(0.15, 0.35)
+		var w = randf_range(0.03, 0.06)
+		mesh.size = Vector3(w, h, w)
+		crystal.mesh = mesh
+		crystal.material_override = crystal_mat
+
+		# Random position around impact point
+		var angle = randf() * TAU
+		var dist = randf_range(0.2, 1.2)
+		crystal.position = Vector3(cos(angle) * dist, h * 0.5, sin(angle) * dist)
+
+		# Slight random rotation for irregular look
+		crystal.rotation.x = randf_range(-0.3, 0.3)
+		crystal.rotation.z = randf_range(-0.3, 0.3)
+
+		# Start at zero scale, animate growing
+		crystal.scale = Vector3.ZERO
+		container.add_child(crystal)
+
+		var tween = crystal.create_tween()
+		var target_scale = Vector3(1.0, 1.0, 1.0) * randf_range(0.7, 1.3)
+		tween.tween_property(crystal, "scale", target_scale, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		tween.tween_interval(duration - 0.6)
+		tween.tween_property(crystal, "scale", Vector3.ZERO, 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+
+	# Remove container after duration
+	var cleanup_tween = container.create_tween()
+	cleanup_tween.tween_interval(duration + 0.1)
+	cleanup_tween.tween_callback(container.queue_free)
+
+func _spawn_frost_mist(pos: Vector3, duration: float) -> void:
+	var mist = GPUParticles3D.new()
+	mist.global_position = pos
+	mist.amount = 12
+	mist.lifetime = 1.0
+	mist.one_shot = false
+	mist.emitting = true
+
+	# Mist draw pass — white/blue transparent spheres
+	var mist_mesh = SphereMesh.new()
+	mist_mesh.radius = 0.08
+	mist_mesh.height = 0.16
+	mist.draw_pass_1 = mist_mesh
+
+	var mist_mat_override = StandardMaterial3D.new()
+	mist_mat_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mist_mat_override.albedo_color = Color(0.7, 0.85, 1.0, 0.15)
+	mist_mat_override.emission_enabled = true
+	mist_mat_override.emission = Color(0.5, 0.7, 1.0)
+	mist_mat_override.emission_energy_multiplier = 0.3
+	mist.material_override = mist_mat_override
+
+	var proc_mat = ParticleProcessMaterial.new()
+	proc_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	proc_mat.emission_sphere_radius = 1.5
+	proc_mat.direction = Vector3(0, 0.1, 0)
+	proc_mat.spread = 180.0
+	proc_mat.initial_velocity_min = 0.1
+	proc_mat.initial_velocity_max = 0.3
+	proc_mat.gravity = Vector3(0, -0.1, 0)
+	proc_mat.scale_min = 0.5
+	proc_mat.scale_max = 1.5
+	mist.process_material = proc_mat
+
+	get_tree().current_scene.call_deferred("add_child", mist)
+
+	# Stop emitting after duration, then free
+	var tween = mist.create_tween()
+	tween.tween_interval(duration - 1.0)
+	tween.tween_callback(func(): mist.emitting = false)
+	tween.tween_interval(1.5)
+	tween.tween_callback(mist.queue_free)
