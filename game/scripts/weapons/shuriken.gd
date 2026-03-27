@@ -34,8 +34,8 @@ func _ready() -> void:
 	_shuriken_mat.metallic = 0.9
 	_shuriken_mat.roughness = 0.2
 	_shuriken_mat.emission_enabled = true
-	_shuriken_mat.emission = Color(0.3, 0.6, 1.0)
-	_shuriken_mat.emission_energy_multiplier = 0.5
+	_shuriken_mat.emission = Color(0.3, 0.7, 1.0)
+	_shuriken_mat.emission_energy_multiplier = 0.8
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -95,21 +95,25 @@ func _apply_shuriken_mesh(bullet: Node) -> void:
 	spin_node.set_script(_ShurikenSpinScript)
 	mesh_node.add_child(spin_node)
 
-	# Blade 1 — horizontal bar
-	var blade1_mesh = BoxMesh.new()
-	blade1_mesh.size = Vector3(0.01, 0.15, 0.05)
-	var blade1 = MeshInstance3D.new()
-	blade1.mesh = blade1_mesh
-	blade1.material_override = _shuriken_mat
-	spin_node.add_child(blade1)
+	# 4 thin blades at 0, 45, 90, 135 degrees forming a proper 4-point star
+	var blade_angles := [0.0, 45.0, 90.0, 135.0]
+	for angle in blade_angles:
+		var blade_mesh = BoxMesh.new()
+		blade_mesh.size = Vector3(0.22, 0.008, 0.04)  # long, very thin, narrow
+		var blade = MeshInstance3D.new()
+		blade.mesh = blade_mesh
+		blade.material_override = _shuriken_mat
+		blade.rotation.y = deg_to_rad(angle)
+		spin_node.add_child(blade)
 
-	# Blade 2 — vertical bar (crossed)
-	var blade2_mesh = BoxMesh.new()
-	blade2_mesh.size = Vector3(0.01, 0.05, 0.15)
-	var blade2 = MeshInstance3D.new()
-	blade2.mesh = blade2_mesh
-	blade2.material_override = _shuriken_mat
-	spin_node.add_child(blade2)
+	# Center hub — small metallic sphere
+	var hub_mesh = SphereMesh.new()
+	hub_mesh.radius = 0.02
+	hub_mesh.height = 0.04
+	var hub = MeshInstance3D.new()
+	hub.mesh = hub_mesh
+	hub.material_override = _shuriken_mat
+	spin_node.add_child(hub)
 
 # Inline spin script for the shuriken star
 var _ShurikenSpinScript: GDScript = null
