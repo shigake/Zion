@@ -937,43 +937,4 @@ func _generate_underwater_light_rays() -> void:
 ## ─── ILUMINACAO AMBIENTE BotW ────────────────────────────────────────────────
 
 func _generate_ambient_lights() -> void:
-	var light_configs: Array[Dictionary] = [
-		{"color": Color(0.1, 0.3, 0.85), "energy": 0.5},   # Azul profundo
-		{"color": Color(0.0, 0.55, 0.65), "energy": 0.45},  # Teal
-		{"color": Color(0.15, 0.45, 0.75), "energy": 0.4},  # Azul medio
-		{"color": Color(0.0, 0.7, 0.6), "energy": 0.5},     # Ciano esverdeado
-		{"color": Color(0.1, 0.2, 0.6), "energy": 0.35},    # Azul escuro
-		{"color": Color(0.0, 0.8, 0.8), "energy": 0.55},    # Turquesa
-		{"color": Color(0.2, 0.6, 0.9), "energy": 0.45},    # Azul claro
-	]
-
-	for i in range(14):
-		var light = OmniLight3D.new()
-		var config = light_configs[rng.randi() % light_configs.size()]
-
-		## Algumas luzes posicionadas perto de corais (uplighting)
-		var x: float
-		var z: float
-		var y: float
-		if i < 6:
-			## Luzes baixas perto do chao (uplighting em coral)
-			x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-			z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-			y = rng.randf_range(0.3, 1.5)
-		elif i < 10:
-			## Luzes medias
-			x = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-			z = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-			y = rng.randf_range(2.0, 5.0)
-		else:
-			## Luzes altas (simula luz vinda de cima)
-			x = rng.randf_range(-area_size * 0.5, area_size * 0.5)
-			z = rng.randf_range(-area_size * 0.5, area_size * 0.5)
-			y = rng.randf_range(6.0, 10.0)
-
-		light.position = Vector3(x, y, z)
-		light.light_color = config["color"]
-		light.light_energy = config["energy"]
-		light.omni_range = rng.randf_range(8.0, 14.0)
-		light.omni_attenuation = 1.8
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source

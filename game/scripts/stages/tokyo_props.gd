@@ -747,33 +747,4 @@ func _generate_glitch_particles() -> void:
 ## ===================== ILUMINACAO NEON DRAMATICA =====================
 
 func _generate_neon_lights() -> void:
-	## Cores com mais contraste — mistura quente e fria
-	var dramatic_colors: Array[Color] = [
-		Color(1.0, 0.0, 0.5),   ## Rosa neon
-		Color(0.0, 0.8, 1.0),   ## Ciano neon
-		Color(0.5, 0.0, 1.0),   ## Roxo neon
-		Color(1.0, 0.3, 0.0),   ## Laranja quente
-		Color(0.0, 1.0, 0.3),   ## Verde neon
-		Color(1.0, 0.6, 0.2),   ## Amarelo quente
-		Color(0.0, 0.5, 1.0),   ## Azul intenso
-		Color(1.0, 0.0, 0.8),   ## Magenta
-	]
-
-	for i in range(20):
-		var light = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		var z = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-
-		## Variar altura — algumas perto do chao, outras mais altas
-		var y_pos: float
-		if i < 8:
-			y_pos = rng.randf_range(1.0, 2.5)   ## Perto do chao para drama
-		else:
-			y_pos = rng.randf_range(2.5, 5.0)
-
-		light.position = Vector3(x, y_pos, z)
-		light.light_color = dramatic_colors[rng.randi() % dramatic_colors.size()]
-		light.light_energy = rng.randf_range(0.4, 0.9)
-		light.omni_range = rng.randf_range(6.0, 12.0)
-		light.omni_attenuation = 2.0
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source

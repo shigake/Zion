@@ -742,27 +742,7 @@ func _generate_candle_graves() -> void:
 ## Luzes ambiente com variedade de cores fantasmagoricas
 ## -------------------------------------------------------
 func _generate_ambient_lights() -> void:
-	var ghost_colors: Array[Color] = [
-		Color(0.6, 0.75, 0.95),   ## Azul palido
-		Color(0.4, 0.2, 0.7),     ## Roxo sombrio
-		Color(0.2, 0.6, 0.4),     ## Verde espectral
-		Color(0.3, 0.3, 0.9),     ## Azul profundo
-		Color(0.5, 0.15, 0.6),    ## Roxo escuro
-		Color(0.15, 0.7, 0.5),    ## Ciano fantasma
-		Color(0.7, 0.3, 0.8),     ## Magenta suave
-		Color(0.1, 0.5, 0.7),     ## Azul turquesa
-	]
-
-	for i in range(num_lights):
-		var light = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		var z = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		light.position = Vector3(x, rng.randf_range(1.0, 3.0), z)
-		light.light_color = ghost_colors[rng.randi() % ghost_colors.size()]
-		light.light_energy = rng.randf_range(0.6, 2.0)
-		light.omni_range = rng.randf_range(10.0, 22.0)
-		light.omni_attenuation = rng.randf_range(1.5, 2.5)
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source
 
 ## -------------------------------------------------------
 ## Nevoa no chao — duas camadas com alturas diferentes

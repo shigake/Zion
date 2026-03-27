@@ -983,43 +983,7 @@ func _generate_wildflowers() -> void:
 ## ─── ILUMINACAO GOLDEN HOUR BotW ─────────────────────────────────────────────
 
 func _generate_ambient_lights() -> void:
-	var light_configs: Array[Dictionary] = [
-		{"color": Color(0.95, 0.75, 0.3), "energy": 0.5},  # Dourado quente
-		{"color": Color(0.9, 0.55, 0.2), "energy": 0.45},  # Laranja por-do-sol
-		{"color": Color(1.0, 0.85, 0.4), "energy": 0.4},   # Amarelo suave
-		{"color": Color(0.85, 0.5, 0.25), "energy": 0.35},  # Ambar
-		{"color": Color(1.0, 0.7, 0.35), "energy": 0.5},   # Golden
-	]
-
-	for i in range(10):
-		var light = OmniLight3D.new()
-		var config = light_configs[rng.randi() % light_configs.size()]
-
-		var x: float
-		var z: float
-		var y: float
-		if i < 4:
-			## Luzes perto de estruturas (dramaticas)
-			x = rng.randf_range(-area_size * 0.4, area_size * 0.4)
-			z = rng.randf_range(-area_size * 0.4, area_size * 0.4)
-			y = rng.randf_range(1.5, 3.0)
-		elif i < 7:
-			## Luzes medias espalhadas
-			x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-			z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-			y = rng.randf_range(3.0, 5.0)
-		else:
-			## Luzes altas (simula sol)
-			x = rng.randf_range(-area_size * 0.3, area_size * 0.3)
-			z = rng.randf_range(-area_size * 0.3, area_size * 0.3)
-			y = rng.randf_range(5.0, 8.0)
-
-		light.position = Vector3(x, y, z)
-		light.light_color = config["color"]
-		light.light_energy = config["energy"]
-		light.omni_range = rng.randf_range(10.0, 16.0)
-		light.omni_attenuation = 1.8
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source
 
 ## ─── POEIRA GOLDEN HOUR ──────────────────────────────────────────────────────
 

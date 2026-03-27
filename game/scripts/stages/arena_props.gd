@@ -874,53 +874,7 @@ func _generate_dust_devil() -> void:
 
 ## ---- ILUMINACAO DRAMATICA DA ARENA ----
 func _generate_arena_lighting() -> void:
-	## Luar azul frio vindo de cima
-	var moonlight = DirectionalLight3D.new()
-	moonlight.light_color = Color(0.4, 0.5, 0.8)
-	moonlight.light_energy = 0.3
-	moonlight.rotation = Vector3(-1.2, 0.5, 0)
-	add_child(moonlight)
-
-	## Luzes quentes douradas espalhadas (como se vindas das tochas ao longe)
-	for i in range(8):
-		var angle = (float(i) / 8.0) * TAU
-		var radius = area_size * 0.4
-		var light = OmniLight3D.new()
-		light.position = Vector3(
-			cos(angle) * radius,
-			rng.randf_range(3.0, 5.0),
-			sin(angle) * radius
-		)
-		light.light_color = Color(1.0, 0.7, 0.3)
-		light.light_energy = 0.5
-		light.omni_range = 15.0
-		light.omni_attenuation = 2.0
-		add_child(light)
-
-	## Luzes de destaque azuladas nos cantos
-	for i in range(4):
-		var angle = (float(i) / 4.0) * TAU + PI / 4.0
-		var radius = area_size * 0.65
-		var light = OmniLight3D.new()
-		light.position = Vector3(
-			cos(angle) * radius,
-			6.0,
-			sin(angle) * radius
-		)
-		light.light_color = Color(0.3, 0.4, 0.7)
-		light.light_energy = 0.35
-		light.omni_range = 12.0
-		light.omni_attenuation = 2.5
-		add_child(light)
-
-	## Luz central quente para o centro da arena
-	var center_light = OmniLight3D.new()
-	center_light.position = Vector3(0, 8, 0)
-	center_light.light_color = Color(1.0, 0.85, 0.5)
-	center_light.light_energy = 0.6
-	center_light.omni_range = 20.0
-	center_light.omni_attenuation = 1.5
-	add_child(center_light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source
 
 ## ---- MECANICA: MULTIDAO JOGA ITEM ----
 func _crowd_throw_item() -> void:

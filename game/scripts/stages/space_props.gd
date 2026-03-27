@@ -987,51 +987,7 @@ func _generate_damaged_sections() -> void:
 
 ## ---- ILUMINACAO AMBIENTE (MISTURA FRIO + QUENTE) ----
 func _generate_ambient_lights() -> void:
-	## Luzes azuis/brancas da estacao (frias)
-	for i in range(8):
-		var light = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-		var z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-		light.position = Vector3(x, 3.0, z)
-		light.light_color = Color(0.5, 0.7, 1.0)
-		light.light_energy = 0.45
-		light.omni_range = 10.0
-		light.omni_attenuation = 2.0
-		add_child(light)
-
-	## Luzes ambar de emergencia (quentes)
-	for i in range(4):
-		var light = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.5, area_size * 0.5)
-		var z = rng.randf_range(-area_size * 0.5, area_size * 0.5)
-		light.position = Vector3(x, 2.5, z)
-		light.light_color = Color(1.0, 0.7, 0.3)
-		light.light_energy = 0.35
-		light.omni_range = 8.0
-		light.omni_attenuation = 2.5
-		add_child(light)
-
-	## Luz direcional fria de cima (iluminacao geral da estacao)
-	var station_light = DirectionalLight3D.new()
-	station_light.light_color = Color(0.5, 0.6, 0.8)
-	station_light.light_energy = 0.25
-	station_light.rotation = Vector3(-1.0, 0.3, 0)
-	add_child(station_light)
-
-	## Luzes de acento roxas/cyan em cantos
-	for i in range(4):
-		var angle = (float(i) / 4.0) * TAU + PI / 4.0
-		var radius = area_size * 0.5
-		var light = OmniLight3D.new()
-		light.position = Vector3(cos(angle) * radius, 4.0, sin(angle) * radius)
-		if i % 2 == 0:
-			light.light_color = Color(0.5, 0.2, 0.8)
-		else:
-			light.light_color = Color(0.1, 0.8, 0.7)
-		light.light_energy = 0.25
-		light.omni_range = 10.0
-		light.omni_attenuation = 2.0
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source
 
 ## ---- PARTICULAS DE ESTRELAS (MAIS DENSAS + SHOOTING STARS) ----
 func _generate_star_particles() -> void:

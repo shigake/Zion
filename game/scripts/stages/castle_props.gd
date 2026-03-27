@@ -591,14 +591,8 @@ func _generate_dark_zones() -> void:
 		vis_inst.position.y = 0.02
 		zone_node.add_child(vis_inst)
 
-		## Luz roxa/azul de acento na zona escura
-		var accent = OmniLight3D.new()
-		accent.position.y = 1.5
-		accent.light_color = Color(0.3, 0.1, 0.6)
-		accent.light_energy = 0.4
-		accent.omni_range = zone_size * 0.6
-		accent.omni_attenuation = 2.5
-		zone_node.add_child(accent)
+		## Luz roxa/azul de acento na zona escura — removed (orphan light)
+		pass
 
 		## Area3D
 		var area = Area3D.new()
@@ -1358,41 +1352,4 @@ func _generate_bat_particles() -> void:
 ## ---- Iluminacao atmosferica (mix quente/fria, 15+ luzes) ----
 
 func _generate_atmospheric_lights() -> void:
-	## Luzes de luar frio (azul/prata) — simulando luz entrando pelas janelas
-	for i in range(6):
-		var moon = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		var z = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		moon.position = Vector3(x, rng.randf_range(4.0, 7.0), z)
-		moon.light_color = Color(0.6, 0.65, 0.9)
-		moon.light_energy = 0.3
-		moon.omni_range = 12.0
-		moon.omni_attenuation = 2.0
-		add_child(moon)
-
-	## Luzes quentes suaves (laranja/dourado) — velas e tochas dispersas
-	for i in range(5):
-		var warm = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.5, area_size * 0.5)
-		var z = rng.randf_range(-area_size * 0.5, area_size * 0.5)
-		warm.position = Vector3(x, rng.randf_range(1.5, 3.5), z)
-		warm.light_color = Color(1.0, 0.7, 0.35)
-		warm.light_energy = 0.4
-		warm.omni_range = 8.0
-		warm.omni_attenuation = 2.5
-		add_child(warm)
-
-	## Luzes de acento dramaticas (vermelho/roxo)
-	for i in range(4):
-		var accent = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-		var z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-		accent.position = Vector3(x, rng.randf_range(0.5, 2.0), z)
-		if rng.randi() % 2 == 0:
-			accent.light_color = Color(0.6, 0.1, 0.15)
-		else:
-			accent.light_color = Color(0.3, 0.1, 0.5)
-		accent.light_energy = 0.25
-		accent.omni_range = 6.0
-		accent.omni_attenuation = 3.0
-		add_child(accent)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source

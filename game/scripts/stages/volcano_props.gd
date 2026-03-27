@@ -715,30 +715,4 @@ func _generate_ember_particles() -> void:
 ## ===================== ILUMINACAO ATMOSFERICA =====================
 
 func _generate_ambient_lights() -> void:
-	var light_colors: Array[Color] = [
-		Color(1.0, 0.3, 0.0),   ## Laranja quente
-		Color(1.0, 0.5, 0.1),   ## Laranja claro
-		Color(0.8, 0.2, 0.0),   ## Vermelho escuro
-		Color(1.0, 0.15, 0.0),  ## Vermelho fogo
-		Color(1.0, 0.6, 0.0),   ## Amarelo quente
-		Color(0.9, 0.1, 0.05),  ## Vermelho intenso
-	]
-
-	for i in range(16):
-		var light = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		var z = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-
-		## Algumas luzes perto do chao para uplighting dramatico, outras mais altas
-		var y_pos: float
-		if i < 6:
-			y_pos = rng.randf_range(0.3, 1.0)  ## Perto da lava
-		else:
-			y_pos = rng.randf_range(1.5, 4.0)
-
-		light.position = Vector3(x, y_pos, z)
-		light.light_color = light_colors[rng.randi() % light_colors.size()]
-		light.light_energy = rng.randf_range(0.4, 0.9)
-		light.omni_range = rng.randf_range(10.0, 16.0)
-		light.omni_attenuation = 2.0
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source

@@ -861,22 +861,4 @@ func _on_buff_mushroom_entered(body: Node3D, mushroom: Node3D) -> void:
 ## Luzes ambiente com tons magicos — mais luzes, cores variadas
 ## -------------------------------------------------------
 func _generate_ambient_lights() -> void:
-	var light_colors: Array[Color] = [
-		Color(0.2, 0.8, 0.3),     ## Verde floresta
-		Color(0.3, 0.3, 0.9),     ## Azul
-		Color(0.6, 0.2, 0.8),     ## Roxo
-		Color(0.8, 0.7, 0.2),     ## Dourado
-		Color(0.1, 0.7, 0.5),     ## Ciano
-		Color(0.4, 0.9, 0.4),     ## Verde claro
-	]
-
-	for i in range(15):
-		var light = OmniLight3D.new()
-		var x = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		var z = rng.randf_range(-area_size * 0.7, area_size * 0.7)
-		light.position = Vector3(x, rng.randf_range(1.5, 3.5), z)
-		light.light_color = light_colors[rng.randi() % light_colors.size()]
-		light.light_energy = rng.randf_range(0.4, 1.2)
-		light.omni_range = rng.randf_range(8.0, 18.0)
-		light.omni_attenuation = rng.randf_range(1.5, 2.5)
-		add_child(light)
+	return  ## Orphan OmniLight3D lights removed — no visual mesh source
