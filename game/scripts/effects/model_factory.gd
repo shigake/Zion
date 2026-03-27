@@ -972,6 +972,55 @@ func create_mimic_model() -> Node3D:
 const KENNEY_NATURE := "res://assets/models/downloaded/kenney/nature-kit/Models/GLTF format/"
 const KENNEY_DUNGEON := "res://assets/models/downloaded/kenney/mini-dungeon/Models/GLB format/"
 const KAYKIT_GAME := "res://assets/models/downloaded/kaykit/mini-game-variety/Models/gltf/"
+const KAYKIT_ADVENTURERS := "res://assets/models/downloaded/kaykit/adventurers/KayKit_Adventurers_2.0_FREE/Characters/gltf/"
+const KAYKIT_SKELETONS := "res://assets/models/downloaded/kaykit/skeletons/KayKit_Skeletons_1.1_FREE/characters/gltf/"
+const KENNEY_DUNGEON_CHARS := "res://assets/models/downloaded/kenney/mini-dungeon/Models/GLB format/"
+
+## Mapa personagem -> arquivo .glb KayKit Adventurers
+const CHARACTER_GLB_MAP := {
+	"ronin":      "Rogue_Hooded.glb",
+	"soldado":    "Knight.glb",
+	"mago":       "Mage.glb",
+	"berserker":  "Barbarian.glb",
+	"ninja":      "Rogue.glb",
+	"necro":      "Mage.glb",
+	"pirata":     "Ranger.glb",
+	"engenheiro": "Knight.glb",
+	"vampiro":    "Rogue_Hooded.glb",
+	"gladiador":  "Barbarian.glb",
+	"chef":       "Mage.glb",
+	"mystery":    "Rogue_Hooded.glb",
+}
+
+## Mapa inimigo -> arquivo .glb KayKit Skeletons
+const ENEMY_GLB_MAP := {
+	"Skeleton":       "Skeleton_Warrior.glb",
+	"SkeletonArcher": "Skeleton_Rogue.glb",
+	"ZombieRunner":   "Skeleton_Minion.glb",
+	"Slime":          "Skeleton_Minion.glb",
+	"SlimeBig":       "Skeleton_Warrior.glb",
+	"Bat":            "Skeleton_Minion.glb",
+	"Ghost":          "Skeleton_Minion.glb",
+	"GhostWhite":     "Skeleton_Minion.glb",
+	"GhostGreen":     "Skeleton_Minion.glb",
+	"GhostBlue":      "Skeleton_Minion.glb",
+	"GhostRed":       "Skeleton_Warrior.glb",
+	"Tank":           "Skeleton_Warrior.glb",
+	"Bomber":         "Skeleton_Rogue.glb",
+	"Swarm":          "Skeleton_Minion.glb",
+	"Mimic":          "Skeleton_Rogue.glb",
+	"ToothFairy":     "Skeleton_Minion.glb",
+	"BossNecromancer": "Skeleton_Mage.glb",
+	"BossFairyQueen": "Skeleton_Mage.glb",
+	"BossAlienCow":   "Skeleton_Warrior.glb",
+	"BossAIOverlord": "Skeleton_Mage.glb",
+	"BossDemonLord":  "Skeleton_Warrior.glb",
+	"BossLeviathan":  "Skeleton_Warrior.glb",
+	"BossEmperor":    "Skeleton_Warrior.glb",
+	"BossSingularity": "Skeleton_Mage.glb",
+	"BossDracula":    "Skeleton_Mage.glb",
+	"BossSugarKing":  "Skeleton_Warrior.glb",
+}
 
 ## Escala dos modelos KayKit/Kenney para caber no jogo
 const CHARACTER_SCALE := Vector3(1.2, 1.2, 1.2)
@@ -1190,9 +1239,15 @@ func apply_model_materials(root: Node3D, base_color: Color) -> void:
 				VisualSetup.apply_cel_shader_to_mesh(child, base_color)
 
 func get_model_for_character(char_id: String) -> Node3D:
-	# Try loading .glb model first (KayKit Adventurers)
-	var glb_path = "res://assets/models/characters/%s.glb" % char_id
-	var loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
+	# Try loading .glb model from KayKit Adventurers
+	var file_name: String = CHARACTER_GLB_MAP.get(char_id, "")
+	var loaded: Node3D = null
+	if file_name != "":
+		var glb_path = KAYKIT_ADVENTURERS + file_name
+		loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
+	if loaded == null:
+		var glb_path = "res://assets/models/characters/%s.glb" % char_id
+		loaded = _try_load_glb(glb_path, CHARACTER_SCALE)
 	if loaded:
 		if LogManager:
 			LogManager.info("ModelFactory", "Loaded GLB for character '%s'. Children: %d" % [char_id, loaded.get_child_count()])
@@ -1234,31 +1289,6 @@ func _clean_enemy_name(raw_name: String) -> String:
 
 func get_model_for_enemy(enemy_name: String) -> Node3D:
 	var clean_name = _clean_enemy_name(enemy_name)
-	# Map enemy names to .glb file names
-	var glb_map = {
-		"Slime": "slime", "SlimeBig": "slime_big",
-		"Bat": "bat", "Skeleton": "skeleton",
-		"SkeletonArcher": "skeleton_archer",
-		"ZombieRunner": "zombie", "Ghost": "ghost",
-		"Tank": "tank", "Bomber": "bomber",
-		"Swarm": "swarm", "Mimic": "mimic",
-		"GhostWhite": "ghost", "GhostGreen": "ghost",
-		"GhostBlue": "ghost", "GhostRed": "ghost",
-		"ToothFairy": "bat",
-		"BossNecromancer": "boss_necromancer",
-		"BossFairyQueen": "boss_fairy_queen",
-		"BossAlienCow": "boss_alien_cow",
-		"BossAIOverlord": "boss_ai_overlord",
-		"BossDemonLord": "boss_demon_lord",
-		"BossLeviathan": "boss_leviathan",
-		"BossEmperor": "boss_emperor",
-		"BossSingularity": "boss_singularity",
-		"BossDracula": "boss_dracula",
-		"BossSugarKing": "boss_sugar_king",
-	}
-	# Try .glb model
-	var file_name = glb_map.get(clean_name, clean_name.to_snake_case())
-	var folder = "bosses" if clean_name.begins_with("Boss") else "enemies"
 	var s: Vector3
 	if clean_name.begins_with("Boss"):
 		s = BOSS_SCALE
@@ -1266,6 +1296,18 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		s = ENEMY_SCALE_MAP[clean_name]
 	else:
 		s = ENEMY_SCALE
+	# Try KayKit Skeletons first
+	var skel_file: String = ENEMY_GLB_MAP.get(clean_name, "")
+	if skel_file != "":
+		var skel_path = KAYKIT_SKELETONS + skel_file
+		var loaded = _try_load_glb(skel_path, s)
+		if loaded:
+			if LogManager:
+				LogManager.info("ModelFactory", "loaded KayKit skeleton for '%s'" % clean_name)
+			return loaded
+	# Try legacy path
+	var file_name = clean_name.to_snake_case()
+	var folder = "bosses" if clean_name.begins_with("Boss") else "enemies"
 	var glb_path = "res://assets/models/%s/%s.glb" % [folder, file_name]
 	var loaded = _try_load_glb(glb_path, s)
 	if loaded:
