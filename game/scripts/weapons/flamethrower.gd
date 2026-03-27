@@ -14,12 +14,82 @@ var fire_direction: Vector3 = Vector3.FORWARD
 @onready var flame_mesh: MeshInstance3D = $FlameMesh
 
 var burning_enemies: Dictionary = {}  # enemy_id -> burn_timer
+var ember_particles: GPUParticles3D = null
+var heat_shimmer: MeshInstance3D = null
+var _shimmer_time: float = 0.0
 
 func _ready() -> void:
 	flame_mesh.visible = false
 	flame_area.monitoring = false
 	# 3D model
 	ModelFactory.attach_weapon_model(flame_mesh, "flamethrower")
+	# Ember/spark particles
+	_create_ember_particles()
+	# Heat shimmer overlay
+	_create_heat_shimmer()
+
+func _create_ember_particles() -> void:
+	ember_particles = GPUParticles3D.new()
+	ember_particles.emitting = false
+	ember_particles.amount = 24
+	ember_particles.lifetime = 0.8
+	ember_particles.explosiveness = 0.1
+	ember_particles.randomness = 0.6
+	ember_particles.visibility_aabb = AABB(Vector3(-3, -1, -5), Vector3(6, 4, 10))
+
+	var mat = ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 35.0
+	mat.initial_velocity_min = 1.5
+	mat.initial_velocity_max = 3.5
+	mat.gravity = Vector3(0, -1.0, 0)
+	mat.scale_min = 0.03
+	mat.scale_max = 0.08
+	mat.color = Color(1.0, 0.6, 0.15, 0.9)
+
+	# Color ramp: orange -> red -> transparent
+	var color_ramp = GradientTexture1D.new()
+	var grad = Gradient.new()
+	grad.set_color(0, Color(1.0, 0.7, 0.2, 1.0))
+	grad.add_point(0.5, Color(1.0, 0.3, 0.05, 0.7))
+	grad.set_color(1, Color(0.6, 0.1, 0.0, 0.0))
+	color_ramp.gradient = grad
+	mat.color_ramp = color_ramp
+
+	ember_particles.process_material = mat
+
+	# Simple sphere mesh for each ember
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.04
+	sphere.height = 0.08
+	sphere.radial_segments = 4
+	sphere.rings = 2
+	var ember_mat = StandardMaterial3D.new()
+	ember_mat.emission_enabled = true
+	ember_mat.emission = Color(1.0, 0.5, 0.1, 1.0)
+	ember_mat.emission_energy_multiplier = 3.0
+	ember_mat.transparency = 1
+	ember_mat.albedo_color = Color(1.0, 0.6, 0.2, 0.9)
+	sphere.material = ember_mat
+	ember_particles.draw_pass_1 = sphere
+
+	flame_mesh.add_child(ember_particles)
+
+func _create_heat_shimmer() -> void:
+	heat_shimmer = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = Vector3(2.6, 0.5, 4.6)
+	var shimmer_mat = StandardMaterial3D.new()
+	shimmer_mat.transparency = 1
+	shimmer_mat.albedo_color = Color(1.0, 0.9, 0.8, 0.07)
+	shimmer_mat.emission_enabled = true
+	shimmer_mat.emission = Color(1.0, 0.7, 0.3, 1.0)
+	shimmer_mat.emission_energy_multiplier = 0.5
+	shimmer_mat.no_depth_test = true
+	box.material = shimmer_mat
+	heat_shimmer.mesh = box
+	heat_shimmer.position = Vector3(0, 0.15, -0.1)
+	flame_mesh.add_child(heat_shimmer)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -40,6 +110,15 @@ func _process(delta: float) -> void:
 	for key in to_remove:
 		burning_enemies.erase(key)
 
+	# Animate heat shimmer while visible
+	if is_firing and heat_shimmer:
+		_shimmer_time += delta * 4.0
+		var shimmer_scale_x = 1.0 + sin(_shimmer_time * 3.7) * 0.08
+		var shimmer_scale_z = 1.0 + cos(_shimmer_time * 2.9) * 0.06
+		var shimmer_y = 0.15 + sin(_shimmer_time * 5.3) * 0.04
+		heat_shimmer.scale = Vector3(shimmer_scale_x, 1.0, shimmer_scale_z)
+		heat_shimmer.position.y = shimmer_y
+
 	if is_firing:
 		fire_timer -= delta
 		tick_timer -= delta
@@ -54,7 +133,7 @@ func _process(delta: float) -> void:
 
 		if fire_timer <= 0:
 			is_firing = false
-			flame_mesh.visible = false
+			_set_flame_visible(false)
 			flame_area.monitoring = false
 			cooldown_timer = cooldown
 	else:
@@ -71,7 +150,7 @@ func _start_fire(level: int) -> void:
 	fire_duration = 1.5 + (level - 1) * 0.15
 	fire_timer = fire_duration
 	tick_timer = 0.0
-	flame_mesh.visible = true
+	_set_flame_visible(true)
 	flame_area.monitoring = true
 
 	# Scale cone with level
@@ -131,3 +210,12 @@ func _deal_damage(level: int) -> void:
 		var player_pos = get_parent().get_parent().global_position
 		var fx_pos = player_pos + fire_direction * 2.0 + Vector3(0, 0.5, 0)
 		ParticleFactory.spawn_hit_particles(fx_pos, Color(1.0, 0.4, 0.1))
+
+func _set_flame_visible(visible_flag: bool) -> void:
+	flame_mesh.visible = visible_flag
+	if ember_particles:
+		ember_particles.emitting = visible_flag
+	if heat_shimmer:
+		heat_shimmer.visible = visible_flag
+	if not visible_flag:
+		_shimmer_time = 0.0
