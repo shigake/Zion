@@ -1348,8 +1348,9 @@ func _apply_character_tint(model_root: Node3D, char_id: String) -> void:
 	## Tints a Quaternius base character model with the character's color.
 	## Uses CharacterDB color and applies via cel-shader or material override.
 	var char_color := Color.WHITE
-	if CharacterDB and CharacterDB.CHARACTERS.has(char_id):
-		char_color = CharacterDB.CHARACTERS[char_id].get("color", Color.WHITE)
+	var char_data = CharacterDB.get_character(char_id) if CharacterDB else {}
+	if not char_data.is_empty():
+		char_color = char_data.get("color", Color.WHITE)
 	# Apply tint to all MeshInstance3D children recursively
 	_tint_meshes_recursive(model_root, char_color)
 
