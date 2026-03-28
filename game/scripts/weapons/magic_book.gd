@@ -140,9 +140,12 @@ func _fire_page(level: int) -> void:
 	if level >= 6:
 		num_pages = 2
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
 	for i in range(num_pages):
 		var page = ObjectPool.get_instance(projectile_scene)
-		page.global_position = book_global_pos
+		page.position = book_global_pos
 		var spread = (randf() - 0.5) * 0.2
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		page.direction = spread_dir.normalized()
@@ -150,6 +153,6 @@ func _fire_page(level: int) -> void:
 		page.speed = 16.0
 		page.lifetime = 2.0
 		page.damage_type = "physical"
-		get_tree().current_scene.call_deferred("add_child", page)
+		scene_root.add_child(page)
 
 	AudioManager.play_sfx("hit")

@@ -108,6 +108,8 @@ func _return_to_pool() -> void:
 	call_deferred("_do_return")
 
 func _do_return() -> void:
+	if not is_inside_tree():
+		return
 	if scene_file_path and not scene_file_path.is_empty():
 		ObjectPool.return_instance(self, scene_file_path)
 	else:
