@@ -181,9 +181,8 @@ func _update_aim() -> void:
 	if GameManager.manual_aim:
 		fire_direction = GameManager.aim_direction
 		if fire_direction.length() > 0.01:
-			var angle = atan2(fire_direction.x, fire_direction.z)
-			flame_area.rotation.y = -angle
-			flame_mesh.rotation.y = -angle
+			var aim_angle = atan2(-fire_direction.x, -fire_direction.z)
+			rotation.y = aim_angle
 		return
 
 	var player = _get_player_node()
@@ -210,9 +209,8 @@ func _update_aim() -> void:
 		fire_direction = (nearest.global_position - player_pos).normalized()
 		fire_direction.y = 0
 		if fire_direction.length() > 0.01:
-			var angle = atan2(fire_direction.x, fire_direction.z)
-			flame_area.rotation.y = -angle
-			flame_mesh.rotation.y = -angle
+			var aim_angle = atan2(-fire_direction.x, -fire_direction.z)
+			rotation.y = aim_angle
 
 func _deal_damage(level: int) -> void:
 	var bodies = flame_area.get_overlapping_bodies()

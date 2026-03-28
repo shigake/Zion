@@ -222,9 +222,8 @@ func _fire_beam(level: int) -> void:
 
 	# Aim beam
 	if beam_direction.length() > 0.01:
-		var angle = atan2(beam_direction.x, beam_direction.z)
-		beam_area.rotation.y = -angle
-		beam_mesh.rotation.y = -angle
+		var aim_angle = atan2(-beam_direction.x, -beam_direction.z)
+		rotation.y = aim_angle
 
 	# Scale beam with level
 	var area_scale = 1.0 + (level - 1) * 0.12
