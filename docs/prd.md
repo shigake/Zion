@@ -1,4 +1,4 @@
-# Zion — PRD Master (v2.79)
+# Zion — PRD Master (v2.98)
 
 > *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
@@ -93,7 +93,7 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragme
 - Substituir Sprite3D por AnimatedSprite3D no enemy_base.gd e player.gd
 - Detectar movimento via velocity.length() > 0.5 pra trocar idle/walk
 
-### A2. Efeitos de Arma Melee
+### A2. Efeitos de Arma Melee ✅ IMPLEMENTADO
 **Objetivo**: Armas melee devem mostrar visual de ataque.
 
 **Slash trail sprite** (16x32, 3 frames):
@@ -247,7 +247,7 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragme
 - Desativa apos completar (salva no SaveManager)
 - Botao "Pular tutorial" visivel
 
-### C2. Dialogos de Boss (Sentinelas)
+### C2. Dialogos de Boss (Sentinelas) ✅ IMPLEMENTADO
 **Objetivo**: Bosses sao Sentinelas Corrompidos com personalidade e lore.
 
 Os Sentinelas nao sao viloes — sao guardioes prisioneiros do cristal corrompido. Suas falas refletem quem eram antes da corrupcao. Ao serem derrotados, sao **libertados**, nao mortos.

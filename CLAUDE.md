@@ -179,7 +179,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 333+ sprites, 43 SFX, 16 musicas. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano, bullet trails. FASE B (gameplay) parcial — 10 mecanicas de fenda, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global, dialogos de Sentinelas com taunts mid-fight, lore no mapa. FASE D (audio) quase completa — 43 SFX, 16 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) pendente.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 333+ sprites, 43 SFX, 16 musicas. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano, bullet trails, slash trails melee (10 armas com trails + sparks). FASE B (gameplay) parcial — 10 mecanicas de fenda, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global, dialogos de Sentinelas com typewriter + fases + cores tematicas + i18n. FASE D (audio) quase completa — 43 SFX, 16 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) pendente.
 
 Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
