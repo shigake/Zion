@@ -24,8 +24,6 @@ var _prop_defs: Dictionary = {
 func _ready() -> void:
 	_create_ground()
 	_scatter_props()
-	_create_ground_fog()
-	_create_atmosphere_light()
 
 
 func _create_ground() -> void:
@@ -93,29 +91,3 @@ func _scatter_props() -> void:
 			add_child(sprite)
 
 
-func _create_ground_fog() -> void:
-	var fog = MeshInstance3D.new()
-	var fog_mesh = PlaneMesh.new()
-	fog_mesh.size = Vector2(area_size * 1.5, area_size * 1.5)
-	fog.mesh = fog_mesh
-	fog.position.y = 0.3
-
-	var fog_mat = StandardMaterial3D.new()
-	fog_mat.albedo_color = Color(0.3, 0.35, 0.4, 0.12)
-	fog_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	fog_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	fog.material_override = fog_mat
-	fog.name = "GroundFog"
-	add_child(fog)
-
-
-func _create_atmosphere_light() -> void:
-	# Eerie blue-green point light for ghostly atmosphere
-	var light = OmniLight3D.new()
-	light.light_color = Color(0.4, 0.55, 0.8)
-	light.light_energy = 0.3
-	light.omni_range = area_size * 0.6
-	light.omni_attenuation = 2.0
-	light.position = Vector3(0, 15, 0)
-	light.name = "AtmosphereLight"
-	add_child(light)
