@@ -392,8 +392,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_next() -> void:
 	AudioManager.play_sfx("menu_click")
 	GameManager.selected_stage = selected_stage
-	get_tree().change_scene_to_file("res://scenes/ui/relic_select.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/relic_select.tscn")
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/character_select.tscn")

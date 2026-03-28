@@ -895,4 +895,4 @@ func _on_reconnection_failed() -> void:
 	var timer = get_tree().create_timer(3.0)
 	await timer.timeout
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")

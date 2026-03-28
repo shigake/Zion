@@ -190,7 +190,7 @@ func _on_retry() -> void:
 		"candy": "res://scenes/stages/stage_candy.tscn",
 	}
 	var scene = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
-	get_tree().change_scene_to_file(scene)
+	LoadingScreen.load_stage(scene)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not panel.visible:
@@ -202,7 +202,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_menu() -> void:
 	AudioManager.play_sfx("menu_click")
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
 
 
 # ---------------------------------------------------------------------------

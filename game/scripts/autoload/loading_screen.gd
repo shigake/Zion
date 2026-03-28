@@ -589,3 +589,141 @@ func _get_stage_id() -> String:
 	if filename.begins_with("stage_"):
 		return filename.substr(6)  # "cemetery"
 	return GameManager.selected_stage
+
+# ==================== Transition (menu-to-menu) ====================
+
+## Transicao simples com fade para cenas de menu.
+## Exibe sprite do personagem selecionado, nome da fase e dica aleatoria.
+## Uso: LoadingScreen.transition_to("res://scenes/ui/stage_select.tscn")
+
+var _transition_overlay: ColorRect
+var _transition_root: Control
+var _transition_char_sprite: TextureRect
+var _transition_stage_label: Label
+var _transition_tip_label: Label
+var _transition_loading_label: Label
+var _is_transitioning: bool = false
+var _dots_timer: float = 0.0
+
+const TRANSITION_TIPS: Array = [
+	"Evolua armas no nivel 8 com o item correspondente!",
+	"Dash (ESPACO) te da invulnerabilidade momentanea",
+	"Inimigos Elite aparecem apos o minuto 15",
+	"Combine elementos para sinergias poderosas",
+	"O boss aparece no minuto 25",
+	"Cogumelos na floresta dao buffs aleatorios",
+	"Cuidado com a lava no vulcao!",
+	"O milharal na fazenda te esconde dos inimigos",
+	"Zonas escuras no castelo fortalecem inimigos",
+	"Caramelo no mundo doce reduz sua velocidade",
+]
+
+func transition_to(scene_path: String) -> void:
+	if _is_transitioning or _is_loading:
+		# Fallback direto se ja esta em transicao
+		get_tree().change_scene_to_file(scene_path)
+		return
+
+	_is_transitioning = true
+	visible = true
+
+	# Build fade overlay
+	_transition_root = Control.new()
+	_transition_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_transition_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	_transition_root.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_transition_root)
+
+	_transition_overlay = ColorRect.new()
+	_transition_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_transition_overlay.color = Color(0, 0, 0, 0)
+	_transition_root.add_child(_transition_overlay)
+
+	# Fade in (black)
+	var tween = create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(_transition_overlay, "color:a", 1.0, 0.4)
+	await tween.finished
+
+	# Show loading info (character, stage, tip)
+	_build_transition_info()
+
+	# Change scene
+	get_tree().change_scene_to_file(scene_path)
+
+	# Wait frames for scene to settle
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	# Fade out
+	var tween2 = create_tween()
+	tween2.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween2.tween_property(_transition_overlay, "color:a", 0.0, 0.4)
+	await tween2.finished
+
+	# Cleanup
+	_cleanup_transition()
+
+func _build_transition_info() -> void:
+	# Center content container
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.anchor_left = 0.15
+	vbox.anchor_right = 0.85
+	vbox.anchor_top = 0.15
+	vbox.anchor_bottom = 0.85
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 16)
+	_transition_root.add_child(vbox)
+
+	# Character sprite (from GameManager.selected_character)
+	var char_id = GameManager.selected_character
+	var sprite_path = "res://assets/sprites/characters/%s.png" % char_id
+	_transition_char_sprite = TextureRect.new()
+	_transition_char_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_transition_char_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_transition_char_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_transition_char_sprite.custom_minimum_size = Vector2(192, 192)  # ~3x scale for 64px sprites
+	_transition_char_sprite.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if ResourceLoader.exists(sprite_path):
+		_transition_char_sprite.texture = load(sprite_path)
+	vbox.add_child(_transition_char_sprite)
+
+	# Stage name
+	var stage_id = GameManager.selected_stage
+	var stage_name = STAGE_NAMES.get(stage_id, stage_id.capitalize())
+	_transition_stage_label = Label.new()
+	_transition_stage_label.text = stage_name
+	_transition_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_transition_stage_label.add_theme_font_size_override("font_size", 28)
+	_transition_stage_label.add_theme_color_override("font_color", Color.WHITE)
+	vbox.add_child(_transition_stage_label)
+
+	# Random tip (gray italic)
+	_transition_tip_label = Label.new()
+	_transition_tip_label.text = TRANSITION_TIPS[randi() % TRANSITION_TIPS.size()]
+	_transition_tip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_transition_tip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_transition_tip_label.add_theme_font_size_override("font_size", 14)
+	_transition_tip_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+	vbox.add_child(_transition_tip_label)
+
+	# "Carregando..." with animated dots
+	_transition_loading_label = Label.new()
+	_transition_loading_label.text = "Carregando..."
+	_transition_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_transition_loading_label.add_theme_font_size_override("font_size", 18)
+	_transition_loading_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
+	vbox.add_child(_transition_loading_label)
+
+func _cleanup_transition() -> void:
+	_is_transitioning = false
+	if _transition_root and is_instance_valid(_transition_root):
+		_transition_root.queue_free()
+		_transition_root = null
+	_transition_overlay = null
+	_transition_char_sprite = null
+	_transition_stage_label = null
+	_transition_tip_label = null
+	_transition_loading_label = null
+	visible = false

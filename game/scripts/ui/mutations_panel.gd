@@ -119,12 +119,12 @@ func _update_multiplier() -> void:
 
 func _on_confirm() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/stage_select.tscn")
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
 	MutationManager.reset()
-	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/character_select.tscn")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

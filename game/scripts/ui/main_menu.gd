@@ -78,7 +78,7 @@ func _ready() -> void:
 	var daily_btn := _create_menu_button("📅  Desafio diario")
 	daily_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
-		get_tree().change_scene_to_file("res://scenes/ui/daily_challenge_screen.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/daily_challenge_screen.tscn")
 	)
 	buttons_container.add_child(daily_btn)
 
@@ -86,7 +86,7 @@ func _ready() -> void:
 	var leaderboard_btn := _create_menu_button("🏆  " + LocaleManager.tr_key("menu_leaderboard"))
 	leaderboard_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
-		get_tree().change_scene_to_file("res://scenes/ui/leaderboard_screen.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/leaderboard_screen.tscn")
 	)
 	buttons_container.add_child(leaderboard_btn)
 
@@ -94,7 +94,7 @@ func _ready() -> void:
 	var bestiary_btn := _create_menu_button("📖  " + LocaleManager.tr_key("bestiary"))
 	bestiary_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
-		get_tree().change_scene_to_file("res://scenes/ui/bestiary_screen.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/bestiary_screen.tscn")
 	)
 	buttons_container.add_child(bestiary_btn)
 
@@ -102,7 +102,7 @@ func _ready() -> void:
 	var codex_btn := _create_menu_button("📜  " + LocaleManager.tr_key("codex"))
 	codex_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
-		get_tree().change_scene_to_file("res://scenes/ui/codex_screen.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/codex_screen.tscn")
 	)
 	buttons_container.add_child(codex_btn)
 
@@ -110,7 +110,7 @@ func _ready() -> void:
 	var achievements_btn := _create_menu_button("🏆  Conquistas")
 	achievements_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
-		get_tree().change_scene_to_file("res://scenes/ui/achievements_screen.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/achievements_screen.tscn")
 	)
 	buttons_container.add_child(achievements_btn)
 
@@ -118,7 +118,7 @@ func _ready() -> void:
 	var options_btn := _create_menu_button("⚙  " + LocaleManager.tr_key("menu_options"))
 	options_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
-		get_tree().change_scene_to_file("res://scenes/ui/options_screen.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/options_screen.tscn")
 	)
 	buttons_container.add_child(options_btn)
 
@@ -447,22 +447,22 @@ func _update_crystals() -> void:
 
 func _on_play() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/character_select.tscn")
 
 
 func _on_multiplayer() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/lobby_screen.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/lobby_screen.tscn")
 
 
 func _on_shop() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/shop.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/shop.tscn")
 
 
 func _on_credits() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/credits_screen.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/credits_screen.tscn")
 
 
 func _unhandled_input(event: InputEvent) -> void:

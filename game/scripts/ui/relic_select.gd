@@ -246,4 +246,4 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/stage_select.tscn")

@@ -388,7 +388,7 @@ func _on_start() -> void:
 		AudioManager.play_sfx("menu_click")
 		GameManager.selected_character = char_id
 		GameManager.auto_play = false
-		get_tree().change_scene_to_file("res://scenes/ui/mutations_panel.tscn")
+		LoadingScreen.transition_to("res://scenes/ui/mutations_panel.tscn")
 
 func _on_random_start() -> void:
 	# Pick random unlocked character
@@ -430,4 +430,4 @@ func _on_random_start() -> void:
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")

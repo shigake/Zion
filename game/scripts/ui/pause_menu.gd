@@ -467,7 +467,7 @@ func _on_menu() -> void:
 		stats_panel = null
 	get_tree().paused = false
 	GameManager.paused = false
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
 
 func _on_quit() -> void:
 	AudioManager.play_sfx("menu_click")

@@ -168,7 +168,7 @@ func _on_start() -> void:
 
 @rpc("authority", "reliable")
 func _load_game_scene(scene_path: String) -> void:
-	get_tree().change_scene_to_file(scene_path)
+	LoadingScreen.load_stage(scene_path)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -179,4 +179,4 @@ func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
 	_is_local_ready = false
 	MultiplayerManager.disconnect_from_game()
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
