@@ -249,26 +249,32 @@ func _create_characters_circle() -> void:
 
 	for i in range(count):
 		var char_id = char_ids[i]
-		var char_data = CharacterDB.get_character(char_id)
 		var angle = (float(i) / count) * TAU - PI / 2.0
 
 		var char_root = Node3D.new()
 		char_root.position = Vector3(cos(angle) * radius, 0, sin(angle) * radius)
 
-		var look_target = Vector3(0, 0, 0)
-		var dir = (look_target - char_root.position).normalized()
-		char_root.rotation.y = atan2(dir.x, dir.z)
+		# Sprite pixel art do heroi
+		var sprite = Sprite3D.new()
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.012
+		sprite.position.y = 0.8
 
-		var model = ModelFactory.get_model_for_character(char_id)
-		model.scale = Vector3(0.8, 0.8, 0.8)
-		model.position.y = -0.15
-		model.rotation.x = deg_to_rad(8)
+		var tex_path = "res://assets/sprites/characters/%s.png" % char_id
+		var tex = load(tex_path)
+		if tex:
+			sprite.texture = tex
+		else:
+			# Fallback: tenta nomes alternativos comuns
+			var fallback = load("res://assets/sprites/characters/mystery.png")
+			if fallback:
+				sprite.texture = fallback
 
-		var base_color = char_data.get("color", Color(0.5, 0.5, 0.5))
-		ModelFactory.apply_model_materials(model, base_color)
+		# Leve glow da fogueira nos sprites
+		sprite.modulate = Color(1.0, 0.95, 0.85)
 
-		char_root.add_child(model)
-
+		char_root.add_child(sprite)
 		sub_viewport.add_child(char_root)
 
 

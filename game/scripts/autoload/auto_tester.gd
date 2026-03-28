@@ -6,8 +6,12 @@ extends Node
 ## Usage:
 ##   godot --path game --run -- --test=smoke
 ##   godot --path game --run -- --test=weapons
+##   godot --path game --run -- --test=evolution
 ##   godot --path game --run -- --test=full
+##   godot --path game --run -- --test=balance
 ##   godot --path game --run -- --test=stress
+##   godot --path game --run -- --test=achievements
+##   godot --path game --run -- --test=events
 ##   godot --path game --run -- --test=all
 ##   godot --path game --run -- --test=menu_smoke
 ##   godot --path game --run -- --test=smoke --test-headless

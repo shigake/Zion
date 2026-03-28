@@ -25,12 +25,21 @@ func _process(delta: float) -> void:
 		if active_portal == null:
 			_create_portal(level)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _create_portal(level: int) -> void:
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		return
 
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 
 	# Find nearest enemy
 	var nearest: Node3D = null

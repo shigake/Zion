@@ -31,6 +31,12 @@ func _ready() -> void:
 		sprite.name = "WeaponSprite"
 		punch_mesh.get_parent().add_child(sprite)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return
@@ -97,7 +103,10 @@ func _on_body_entered(body: Node3D) -> void:
 		hit_enemies_this_step.append(body)
 
 		# Knockback forte
-		var player_pos = get_parent().get_parent().global_position
+		var player = _get_player_node()
+		if not player:
+			return
+		var player_pos = player.global_position
 		var kb_dir = (body.global_position - player_pos).normalized()
 		kb_dir.y = 0
 		if body.has_method("apply_knockback"):

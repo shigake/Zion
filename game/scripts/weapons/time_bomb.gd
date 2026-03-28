@@ -27,8 +27,17 @@ func _process(delta: float) -> void:
 		if active_bombs.size() < MAX_BOMBS:
 			_drop_bomb(level)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _drop_bomb(level: int) -> void:
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 	var bomb = _create_bomb_node(level)
 	bomb.global_position = player_pos
 	get_tree().current_scene.call_deferred("add_child", bomb)

@@ -121,9 +121,16 @@ var translations: Dictionary = {
 	"merchant_close": {"pt": "Fechar", "en": "Close"},
 
 	# ---- Leaderboard ----
-	"leaderboard_title": {"pt": "Leaderboard - modo endless", "en": "Leaderboard - endless mode"},
+	"leaderboard_title": {"pt": "Ranking global", "en": "Global ranking"},
 	"leaderboard_empty": {"pt": "Nenhuma run registrada ainda!", "en": "No runs recorded yet!"},
 	"leaderboard_header": {"pt": "  #   | Tempo      | Kills  | Personagem | Data", "en": "  #   | Time       | Kills  | Character  | Date"},
+	"leaderboard_tab_daily": {"pt": "Diario", "en": "Daily"},
+	"leaderboard_tab_endless": {"pt": "Endless", "en": "Endless"},
+	"leaderboard_tab_normal": {"pt": "Normal", "en": "Normal"},
+	"leaderboard_tab_boss_rush": {"pt": "Boss rush", "en": "Boss rush"},
+	"leaderboard_your_best": {"pt": "Seu melhor: #%d — %s", "en": "Your best: #%d — %s"},
+	"leaderboard_refresh": {"pt": "Atualizar", "en": "Refresh"},
+	"leaderboard_mock_notice": {"pt": "Dados de teste (mockados)", "en": "Test data (mocked)"},
 
 	# ---- Lobby ----
 	"lobby_server_created": {"pt": "Servidor criado! Aguardando jogadores...", "en": "Server created! Waiting for players..."},

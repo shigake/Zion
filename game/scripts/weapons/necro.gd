@@ -24,8 +24,17 @@ func _process(delta: float) -> void:
 		summon_timer = cooldown
 		_summon(level)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _summon(level: int) -> void:
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 	var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
 
 	var skeleton = ObjectPool.get_instance(skeleton_scene)

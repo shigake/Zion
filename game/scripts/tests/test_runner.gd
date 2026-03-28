@@ -27,6 +27,7 @@ var _fps_samples: Array = []
 # Level up interception
 var _auto_choose_mode: String = "random"  # random, prioritize_weapons, prioritize_items, forced
 var _forced_weapon: String = ""
+var _forced_item: String = ""
 var _level_up_screen: Node = null
 
 # Stage scene paths
@@ -57,13 +58,25 @@ func build_suite(suite_name: String) -> Array:
 			tests = _build_smoke_tests()
 		"weapons":
 			tests = _build_weapon_tests()
+		"evolution":
+			tests = _build_evolution_tests()
 		"full":
 			tests = _build_full_tests()
+		"balance":
+			tests = _build_balance_tests()
 		"stress":
 			tests = _build_stress_tests()
+		"achievements":
+			tests = _build_achievement_tests()
+		"events":
+			tests = _build_event_tests()
 		"all":
 			tests.append_array(_build_smoke_tests())
 			tests.append_array(_build_weapon_tests())
+			tests.append_array(_build_evolution_tests())
+			tests.append_array(_build_balance_tests())
+			tests.append_array(_build_achievement_tests())
+			tests.append_array(_build_event_tests())
 			tests.append_array(_build_full_tests())
 			tests.append_array(_build_stress_tests())
 		_:
@@ -73,16 +86,41 @@ func build_suite(suite_name: String) -> Array:
 
 func _build_smoke_tests() -> Array:
 	var tests: Array = []
+	# 1. Each character (12) on Cemetery for 2 min
 	for char_id in ALL_CHARACTERS:
 		tests.append({
-			"name": "smoke_%s" % char_id,
+			"name": "smoke_char_%s" % char_id,
 			"suite": "smoke",
 			"character": char_id,
 			"stage": "cemetery",
-			"duration": 120.0,  # 2 minutes
+			"duration": 120.0,
 			"choose_mode": "random",
 			"forced_weapon": "",
 			"game_mode": "normal",
+		})
+	# 2. Each stage (10) with Ronin for 2 min
+	for stage_id in STAGE_SCENES.keys():
+		tests.append({
+			"name": "smoke_stage_%s" % stage_id,
+			"suite": "smoke",
+			"character": "ronin",
+			"stage": stage_id,
+			"duration": 120.0,
+			"choose_mode": "random",
+			"forced_weapon": "",
+			"game_mode": "normal",
+		})
+	# 3. Each game mode with Ronin on Cemetery for 2 min
+	for mode in ["normal", "endless", "boss_rush", "hyper"]:
+		tests.append({
+			"name": "smoke_mode_%s" % mode,
+			"suite": "smoke",
+			"character": "ronin",
+			"stage": "cemetery",
+			"duration": 120.0,
+			"choose_mode": "random",
+			"forced_weapon": "",
+			"game_mode": mode,
 		})
 	return tests
 
@@ -155,6 +193,186 @@ func _build_stress_tests() -> Array:
 	})
 	return tests
 
+func _build_evolution_tests() -> Array:
+	var tests: Array = []
+	var all_evos = EvolutionDB.get_all_evolution_ids()
+	for evo_id in all_evos:
+		var evo = EvolutionDB.get_evolution(evo_id)
+		if evo.is_empty():
+			continue
+		tests.append({
+			"name": "evolution_%s" % evo_id,
+			"suite": "evolution",
+			"character": "ronin",
+			"stage": "cemetery",
+			"duration": 300.0,  # 5 min to evolve and test
+			"choose_mode": "forced",
+			"forced_weapon": evo["weapon_required"],
+			"forced_item": evo["item_required"],
+			"evolution_id": evo_id,
+			"game_mode": "normal",
+		})
+	return tests
+
+func _build_balance_tests() -> Array:
+	var tests: Array = []
+	# XP curve: long run measuring levels per minute
+	tests.append({
+		"name": "balance_xp_curve",
+		"suite": "balance",
+		"character": "ronin",
+		"stage": "cemetery",
+		"duration": 600.0,  # 10 min
+		"choose_mode": "random",
+		"forced_weapon": "",
+		"game_mode": "normal",
+	})
+	# DPS curve: each starting weapon 5 min
+	for char_id in ["ronin", "soldado", "mago", "berserker"]:
+		tests.append({
+			"name": "balance_dps_%s" % char_id,
+			"suite": "balance",
+			"character": char_id,
+			"stage": "cemetery",
+			"duration": 300.0,
+			"choose_mode": "prioritize_weapons",
+			"forced_weapon": "",
+			"game_mode": "normal",
+		})
+	# Economy: crystal earnings per run
+	for stage_id in ["cemetery", "forest", "volcano"]:
+		tests.append({
+			"name": "balance_economy_%s" % stage_id,
+			"suite": "balance",
+			"character": "ronin",
+			"stage": stage_id,
+			"duration": 600.0,
+			"choose_mode": "random",
+			"forced_weapon": "",
+			"game_mode": "normal",
+		})
+	return tests
+
+func _build_achievement_tests() -> Array:
+	var tests: Array = []
+	# first_walk: survive 5+ minutes
+	tests.append({
+		"name": "ach_first_walk",
+		"suite": "achievements",
+		"character": "ronin",
+		"stage": "cemetery",
+		"duration": 330.0,  # 5.5 min to be safe
+		"choose_mode": "random",
+		"forced_weapon": "",
+		"game_mode": "normal",
+		"achievement_target": "first_walk",
+	})
+	# nobody_deserves: die in < 10 seconds (stand still and take damage)
+	tests.append({
+		"name": "ach_nobody_deserves",
+		"suite": "achievements",
+		"character": "ronin",
+		"stage": "cemetery",
+		"duration": 60.0,
+		"choose_mode": "random",
+		"forced_weapon": "",
+		"game_mode": "hyper",
+		"achievement_target": "nobody_deserves",
+		"auto_player_mode": "stand_still",
+	})
+	# genocide: 10000 kills (long hyper run)
+	tests.append({
+		"name": "ach_genocide",
+		"suite": "achievements",
+		"character": "berserker",
+		"stage": "cemetery",
+		"duration": 900.0,  # 15 min hyper mode
+		"choose_mode": "prioritize_weapons",
+		"forced_weapon": "",
+		"game_mode": "hyper",
+		"achievement_target": "genocide",
+	})
+	# speedrunner: kill boss in < 15 min
+	tests.append({
+		"name": "ach_speedrunner",
+		"suite": "achievements",
+		"character": "berserker",
+		"stage": "cemetery",
+		"duration": 900.0,
+		"choose_mode": "prioritize_weapons",
+		"forced_weapon": "",
+		"game_mode": "boss_rush",
+		"achievement_target": "speedrunner",
+	})
+	# sweet_revenge: complete Candy stage
+	tests.append({
+		"name": "ach_sweet_revenge",
+		"suite": "achievements",
+		"character": "ronin",
+		"stage": "candy",
+		"duration": 1200.0,
+		"choose_mode": "random",
+		"forced_weapon": "",
+		"game_mode": "normal",
+		"achievement_target": "sweet_revenge",
+	})
+	# cow_brejo: farm without cow damage
+	tests.append({
+		"name": "ach_cow_brejo",
+		"suite": "achievements",
+		"character": "ronin",
+		"stage": "farm",
+		"duration": 1200.0,
+		"choose_mode": "random",
+		"forced_weapon": "",
+		"game_mode": "normal",
+		"achievement_target": "cow_brejo",
+	})
+	# pacifist: survive 3 min without attacking (hard to test automatically — skip weapons)
+	tests.append({
+		"name": "ach_pacifist",
+		"suite": "achievements",
+		"character": "ninja",  # high dodge
+		"stage": "cemetery",
+		"duration": 210.0,
+		"choose_mode": "prioritize_items",
+		"forced_weapon": "",
+		"game_mode": "normal",
+		"achievement_target": "pacifist",
+		"auto_player_mode": "no_weapons",
+	})
+	return tests
+
+func _build_event_tests() -> Array:
+	var tests: Array = []
+	# Run long enough to hit all timed events (up to 22 min = 1320s)
+	# golden_horde at 3m, elite_horde at 5m, eclipse at 8m, miniboss at 10m,
+	# meteor_shower at 12m, massive_horde at 15m, roulette at 18m,
+	# miniboss_strong at 20m, portal_dimensional at 22m
+	tests.append({
+		"name": "events_full_timeline",
+		"suite": "events",
+		"character": "ronin",
+		"stage": "cemetery",
+		"duration": 1380.0,  # 23 min to cover all events
+		"choose_mode": "random",
+		"forced_weapon": "",
+		"game_mode": "normal",
+	})
+	# Test events on different stages
+	for stage_id in ["forest", "volcano", "candy"]:
+		tests.append({
+			"name": "events_%s" % stage_id,
+			"suite": "events",
+			"character": "ronin",
+			"stage": stage_id,
+			"duration": 660.0,  # 11 min — covers up to miniboss
+			"choose_mode": "random",
+			"forced_weapon": "",
+			"game_mode": "normal",
+		})
+	return tests
+
 func start_suite(suite_name: String) -> void:
 	test_queue = build_suite(suite_name)
 	test_results.clear()
@@ -189,6 +407,7 @@ func _run_next_test() -> void:
 	_dps_tracker = {"damage_samples": [], "last_damage": 0, "last_sample_time": 0.0}
 	_auto_choose_mode = current_test.get("choose_mode", "random")
 	_forced_weapon = current_test.get("forced_weapon", "")
+	_forced_item = current_test.get("forced_item", "")
 	_start_time_msec = Time.get_ticks_msec()
 
 	# Set game config
@@ -232,10 +451,20 @@ func _attach_auto_player() -> void:
 	# For forced weapon tests, give the weapon immediately
 	if _forced_weapon != "" and _auto_choose_mode == "forced":
 		if not GameManager.has_weapon(_forced_weapon):
-			# Clear existing weapons and add the forced one
-			# The stage script already adds the starting weapon, so we add forced alongside
 			GameManager.add_weapon(_forced_weapon)
 			player.add_weapon_node(_forced_weapon)
+
+	# For evolution tests, force weapon to lv8 and item to lv5
+	if current_test.get("suite") == "evolution":
+		_setup_evolution_test(player)
+
+	# For achievement tests with special auto_player modes
+	var ap_mode = current_test.get("auto_player_mode", "")
+	if ap_mode == "stand_still":
+		_auto_player.enabled = false  # Don't move — let enemies kill player
+	elif ap_mode == "no_weapons":
+		# Remove all weapons so player can't attack (pacifist test)
+		_auto_player.avoid_attacks = true
 
 	# Find and hook into level up screen
 	_find_level_up_screen()
@@ -251,6 +480,43 @@ func _attach_auto_player() -> void:
 	_take_snapshot("start")
 
 	print("  AutoPlayer attached, test running...")
+
+func _setup_evolution_test(player: CharacterBody3D) -> void:
+	var evo_id = current_test.get("evolution_id", "")
+	if evo_id.is_empty():
+		return
+	var evo = EvolutionDB.get_evolution(evo_id)
+	if evo.is_empty():
+		_errors.append("ERROR: Evolution '%s' not found" % evo_id)
+		return
+
+	var weapon_id = evo["weapon_required"]
+	var item_id = evo["item_required"]
+
+	print("  [Evolution] Setting up: %s (weapon=%s lv8, item=%s lv5)" % [evo_id, weapon_id, item_id])
+
+	# Add weapon if missing and level it to 8
+	if not GameManager.has_weapon(weapon_id):
+		GameManager.add_weapon(weapon_id)
+		player.add_weapon_node(weapon_id)
+	for i in range(7):  # level 1 -> 8
+		GameManager.upgrade_weapon(weapon_id)
+
+	# Add item if missing and level it to 5
+	if not GameManager.has_item(item_id):
+		GameManager.add_item(item_id)
+	for i in range(4):  # level 1 -> 5
+		GameManager.upgrade_item(item_id)
+
+	# Track pre-evolution DPS
+	_dps_tracker["pre_evolution_damage"] = GameManager.total_damage_dealt
+	_dps_tracker["evolution_triggered"] = false
+	_dps_tracker["evolution_time"] = 0.0
+
+	print("  [Evolution] Weapon %s at lv%d, Item %s at lv%d" % [
+		weapon_id, GameManager.get_weapon_level(weapon_id),
+		item_id, GameManager.get_item_level(item_id),
+	])
 
 func _find_level_up_screen() -> void:
 	# Find the LevelUpScreen node in the scene tree
@@ -291,6 +557,16 @@ func _process(delta: float) -> void:
 
 	# Auto-choose level up options when screen is visible
 	_auto_level_up()
+
+	# Track evolution completion
+	if current_test.get("suite") == "evolution" and not _dps_tracker.get("evolution_triggered", false):
+		var evo_id = current_test.get("evolution_id", "")
+		if evo_id != "" and evo_id in EvolutionDB.evolved_weapons:
+			_dps_tracker["evolution_triggered"] = true
+			_dps_tracker["evolution_time"] = GameManager.game_time
+			_dps_tracker["post_evolution_damage_start"] = GameManager.total_damage_dealt
+			_take_snapshot("evolution_triggered")
+			print("  [Evolution] %s triggered at %.0fs!" % [evo_id, GameManager.game_time])
 
 	# Periodic snapshots
 	_snapshot_timer += delta
@@ -366,11 +642,16 @@ func _auto_level_up() -> void:
 func _select_level_up_option(options: Array) -> int:
 	match _auto_choose_mode:
 		"forced":
-			# Prioritize the forced weapon, then upgrades to it
+			# Prioritize the forced weapon
 			for i in range(options.size()):
 				if options[i]["id"] == _forced_weapon:
 					return i
-			# If forced weapon not in options, pick randomly
+			# Then prioritize forced item (for evolution tests)
+			if _forced_item != "":
+				for i in range(options.size()):
+					if options[i]["id"] == _forced_item:
+						return i
+			# If neither in options, pick randomly
 			return randi() % options.size()
 
 		"prioritize_weapons":
@@ -545,7 +826,7 @@ func _compile_result(end_reason: String) -> Dictionary:
 	else:
 		fps_min = 0.0
 
-	return {
+	var result = {
 		"test_name": current_test["name"],
 		"suite": current_test["suite"],
 		"character": current_test["character"],
@@ -570,6 +851,37 @@ func _compile_result(end_reason: String) -> Dictionary:
 		"errors": _errors.duplicate(),
 		"forced_weapon": current_test.get("forced_weapon", ""),
 	}
+
+	# Evolution test data
+	if current_test.get("suite") == "evolution":
+		result["evolution_id"] = current_test.get("evolution_id", "")
+		result["evolution_triggered"] = _dps_tracker.get("evolution_triggered", false)
+		result["evolution_time"] = _dps_tracker.get("evolution_time", 0.0)
+		if _dps_tracker.get("evolution_triggered", false):
+			var post_evo_damage = GameManager.total_damage_dealt - _dps_tracker.get("post_evolution_damage_start", 0)
+			var post_evo_time = GameManager.game_time - _dps_tracker.get("evolution_time", GameManager.game_time)
+			result["post_evolution_dps"] = post_evo_damage / maxf(post_evo_time, 1.0)
+		result["evolved_weapons"] = EvolutionDB.evolved_weapons.duplicate()
+
+	# Achievement test data
+	if current_test.get("suite") == "achievements":
+		result["achievement_target"] = current_test.get("achievement_target", "")
+		result["achievement_unlocked"] = AchievementManager.is_unlocked(current_test.get("achievement_target", ""))
+		result["all_unlocked"] = AchievementManager.get_unlocked_count()
+
+	# Event test data
+	if current_test.get("suite") == "events":
+		result["events_triggered"] = GameManager.events_triggered.duplicate()
+		result["events_count"] = GameManager.events_triggered.size()
+
+	# Balance test data
+	if current_test.get("suite") == "balance":
+		result["crystals_earned"] = GameManager.crystals_this_run
+		result["xp_total"] = GameManager.player_xp
+		result["levels_per_minute"] = GameManager.player_level / maxf(GameManager.game_time / 60.0, 0.1)
+		result["kills_per_minute"] = GameManager.total_kills / maxf(GameManager.game_time / 60.0, 0.1)
+
+	return result
 
 func _print_test_summary(result: Dictionary) -> void:
 	print("\n  --- Test Complete: %s ---" % result["test_name"])

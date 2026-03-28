@@ -35,6 +35,33 @@ Armas do mesmo elemento combinam para efeitos extras:
 
 ---
 
+## Mecanicas Unicas por Stage
+
+Cada stage tem uma zona ambiental (Area3D) com efeito especial:
+
+| Stage | Mecanica | Efeito |
+|---|---|---|
+| **Cemiterio** | Tumulos destrutiveis | Dropam power-ups aleatorios |
+| **Floresta** | Cogumelos de buff | Buff aleatorio 10s (speed/damage/area) |
+| **Fazenda** | Milharal | Jogador invisivel pra inimigos dentro do milho |
+| **Toquio** | Paineis eletricos | 5 dano/s eletrico |
+| **Vulcao** | Lava pools | 10 dano/s fogo, inimigos de fogo imunes |
+| **Oceano** | Correntes | Empurram jogador e inimigos |
+| **Arena** | Plateia | Itens aleatorios (cura/bomba) a cada 30s |
+| **Espaco** | Zero-G zones | +50% speed, -30% controle |
+| **Castelo** | Zonas escuras | Inimigos +30% dano, tochas = zonas seguras |
+| **Mundo Doce** | Caramelo | -50% speed |
+
+---
+
+## Leaderboard Global
+
+- Tabs: Geral, Por fase, Por personagem, Desafio diario
+- Colunas: posicao, nome, pontuacao, kills, tempo, personagem, fase
+- Dados mockados para teste (integracao online futura)
+
+---
+
 ## Sistema de Reliquias
 
 Escolhe 1 reliquia no inicio de cada run. Define a estrategia da partida.

@@ -40,6 +40,12 @@ func _ready() -> void:
 		charge_mesh.get_parent().add_child(sprite)
 	_setup_billboard_sprite()
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _setup_billboard_sprite() -> void:
 	var sprite_path = "res://assets/sprites/projectiles/plasma_bolt.png"
 	if ResourceLoader.exists(sprite_path):
@@ -172,7 +178,10 @@ func _start_charge(level: int) -> void:
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 
 	if GameManager.manual_aim:
 		beam_direction = GameManager.aim_direction
@@ -213,9 +222,8 @@ func _fire_beam(level: int) -> void:
 
 	# Aim beam
 	if beam_direction.length() > 0.01:
-		var angle = atan2(beam_direction.x, beam_direction.z)
-		beam_area.rotation.y = -angle
-		beam_mesh.rotation.y = -angle
+		var aim_angle = atan2(-beam_direction.x, -beam_direction.z)
+		rotation.y = aim_angle
 
 	# Scale beam with level
 	var area_scale = 1.0 + (level - 1) * 0.12

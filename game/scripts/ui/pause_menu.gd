@@ -467,6 +467,8 @@ func _on_menu() -> void:
 		stats_panel = null
 	get_tree().paused = false
 	GameManager.paused = false
+	if MultiplayerManager.is_online:
+		MultiplayerManager.disconnect_from_game()
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
 
 func _on_quit() -> void:

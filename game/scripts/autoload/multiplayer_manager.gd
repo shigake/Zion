@@ -114,6 +114,10 @@ func _create_client_peer(address: String, port: int) -> Array:
 
 # ---- Host ----
 func create_server(port: int = DEFAULT_PORT) -> Error:
+	# Limpa peer anterior para permitir recriar servidor
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer.close()
+		multiplayer.multiplayer_peer = null
 	var result = _create_server_peer(port)
 	var peer = result[0]
 	var error = result[1]
@@ -131,6 +135,10 @@ func create_server(port: int = DEFAULT_PORT) -> Error:
 
 # ---- Client ----
 func join_server(address: String = "127.0.0.1", port: int = DEFAULT_PORT) -> Error:
+	# Limpa peer anterior para permitir reconectar
+	if multiplayer.multiplayer_peer and not _reconnecting:
+		multiplayer.multiplayer_peer.close()
+		multiplayer.multiplayer_peer = null
 	var result = _create_client_peer(address, port)
 	var peer = result[0]
 	var error = result[1]
