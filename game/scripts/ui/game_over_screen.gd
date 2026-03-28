@@ -43,6 +43,7 @@ func _ready() -> void:
 func _show() -> void:
 	GameManager.end_run()
 	AchievementManager.check_achievements()
+	var _unlocked_chars := SaveManager.check_unlocks()
 	# Submit daily challenge score
 	if GameManager.game_mode == "daily":
 		DailyChallenge.submit_daily_score(
@@ -60,11 +61,23 @@ func _show() -> void:
 	var t = int(GameManager.game_time)
 	var time_str = "%02d:%02d" % [t / 60, t % 60]
 	if GameManager.is_victory:
-		# Narrative flavor: victory message with lore
-		if GameManager.selected_stage == "candy" and GameManager.game_mode == "normal":
-			time_label.text = LocaleManager.tr_key("lore_victory_final") + "\n" + LocaleManager.tr_key("victory_time") % time_str
+		# Check if ALL stages are now complete (final victory)
+		var all_complete := true
+		var all_stages := ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+		for s in all_stages:
+			if s not in SaveManager.data.get("completed_stages", []):
+				all_complete = false
+				break
+		if all_complete and GameManager.game_mode == "normal":
+			# Final victory — all fragments restored
+			time_label.text = LocaleManager.tr_key("victory_all_stages") + "\n\n" + LocaleManager.tr_key("victory_time") % time_str
 		else:
-			time_label.text = LocaleManager.tr_key("lore_victory") + "\n" + LocaleManager.tr_key("victory_time") % time_str
+			# Per-stage victory lore
+			var victory_key = "victory_lore_" + GameManager.selected_stage
+			var victory_text = LocaleManager.tr_key(victory_key)
+			if victory_text == victory_key:
+				victory_text = LocaleManager.tr_key("lore_victory")
+			time_label.text = victory_text + "\n" + LocaleManager.tr_key("victory_time") % time_str
 	else:
 		# Narrative flavor: death message with lore
 		time_label.text = LocaleManager.tr_key("lore_death") + "\n" + LocaleManager.tr_key("time") % time_str
@@ -184,16 +197,15 @@ func _show() -> void:
 				crystals_label.text += "\n" + LocaleManager.tr_key("leaderboard_rank") % (i + 1)
 				break
 	# Stage completion check (only on victory)
-	if GameManager.game_mode == "normal" and GameManager.is_victory:
+	if GameManager.is_victory:
 		var stage_key = "stage_" + GameManager.selected_stage
 		var stage_name = LocaleManager.tr_key(stage_key)
 		crystals_label.text += "\n" + LocaleManager.tr_key("stage_complete") % stage_name
 	# Show total damage dealt
 	crystals_label.text += "\n" + LocaleManager.tr_key("total_damage") % GameManager.total_damage_dealt
-	# Unlocks
-	var unlocked = SaveManager.check_unlocks()
-	if not unlocked.is_empty():
-		for char_id in unlocked:
+	# Unlocks (computed earlier, before UI setup)
+	if not _unlocked_chars.is_empty():
+		for char_id in _unlocked_chars:
 			var unlocked_data = CharacterDB.get_character(char_id)
 			crystals_label.text += "\n" + LocaleManager.tr_key("unlocked") % unlocked_data["name"]
 			# Special narrative for mystery character unlock
