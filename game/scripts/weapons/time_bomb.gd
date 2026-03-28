@@ -172,13 +172,13 @@ func _explode() -> void:
 	var pos = global_position
 	var radius_sq = explosion_radius * explosion_radius
 
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
+	# Use spatial grid for O(1) radius query
+	var nearby = GameManager.get_enemies_in_radius(pos, explosion_radius)
+	for e in nearby:
 		if not is_instance_valid(e):
 			continue
-		if pos.distance_squared_to(e.global_position) <= radius_sq:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "fire")
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "fire")
 
 	ScreenEffects.shake(0.5)
 	AudioManager.play_sfx("hit")

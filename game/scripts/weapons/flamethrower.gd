@@ -180,15 +180,16 @@ func _update_aim() -> void:
 			flame_mesh.rotation.y = -angle
 		return
 
-	var enemies = GameManager.get_enemies()
-	if enemies.is_empty():
-		return
-
 	var player_pos = get_parent().get_parent().global_position
+
+	# Use spatial grid for nearby search instead of iterating all enemies
+	var nearby = GameManager.get_nearby_enemies(player_pos, 15.0)
+	if nearby.is_empty():
+		return
 
 	var nearest: Node3D = null
 	var min_dist = INF
-	for e in enemies:
+	for e in nearby:
 		if not is_instance_valid(e):
 			continue
 		var d = player_pos.distance_squared_to(e.global_position)

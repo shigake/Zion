@@ -19,6 +19,15 @@ var _cached_enemies: Array = []
 var _enemies_cache_frame: int = -1
 var _cached_players: Array = []
 var _players_cache_frame: int = -1
+
+# Spatial grid for O(1) neighbor lookups (enemy separation, AoE targeting)
+var _spatial_grid: Dictionary = {}  # Vector2i -> Array[Node3D]
+var _spatial_grid_frame: int = -1
+const SPATIAL_CELL_SIZE: float = 3.0  # Matches separation radius
+
+# Cached nearest player per frame (avoid per-enemy iteration)
+var _cached_nearest_player: Dictionary = {}  # enemy_instance_id -> Node3D
+var _nearest_player_frame: int = -1
 var total_kills: int = 0
 var total_damage_dealt: int = 0
 var peak_enemies: int = 0
@@ -125,6 +134,51 @@ func get_players() -> Array:
 		_players_cache_frame = frame
 		_cached_players = get_tree().get_nodes_in_group("players")
 	return _cached_players
+
+## Spatial grid — rebuilt once per frame for O(1) neighbor queries.
+func _rebuild_spatial_grid() -> void:
+	var frame = Engine.get_process_frames()
+	if frame == _spatial_grid_frame:
+		return
+	_spatial_grid_frame = frame
+	_spatial_grid.clear()
+	var enemies = get_enemies()
+	for e in enemies:
+		if not is_instance_valid(e) or e.is_dead:
+			continue
+		var cell = _pos_to_cell(e.global_position)
+		if not _spatial_grid.has(cell):
+			_spatial_grid[cell] = []
+		_spatial_grid[cell].append(e)
+
+func _pos_to_cell(pos: Vector3) -> Vector2i:
+	return Vector2i(int(floor(pos.x / SPATIAL_CELL_SIZE)), int(floor(pos.z / SPATIAL_CELL_SIZE)))
+
+## Get nearby enemies from spatial grid (O(1) instead of O(n)).
+func get_nearby_enemies(pos: Vector3, radius: float) -> Array:
+	_rebuild_spatial_grid()
+	var cell = _pos_to_cell(pos)
+	var cells_to_check = int(ceil(radius / SPATIAL_CELL_SIZE))
+	var result: Array = []
+	for dx in range(-cells_to_check, cells_to_check + 1):
+		for dz in range(-cells_to_check, cells_to_check + 1):
+			var check_cell = Vector2i(cell.x + dx, cell.y + dz)
+			if _spatial_grid.has(check_cell):
+				result.append_array(_spatial_grid[check_cell])
+	return result
+
+## Get enemies in radius with distance check (for AoE).
+func get_enemies_in_radius(pos: Vector3, radius: float) -> Array:
+	var candidates = get_nearby_enemies(pos, radius)
+	var result: Array = []
+	var radius_sq = radius * radius
+	for e in candidates:
+		if is_instance_valid(e) and not e.is_dead:
+			var diff = pos - e.global_position
+			diff.y = 0
+			if diff.length_squared() <= radius_sq:
+				result.append(e)
+	return result
 
 func _register_input_actions() -> void:
 	_add_key_action("move_up", KEY_W)

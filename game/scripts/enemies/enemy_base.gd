@@ -18,6 +18,7 @@ var is_dead: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 var _animator: Node = null
 var _hit_count: int = 0
+var _flash_tween: Tween = null  # Reuse tween for flash to avoid creating new ones per hit
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
@@ -145,17 +146,18 @@ func _physics_process(delta: float) -> void:
 
 func _get_separation_vector() -> Vector3:
 	var sep := Vector3.ZERO
-	var enemies = GameManager.get_enemies()
+	# Use spatial grid for O(1) neighbor lookup instead of iterating all enemies
+	var nearby = GameManager.get_nearby_enemies(global_position, SEPARATION_RADIUS)
 	var checked := 0
-	for enemy in enemies:
+	for enemy in nearby:
 		if enemy == self or not is_instance_valid(enemy) or enemy.is_dead:
 			continue
 		var diff = global_position - enemy.global_position
 		diff.y = 0
-		var dist = diff.length()
-		if dist < SEPARATION_RADIUS and dist > 0.01:
-			# Quanto mais perto, mais forte a repulsao
-			sep += diff.normalized() * (SEPARATION_RADIUS - dist) / SEPARATION_RADIUS * SEPARATION_FORCE
+		var dist_sq = diff.length_squared()
+		if dist_sq < SEPARATION_RADIUS * SEPARATION_RADIUS and dist_sq > 0.0001:
+			var dist = sqrt(dist_sq)
+			sep += diff * ((SEPARATION_RADIUS - dist) / (SEPARATION_RADIUS * dist) * SEPARATION_FORCE)
 			checked += 1
 			if checked >= MAX_NEIGHBORS_CHECK:
 				break
@@ -221,9 +223,12 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	elif dmg_label.is_inside_tree():
 		dmg_label.global_position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
 
-	# Hit particles + screen shake
-	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color.WHITE)
-	ScreenEffects.shake(0.04)
+	# Hit particles + screen shake (throttled: skip particles at low FPS to save performance)
+	var fps = Engine.get_frames_per_second()
+	if fps > 30 or randf() < 0.3:
+		ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color.WHITE, 3 if fps < 40 else 6)
+	if fps > 20:
+		ScreenEffects.shake(0.04)
 
 	# Knockback
 	if target and is_instance_valid(target):
@@ -256,16 +261,21 @@ func _flash_white() -> void:
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:
 		sprite.modulate = Color(10, 10, 10)  # Bright flash
-		var tween = create_tween()
-		tween.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+		# Reuse tween to avoid creating hundreds per second
+		if _flash_tween and _flash_tween.is_valid():
+			_flash_tween.kill()
+		_flash_tween = create_tween()
+		_flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.12)
 		return
 	var proc_model = get_node_or_null("ProceduralModel")
 	if proc_model:
 		for child in proc_model.get_children():
 			if child is MeshInstance3D and child.material_override is ShaderMaterial:
 				child.material_override.set_shader_parameter("albedo_color", Color.WHITE)
-		var tween = create_tween()
-		tween.tween_callback(func():
+		if _flash_tween and _flash_tween.is_valid():
+			_flash_tween.kill()
+		_flash_tween = create_tween()
+		_flash_tween.tween_callback(func():
 			if is_instance_valid(proc_model):
 				for child in proc_model.get_children():
 					if child is MeshInstance3D and child.material_override is ShaderMaterial:
@@ -275,8 +285,10 @@ func _flash_white() -> void:
 		var mat = mesh.material_override
 		if mat is ShaderMaterial:
 			mat.set_shader_parameter("albedo_color", Color.WHITE)
-			var tween = create_tween()
-			tween.tween_callback(func(): mat.set_shader_parameter("albedo_color", enemy_color)).set_delay(0.15)
+			if _flash_tween and _flash_tween.is_valid():
+				_flash_tween.kill()
+			_flash_tween = create_tween()
+			_flash_tween.tween_callback(func(): mat.set_shader_parameter("albedo_color", enemy_color)).set_delay(0.15)
 
 func _die() -> void:
 	if is_dead:
@@ -300,11 +312,15 @@ func _die() -> void:
 	var pos = global_position if is_inside_tree() else Vector3.ZERO
 	GameManager.enemy_killed.emit(pos, xp_drop)
 	if is_inside_tree():
-		ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.3, 0), enemy_color)
-		# Gold particles for elite enemies
-		if enemy_color == Color(1.0, 0.85, 0.2) or scale.x > 1.2:
-			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 15)
-		ScreenEffects.shake(0.06)
+		# Throttle death particles at low FPS
+		var _fps = Engine.get_frames_per_second()
+		if _fps > 25 or randf() < 0.4:
+			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.3, 0), enemy_color, 6 if _fps < 40 else 12)
+			# Gold particles for elite enemies
+			if enemy_color == Color(1.0, 0.85, 0.2) or scale.x > 1.2:
+				ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 8)
+		if _fps > 20:
+			ScreenEffects.shake(0.06)
 		SynergySystem.apply_on_kill_synergies(pos)
 		# Mutation: explosive enemies
 		if MutationManager.is_active("explosive_enemies") and not is_in_group("boss"):
@@ -383,6 +399,7 @@ func _spawn_magnet_pickup(pos: Vector3) -> void:
 	magnet.global_position = pos + Vector3(0.2, 0.3, -0.3)
 
 func _spawn_fire_ground(pos: Vector3) -> void:
+	# Lightweight fire ground: just disc mesh + Area3D collision (no GPUParticles3D)
 	var fire_scene = preload("res://scripts/effects/fire_ground_effect.gd")
 	var fire = Area3D.new()
 	fire.set_script(fire_scene)
@@ -393,7 +410,7 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	shape.radius = 1.5
 	col.shape = shape
 	fire.add_child(col)
-	# Visual — base fire disc
+	# Visual — simple fire disc (no particles for performance)
 	var mesh_inst = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
 	disc.top_radius = 1.5
@@ -408,84 +425,6 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mesh_inst.material_override = mat
 	fire.add_child(mesh_inst)
-
-	# Flames — rising fire particles
-	var flames = GPUParticles3D.new()
-	flames.name = "Flames"
-	flames.amount = 25
-	flames.lifetime = 0.6
-	flames.position = Vector3(0, 0.05, 0)
-	var flame_mat = ParticleProcessMaterial.new()
-	flame_mat.direction = Vector3(0, 1, 0)
-	flame_mat.initial_velocity_min = 0.5
-	flame_mat.initial_velocity_max = 1.5
-	flame_mat.spread = 20.0
-	flame_mat.gravity = Vector3(0, 0.5, 0)
-	flame_mat.scale_min = 0.5
-	flame_mat.scale_max = 1.0
-	flame_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	flame_mat.emission_sphere_radius = 1.2
-	# Scale curve: start big, shrink as they rise
-	var flame_scale_curve = CurveTexture.new()
-	var fcurve = Curve.new()
-	fcurve.add_point(Vector2(0.0, 1.0))
-	fcurve.add_point(Vector2(0.5, 0.5))
-	fcurve.add_point(Vector2(1.0, 0.0))
-	flame_scale_curve.curve = fcurve
-	flame_mat.scale_curve = flame_scale_curve
-	# Color gradient: yellow -> orange -> red
-	var flame_color_ramp = GradientTexture1D.new()
-	var flame_gradient = Gradient.new()
-	flame_gradient.set_offset(0, 0.0)
-	flame_gradient.set_color(0, Color(1.0, 0.9, 0.2, 0.9))
-	flame_gradient.add_point(0.5, Color(1.0, 0.5, 0.1, 0.7))
-	flame_gradient.set_offset(2, 1.0)
-	flame_gradient.set_color(2, Color(0.8, 0.1, 0.0, 0.0))
-	flame_color_ramp.gradient = flame_gradient
-	flame_mat.color_ramp = flame_color_ramp
-	flames.process_material = flame_mat
-	var flame_mesh = SphereMesh.new()
-	flame_mesh.radius = 0.08
-	flame_mesh.height = 0.16
-	var flame_mesh_mat = StandardMaterial3D.new()
-	flame_mesh_mat.albedo_color = Color(1.0, 0.6, 0.1, 0.8)
-	flame_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	flame_mesh_mat.emission_enabled = true
-	flame_mesh_mat.emission = Color(1.0, 0.5, 0.1)
-	flame_mesh_mat.emission_energy_multiplier = 2.0
-	flame_mesh.material = flame_mesh_mat
-	flames.draw_pass_1 = flame_mesh
-	fire.add_child(flames)
-
-	# Embers — small bright dots floating up
-	var embers = GPUParticles3D.new()
-	embers.name = "Embers"
-	embers.amount = 8
-	embers.lifetime = 1.2
-	embers.position = Vector3(0, 0.1, 0)
-	var ember_mat = ParticleProcessMaterial.new()
-	ember_mat.direction = Vector3(0, 1, 0)
-	ember_mat.initial_velocity_min = 0.3
-	ember_mat.initial_velocity_max = 0.8
-	ember_mat.spread = 40.0
-	ember_mat.gravity = Vector3(0, 0.3, 0)
-	ember_mat.scale_min = 0.02
-	ember_mat.scale_max = 0.05
-	ember_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	ember_mat.emission_sphere_radius = 1.0
-	embers.process_material = ember_mat
-	var ember_mesh = SphereMesh.new()
-	ember_mesh.radius = 0.02
-	ember_mesh.height = 0.04
-	var ember_mesh_mat = StandardMaterial3D.new()
-	ember_mesh_mat.albedo_color = Color(1.0, 0.7, 0.2, 0.9)
-	ember_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ember_mesh_mat.emission_enabled = true
-	ember_mesh_mat.emission = Color(1.0, 0.6, 0.1)
-	ember_mesh_mat.emission_energy_multiplier = 3.0
-	ember_mesh.material = ember_mesh_mat
-	embers.draw_pass_1 = ember_mesh
-	fire.add_child(embers)
 	fire.global_position = pos
 	fire.monitoring = true
 	get_tree().current_scene.call_deferred("add_child", fire)
@@ -502,11 +441,12 @@ func _mutation_explode(pos: Vector3) -> void:
 	var explosion_damage = maxi(1, max_hp / 2)
 	var explosion_radius = 1.5
 	ParticleFactory.spawn_explosion_particles(pos + Vector3(0, 0.3, 0))
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
+	# Use spatial grid for O(1) radius query instead of iterating all enemies
+	var nearby = GameManager.get_enemies_in_radius(pos, explosion_radius)
+	for e in nearby:
 		if e == self or not is_instance_valid(e) or e.is_dead:
 			continue
-		if pos.distance_to(e.global_position) <= explosion_radius and e.has_method("take_damage"):
+		if e.has_method("take_damage"):
 			e.call_deferred("take_damage", explosion_damage, "fire")
 
 func _on_body_entered(body: Node3D) -> void:

@@ -155,16 +155,15 @@ func _process(delta: float) -> void:
 	for key in to_remove:
 		teleported_enemies.erase(key)
 
-	# Check enemies near entry portal
-	var enemies = GameManager.get_enemies()
-	for enemy in enemies:
+	# Check enemies near entry portal (spatial grid: O(1))
+	var nearby = GameManager.get_enemies_in_radius(entry_mesh.global_position, portal_radius)
+	for enemy in nearby:
 		if not is_instance_valid(enemy):
 			continue
 		var eid = enemy.get_instance_id()
 		if eid in teleported_enemies:
 			continue
-		var dist = entry_mesh.global_position.distance_to(enemy.global_position)
-		if dist <= portal_radius:
+		if true:
 			# Teleport enemy to exit position with some randomness
 			var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
 			enemy.global_position = exit_position + offset

@@ -91,18 +91,16 @@ func _freeze_area(pos: Vector3, level: int) -> void:
 	# Spawn frost mist
 	_spawn_frost_mist(pos, freeze_duration)
 
-	# Find all enemies in radius and slow them
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
+	# Find all enemies in radius and slow them (spatial grid: O(1) instead of O(n))
+	var nearby = GameManager.get_enemies_in_radius(pos, freeze_radius)
+	for e in nearby:
 		if not is_instance_valid(e):
 			continue
-		var dist = pos.distance_to(e.global_position)
-		if dist <= freeze_radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "ice")
-			# Apply slow effect if enemy supports it
-			if e.has_method("apply_slow"):
-				e.call_deferred("apply_slow", 0.4, freeze_duration)
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "ice")
+		# Apply slow effect if enemy supports it
+		if e.has_method("apply_slow"):
+			e.call_deferred("apply_slow", 0.4, freeze_duration)
 
 func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
 	var crystal_mat = StandardMaterial3D.new()

@@ -115,17 +115,16 @@ func _explode() -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.7, 0.1))
 	ParticleFactory.spawn_death_particles(pos, Color(0.3, 0.15, 0.05))
 
-	# Damage all enemies in radius
-	var enemies = GameManager.get_enemies()
-	for enemy in enemies:
+	# Damage all enemies in radius (spatial grid: O(1) instead of O(n))
+	var nearby = GameManager.get_enemies_in_radius(global_position, explosion_radius)
+	for enemy in nearby:
 		if not is_instance_valid(enemy):
 			continue
 		var dist = global_position.distance_to(enemy.global_position)
-		if dist <= explosion_radius:
-			if enemy.has_method("take_damage"):
-				var falloff = 1.0 - (dist / explosion_radius) * 0.5
-				var final_damage = int(damage * falloff)
-				enemy.call_deferred("take_damage", final_damage, "fire")
+		if enemy.has_method("take_damage"):
+			var falloff = 1.0 - (dist / explosion_radius) * 0.5
+			var final_damage = int(damage * falloff)
+			enemy.call_deferred("take_damage", final_damage, "fire")
 
 	queue_free()
 

@@ -40,8 +40,14 @@ var _boss_rush_index: int = 0
 var _boss_rush_cooldown: float = 0.0
 var _boss_rush_active_boss: bool = false
 
+# Cached stage skin data (resolved once at start instead of per-spawn)
+var _cached_skin_colors: Array = []
+var _cached_skin_names: Dictionary = {}
+var _cached_skin_stage: String = ""
+
 func _ready() -> void:
 	rng.randomize()
+	_cache_stage_skin()
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -285,22 +291,27 @@ var _stage_skins: Dictionary = {
 	},
 }
 
-func _apply_stage_skin(enemy: Node3D) -> void:
+func _cache_stage_skin() -> void:
 	var stage: String = GameManager.selected_stage
-	if stage == "cemetery" or stage == "":
-		return  # Cemetery uses default skins
-	if not _stage_skins.has(stage):
+	_cached_skin_stage = stage
+	if stage == "cemetery" or stage == "" or not _stage_skins.has(stage):
+		_cached_skin_colors = []
+		_cached_skin_names = {}
 		return
 	var skin_data: Dictionary = _stage_skins[stage]
-	# Apply themed color
+	_cached_skin_colors = skin_data["colors"]
+	_cached_skin_names = skin_data["names"]
+
+func _apply_stage_skin(enemy: Node3D) -> void:
+	if _cached_skin_colors.is_empty():
+		return
+	# Apply themed color (uses cached array)
 	if enemy is EnemyBase3D:
-		var colors: Array = skin_data["colors"]
-		enemy.enemy_color = colors[rng.randi() % colors.size()]
+		enemy.enemy_color = _cached_skin_colors[rng.randi() % _cached_skin_colors.size()]
 	# Apply themed name (display only; model lookup uses scene_file_path)
-	var names: Dictionary = skin_data["names"]
 	var base_name: String = enemy.name
-	if names.has(base_name):
-		enemy.name = names[base_name]
+	if _cached_skin_names.has(base_name):
+		enemy.name = _cached_skin_names[base_name]
 
 func _process_boss_rush(delta: float) -> void:
 	if _boss_rush_index >= _boss_rush_stages.size():

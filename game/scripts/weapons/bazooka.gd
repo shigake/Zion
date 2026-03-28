@@ -41,8 +41,7 @@ func _fire(level: int) -> void:
 		# Fire in aim direction, target a point 12 units away
 		best_target = player_pos + GameManager.aim_direction * 12.0
 	else:
-		# Mira no cluster mais denso de inimigos
-		# Find first valid enemy for initial target
+		# Mira no cluster mais denso de inimigos (sampled for performance)
 		var found_initial := false
 		for e in enemies:
 			if is_instance_valid(e):
@@ -53,14 +52,18 @@ func _fire(level: int) -> void:
 			return
 
 		var best_count: int = 0
-
-		for e in enemies:
+		# Sample up to 20 enemies instead of checking all (O(n*20) instead of O(n²))
+		var sample_count = mini(enemies.size(), 20)
+		var step = maxi(1, enemies.size() / sample_count)
+		var idx := 0
+		while idx < enemies.size():
+			var e = enemies[idx]
+			idx += step
 			if not is_instance_valid(e):
 				continue
-			var count = 0
-			for e2 in enemies:
-				if is_instance_valid(e2) and e.global_position.distance_to(e2.global_position) < 4.0:
-					count += 1
+			# Use spatial grid for neighbor count instead of iterating all enemies
+			var nearby = GameManager.get_enemies_in_radius(e.global_position, 4.0)
+			var count = nearby.size()
 			if count > best_count:
 				best_count = count
 				best_target = e.global_position

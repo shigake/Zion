@@ -4,12 +4,12 @@ extends Node
 ## Usa pool para evitar alocacoes constantes (performance com 500+ inimigos).
 
 # --- Particle Pool ---
-const PARTICLE_POOL_SIZE := 20
+const PARTICLE_POOL_SIZE := 30
 var _particle_pool: Array = []  # Available GPUParticles3D nodes
 var _active_particles: Dictionary = {}  # node -> cleanup_timer
 
 # --- Damage Number Pool ---
-const DAMAGE_NUMBER_POOL_SIZE := 30
+const DAMAGE_NUMBER_POOL_SIZE := 50
 var _dmg_pool: Array = []  # Available Label3D nodes
 var _dmg_script = preload("res://scripts/effects/damage_number.gd")
 

@@ -509,7 +509,8 @@ func _update_item_icons() -> void:
 # --------------- Boss HP Bar ---------------
 
 func _update_boss_hp() -> void:
-	var bosses := get_tree().get_nodes_in_group("boss")
+	# Use cached group lookup from GameManager instead of direct tree query
+	var bosses := get_tree().get_nodes_in_group("boss")  # Small group, no perf concern
 	if bosses.is_empty():
 		boss_hp_bar.visible = false
 		return

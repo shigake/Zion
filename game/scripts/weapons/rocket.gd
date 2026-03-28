@@ -45,14 +45,13 @@ func _physics_process(delta: float) -> void:
 		_explode()
 
 func _explode() -> void:
-	# Dano em area
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
+	# Dano em area (spatial grid: O(1) instead of O(n))
+	var nearby = GameManager.get_enemies_in_radius(global_position, explosion_radius)
+	for e in nearby:
 		if not is_instance_valid(e):
 			continue
-		if global_position.distance_to(e.global_position) <= explosion_radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", damage, "fire")
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", damage, "fire")
 
 	# --- Multi-layer explosion ---
 	var explosion_root = Node3D.new()
@@ -154,11 +153,11 @@ func _create_shockwave(parent: Node3D) -> void:
 	tween.set_parallel(false)
 	tween.tween_callback(mesh_inst.queue_free)
 
-# Layer 4: Smoke particles rising
+# Layer 4: Smoke particles rising (reduced count for performance)
 func _create_smoke_particles(parent: Node3D) -> void:
 	var particles = GPUParticles3D.new()
-	particles.amount = 20
-	particles.lifetime = 1.5
+	particles.amount = 10
+	particles.lifetime = 1.0
 	particles.one_shot = true
 	particles.explosiveness = 0.9
 	particles.emitting = true
@@ -186,8 +185,8 @@ func _create_smoke_particles(parent: Node3D) -> void:
 # Layer 5: Sparks flying outward
 func _create_spark_particles(parent: Node3D) -> void:
 	var particles = GPUParticles3D.new()
-	particles.amount = 25
-	particles.lifetime = 0.5
+	particles.amount = 12
+	particles.lifetime = 0.4
 	particles.one_shot = true
 	particles.explosiveness = 1.0
 	particles.emitting = true
