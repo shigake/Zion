@@ -495,8 +495,8 @@ const CROSS_COMBOS: Dictionary = {
 	"electric_ice": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0)},
 	"fire_electric": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2)},
 	"electric_fire": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2)},
-	"dark_ice": {"name": "Frozen Abyss", "color": Color(0.2, 0.1, 0.5)},
-	"ice_dark": {"name": "Frozen Abyss", "color": Color(0.2, 0.1, 0.5)},
+	"dark_ice": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
+	"ice_dark": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
 	# Water cross-combos
 	"water_fire": {"name": "Steam Explosion", "color": Color(1.0, 0.9, 0.8)},
 	"fire_water": {"name": "Steam Explosion", "color": Color(1.0, 0.9, 0.8)},
@@ -509,10 +509,6 @@ const CROSS_COMBOS: Dictionary = {
 	# New cross-combos
 	"fire_poison": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1)},
 	"poison_fire": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1)},
-	"ice_dark": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
-	"dark_ice": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
-	"electric_poison": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
-	"poison_electric": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
 }
 
 func register_elemental_zone(pos: Vector3, element: String, owner_peer: int, duration: float = 3.0) -> void:
