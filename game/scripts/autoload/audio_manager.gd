@@ -21,7 +21,12 @@ const SFX_POOL_SIZE: int = 5
 var _valid_sfx: Array[String] = [
 	"hit", "kill", "collect_xp", "collect_crystal", "level_up",
 	"evolve", "boss_appear", "dash", "player_hurt", "menu_click",
-	"boomerang", "tornado", "chain_whip", "blood_orb"
+	"boomerang", "tornado", "chain_whip", "blood_orb",
+	"sword_slash", "axe_chop", "scythe_swoosh", "whip_crack",
+	"hammer_slam", "lance_thrust", "punch_hit", "gun_shot",
+	"bow_release", "magic_cast", "explosion", "electric_zap",
+	"poison_splash", "summon_pop", "heal", "achievement",
+	"reroll", "banish", "select", "boss_roar", "boss_death"
 ]
 
 # Known music names

@@ -608,6 +608,7 @@ func _choose(index: int) -> void:
 		_banish_option(index)
 		return
 
+	AudioManager.play_sfx("select")
 	var opt = options[index]
 
 	# --- Click flash animation ---
@@ -742,11 +743,13 @@ func _on_reroll() -> void:
 	if GameManager.rerolls <= 0:
 		return
 	GameManager.rerolls -= 1
+	AudioManager.play_sfx("reroll")
 	_show_choices()
 
 func _on_banish() -> void:
 	if GameManager.banishes <= 0:
 		return
+	AudioManager.play_sfx("banish")
 	banish_mode = true
 	title_label.text = LocaleManager.tr_key("banish_select")
 	subtitle_label.text = ""

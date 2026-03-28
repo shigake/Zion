@@ -92,7 +92,7 @@ func _fire(level: int) -> void:
 		arrow.position = pos
 		scene_root.add_child(arrow)
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("bow_release")
 
 ## Client-only: spawns visual arrows without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -150,4 +150,4 @@ func _fire_visual_only(level: int) -> void:
 		arrow.position = pos
 		scene_root.add_child(arrow)
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("bow_release")

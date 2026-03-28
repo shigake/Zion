@@ -100,7 +100,7 @@ func _do_punch(level: int) -> void:
 	punch_area.position = offsets[idx]
 	punch_mesh.position = offsets[idx]
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("punch_hit")
 
 	# Slash trail visual at punch position
 	_spawn_slash_trail(punch_mesh.global_position)

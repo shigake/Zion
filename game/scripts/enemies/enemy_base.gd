@@ -819,6 +819,7 @@ func _die() -> void:
 		AchievementManager.on_boss_killed_one_hit()
 	# Telemetry: boss killed event + boss death dialogue
 	if is_in_group("boss"):
+		AudioManager.play_sfx("boss_death")
 		GameManager.boss_died.emit(name)
 		Telemetry.send_event("boss_killed", {
 			"boss_name": name,

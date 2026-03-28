@@ -155,4 +155,4 @@ func _fire_page(level: int) -> void:
 		page.damage_type = "physical"
 		scene_root.add_child(page)
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("magic_cast")

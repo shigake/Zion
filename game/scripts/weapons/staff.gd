@@ -69,6 +69,8 @@ func _fire(level: int) -> void:
 	if not is_instance_valid(scene_root):
 		return
 
+	AudioManager.play_sfx("magic_cast")
+
 	if GameManager.manual_aim:
 		# Manual aim: fire straight projectiles (no homing)
 		for i in range(num_projectiles):

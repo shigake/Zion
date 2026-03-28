@@ -119,6 +119,8 @@ func _attack(level: int) -> void:
 	slash_mesh_l.scale = Vector3.ONE * area_scale
 	slash_mesh_r.scale = Vector3.ONE * area_scale
 
+	AudioManager.play_sfx("sword_slash")
+
 	# Slash trail visual
 	_spawn_slash_trail()
 

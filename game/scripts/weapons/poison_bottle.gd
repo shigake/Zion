@@ -217,5 +217,5 @@ func _throw_bottle(level: int) -> void:
 	active_pools.append(pool)
 	get_tree().current_scene.call_deferred("add_child", pool)
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("poison_splash")
 	ParticleFactory.spawn_hit_particles(target_pos + Vector3(0, 0.5, 0), Color(0.2, 0.8, 0.1))

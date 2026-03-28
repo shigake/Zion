@@ -69,7 +69,7 @@ func _fire(level: int) -> void:
 
 	# Spawn effect
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("bow_release")
 
 	var dmg = int(WeaponDB.get_damage("crossbow", level))
 
@@ -132,7 +132,7 @@ func _fire_visual_only(level: int) -> void:
 		direction.y = 0
 
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("bow_release")
 
 	var scene_root = get_tree().current_scene
 	if not is_instance_valid(scene_root):

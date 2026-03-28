@@ -90,6 +90,7 @@ func _on_body_entered(body: Node3D) -> void:
 	GameManager._last_attacking_weapon = "scythe"
 	body.call_deferred("take_damage", dmg, "dark")
 	hit_timers[eid] = hit_cooldown
+	AudioManager.play_sfx("scythe_swoosh")
 
 	# Slash trail visual at hit position
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))

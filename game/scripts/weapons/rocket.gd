@@ -54,6 +54,8 @@ func _explode() -> void:
 			GameManager._last_attacking_weapon = "bazooka"
 			e.call_deferred("take_damage", damage, "fire")
 
+	AudioManager.play_sfx("explosion")
+
 	# --- Multi-layer explosion ---
 	var explosion_root = Node3D.new()
 	get_tree().current_scene.add_child(explosion_root)

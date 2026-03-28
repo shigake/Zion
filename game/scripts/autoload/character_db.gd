@@ -128,7 +128,7 @@ var characters: Dictionary = {
 	},
 	"chef": {
 		"name": "Chef",
-		"starting_weapon": "flamethrower",
+		"starting_weapon": "axe",
 		"passive": "Cura 2x efetiva",
 		"color": Color(1.0, 0.95, 0.9),
 		"speed_bonus": 0.0,

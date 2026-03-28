@@ -183,13 +183,7 @@ func _display_popup(data: Dictionary) -> void:
 	_popup_panel.modulate = Color.WHITE
 
 	# Play sound
-	if AudioManager.has_method("play_sfx"):
-		# Try "achievement" first, fallback to "level_up"
-		var sfx_list: Array = AudioManager.get("sfx_list") if AudioManager.get("sfx_list") else []
-		if "achievement" in sfx_list:
-			AudioManager.play_sfx("achievement")
-		else:
-			AudioManager.play_sfx("level_up")
+	AudioManager.play_sfx("achievement")
 
 	# Slide-in animation with EASE_OUT_BACK (bouncy entrance)
 	var tween := create_tween()

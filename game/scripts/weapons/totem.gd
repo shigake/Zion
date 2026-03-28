@@ -167,7 +167,7 @@ func _place_totem(level: int) -> void:
 	active_totems.append(totem)
 	get_tree().current_scene.call_deferred("add_child", totem)
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("electric_zap")
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.2, 0.6, 1.0))
 
 # Inner class for totem behavior

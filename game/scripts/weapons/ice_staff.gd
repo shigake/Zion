@@ -69,7 +69,7 @@ func _fire(level: int) -> void:
 
 	# Ice particles at spawn
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("magic_cast")
 
 	var dmg = int(WeaponDB.get_damage("ice_staff", level))
 
@@ -129,7 +129,7 @@ func _fire_visual_only(level: int) -> void:
 		direction.y = 0
 
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("magic_cast")
 
 	var scene_root = get_tree().current_scene
 	if not is_instance_valid(scene_root):

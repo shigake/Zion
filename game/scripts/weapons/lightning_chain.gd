@@ -113,7 +113,7 @@ func _cast(level: int) -> void:
 
 		current_target = next_target
 
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("electric_zap")
 
 func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	var container = Node3D.new()

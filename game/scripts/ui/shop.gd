@@ -12,6 +12,7 @@ func _ready() -> void:
 	back_btn.pressed.connect(_on_back)
 	_build_shop()
 	GamepadUI.notify_menu_opened()
+	AudioManager.play_music("shop")
 
 func _build_shop() -> void:
 	_clear_upgrades()

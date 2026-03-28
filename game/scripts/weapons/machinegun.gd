@@ -64,7 +64,7 @@ func _fire(level: int) -> void:
 	var player_pos = player.global_position
 	# Muzzle flash
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("gun_shot")
 
 	var direction: Vector3
 	if GameManager.manual_aim:
@@ -123,7 +123,7 @@ func _fire_visual_only(level: int) -> void:
 		return
 	var player_pos = player.global_position
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("gun_shot")
 
 	var direction: Vector3
 	if GameManager.manual_aim:

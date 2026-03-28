@@ -46,6 +46,7 @@ func _summon(level: int) -> void:
 	skeleton.damage = int(WeaponDB.get_damage("necro", level))
 	skeleton.lifetime = 8.0 + level * 2.0
 	get_tree().current_scene.call_deferred("add_child", skeleton)
+	AudioManager.play_sfx("summon_pop")
 	# Green summon circle
 	_spawn_summon_circle(player_pos + offset)
 

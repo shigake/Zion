@@ -91,6 +91,8 @@ func _attack(level: int) -> void:
 	thrust_area.position.z = 0.0
 	thrust_mesh.position.z = 0.0
 
+	AudioManager.play_sfx("lance_thrust")
+
 	# Slash trail visual
 	_spawn_slash_trail()
 

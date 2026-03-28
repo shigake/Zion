@@ -199,6 +199,10 @@ func _show() -> void:
 			# Special narrative for mystery character unlock
 			if char_id == "mystery":
 				crystals_label.text += "\n\n" + LocaleManager.tr_key("lore_mystery_unlock")
+	if GameManager.is_victory:
+		AudioManager.play_music("victory")
+	else:
+		AudioManager.play_music("game_over_music")
 	overlay.visible = true
 	panel.visible = true
 	GameManager.paused = true

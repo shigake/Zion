@@ -110,6 +110,7 @@ func _ready() -> void:
 func _on_boss_spawned(boss_name: String) -> void:
 	var key = _normalize_boss_name(boss_name)
 	if BOSS_LINES.has(key):
+		AudioManager.play_sfx("boss_roar")
 		_show_dialogue(BOSS_LINES[key]["intro"])
 
 func _on_boss_died(boss_name: String) -> void:

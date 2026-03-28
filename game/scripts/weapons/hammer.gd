@@ -80,7 +80,7 @@ func _attack(level: int) -> void:
 
 	# Screen shake on impact
 	ScreenEffects.shake(0.3)
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("hammer_slam")
 
 	# Slash trail visual (ground slam)
 	_spawn_slash_trail()

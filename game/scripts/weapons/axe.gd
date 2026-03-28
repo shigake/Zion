@@ -122,6 +122,8 @@ func _throw(level: int) -> void:
 	return_duration = 0.6 / speed_mult
 	max_distance = 8.0 + (level - 1) * 0.5
 
+	AudioManager.play_sfx("axe_chop")
+
 	is_flying = true
 	returning = false
 	fly_timer = 0.0

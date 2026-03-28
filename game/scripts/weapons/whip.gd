@@ -96,6 +96,8 @@ func _attack(level: int) -> void:
 	slash_area.scale = Vector3.ONE * area_scale
 	slash_mesh.scale = Vector3.ONE * area_scale
 
+	AudioManager.play_sfx("whip_crack")
+
 	# Slash trail visual
 	_spawn_slash_trail()
 

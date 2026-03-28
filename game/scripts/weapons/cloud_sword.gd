@@ -94,7 +94,7 @@ func _attack(level: int) -> void:
 	# Screen shake — golpe pesado
 	ScreenEffects.shake(0.4)
 	ScreenEffects.flash(0.05, 0.1)
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("sword_slash")
 
 	# Ground dust at player position
 	ParticleFactory.spawn_ground_dust(global_position, 8)

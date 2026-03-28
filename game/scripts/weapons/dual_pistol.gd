@@ -76,7 +76,7 @@ func _fire(level: int) -> void:
 
 	# Muzzle flash
 	ParticleFactory.spawn_hit_particles(spawn_pos, Color(1.0, 0.9, 0.3))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("gun_shot")
 
 	var dmg = int(WeaponDB.get_damage("dual_pistol", level))
 
@@ -132,7 +132,7 @@ func _fire_visual_only(level: int) -> void:
 	var spawn_pos = player_pos + Vector3(0, 0.5, 0) + right * side_offset
 
 	ParticleFactory.spawn_hit_particles(spawn_pos, Color(1.0, 0.9, 0.3))
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("gun_shot")
 
 	var scene_root = get_tree().current_scene
 	if not is_instance_valid(scene_root):
