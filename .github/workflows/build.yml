@@ -1,0 +1,145 @@
+name: Build e Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versao para o build (ex: 2.99.0)'
+        required: false
+
+env:
+  GODOT_VERSION: "4.4.1"
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ler versao
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ -f game/VERSION ]; then
+            VERSION=$(cat game/VERSION)
+          else
+            VERSION="0.0.0"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Versao: $VERSION"
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/godot
+            ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux-export
+
+      - name: Instalar Godot + Export Templates
+        run: |
+          # Godot editor
+          if [ ! -f ~/godot/godot ]; then
+            mkdir -p ~/godot
+            wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -o /tmp/godot.zip -d ~/godot
+            mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+            chmod +x ~/godot/godot
+          fi
+          echo "$HOME/godot" >> $GITHUB_PATH
+
+          # Export templates
+          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          if [ ! -d "$TEMPLATES_DIR" ]; then
+            mkdir -p "$TEMPLATES_DIR"
+            wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -O /tmp/templates.tpz
+            unzip -o /tmp/templates.tpz -d /tmp/templates
+            cp /tmp/templates/templates/* "$TEMPLATES_DIR/"
+          fi
+
+      - name: Importar projeto
+        run: |
+          cd game
+          godot --headless --import project.godot 2>&1 || true
+
+      - name: Exportar Windows
+        run: |
+          mkdir -p build
+          cd game
+          godot --headless --export-release "Windows Desktop" ../build/zion.exe 2>&1 | tee /tmp/export.log
+          echo ""
+          if [ -f ../build/zion.exe ]; then
+            SIZE=$(du -h ../build/zion.exe | cut -f1)
+            echo "✅ Build gerado com sucesso: zion.exe ($SIZE)"
+          else
+            echo "❌ Falha ao gerar o build"
+            cat /tmp/export.log
+            exit 1
+          fi
+
+      - name: Preparar pacote
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          mkdir -p "release/Zion-v${VERSION}"
+          cp build/zion.exe "release/Zion-v${VERSION}/"
+          # Copiar README jogavel
+          cat > "release/Zion-v${VERSION}/LEIA-ME.txt" << 'READMEEOF'
+          ╔══════════════════════════════════════╗
+          ║          ZION - Survivors            ║
+          ║      Roguelite Co-op Online          ║
+          ╚══════════════════════════════════════╝
+
+          Como jogar:
+          1. Execute zion.exe
+          2. Se o Windows Defender alertar, clique em
+             "Mais informacoes" > "Executar mesmo assim"
+          3. Divirta-se!
+
+          Multiplayer:
+          - Host cria sala no menu
+          - Outros jogadores entram pelo IP do host
+
+          Controles:
+          - WASD: Mover
+          - Mouse: Mirar
+          - Armas atiram automaticamente
+          - TAB: Inventario
+          - ESC: Pausa
+
+          Bugs? Reporte em: github.com/REPO/issues
+          READMEEOF
+          cd release
+          zip -r "../Zion-v${VERSION}-windows.zip" "Zion-v${VERSION}/"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zion-v${{ steps.version.outputs.version }}-windows
+          path: release/Zion-v${{ steps.version.outputs.version }}/
+          retention-days: 30
+
+      - name: Criar GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Zion v${{ steps.version.outputs.version }}"
+          body: |
+            ## Zion v${{ steps.version.outputs.version }}
+
+            ### Download
+            Baixe o arquivo `.zip`, descompacte e execute `zion.exe`.
+
+            > **Nota**: O Windows Defender pode alertar sobre o executável não assinado.
+            > Clique em "Mais informações" → "Executar mesmo assim".
+
+            ### O que há de novo
+            Veja o histórico de commits para detalhes das mudanças.
+          files: |
+            Zion-v${{ steps.version.outputs.version }}-windows.zip
+          draft: false
+          prerelease: false

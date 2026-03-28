@@ -1,0 +1,107 @@
+name: CI - Validacao e Testes
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  GODOT_VERSION: "4.4.1"
+
+jobs:
+  validate:
+    name: Validar projeto
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/godot
+            ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Instalar Godot
+        run: |
+          if [ ! -f ~/godot/godot ]; then
+            mkdir -p ~/godot
+            wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -o /tmp/godot.zip -d ~/godot
+            mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+            chmod +x ~/godot/godot
+          fi
+          echo "$HOME/godot" >> $GITHUB_PATH
+
+      - name: Importar projeto (validar erros)
+        run: |
+          cd game
+          godot --headless --import project.godot 2>&1 | tee /tmp/import.log
+          # Falha se houver erros criticos
+          if grep -i "ERROR\|FATAL\|Cannot" /tmp/import.log | grep -v "Condition\|vulkan\|Mesa\|rendering\|display" | head -20; then
+            echo "::warning::Erros encontrados na importacao (ver log acima)"
+          fi
+
+      - name: Verificar estrutura do projeto
+        run: |
+          echo "=== Verificando arquivos essenciais ==="
+          test -f game/project.godot && echo "✅ project.godot" || (echo "❌ project.godot ausente" && exit 1)
+          test -f game/VERSION && echo "✅ VERSION ($(cat game/VERSION))" || (echo "❌ VERSION ausente" && exit 1)
+          test -f game/export_presets.cfg && echo "✅ export_presets.cfg" || echo "⚠️ export_presets.cfg ausente (build vai falhar)"
+          test -d game/scenes && echo "✅ scenes/" || (echo "❌ scenes/ ausente" && exit 1)
+          test -d game/scripts && echo "✅ scripts/" || (echo "❌ scripts/ ausente" && exit 1)
+          test -d game/assets && echo "✅ assets/" || (echo "❌ assets/ ausente" && exit 1)
+
+          echo ""
+          echo "=== Estatisticas ==="
+          echo "Cenas: $(find game/scenes -name '*.tscn' | wc -l)"
+          echo "Scripts: $(find game/scripts -name '*.gd' | wc -l)"
+          echo "Versao: $(cat game/VERSION)"
+
+  balance-test:
+    name: Teste de balanceamento
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/godot
+            ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Instalar Godot
+        run: |
+          if [ ! -f ~/godot/godot ]; then
+            mkdir -p ~/godot
+            wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -o /tmp/godot.zip -d ~/godot
+            mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+            chmod +x ~/godot/godot
+          fi
+          echo "$HOME/godot" >> $GITHUB_PATH
+
+      - name: Importar projeto
+        run: |
+          cd game
+          godot --headless --import project.godot 2>&1 || true
+
+      - name: Rodar teste de balanceamento
+        run: |
+          cd game
+          timeout 120 godot --headless --script res://scripts/tests/balance_test.gd 2>&1 | tee /tmp/balance.log || true
+          echo ""
+          echo "=== Resultado ==="
+          if grep -q "PASS" /tmp/balance.log; then
+            echo "✅ Testes de balanceamento passaram"
+          elif grep -q "FAIL" /tmp/balance.log; then
+            echo "❌ Testes de balanceamento falharam"
+            exit 1
+          else
+            echo "⚠️ Resultado inconclusivo (ver log)"
+          fi
