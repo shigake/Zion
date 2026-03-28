@@ -17,7 +17,10 @@ var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 # Eclipse state
 var _eclipse_original_energy: float = -1.0
-var _eclipse_hidden_enemies: Array = []
+var _eclipse_original_modulate: Color = Color.WHITE
+var _eclipse_glowing_enemies: Array = []
+var _eclipse_xp_bonus_active: bool = false
+var _eclipse_prev_xp_mult: float = 1.0
 
 # Meteor shower state
 var _meteor_spawns_remaining: int = 0
@@ -162,7 +165,7 @@ func _start_event(event_name: String) -> void:
 			event_timer = 5.0
 			_do_roulette()
 		"eclipse":
-			event_timer = 20.0
+			event_timer = 15.0
 			_start_eclipse()
 		"meteor_shower":
 			event_timer = 12.0  # 10s of spawns + 2s buffer for last meteor
@@ -545,34 +548,46 @@ func _do_roulette() -> void:
 		"slow":
 			GameManager.speed_mult = maxf(0.5, GameManager.speed_mult - 0.3)
 
-# ---- Eclipse (min 8) ----
-# Darken screen, enemies become invisible for 20 seconds
+# ---- Eclipse Total (min 8) ----
+# Darken the stage, enemies get a glow effect, bonus XP for 15 seconds
 func _start_eclipse() -> void:
 	# Reduce DirectionalLight energy
 	var dir_light = _find_directional_light()
 	if dir_light:
 		_eclipse_original_energy = dir_light.light_energy
-		dir_light.light_energy = 0.1
+		dir_light.light_energy = 0.15
 
-	# Add dark overlay via CanvasLayer
+	# Darken the stage by modulating the current scene
+	var root = get_tree().current_scene
+	if root:
+		_eclipse_original_modulate = root.modulate if "modulate" in root else Color.WHITE
+		var tween = create_tween()
+		tween.tween_property(root, "modulate", Color(0.2, 0.2, 0.3), 1.0)
+
+	# Add subtle dark overlay via CanvasLayer for extra atmosphere
 	var overlay = ColorRect.new()
 	overlay.name = "EclipseOverlay"
-	overlay.color = Color(0, 0, 0, 0.6)
+	overlay.color = Color(0.05, 0.0, 0.1, 0.4)
 	overlay.anchors_preset = Control.PRESET_FULL_RECT
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var canvas = CanvasLayer.new()
 	canvas.name = "EclipseCanvas"
 	canvas.layer = 10
 	canvas.add_child(overlay)
 	add_child(canvas)
 
-	# Hide enemy meshes
-	_eclipse_hidden_enemies.clear()
+	# Make enemies glow (brighter modulate + emission-like color)
+	_eclipse_glowing_enemies.clear()
 	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
-		var mesh = enemy.find_child("MeshInstance3D", true, false)
-		if mesh and mesh is MeshInstance3D:
-			mesh.visible = false
-			_eclipse_hidden_enemies.append(enemy)
+		if is_instance_valid(enemy) and enemy is Node3D:
+			enemy.modulate = Color(2.0, 2.0, 2.5)  # Bright glow
+			_eclipse_glowing_enemies.append(enemy)
+
+	# Bonus XP during eclipse (1.5x multiplier)
+	_eclipse_xp_bonus_active = true
+	_eclipse_prev_xp_mult = GameManager.xp_mult
+	GameManager.xp_mult = _eclipse_prev_xp_mult * 1.5
 
 func _end_eclipse() -> void:
 	# Restore DirectionalLight
@@ -581,18 +596,27 @@ func _end_eclipse() -> void:
 		dir_light.light_energy = _eclipse_original_energy
 		_eclipse_original_energy = -1.0
 
+	# Restore stage modulate
+	var root = get_tree().current_scene
+	if root:
+		var tween = create_tween()
+		tween.tween_property(root, "modulate", _eclipse_original_modulate, 1.0)
+
 	# Remove dark overlay
 	var canvas = get_node_or_null("EclipseCanvas")
 	if canvas:
 		canvas.queue_free()
 
-	# Restore enemy mesh visibility
-	for enemy in _eclipse_hidden_enemies:
-		if is_instance_valid(enemy):
-			var mesh = enemy.find_child("MeshInstance3D", true, false)
-			if mesh and mesh is MeshInstance3D:
-				mesh.visible = true
-	_eclipse_hidden_enemies.clear()
+	# Remove enemy glow
+	for enemy in _eclipse_glowing_enemies:
+		if is_instance_valid(enemy) and enemy is Node3D:
+			enemy.modulate = Color.WHITE
+	_eclipse_glowing_enemies.clear()
+
+	# Restore XP multiplier
+	if _eclipse_xp_bonus_active:
+		GameManager.xp_mult = _eclipse_prev_xp_mult
+		_eclipse_xp_bonus_active = false
 
 func _find_directional_light() -> DirectionalLight3D:
 	var lights = get_tree().get_nodes_in_group("directional_light")

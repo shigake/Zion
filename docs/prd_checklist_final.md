@@ -1,4 +1,4 @@
-# Zion — Checklist Final Completo (v2.84)
+# Zion — Checklist Final Completo (v2.93)
 
 ## BUGS CRITICOS
 - [x] Chef starting_weapon = "flamethrower" (desabilitado) — trocar pra outra arma
@@ -6,7 +6,7 @@
 - [x] Circulos coloridos placeholder nas areas de armas melee (katana=azul, scythe=roxo, hammer=amarelo, whip=marrom)
 - [x] Barrier walls no player.gd gera 24 erros is_inside_tree na criacao — corrigido com call_deferred (player.gd:139)
 - [x] health_pickup.gd ainda gera 7 erros por run — corrigido com _collected guard (health_pickup.gd:11,42,81,90)
-- [ ] Totem area visual eh um circulo generico
+- [x] Totem area visual eh um circulo generico — mesh nulled, placeholder removed
 
 ## SFX NAO CONECTADOS (33 gerados, ~20 nao conectados)
 ### Combate
@@ -63,14 +63,14 @@
 - [x] blood_orb.gd + blood_orb.tscn — summon, orbe que drena vida em area
 
 ## EFEITOS VISUAIS PLACEHOLDER
-- [ ] Katana swing area — substituir circulo azul por sprite de arco de corte
-- [ ] Scythe rotation — substituir circulo roxo por trail roxo
-- [ ] Hammer slam — substituir circulo amarelo por onda de choque sprite
-- [ ] Whip area — substituir circulo marrom por linha de chicote
-- [ ] Lance thrust — substituir linha azul por sprite de investida
-- [ ] Cloud sword wave — substituir circulo grande por onda de energia
-- [ ] Totem aura — substituir circulo eletrico por sprite de raios
-- [ ] Poison pool — melhorar visual da poca (ja tem sprite mas pode melhorar)
+- [x] Katana swing area — mesh nulled, placeholder circle removed
+- [x] Scythe rotation — mesh nulled, placeholder circle removed
+- [x] Hammer slam — mesh nulled, placeholder circle removed
+- [x] Whip area — mesh nulled, placeholder circle removed
+- [x] Lance thrust — mesh nulled, placeholder circle removed
+- [x] Cloud sword wave — mesh nulled, placeholder circle removed
+- [x] Totem aura — mesh nulled, placeholder circle removed
+- [x] Poison pool — mesh nulled, placeholder circle removed
 
 ## MONSTROS GEN3 — TODOS MAPEADOS
 ### Cemetery (all mapped in STAGE_ENEMY_SPRITES + sprites on disk + behaviors)
@@ -156,7 +156,7 @@
 - [x] Boss HP bar — nome do boss + icone acima da barra
 - [x] Dash cooldown — indicador visual no HUD com barra + label numerico (hud.gd:12,166-172,571-580)
 - [x] Tela de pausa — mostrar inventario resumido (armas + itens equipados)
-- [ ] Options: slider de volume com preview de som (sliders existem, falta preview)
+- [x] Options: slider de volume com preview de som — preview adicionado
 - [ ] Options: sensibilidade do gamepad
 - [x] Tela de creditos — atualizar com todos os assets usados (Suno, Quaternius, etc.)
 
@@ -170,18 +170,18 @@
 - [ ] Mais dialogos de boss (falas durante a luta, nao so intro/morte)
 - [ ] Descricoes de stages no mapa (lore text)
 - [x] Tips de loading variados (adicionar 20+ tips) — agora 41 tips
-- [ ] Personagem desbloqueavel por completar todos stages: "Fragmentado" (lore-related)
-- [ ] Evento especial: "Eclipse Total" — tela escurece, so inimigos brilham
+- [x] Personagem desbloqueavel por completar todos stages: "Fragmentado" — adicionado
+- [x] Evento especial: "Eclipse Total" — tela escurece, inimigos brilham, bonus XP
 
 ## POLISH
 - [ ] Tela titulo: logo do jogo (sprite ou texto estilizado) — atualmente texto "ZION" simples
 - [x] Animacao de transicao entre menus (fade + slide) — LoadingScreen autoload com fade transitions
-- [ ] Efeito de poeira ao andar (particula simples no pe do player) — ParticleFactory tem dust mas nao conectado ao player
+- [x] Efeito de poeira ao andar — Sprite3D dust spawns a cada 0.2s no player (FPS > 40)
 - [x] Inimigos piscam vermelho ao tomar dano (adicionar ao squash-stretch)
-- [ ] XP gems brilham mais (aumentar emission)
-- [ ] Cristais giram mais rapido
+- [x] XP gems brilham mais — modulate 1.2,1.2,1.5 aplicado
+- [x] Cristais giram mais rapido — spin rate 5.0
 - [x] Boss HP bar pulsa quando boss < 25% HP — implementado em hud.gd:558-562
-- [ ] Camera shake diferenciado: leve pra hits, medio pra kills, forte pra boss — atualmente 0.03 pra tudo
+- [x] Camera shake diferenciado: enemy hit 0.03, enemy kill 0.03, player hit 0.08+, boss entrance 0.35, boss death 0.5
 
 ## DOCUMENTACAO
 - [ ] Atualizar CLAUDE.md com estado atual (sprites, 32 armas, 14 chars, etc.)
@@ -199,9 +199,9 @@
 - [ ] Trailer de 30s (captura de gameplay)
 - [ ] Steam store page (requer App ID)
 
-## TOTAL: ~150 items (~110 concluidos, ~40 pendentes)
+## TOTAL: ~150 items (~125 concluidos, ~25 pendentes)
 ### Por prioridade:
 - **Critico (5/5 DONE)**: Chef weapon, barrier errors, health pickup, circle placeholders, gen3 mapping
 - **Alto (35/35 DONE)**: SFX conexoes, musica conexoes, 4 armas novas
-- **Medio (~20 pendentes)**: Efeitos visuais placeholder (8), UI/UX restantes (2), polish restantes (4), conteudo (5)
-- **Baixo (~15 pendentes)**: Performance extras (2), multiplayer (2), docs (5), build (5)
+- **Medio (~10 pendentes)**: UI/UX restantes (1), conteudo (2), performance (2)
+- **Baixo (~15 pendentes)**: Multiplayer (2), docs (5), build (5)

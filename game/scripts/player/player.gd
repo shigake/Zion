@@ -24,6 +24,7 @@ var original_color: Color = Color(0.2, 0.85, 0.3)
 var is_local: bool = true  # Se este jogador e controlado localmente
 var _animator: Node = null
 var _footstep_timer: float = 0.0
+var _dust_timer: float = 0.0
 
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
@@ -198,6 +199,15 @@ func _physics_process(delta: float) -> void:
 	else:
 		_footstep_timer = 0.0
 
+	# Dust particles when walking (only when FPS > 40)
+	if velocity.length() > 1.0 and Engine.get_frames_per_second() > 40:
+		_dust_timer += delta
+		if _dust_timer > 0.2:
+			_dust_timer = 0.0
+			_spawn_dust()
+	else:
+		_dust_timer = 0.0
+
 	# Clamp position to map boundaries
 	var half = GameManager.map_half_size
 	global_position.x = clampf(global_position.x, -half, half)
@@ -319,6 +329,24 @@ func add_weapon_node(weapon_id: String) -> void:
 
 func get_weapon_nodes() -> Array:
 	return weapon_pivot.get_children()
+
+func _spawn_dust() -> void:
+	if not is_inside_tree():
+		return
+	var dust = Sprite3D.new()
+	# Small white-gray dot
+	var img = Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.6, 0.55, 0.5, 0.4))
+	dust.texture = ImageTexture.create_from_image(img)
+	dust.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	dust.pixel_size = 0.02
+	dust.shaded = false
+	dust.transparent = true
+	dust.position = global_position + Vector3(randf_range(-0.2, 0.2), 0.1, randf_range(-0.2, 0.2))
+	get_tree().current_scene.add_child(dust)
+	var tw = dust.create_tween()
+	tw.tween_property(dust, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(dust.queue_free)
 
 func _create_barrier_walls() -> void:
 	if not is_inside_tree():
