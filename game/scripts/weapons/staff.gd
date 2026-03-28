@@ -120,7 +120,7 @@ func _fire_visual_only(level: int) -> void:
 
 	if GameManager.manual_aim:
 		for i in range(num_projectiles):
-			var proj = projectile_scene.instantiate()
+			var proj = ObjectPool.get_instance(projectile_scene)
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = null
 			proj.direction = GameManager.aim_direction
@@ -138,7 +138,7 @@ func _fire_visual_only(level: int) -> void:
 		for t in targets:
 			if not is_instance_valid(t):
 				continue
-			var proj = projectile_scene.instantiate()
+			var proj = ObjectPool.get_instance(projectile_scene)
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = 0

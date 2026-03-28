@@ -26,6 +26,13 @@ var _auto_check: CheckBox = null
 var _waiting_overlay: ColorRect = null
 var _waiting_label: Label = null
 
+# Async level up (multiplayer)
+var _async_mode: bool = false  # true when levelup_sync option is OFF
+var _async_timer: float = 0.0
+const ASYNC_TIMEOUT: float = 10.0
+const ASYNC_INVULN_TIME: float = 3.0
+var _choosing_label: Label = null  # "escolhendo..." label shown over player sprite
+
 const TYPE_COLORS = {
 	"melee": Color(0.85, 0.25, 0.2),
 	"ranged": Color(0.2, 0.5, 0.85),
@@ -142,8 +149,14 @@ func _style_action_button(btn: Button, bg_color: Color, border_color: Color) -> 
 
 func _on_level_up(_new_level: int) -> void:
 	pending_levels += 1
+	_async_mode = MultiplayerManager.is_online and not SaveManager.data.get("levelup_sync", true)
 	if MultiplayerManager.is_online:
-		# Multiplayer: notify Host to pause globally and coordinate
+		if _async_mode:
+			# Async mode: don't pause, give invulnerability, show choices immediately
+			if not panel.visible:
+				_start_async_levelup()
+			return
+		# Sync mode: notify Host to pause globally and coordinate
 		MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
 		# Don't show choices yet; wait for Host's RPC signal
 		return
@@ -152,6 +165,45 @@ func _on_level_up(_new_level: int) -> void:
 		_show_choices()
 	elif panel.visible and GameManager.paused:
 		panel.visible = true
+
+func _process(delta: float) -> void:
+	if _async_mode and panel.visible and _async_timer > 0.0:
+		_async_timer -= delta
+		if _async_timer <= 0.0:
+			# Auto-pick after timeout
+			if not options.is_empty():
+				var rand_idx = randi() % options.size()
+				_choose(rand_idx)
+
+func _start_async_levelup() -> void:
+	# Give the player invulnerability
+	var player = get_tree().get_first_node_in_group("players")
+	if player:
+		player.can_be_hurt = false
+		player.hurt_cooldown = ASYNC_INVULN_TIME
+		# Show "escolhendo..." label over the player sprite
+		_show_choosing_label(player)
+	_async_timer = ASYNC_TIMEOUT
+	_show_choices()
+
+func _show_choosing_label(player: Node3D) -> void:
+	if _choosing_label and is_instance_valid(_choosing_label):
+		_choosing_label.queue_free()
+	var label3d = Label3D.new()
+	label3d.text = "escolhendo..."
+	label3d.font_size = 32
+	label3d.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label3d.modulate = Color(1.0, 0.9, 0.3, 0.9)
+	label3d.position = Vector3(0, 2.0, 0)
+	label3d.name = "ChoosingLabel"
+	label3d.no_depth_test = true
+	player.add_child(label3d)
+	_choosing_label = label3d
+
+func _hide_choosing_label() -> void:
+	if _choosing_label and is_instance_valid(_choosing_label):
+		_choosing_label.queue_free()
+		_choosing_label = null
 
 func _show_choices() -> void:
 	options = _generate_options()
@@ -214,9 +266,10 @@ func _show_choices() -> void:
 
 	banish_mode = false
 	panel.visible = true
-	GameManager.paused = true
-	if not MultiplayerManager.is_online:
-		get_tree().paused = false
+	if not _async_mode:
+		GameManager.paused = true
+		if not MultiplayerManager.is_online:
+			get_tree().paused = false
 	_setup_levelup_focus()
 	GamepadUI.notify_menu_opened()
 
@@ -632,11 +685,20 @@ func _choose(index: int) -> void:
 	panel.visible = false
 	pending_levels -= 1
 
+	# Clean up async state
+	if _async_mode:
+		_async_timer = 0.0
+		_hide_choosing_label()
+
 	if MultiplayerManager.is_online:
-		var choice_data = {"type": opt["type"], "id": opt["id"]}
-		MultiplayerManager.submit_level_up_choice(MultiplayerManager.local_player_id, choice_data)
-		if pending_levels > 0:
-			MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
+		if _async_mode:
+			if pending_levels > 0:
+				call_deferred("_start_async_levelup")
+		else:
+			var choice_data = {"type": opt["type"], "id": opt["id"]}
+			MultiplayerManager.submit_level_up_choice(MultiplayerManager.local_player_id, choice_data)
+			if pending_levels > 0:
+				MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
 	else:
 		if pending_levels > 0:
 			call_deferred("_show_choices")

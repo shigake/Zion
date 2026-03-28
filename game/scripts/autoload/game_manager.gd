@@ -761,12 +761,19 @@ func get_accuracy_spread() -> float:
 	# accuracy_mult reduces spread. 1.0 = normal, 2.0 = half spread
 	return 1.0 / maxf(0.1, accuracy_mult)
 
+@rpc("authority", "call_remote", "reliable")
+func sync_weapon_damage(data: Dictionary) -> void:
+	weapon_damage_dealt = data
+
 func end_run() -> void:
 	# Cristais = kills / 5 (minimo), com multiplicador de mutacoes
 	crystals_this_run = maxi(int(maxi(total_kills / 5, 10) * MutationManager.get_crystal_multiplier()), 10)
 	LogManager.info("Game", "Run ended: %s on %s, time: %.1fs, kills: %d, crystals: %d, victory: %s" % [
 		selected_character, selected_stage, game_time, total_kills, crystals_this_run, str(is_victory)
 	])
+	# Sync weapon damage to all clients for game over screen
+	if MultiplayerManager.is_online and multiplayer.is_server():
+		sync_weapon_damage.rpc(weapon_damage_dealt)
 	# Save weapons for New Game+ on victory
 	if is_victory:
 		ng_plus_weapons.clear()

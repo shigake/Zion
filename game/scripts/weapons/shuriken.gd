@@ -111,7 +111,7 @@ func _fire_visual_only(level: int) -> void:
 		return
 
 	for dir in dirs:
-		var proj = projectile_scene.instantiate()
+		var proj = ObjectPool.get_instance(projectile_scene)
 		var pos = player_pos + Vector3(0, 0.5, 0)
 		proj.direction = dir.normalized()
 		proj.damage = 0

@@ -1,4 +1,4 @@
-# Zion — Checklist Final Completo (v2.94)
+# Zion — Checklist Final Completo (v2.95)
 
 ## BUGS CRITICOS
 - [x] Chef starting_weapon = "flamethrower" (desabilitado) — trocar pra outra arma
@@ -157,14 +157,14 @@
 - [x] Dash cooldown — indicador visual no HUD com barra + label numerico (hud.gd:12,166-172,571-580)
 - [x] Tela de pausa — mostrar inventario resumido (armas + itens equipados)
 - [x] Options: slider de volume com preview de som — preview adicionado
-- [ ] Options: sensibilidade do gamepad
+- [x] Options: sensibilidade do gamepad
 - [x] Tela de creditos — atualizar com todos os assets usados (Suno, Quaternius, etc.)
 
 ## MULTIPLAYER
-- [ ] Level up assincrono (design aprovado, implementacao pendente)
+- [x] Level up assincrono (design aprovado, implementacao pendente)
 - [x] Ping display no HUD durante gameplay
 - [x] Ally HP bars com nomes dos jogadores
-- [ ] Sync de weapon_damage_dealt pro game over screen multiplayer
+- [x] Sync de weapon_damage_dealt pro game over screen multiplayer
 
 ## CONTEUDO
 - [x] Mais dialogos de boss (falas durante a luta, nao so intro/morte)
@@ -174,7 +174,7 @@
 - [x] Evento especial: "Eclipse Total" — tela escurece, inimigos brilham, bonus XP
 
 ## POLISH
-- [ ] Tela titulo: logo do jogo (sprite ou texto estilizado) — atualmente texto "ZION" simples
+- [x] Tela titulo: logo do jogo (sprite ou texto estilizado) — logo_gen.gd + main_menu.gd carrega logo.png
 - [x] Animacao de transicao entre menus (fade + slide) — LoadingScreen autoload com fade transitions
 - [x] Efeito de poeira ao andar — Sprite3D dust spawns a cada 0.2s no player (FPS > 40)
 - [x] Inimigos piscam vermelho ao tomar dano (adicionar ao squash-stretch)
@@ -193,15 +193,15 @@
 - [x] Atualizar balance_analysis.md com DPS das novas armas
 
 ## BUILD/DEPLOY
-- [ ] Export preset Windows Desktop
+- [x] Export preset Windows Desktop
 - [ ] Testar export em maquina limpa
 - [ ] Itch.io page com screenshots
 - [ ] Trailer de 30s (captura de gameplay)
 - [ ] Steam store page (requer App ID)
 
-## TOTAL: ~150 items (~134 concluidos, ~16 pendentes)
+## TOTAL: ~150 items (~140 concluidos, ~10 pendentes)
 ### Por prioridade:
 - **Critico (5/5 DONE)**: Chef weapon, barrier errors, health pickup, circle placeholders, gen3 mapping
 - **Alto (35/35 DONE)**: SFX conexoes, musica conexoes, 4 armas novas
-- **Medio (~4 pendentes)**: UI/UX restantes (1), performance (1: MultiMesh pickups)
-- **Baixo (~12 pendentes)**: Multiplayer (2), build/deploy (5), tela titulo (1), gamepad sensitivity (1), level up async (1), weapon sync (1)
+- **Medio (~1 pendente)**: performance (1: MultiMesh pickups)
+- **Baixo (~9 pendentes)**: build/deploy restantes (4: testar export, itch.io, trailer, Steam page)

@@ -175,15 +175,32 @@ void fragment() {
 
 func _style_title() -> void:
 	var scale := PlatformHelper.get_ui_scale()
-	# Title — large and dramatic with heavy outline and glow shadow
-	title_label.text = "ZION"
-	title_label.add_theme_font_size_override("font_size", int(72 * scale))
-	title_label.add_theme_color_override("font_color", COLOR_GOLD)
-	title_label.add_theme_constant_override("shadow_offset_x", 0)
-	title_label.add_theme_constant_override("shadow_offset_y", 6)
-	title_label.add_theme_color_override("font_shadow_color", Color(0.5, 0.38, 0.0, 0.8))
-	title_label.add_theme_constant_override("outline_size", int(5 * scale))
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.85, 0.3, 0.5))
+	# Try to load logo sprite, fallback to text label
+	var logo_path := "res://assets/sprites/ui/logo.png"
+	if ResourceLoader.exists(logo_path):
+		title_label.visible = false
+		var logo_tex := TextureRect.new()
+		logo_tex.texture = load(logo_path)
+		logo_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		logo_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		logo_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo_tex.custom_minimum_size = Vector2(384 * scale, 96 * scale)
+		logo_tex.name = "LogoSprite"
+		# Insert logo where the title label is
+		var parent = title_label.get_parent()
+		var idx = title_label.get_index()
+		parent.add_child(logo_tex)
+		parent.move_child(logo_tex, idx)
+	else:
+		# Fallback: styled text title
+		title_label.text = "ZION"
+		title_label.add_theme_font_size_override("font_size", int(72 * scale))
+		title_label.add_theme_color_override("font_color", COLOR_GOLD)
+		title_label.add_theme_constant_override("shadow_offset_x", 0)
+		title_label.add_theme_constant_override("shadow_offset_y", 6)
+		title_label.add_theme_color_override("font_shadow_color", Color(0.5, 0.38, 0.0, 0.8))
+		title_label.add_theme_constant_override("outline_size", int(5 * scale))
+		title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.85, 0.3, 0.5))
 	# Store base position for floating animation
 	_title_base_y = title_label.position.y
 	# Subtitle — tagline

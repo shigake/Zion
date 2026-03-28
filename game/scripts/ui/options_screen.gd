@@ -452,6 +452,10 @@ func _build_tab_gameplay() -> void:
 	_add_toggle(vbox, "Pausar ao perder foco", "game_pause_focus_loss", true, Callable(), t)
 	_add_toggle(vbox, "Confirmar ao sair", "game_confirm_exit", true, Callable(), t)
 
+	# Section: Multiplayer
+	_add_section(vbox, "Multiplayer")
+	_add_toggle(vbox, "Level up sincrono", "levelup_sync", true, Callable(), t)
+
 	# Section: Telemetria
 	_add_section(vbox, "Telemetria")
 	_add_toggle(vbox, "Enviar dados anonimos", "telemetry_enabled", true,
@@ -498,6 +502,10 @@ func _build_tab_controles() -> void:
 	_add_section(vbox, "Gamepad")
 
 	_add_slider(vbox, "Zona morta do analogico", "input_deadzone", 0.05, 0.5, 0.01, 0.15, Callable(), t)
+	_add_slider(vbox, "Sensibilidade do gamepad", "gamepad_deadzone", 0.1, 0.5, 0.01, 0.3,
+		func(val: float) -> void:
+			SaveManager.data["gamepad_deadzone"] = val,
+		t)
 	_add_toggle(vbox, "Vibracao", "input_vibration", true, Callable(), t)
 
 # ---------------------------------------------------------------------------
