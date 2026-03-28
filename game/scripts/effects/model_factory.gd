@@ -1374,16 +1374,8 @@ func _tint_meshes_recursive(node: Node, tint_color: Color) -> void:
 		_tint_meshes_recursive(child, tint_color)
 
 func get_model_for_character(char_id: String) -> Node3D:
-	# Try Quaternius base character FIRST (modular mesh with Skeleton3D)
-	var quat_char_file: String = QUAT_CHARACTER_MAP.get(char_id, "")
-	if quat_char_file != "":
-		var quat_path = QUAT_CHARACTERS + quat_char_file
-		var quat_model = _try_load_glb(quat_path, CHARACTER_SCALE, true)
-		if quat_model:
-			# Tint the base mesh with character color to differentiate
-			_apply_character_tint(quat_model, char_id)
-			return quat_model
-	# Fallback: procedural models — each character has unique silhouette and accessories
+	# Procedural models — unique silhouette per character (chapeu do mago, hakama do ronin, etc.)
+	# Quaternius base characters disabled: generic superhero T-pose doesn't fit the game
 	match char_id:
 		"ronin": return create_ronin_model()
 		"soldado": return create_soldado_model()
