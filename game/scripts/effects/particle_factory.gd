@@ -18,6 +18,11 @@ var _sphere_mesh: SphereMesh
 var _box_mesh: BoxMesh
 var _small_sphere_mesh: SphereMesh
 
+# Shared draw passes with materials (avoid creating new meshes per spawn)
+var _spark_draw_pass: SphereMesh  # For slash sparks, whip sparks
+var _dust_draw_pass: SphereMesh   # For ground dust, hammer dust
+var _debris_draw_pass: BoxMesh    # For hammer debris
+
 func _ready() -> void:
 	_create_shared_meshes()
 	_init_particle_pool()
@@ -34,6 +39,33 @@ func _create_shared_meshes() -> void:
 	_small_sphere_mesh = SphereMesh.new()
 	_small_sphere_mesh.radius = 0.05
 	_small_sphere_mesh.height = 0.1
+
+	# Spark draw pass (slash sparks, whip sparks)
+	_spark_draw_pass = SphereMesh.new()
+	_spark_draw_pass.radius = 0.03
+	_spark_draw_pass.height = 0.06
+	var spark_mat = StandardMaterial3D.new()
+	spark_mat.emission_enabled = true
+	spark_mat.emission_energy_multiplier = 5.0
+	_spark_draw_pass.surface_set_material(0, spark_mat)
+
+	# Dust draw pass (ground dust, hammer dust)
+	_dust_draw_pass = SphereMesh.new()
+	_dust_draw_pass.radius = 0.08
+	_dust_draw_pass.height = 0.16
+	var dust_mat = StandardMaterial3D.new()
+	dust_mat.emission_enabled = true
+	dust_mat.emission_energy_multiplier = 0.5
+	dust_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_dust_draw_pass.surface_set_material(0, dust_mat)
+
+	# Debris draw pass (hammer debris)
+	_debris_draw_pass = BoxMesh.new()
+	_debris_draw_pass.size = Vector3(0.04, 0.04, 0.04)
+	var debris_mat = StandardMaterial3D.new()
+	debris_mat.emission_enabled = true
+	debris_mat.emission_energy_multiplier = 1.0
+	_debris_draw_pass.surface_set_material(0, debris_mat)
 
 func _init_particle_pool() -> void:
 	for i in PARTICLE_POOL_SIZE:
@@ -286,16 +318,11 @@ func spawn_slash_sparks(pos: Vector3, count: int = 5) -> void:
 	particles.lifetime = 0.15
 	particles.explosiveness = 1.0
 
-	var draw_pass = SphereMesh.new()
-	draw_pass.radius = 0.03
-	draw_pass.height = 0.06
-	var draw_mat = StandardMaterial3D.new()
-	draw_mat.emission_enabled = true
-	draw_mat.albedo_color = color
-	draw_mat.emission = color
-	draw_mat.emission_energy_multiplier = 5.0
-	draw_pass.surface_set_material(0, draw_mat)
-	particles.draw_pass_1 = draw_pass
+	particles.draw_pass_1 = _spark_draw_pass
+	var draw_mat: StandardMaterial3D = _spark_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = color
 
 	_setup_and_emit(particles, pos, 0.5)
 
@@ -317,17 +344,11 @@ func spawn_ground_dust(pos: Vector3, count: int = 8) -> void:
 	particles.lifetime = 0.5
 	particles.explosiveness = 0.9
 
-	var draw_pass = SphereMesh.new()
-	draw_pass.radius = 0.06
-	draw_pass.height = 0.12
-	var draw_mat = StandardMaterial3D.new()
-	draw_mat.emission_enabled = true
-	draw_mat.albedo_color = color
-	draw_mat.emission = Color(0.45, 0.35, 0.25)
-	draw_mat.emission_energy_multiplier = 0.5
-	draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	draw_pass.surface_set_material(0, draw_mat)
-	particles.draw_pass_1 = draw_pass
+	particles.draw_pass_1 = _dust_draw_pass
+	var draw_mat: StandardMaterial3D = _dust_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(0.45, 0.35, 0.25)
 
 	_setup_and_emit(particles, pos, 1.0)
 
@@ -349,15 +370,11 @@ func spawn_hammer_debris(pos: Vector3, count: int = 12) -> void:
 	particles.lifetime = 0.6
 	particles.explosiveness = 1.0
 
-	var draw_pass = BoxMesh.new()
-	draw_pass.size = Vector3(0.03, 0.03, 0.03)
-	var draw_mat = StandardMaterial3D.new()
-	draw_mat.emission_enabled = true
-	draw_mat.albedo_color = color
-	draw_mat.emission = Color(0.4, 0.3, 0.15)
-	draw_mat.emission_energy_multiplier = 1.0
-	draw_pass.surface_set_material(0, draw_mat)
-	particles.draw_pass_1 = draw_pass
+	particles.draw_pass_1 = _debris_draw_pass
+	var draw_mat: StandardMaterial3D = _debris_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(0.4, 0.3, 0.15)
 
 	_setup_and_emit(particles, pos, 1.5)
 
@@ -379,17 +396,11 @@ func spawn_hammer_dust(pos: Vector3, count: int = 8) -> void:
 	particles.lifetime = 0.8
 	particles.explosiveness = 0.8
 
-	var draw_pass = SphereMesh.new()
-	draw_pass.radius = 0.12
-	draw_pass.height = 0.24
-	var draw_mat = StandardMaterial3D.new()
-	draw_mat.emission_enabled = true
-	draw_mat.albedo_color = color
-	draw_mat.emission = Color(0.4, 0.35, 0.3)
-	draw_mat.emission_energy_multiplier = 0.3
-	draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	draw_pass.surface_set_material(0, draw_mat)
-	particles.draw_pass_1 = draw_pass
+	particles.draw_pass_1 = _dust_draw_pass
+	var draw_mat: StandardMaterial3D = _dust_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(0.4, 0.35, 0.3)
 
 	_setup_and_emit(particles, pos, 1.5)
 
@@ -411,16 +422,11 @@ func spawn_whip_spark(pos: Vector3) -> void:
 	particles.lifetime = 0.12
 	particles.explosiveness = 1.0
 
-	var draw_pass = SphereMesh.new()
-	draw_pass.radius = 0.02
-	draw_pass.height = 0.04
-	var draw_mat = StandardMaterial3D.new()
-	draw_mat.emission_enabled = true
-	draw_mat.albedo_color = color
-	draw_mat.emission = color
-	draw_mat.emission_energy_multiplier = 6.0
-	draw_pass.surface_set_material(0, draw_mat)
-	particles.draw_pass_1 = draw_pass
+	particles.draw_pass_1 = _spark_draw_pass
+	var draw_mat: StandardMaterial3D = _spark_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = color
 
 	_setup_and_emit(particles, pos, 0.5)
 
