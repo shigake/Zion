@@ -14,6 +14,11 @@ signal miniboss_spawned(boss_name: String)
 var game_time: float = 0.0
 var enemies_alive: int = 0
 var max_enemies: int = 500
+# Cached enemy list (updated once per frame to avoid 45+ get_nodes_in_group calls)
+var _cached_enemies: Array = []
+var _enemies_cache_frame: int = -1
+var _cached_players: Array = []
+var _players_cache_frame: int = -1
 var total_kills: int = 0
 var total_damage_dealt: int = 0
 var peak_enemies: int = 0
@@ -104,6 +109,22 @@ func _process(delta: float) -> void:
 		game_time += delta
 		if enemies_alive > peak_enemies:
 			peak_enemies = enemies_alive
+
+## Returns cached enemy list (refreshed once per frame). Use this instead of get_tree().get_nodes_in_group("enemies").
+func get_enemies() -> Array:
+	var frame = Engine.get_process_frames()
+	if frame != _enemies_cache_frame:
+		_enemies_cache_frame = frame
+		_cached_enemies = get_tree().get_nodes_in_group("enemies")
+	return _cached_enemies
+
+## Returns cached player list (refreshed once per frame).
+func get_players() -> Array:
+	var frame = Engine.get_process_frames()
+	if frame != _players_cache_frame:
+		_players_cache_frame = frame
+		_cached_players = get_tree().get_nodes_in_group("players")
+	return _cached_players
 
 func _register_input_actions() -> void:
 	_add_key_action("move_up", KEY_W)
