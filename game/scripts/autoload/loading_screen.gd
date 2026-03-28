@@ -365,12 +365,18 @@ func _transition_to_scene() -> void:
 	tween.tween_callback(_do_scene_change)
 
 func _do_scene_change() -> void:
+	var tree = get_tree()
+	if not tree:
+		LogManager.error("Loading", "get_tree() null em _do_scene_change")
+		_cleanup()
+		return
+
 	var packed_scene = ResourceLoader.load_threaded_get(_target_scene_path)
 	if packed_scene:
-		get_tree().change_scene_to_packed(packed_scene)
+		tree.change_scene_to_packed(packed_scene)
 	else:
 		LogManager.error("Loading", "Cena nao carregou: %s" % _target_scene_path)
-		get_tree().change_scene_to_file(_target_scene_path)
+		tree.change_scene_to_file(_target_scene_path)
 
 	# Cleanup
 	_cleanup()
@@ -378,7 +384,12 @@ func _do_scene_change() -> void:
 
 func _force_sync_load() -> void:
 	LogManager.warn("Loading", "Fallback para carregamento sincrono")
-	get_tree().change_scene_to_file(_target_scene_path)
+	var tree = get_tree()
+	if not tree:
+		LogManager.error("Loading", "get_tree() null em _force_sync_load")
+		_cleanup()
+		return
+	tree.change_scene_to_file(_target_scene_path)
 	_cleanup()
 
 func _cleanup() -> void:
@@ -540,7 +551,8 @@ func _update_stage_visuals() -> void:
 
 	# Nome da fase
 	var stage_name = STAGE_NAMES.get(stage_id, stage_id.capitalize())
-	_title_label.text = stage_name
+	if _title_label:
+		_title_label.text = stage_name
 
 	# Art da fase como background
 	var art_path = "res://assets/sprites/stages/%s.png" % stage_id
@@ -620,8 +632,19 @@ const TRANSITION_TIPS: Array = [
 
 func transition_to(scene_path: String) -> void:
 	if _is_transitioning or _is_loading:
-		# Fallback direto se ja esta em transicao
-		get_tree().change_scene_to_file(scene_path)
+		LogManager.warn("Loading", "Transicao ignorada: ja em andamento")
+		return
+
+	# Validacao do path da cena
+	if scene_path.is_empty():
+		LogManager.error("Loading", "transition_to chamado com path vazio")
+		return
+	if not ResourceLoader.exists(scene_path):
+		LogManager.error("Loading", "Cena nao encontrada: %s" % scene_path)
+		# Tenta trocar direto como fallback
+		var tree = get_tree()
+		if tree:
+			tree.change_scene_to_file(scene_path)
 		return
 
 	_is_transitioning = true
@@ -641,22 +664,54 @@ func transition_to(scene_path: String) -> void:
 
 	# Fade in (black)
 	var tween = create_tween()
+	if not tween:
+		LogManager.error("Loading", "Falha ao criar tween para fade-in")
+		_force_transition_fallback(scene_path)
+		return
 	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(_transition_overlay, "color:a", 1.0, 0.4)
 	await tween.finished
 
+	# Verifica se ainda estamos em transicao (pode ter sido cancelada)
+	if not _is_transitioning:
+		return
+
 	# Show loading info (character, stage, tip)
-	_build_transition_info()
+	if is_instance_valid(_transition_root):
+		_build_transition_info()
 
 	# Change scene
-	get_tree().change_scene_to_file(scene_path)
+	var tree = get_tree()
+	if not tree:
+		LogManager.error("Loading", "get_tree() retornou null durante transicao")
+		_cleanup_transition()
+		return
+	tree.change_scene_to_file(scene_path)
 
 	# Wait frames for scene to settle
-	await get_tree().process_frame
-	await get_tree().process_frame
+	tree = get_tree()
+	if not tree:
+		_cleanup_transition()
+		return
+	await tree.process_frame
+
+	tree = get_tree()
+	if not tree:
+		_cleanup_transition()
+		return
+	await tree.process_frame
+
+	# Verifica se overlay ainda existe apos awaits
+	if not _is_transitioning or not is_instance_valid(_transition_overlay):
+		_cleanup_transition()
+		return
 
 	# Fade out
 	var tween2 = create_tween()
+	if not tween2:
+		LogManager.error("Loading", "Falha ao criar tween para fade-out")
+		_cleanup_transition()
+		return
 	tween2.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween2.tween_property(_transition_overlay, "color:a", 0.0, 0.4)
 	await tween2.finished
@@ -664,7 +719,19 @@ func transition_to(scene_path: String) -> void:
 	# Cleanup
 	_cleanup_transition()
 
+## Fallback direto quando a transicao animada falha.
+func _force_transition_fallback(scene_path: String) -> void:
+	LogManager.warn("Loading", "Fallback direto para: %s" % scene_path)
+	var tree = get_tree()
+	if tree:
+		tree.change_scene_to_file(scene_path)
+	_cleanup_transition()
+
 func _build_transition_info() -> void:
+	if not is_instance_valid(_transition_root):
+		LogManager.warn("Loading", "_build_transition_info: _transition_root invalido")
+		return
+
 	# Center content container
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_CENTER)
@@ -677,7 +744,7 @@ func _build_transition_info() -> void:
 	_transition_root.add_child(vbox)
 
 	# Character sprite (from GameManager.selected_character)
-	var char_id = GameManager.selected_character
+	var char_id = GameManager.selected_character if GameManager.selected_character else "ronin"
 	var sprite_path = "res://assets/sprites/characters/%s.png" % char_id
 	_transition_char_sprite = TextureRect.new()
 	_transition_char_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -690,7 +757,7 @@ func _build_transition_info() -> void:
 	vbox.add_child(_transition_char_sprite)
 
 	# Stage name
-	var stage_id = GameManager.selected_stage
+	var stage_id = GameManager.selected_stage if GameManager.selected_stage else "cemetery"
 	var stage_name = STAGE_NAMES.get(stage_id, stage_id.capitalize())
 	_transition_stage_label = Label.new()
 	_transition_stage_label.text = stage_name
