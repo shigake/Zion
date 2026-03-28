@@ -70,7 +70,7 @@ func _attack(level: int) -> void:
 
 	# Manual aim: rotate thrust to face aim direction
 	if GameManager.manual_aim:
-		var aim_angle = atan2(GameManager.aim_direction.x, GameManager.aim_direction.z)
+		var aim_angle = atan2(-GameManager.aim_direction.x, -GameManager.aim_direction.z)
 		rotation.y = aim_angle
 
 	# Scale with level — longer reach
