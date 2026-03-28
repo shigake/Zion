@@ -16,7 +16,7 @@
 size = Vector2(200, 200)
 
 [sub_resource type="StandardMaterial3D" id="2"]
-albedo_color = Color(0.18, 0.22, 0.15, 1)
+albedo_color = Color(0.28, 0.32, 0.24, 1)
 roughness = 0.95
 
 [sub_resource type="Environment" id="3"]
