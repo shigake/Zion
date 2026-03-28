@@ -402,7 +402,7 @@ func _build_ui() -> void:
 
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	_root.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(_root)
 
 	# Background escuro base
@@ -522,7 +522,7 @@ func _build_ui() -> void:
 	_press_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_press_label.add_theme_font_size_override("font_size", 22)
 	_press_label.add_theme_color_override("font_color", Color.WHITE)
-	_press_label.text = "Pressione qualquer botao para iniciar"
+	_press_label.text = "Clique ou pressione qualquer botao para iniciar"
 	_press_label.visible = false
 	center_vbox.add_child(_press_label)
 
