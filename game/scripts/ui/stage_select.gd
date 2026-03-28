@@ -239,13 +239,14 @@ func _create_stage_card(stage_id: String) -> Button:
 	btn.add_theme_font_size_override("font_size", 12)
 
 	# Stage icon
-	var stage_icon_path := "res://assets/icons/stages/%s.svg" % stage_id
+	var stage_icon_path := "res://assets/sprites/stages/%s.png" % stage_id
 	var stage_icon_tex = load(stage_icon_path) if ResourceLoader.exists(stage_icon_path) else null
 	if stage_icon_tex:
 		btn.icon = stage_icon_tex
 		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		btn.expand_icon = true
+		btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	# Draw the colored top bar via the draw signal
 	if unlocked:

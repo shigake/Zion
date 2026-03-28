@@ -272,11 +272,12 @@ func _on_player_took_damage() -> void:
 func _on_achievement_unlocked(_id: String, name: String) -> void:
 	achievement_label.text = LocaleManager.tr_key("achievement_label") % name
 
-	# Load achievement icon SVG if available
-	var icon_path = "res://assets/icons/achievements/%s.svg" % _id
+	# Load achievement icon sprite if available
+	var icon_path = "res://assets/sprites/achievements/%s.png" % _id
 	var icon_tex = load(icon_path) if ResourceLoader.exists(icon_path) else null
 	if icon_tex:
 		achievement_icon.texture = icon_tex
+		achievement_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		achievement_icon.visible = true
 	else:
 		achievement_icon.visible = false

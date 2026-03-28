@@ -25,13 +25,14 @@ func _build_shop() -> void:
 
 		var hbox = HBoxContainer.new()
 
-		var icon_path = "res://assets/icons/upgrades/%s.svg" % uid
+		var icon_path = "res://assets/sprites/upgrades/%s.png" % uid
 		var icon_tex = load(icon_path) if ResourceLoader.exists(icon_path) else null
 		if icon_tex:
 			var icon = TextureRect.new()
 			icon.texture = icon_tex
 			icon.custom_minimum_size = Vector2(32, 32)
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			hbox.add_child(icon)
 			hbox.add_theme_constant_override("separation", 4)
 
