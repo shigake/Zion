@@ -45,6 +45,10 @@ func generate_report(results: Array) -> Dictionary:
 		"summary": {},
 		"weapon_analysis": {},
 		"character_analysis": {},
+		"evolution_analysis": {},
+		"achievement_analysis": {},
+		"event_analysis": {},
+		"balance_analysis": {},
 		"performance_analysis": {},
 		"outliers": [],
 		"warnings": [],
@@ -69,6 +73,22 @@ func generate_report(results: Array) -> Dictionary:
 	# Character analysis (from smoke tests)
 	if "smoke" in by_suite:
 		report["character_analysis"] = _analyze_characters(by_suite["smoke"])
+
+	# Evolution analysis
+	if "evolution" in by_suite:
+		report["evolution_analysis"] = _analyze_evolutions(by_suite["evolution"])
+
+	# Achievement analysis
+	if "achievements" in by_suite:
+		report["achievement_analysis"] = _analyze_achievements(by_suite["achievements"])
+
+	# Event analysis
+	if "events" in by_suite:
+		report["event_analysis"] = _analyze_events(by_suite["events"])
+
+	# Balance analysis
+	if "balance" in by_suite:
+		report["balance_analysis"] = _analyze_balance(by_suite["balance"])
 
 	# Performance analysis (from all tests)
 	report["performance_analysis"] = _analyze_performance(results)
@@ -169,6 +189,116 @@ func _analyze_characters(smoke_results: Array) -> Dictionary:
 
 	return analysis
 
+func _analyze_evolutions(evo_results: Array) -> Dictionary:
+	var analysis: Dictionary = {}
+	for r in evo_results:
+		var evo_id = r.get("evolution_id", "")
+		if evo_id.is_empty():
+			continue
+		var evo = EvolutionDB.get_evolution(evo_id)
+		var evo_name = evo.get("name", evo_id) if not evo.is_empty() else evo_id
+		var triggered = r.get("evolution_triggered", false)
+
+		analysis[evo_id] = {
+			"name": evo_name,
+			"weapon": evo.get("weapon_required", ""),
+			"item": evo.get("item_required", ""),
+			"triggered": triggered,
+			"trigger_time": r.get("evolution_time", 0.0),
+			"pre_evo_dps": r["avg_dps"],
+			"post_evo_dps": r.get("post_evolution_dps", 0.0),
+			"dps_multiplier": r.get("post_evolution_dps", 0.0) / maxf(r["avg_dps"], 0.1) if triggered else 0.0,
+			"expected_mult": evo.get("evolved_damage_mult", 1.0),
+			"status": "PASS" if triggered else "FAIL_NOT_TRIGGERED",
+		}
+	return analysis
+
+func _analyze_achievements(ach_results: Array) -> Dictionary:
+	var analysis: Dictionary = {}
+	for r in ach_results:
+		var target = r.get("achievement_target", "")
+		if target.is_empty():
+			continue
+		var unlocked = r.get("achievement_unlocked", false)
+		analysis[target] = {
+			"achievement_id": target,
+			"unlocked": unlocked,
+			"end_reason": r["end_reason"],
+			"duration": r["duration_game"],
+			"kills": r["total_kills"],
+			"level": r["final_level"],
+			"status": "PASS" if unlocked else "FAIL",
+		}
+	return analysis
+
+func _analyze_events(event_results: Array) -> Dictionary:
+	var all_expected_events = [
+		"golden_horde", "elite_horde", "eclipse", "miniboss",
+		"meteor_shower", "massive_horde", "roulette",
+		"miniboss_strong", "portal_dimensional",
+	]
+	var analysis: Dictionary = {
+		"tests": [],
+		"events_seen": {},
+		"events_never_seen": [],
+	}
+	var seen: Dictionary = {}
+
+	for r in event_results:
+		var events = r.get("events_triggered", [])
+		var entry = {
+			"test_name": r["test_name"],
+			"stage": r["stage"],
+			"duration": r["duration_game"],
+			"events_triggered": events.duplicate(),
+			"event_count": events.size(),
+		}
+		analysis["tests"].append(entry)
+		for e in events:
+			seen[e] = true
+
+	analysis["events_seen"] = seen
+	for evt in all_expected_events:
+		if evt not in seen:
+			analysis["events_never_seen"].append(evt)
+
+	return analysis
+
+func _analyze_balance(balance_results: Array) -> Dictionary:
+	var analysis: Dictionary = {
+		"xp_curve": [],
+		"dps_curve": [],
+		"economy": [],
+	}
+	for r in balance_results:
+		if r["test_name"].begins_with("balance_xp"):
+			analysis["xp_curve"].append({
+				"test": r["test_name"],
+				"final_level": r["final_level"],
+				"duration_min": r["duration_game"] / 60.0,
+				"levels_per_min": r.get("levels_per_minute", 0.0),
+				"kills_per_min": r.get("kills_per_minute", 0.0),
+			})
+		elif r["test_name"].begins_with("balance_dps"):
+			analysis["dps_curve"].append({
+				"test": r["test_name"],
+				"character": r["character"],
+				"avg_dps": r["avg_dps"],
+				"peak_dps": r["peak_dps"],
+				"final_level": r["final_level"],
+				"weapons": r["weapons"].duplicate(true),
+			})
+		elif r["test_name"].begins_with("balance_economy"):
+			analysis["economy"].append({
+				"test": r["test_name"],
+				"stage": r["stage"],
+				"crystals": r.get("crystals_earned", 0),
+				"kills": r["total_kills"],
+				"duration_min": r["duration_game"] / 60.0,
+				"crystals_per_min": r.get("crystals_earned", 0) / maxf(r["duration_game"] / 60.0, 0.1),
+			})
+	return analysis
+
 func _analyze_performance(results: Array) -> Dictionary:
 	var fps_values: Array = []
 	var min_fps = INF
@@ -226,6 +356,22 @@ func _print_report(report: Dictionary) -> void:
 	# Character table
 	if not report["character_analysis"].is_empty():
 		_print_character_table(report["character_analysis"])
+
+	# Evolution table
+	if not report["evolution_analysis"].is_empty():
+		_print_evolution_table(report["evolution_analysis"])
+
+	# Achievement table
+	if not report["achievement_analysis"].is_empty():
+		_print_achievement_table(report["achievement_analysis"])
+
+	# Event table
+	if not report["event_analysis"].is_empty():
+		_print_event_table(report["event_analysis"])
+
+	# Balance table
+	if not report["balance_analysis"].is_empty():
+		_print_balance_table(report["balance_analysis"])
 
 	# Performance
 	var perf = report["performance_analysis"]
@@ -300,6 +446,92 @@ func _print_character_table(analysis: Dictionary) -> void:
 			c["final_hp_pct"],
 			c["avg_dps"],
 		])
+	print("")
+
+func _print_evolution_table(analysis: Dictionary) -> void:
+	print("  --- Evolution Test ---")
+	print("  %-20s | %-12s | %-10s | %8s | %8s | %5s | %s" % [
+		"Evolution", "Weapon", "Item", "Pre DPS", "Post DPS", "Mult", "Status"
+	])
+	print("  %s" % ("-".repeat(85)))
+
+	var keys = analysis.keys()
+	keys.sort()
+	for evo_id in keys:
+		var e = analysis[evo_id]
+		var post_str = "%.1f" % e["post_evo_dps"] if e["triggered"] else "N/A"
+		var mult_str = "%.2fx" % e["dps_multiplier"] if e["triggered"] else "N/A"
+		print("  %-20s | %-12s | %-10s | %8.1f | %8s | %5s | %s" % [
+			e["name"].left(20), e["weapon"].left(12), e["item"].left(10),
+			e["pre_evo_dps"], post_str, mult_str, e["status"],
+		])
+	print("")
+
+func _print_achievement_table(analysis: Dictionary) -> void:
+	print("  --- Achievement Test ---")
+	print("  %-20s | %8s | %8s | %6s | %5s | %s" % [
+		"Achievement", "Duration", "Kills", "Level", "End", "Status"
+	])
+	print("  %s" % ("-".repeat(68)))
+
+	var keys = analysis.keys()
+	keys.sort()
+	for ach_id in keys:
+		var a = analysis[ach_id]
+		print("  %-20s | %7.0fs | %8d | %6d | %5s | %s" % [
+			ach_id.left(20), a["duration"], a["kills"],
+			a["level"], a["end_reason"].left(5),
+			"PASS" if a["unlocked"] else "FAIL",
+		])
+	print("")
+
+func _print_event_table(analysis: Dictionary) -> void:
+	print("  --- Event Test ---")
+	for t in analysis.get("tests", []):
+		print("  %s (%.0fs): %d events — %s" % [
+			t["test_name"], t["duration"], t["event_count"],
+			", ".join(t["events_triggered"]) if not t["events_triggered"].is_empty() else "none",
+		])
+
+	var never_seen = analysis.get("events_never_seen", [])
+	if not never_seen.is_empty():
+		print("  WARNING: Events never triggered: %s" % ", ".join(never_seen))
+	else:
+		print("  All expected events triggered at least once!")
+	print("")
+
+func _print_balance_table(analysis: Dictionary) -> void:
+	print("  --- Balance Analysis ---")
+
+	# XP curve
+	if not analysis.get("xp_curve", []).is_empty():
+		print("  XP Curve:")
+		for x in analysis["xp_curve"]:
+			print("    %s: Lv%d in %.0fmin (%.1f lv/min, %.0f kills/min)" % [
+				x["test"], x["final_level"], x["duration_min"],
+				x["levels_per_min"], x["kills_per_min"],
+			])
+
+	# DPS curve
+	if not analysis.get("dps_curve", []).is_empty():
+		print("  DPS Curve:")
+		for d in analysis["dps_curve"]:
+			var weapon_str = ""
+			for w in d["weapons"]:
+				weapon_str += "%s(Lv%d) " % [w["id"], w["level"]]
+			print("    %s: avg=%.1f peak=%.1f Lv%d — %s" % [
+				d["character"], d["avg_dps"], d["peak_dps"],
+				d["final_level"], weapon_str.strip_edges(),
+			])
+
+	# Economy
+	if not analysis.get("economy", []).is_empty():
+		print("  Economy:")
+		for e in analysis["economy"]:
+			print("    %s: %d cristais em %.0fmin (%.1f/min, %d kills)" % [
+				e["stage"], e["crystals"], e["duration_min"],
+				e["crystals_per_min"], e["kills"],
+			])
 	print("")
 
 func _find_outliers(weapon_analysis: Dictionary) -> Array:

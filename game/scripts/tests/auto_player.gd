@@ -5,6 +5,7 @@ extends Node
 
 var player: CharacterBody3D = null
 var enabled: bool = false
+var avoid_attacks: bool = false  # For pacifist achievement test — only flee, no weapons
 
 # Timers
 var _dodge_timer: float = 0.0
