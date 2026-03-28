@@ -171,8 +171,8 @@ func _draw_map() -> void:
 	for conn in MAP_CONNECTIONS:
 		var a: String = conn[0]
 		var b: String = conn[1]
-		var pos_a := MAP_POSITIONS[a] * Vector2(scale_x, scale_y)
-		var pos_b := MAP_POSITIONS[b] * Vector2(scale_x, scale_y)
+		var pos_a: Vector2 = MAP_POSITIONS[a] * Vector2(scale_x, scale_y)
+		var pos_b: Vector2 = MAP_POSITIONS[b] * Vector2(scale_x, scale_y)
 		var a_unlocked := SaveManager.is_stage_unlocked(a)
 		var b_unlocked := SaveManager.is_stage_unlocked(b)
 
@@ -186,7 +186,7 @@ func _draw_map() -> void:
 
 	# Draw stage nodes
 	for sid in stage_ids:
-		var pos := MAP_POSITIONS[sid] * Vector2(scale_x, scale_y)
+		var pos: Vector2 = MAP_POSITIONS[sid] * Vector2(scale_x, scale_y)
 		var unlocked := SaveManager.is_stage_unlocked(sid)
 		var theme_color: Color = STAGE_COLORS.get(sid, Color(0.4, 0.4, 0.5))
 		var sc: float = _stage_scales.get(sid, 1.0)
@@ -206,9 +206,9 @@ func _draw_map() -> void:
 			# Stage icon
 			if sid in _stage_textures:
 				var tex: Texture2D = _stage_textures[sid]
-				var icon_sc := (ICON_SIZE * sc) / max(tex.get_width(), 1)
-				var icon_size := tex.get_size() * icon_sc
-				var icon_pos := pos - icon_size * 0.5
+				var icon_sc: float = (ICON_SIZE * sc) / max(tex.get_width(), 1)
+				var icon_size: Vector2 = tex.get_size() * icon_sc
+				var icon_pos: Vector2 = pos - icon_size * 0.5
 				map_area.draw_texture_rect(tex, Rect2(icon_pos, icon_size), false)
 		else:
 			# Locked — gray circle
@@ -232,9 +232,9 @@ func _draw_map() -> void:
 
 	# Draw player marker on hovered stage
 	if _hovered_stage != "":
-		var marker_pos := MAP_POSITIONS[_hovered_stage] * Vector2(scale_x, scale_y)
+		var marker_pos: Vector2 = MAP_POSITIONS[_hovered_stage] * Vector2(scale_x, scale_y)
 		var bob_offset := sin(_marker_time * MARKER_BOB_SPEED) * MARKER_BOB_AMOUNT
-		var marker_y := marker_pos.y - NODE_RADIUS - 10 + bob_offset
+		var marker_y: float = marker_pos.y - NODE_RADIUS - 10 + bob_offset
 
 		# Small triangle pointing down
 		var tri_size := 7.0
@@ -256,7 +256,7 @@ func _on_map_input(event: InputEvent) -> void:
 		var closest_id := ""
 		var closest_dist := 999999.0
 		for sid in stage_ids:
-			var pos := MAP_POSITIONS[sid] * Vector2(scale_x, scale_y)
+			var pos: Vector2 = MAP_POSITIONS[sid] * Vector2(scale_x, scale_y)
 			var dist := mouse_pos.distance_to(pos)
 			if dist < NODE_RADIUS * 1.8 and dist < closest_dist:
 				closest_dist = dist
