@@ -177,11 +177,7 @@ func _process(_delta: float) -> void:
 				_on_condition_met()
 		"dash":
 			if Input.is_action_just_pressed("dash"):
-				var player = _player_ref.get_ref()
-				if player and is_instance_valid(player):
-					# Only count if player actually dashed (has move direction)
-					if player.move_direction.length() > 0.1:
-						_on_condition_met()
+				_on_condition_met()
 
 
 func _on_enemy_killed(_position: Vector3, _xp_value: int) -> void:
