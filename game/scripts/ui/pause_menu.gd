@@ -200,6 +200,42 @@ func _show_stats() -> void:
 		whbox.add_child(wval)
 		vbox.add_child(whbox)
 
+	# Current items and levels
+	var items = GameManager.player_items
+	if not items.is_empty():
+		vbox.add_child(HSeparator.new())
+
+		var items_title = Label.new()
+		items_title.text = "Items"
+		items_title.add_theme_font_size_override("font_size", 16)
+		items_title.add_theme_color_override("font_color", Color(0.6, 1.0, 0.8))
+		vbox.add_child(items_title)
+
+		for it in items:
+			var idata = ItemDB.items.get(it.id, {})
+			var iname = idata.get("name", it.id.capitalize())
+			var ihbox = HBoxContainer.new()
+			var iicon_path = "res://assets/sprites/items/%s.png" % it.id
+			var iicon_tex = load(iicon_path) if ResourceLoader.exists(iicon_path) else null
+			if iicon_tex:
+				var iicon = TextureRect.new()
+				iicon.texture = iicon_tex
+				iicon.custom_minimum_size = Vector2(20, 20)
+				iicon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				iicon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				ihbox.add_child(iicon)
+			var ilbl = Label.new()
+			ilbl.text = iname
+			ilbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			ilbl.add_theme_font_size_override("font_size", 14)
+			ihbox.add_child(ilbl)
+			var ival = Label.new()
+			ival.text = "Lv.%d" % it.level
+			ival.add_theme_font_size_override("font_size", 14)
+			ival.add_theme_color_override("font_color", Color(0.5, 0.9, 1.0))
+			ihbox.add_child(ival)
+			vbox.add_child(ihbox)
+
 	# Active synergies
 	var synergies = SynergySystem.active_synergies
 	if not synergies.is_empty():

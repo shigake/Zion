@@ -153,17 +153,17 @@
 ## UI/UX
 - [ ] Barra de XP — mostrar quanto falta pro proximo nivel (tooltip ou texto)
 - [ ] Timer mais visivel — font maior, cor diferente pros ultimos 3 minutos
-- [ ] Boss HP bar — nome do boss + icone acima da barra
+- [x] Boss HP bar — nome do boss + icone acima da barra
 - [ ] Dash cooldown — indicador visual no HUD (barra ou icone)
-- [ ] Tela de pausa — mostrar inventario resumido (armas + itens equipados)
+- [x] Tela de pausa — mostrar inventario resumido (armas + itens equipados)
 - [ ] Options: slider de volume com preview de som
 - [ ] Options: sensibilidade do gamepad
 - [x] Tela de creditos — atualizar com todos os assets usados (Suno, Quaternius, etc.)
 
 ## MULTIPLAYER
 - [ ] Level up assincrono (design aprovado, implementacao pendente)
-- [ ] Ping display no HUD durante gameplay
-- [ ] Ally HP bars com nomes dos jogadores
+- [x] Ping display no HUD durante gameplay
+- [x] Ally HP bars com nomes dos jogadores
 - [ ] Sync de weapon_damage_dealt pro game over screen multiplayer
 
 ## CONTEUDO

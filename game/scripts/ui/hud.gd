@@ -26,6 +26,7 @@ var _prev_hp: int = -1  # Track HP changes for flash
 var weapon_container: HBoxContainer
 var item_container: HBoxContainer
 var boss_hp_bar: ProgressBar
+var boss_name_label: Label
 
 # Cache to avoid rebuilding every frame
 var _prev_weapon_hash: String = ""
@@ -67,6 +68,24 @@ func _ready() -> void:
 	item_container = $ItemPanel/ItemIcons
 	boss_hp_bar = $BossHPBar
 	boss_hp_bar.visible = false
+
+	# Boss name label — centered above boss HP bar
+	boss_name_label = Label.new()
+	boss_name_label.name = "BossNameLabel"
+	boss_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	boss_name_label.add_theme_font_size_override("font_size", 16)
+	boss_name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.2))
+	boss_name_label.add_theme_constant_override("outline_size", 2)
+	boss_name_label.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.0))
+	boss_name_label.anchor_left = 0.3
+	boss_name_label.anchor_right = 0.7
+	boss_name_label.offset_top = 30.0
+	boss_name_label.offset_bottom = 50.0
+	boss_name_label.visible = false
+	add_child(boss_name_label)
+
+	# Connect boss_spawned signal for boss name display
+	GameManager.boss_spawned.connect(_on_boss_spawned)
 
 	# Conecta ao EventManager se existir
 	await get_tree().process_frame
@@ -361,6 +380,15 @@ func _on_event_warning(event_name: String, seconds_left: float) -> void:
 	tween.tween_property(event_label, "modulate:a", 0.4, 0.5)
 	tween.tween_callback(func(): event_label.visible = false)
 
+func _on_boss_spawned(bname: String) -> void:
+	if boss_name_label:
+		boss_name_label.text = bname.replace("_", " ").capitalize()
+		boss_name_label.visible = true
+		# Scale-in animation
+		boss_name_label.scale = Vector2(1.5, 1.5)
+		var tween = create_tween()
+		tween.tween_property(boss_name_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+
 func _on_miniboss_spawned(boss_name: String) -> void:
 	event_label.text = "MINIBOSS: %s" % boss_name
 	event_label.visible = true
@@ -502,10 +530,17 @@ func _update_boss_hp() -> void:
 	var bosses := get_tree().get_nodes_in_group("boss")  # Small group, no perf concern
 	if bosses.is_empty():
 		boss_hp_bar.visible = false
+		if boss_name_label:
+			boss_name_label.visible = false
 		return
 
 	var boss = bosses[0]
 	boss_hp_bar.visible = true
+	if boss_name_label and not boss_name_label.visible:
+		# Show name from boss node if signal was missed
+		var bname = boss.name if "name" in boss else "Boss"
+		boss_name_label.text = str(bname).replace("_", " ").capitalize()
+		boss_name_label.visible = true
 	if boss.has_method("get_max_hp"):
 		boss_hp_bar.max_value = boss.get_max_hp()
 	elif "max_hp" in boss:
