@@ -1,7 +1,7 @@
 extends Control
 
-## Main menu: professional dark theme with 3D rotating character model.
-## Left side: title, crystals, buttons. Right side: 3D character in SubViewport.
+## Main menu: professional dark theme with character sprite.
+## Left side: title, crystals, buttons. Right side: character sprite at 4x scale.
 
 @onready var crystals_label: Label = $LeftPanel/Content/CrystalsContainer/CrystalsLabel
 @onready var crystal_icon: Label = $LeftPanel/Content/CrystalsContainer/CrystalIcon
@@ -16,10 +16,7 @@ extends Control
 @onready var buttons_container: VBoxContainer = $LeftPanel/Content/Buttons
 @onready var gradient_overlay: ColorRect = $GradientOverlay
 
-var _model_node: Node3D = null
-var _dance_tween: Tween = null
-var _dance_base_pos: Vector3 = Vector3.ZERO
-var _dance_time: float = 0.0
+var _char_sprite: TextureRect = null
 
 # Colors
 const COLOR_BG := Color(0.04, 0.04, 0.06)
@@ -290,75 +287,45 @@ func _create_menu_button(label_text: String) -> Button:
 
 
 # ---------------------------------------------------------------------------
-# 3D Background (right side of screen)
+# Character Sprite (right side of screen)
 # ---------------------------------------------------------------------------
 
 func _setup_3d_background() -> void:
-	var svc := SubViewportContainer.new()
-	svc.name = "ModelViewport"
-	# Position on the right half of the screen
-	svc.anchors_preset = Control.PRESET_FULL_RECT
-	svc.anchor_right = 1.0
-	svc.anchor_bottom = 1.0
-	svc.stretch = true
-	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(svc)
-	# Place behind UI but in front of background (index 2 = after Background + GradientOverlay)
-	move_child(svc, 2)
-
-	var sv := SubViewport.new()
-	sv.size = Vector2i(1280, 720)
-	sv.transparent_bg = true
-	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	svc.add_child(sv)
-
-	var world := Node3D.new()
-	sv.add_child(world)
-
-	# Camera positioned to the right side
-	var cam := Camera3D.new()
-	cam.position = Vector3(3.0, 1.2, 3.2)
-	cam.fov = 38
-	world.add_child(cam)
-	cam.look_at(Vector3(1.5, 0.6, 0))
-
-	# Key light (warm directional)
-	var key_light := DirectionalLight3D.new()
-	key_light.rotation = Vector3(deg_to_rad(-35), deg_to_rad(20), 0)
-	key_light.light_energy = 1.4
-	key_light.light_color = Color(1.0, 0.95, 0.85)
-	world.add_child(key_light)
-
-	# Rim / fill light from behind-left (cool tone)
-	var rim_light := DirectionalLight3D.new()
-	rim_light.rotation = Vector3(deg_to_rad(-20), deg_to_rad(-150), 0)
-	rim_light.light_energy = 0.6
-	rim_light.light_color = Color(0.6, 0.7, 1.0)
-	world.add_child(rim_light)
-
-	# Environment
-	var env := Environment.new()
-	env.ambient_light_color = Color(0.25, 0.27, 0.4)
-	env.ambient_light_energy = 0.4
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.0, 0.0, 0.0, 0.0)
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.glow_enabled = true
-	env.glow_intensity = 0.3
-	env.glow_bloom = 0.1
-	var world_env := WorldEnvironment.new()
-	world_env.environment = env
-	world.add_child(world_env)
-
-	# Random character model placed on the right
+	# Character sprite displayed on the right side of the screen
 	var chars := CharacterDB.get_all_character_ids()
 	var random_char: String = chars[randi() % chars.size()]
-	_model_node = ModelFactory.get_model_for_character(random_char)
-	if _model_node:
-		_model_node.position = Vector3(1.5, 0, 0)
-		_model_node.scale = Vector3(0.5, 0.5, 0.5)
-		_dance_base_pos = _model_node.position
-		world.add_child(_model_node)
+	var sprite_path := "res://assets/sprites/characters/%s.png" % random_char
+
+	if not ResourceLoader.exists(sprite_path):
+		return
+
+	var container := Control.new()
+	container.name = "CharacterSpriteContainer"
+	container.anchors_preset = Control.PRESET_FULL_RECT
+	container.anchor_right = 1.0
+	container.anchor_bottom = 1.0
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(container)
+	# Place behind UI but in front of background (index 2 = after Background + GradientOverlay)
+	move_child(container, 2)
+
+	_char_sprite = TextureRect.new()
+	_char_sprite.texture = load(sprite_path)
+	_char_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_char_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_char_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_char_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 4x scale: position on the right half
+	var tex_size: Vector2 = _char_sprite.texture.get_size()
+	var display_size := tex_size * 4.0
+	_char_sprite.custom_minimum_size = display_size
+	_char_sprite.size = display_size
+	# Center vertically, place on right side
+	_char_sprite.position = Vector2(
+		1280.0 * 0.65 - display_size.x * 0.5,
+		720.0 * 0.5 - display_size.y * 0.5
+	)
+	container.add_child(_char_sprite)
 
 
 # ---------------------------------------------------------------------------
@@ -389,11 +356,8 @@ func _setup_gamepad_focus() -> void:
 # Updates
 # ---------------------------------------------------------------------------
 
-func _process(delta: float) -> void:
-	if not _model_node:
-		return
-	_dance_time += delta
-	_animate_piseiro()
+func _process(_delta: float) -> void:
+	pass
 
 
 func _update_version() -> void:
@@ -407,41 +371,6 @@ func _update_version() -> void:
 func _update_crystals() -> void:
 	var count: int = SaveManager.get_crystals()
 	crystals_label.text = LocaleManager.tr_key("crystals") % count
-
-
-# ---------------------------------------------------------------------------
-# Piseiro Dance Animation
-# ---------------------------------------------------------------------------
-
-func _animate_piseiro() -> void:
-	## Piseiro dance: bouncy rhythmic steps with hip sway (~130 BPM).
-	## Two-step pattern: quick-quick with a bounce on each beat.
-	var bpm := 130.0
-	var beat := _dance_time * bpm / 60.0  # current beat number
-
-	# Bounce: double-time bounce (2x per beat), sharp down + smooth up
-	var bounce_phase := fmod(beat * 2.0, 1.0)
-	var bounce_y: float = abs(sin(bounce_phase * PI)) * 0.06
-
-	# Side-to-side stepping: shifts weight left/right each beat
-	var step_phase := sin(beat * PI)
-	var step_x := step_phase * 0.04
-
-	# Hip rotation: sway synced with steps
-	var hip_rot_z := sin(beat * PI) * deg_to_rad(6.0)
-
-	# Slight forward/back sway (the "gingado")
-	var sway_z := sin(beat * PI * 0.5) * 0.02
-
-	# Upper body counter-rotation for natural feel
-	var upper_rot_y := sin(beat * PI) * deg_to_rad(10.0)
-
-	# Foot shuffle: quick alternating lean
-	var shuffle_rot_x := sin(beat * 2.0 * PI) * deg_to_rad(3.0)
-
-	# Apply to model
-	_model_node.position = _dance_base_pos + Vector3(step_x, bounce_y, sway_z)
-	_model_node.rotation = Vector3(shuffle_rot_x, upper_rot_y, hip_rot_z)
 
 
 # ---------------------------------------------------------------------------
