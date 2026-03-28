@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Substituir a track unica `cemetery` por um sistema de musica dinamica com 3 faixas que mudam conforme o progresso da fase, criando uma experiencia sonora que acompanha a escalada de dificuldade.
+Substituir a track unica `cemetery` por um sistema de musica dinamica com 5 faixas que mudam conforme o progresso da fase, criando uma experiencia sonora que acompanha a escalada de dificuldade — do inicio misterioso ate o boss final epico.
 
 ## Estado Atual
 
@@ -59,15 +59,45 @@ Substituir a track unica `cemetery` por um sistema de musica dinamica com 3 faix
 
 ---
 
+### 4. Climax de Sobrevivencia (Minutos 20 a 25) — `cemetery_climax`
+
+**Contexto gameplay:** Apice do caos antes do boss final. Tela atinge o limite de 500 inimigos simultaneos. Magias voando para todo lado, jogador desviando de tudo. Puro caos.
+
+**Direcao musical:** Adrenalina pura. BPM altissimo, arpeggios freneticos, sensacao de overwhelm total.
+
+**Prompt para geracao por IA:**
+> "Intense high BPM chiptune, frantic 16-bit arpeggios, extreme arcade action soundtrack, spooky gothic undertones, retro adrenaline rush, overwhelming horde survival, fast synthesizer solos, pixel art bullet hell instrumental"
+
+**Arquivo:** `res://assets/audio/music/stages/cemetery_climax.ogg`
+**Duracao ideal:** 2-3 minutos (loop)
+**BPM sugerido:** 170-180
+
+---
+
+### 5. Tema do Boss Final — Necromancer King — `cemetery_boss`
+
+**Contexto gameplay:** O Rei Necromante aparece. 4 metros de altura, invoca hordas de mortos e lanca magias roxas. Batalha final epica.
+
+**Direcao musical:** Epica, misturando o som gotico do cemiterio com a velocidade de uma batalha final. Pipe organ dramatico com bateria rapida.
+
+**Prompt para geracao por IA:**
+> "Epic 16-bit final boss theme, dark gothic chiptune, very fast-paced drums, dramatic classical pipe organ solos, Castlevania Symphony of the Night retro style, dark magic atmosphere, high stakes pixel art battle music, instrumental masterpiece"
+
+**Arquivo:** `res://assets/audio/music/stages/cemetery_boss.ogg`
+**Duracao ideal:** 2-3 minutos (loop)
+**BPM sugerido:** 160-170
+
+---
+
 ## Implementacao Tecnica
 
 ### Task 1 — Registrar novas tracks no AudioManager
 
 **Arquivo:** `scripts/autoload/audio_manager.gd`
 
-Adicionar as 3 novas tracks na lista `_valid_music`:
+Adicionar as 5 novas tracks na lista `_valid_music`:
 ```
-cemetery_intro, cemetery_horde, cemetery_miniboss
+cemetery_intro, cemetery_horde, cemetery_miniboss, cemetery_climax, cemetery_boss
 ```
 
 Manter `cemetery` como fallback (compatibilidade).
@@ -105,7 +135,8 @@ func _ready() -> void:
     music_track = "cemetery_intro"  # Track inicial
     dynamic_music = [
         { "time": 0.0, "track": "cemetery_intro" },
-        { "time": 600.0, "track": "cemetery_horde" },  # 10 minutos
+        { "time": 600.0, "track": "cemetery_horde" },    # 10 minutos
+        { "time": 1200.0, "track": "cemetery_climax" },   # 20 minutos
     ]
     super._ready()
 ```
@@ -114,11 +145,11 @@ func _ready() -> void:
 
 ---
 
-### Task 4 — Trigger de musica do mini-boss
+### Task 4 — Trigger de musica do mini-boss e boss final
 
 **Arquivo:** `scripts/stages/base_stage.gd` ou via signal
 
-Quando o mini-boss spawnar, trocar para a track de mini-boss. Quando morrer, voltar para a track do tempo atual.
+**Mini-boss:** Quando o mini-boss spawnar, trocar para `cemetery_miniboss`. Quando morrer, voltar para a track do tempo atual.
 
 Opcoes de implementacao:
 - **Signal:** `GameManager.miniboss_spawned` / `GameManager.miniboss_killed`
@@ -126,13 +157,15 @@ Opcoes de implementacao:
 
 Ao voltar da musica do mini-boss, retomar a track correta baseada no tempo decorrido.
 
-**Estimativa:** 15 min
+**Boss final (Necromancer King):** Quando o boss final spawnar (minuto 25), trocar para `cemetery_boss`. Esta track toca ate o boss morrer ou o jogador morrer — nao retorna para outra track.
+
+**Estimativa:** 20 min
 
 ---
 
 ### Task 5 — Gerar e adicionar arquivos de audio
 
-Gerar as 3 faixas usando IA (Suno, Udio, ou similar) com os prompts acima.
+Gerar as 5 faixas usando IA (Suno, Udio, ou similar) com os prompts acima.
 
 Exportar como `.ogg` (Vorbis), qualidade 6-8, stereo.
 
@@ -141,9 +174,11 @@ Colocar em:
 game/assets/audio/music/stages/cemetery_intro.ogg
 game/assets/audio/music/stages/cemetery_horde.ogg
 game/assets/audio/music/stages/cemetery_miniboss.ogg
+game/assets/audio/music/stages/cemetery_climax.ogg
+game/assets/audio/music/stages/cemetery_boss.ogg
 ```
 
-**Estimativa:** 30 min (geracao + selecao + export)
+**Estimativa:** 45 min (geracao + selecao + export)
 
 ---
 
@@ -169,17 +204,37 @@ Transicoes de fase devem usar `fade_duration = 3.0` para suavizar a mudanca.
 game/assets/audio/music/stages/
 ├── cemetery_intro.ogg      # 0-10 min, 120-130 BPM, gotico misterioso
 ├── cemetery_horde.ogg      # 10-20 min, 150-160 BPM, acao intensa
-└── cemetery_miniboss.ogg   # Mini-boss, 90-100 BPM, pesado intimidador
+├── cemetery_miniboss.ogg   # Mini-boss, 90-100 BPM, pesado intimidador
+├── cemetery_climax.ogg     # 20-25 min, 170-180 BPM, caos total
+└── cemetery_boss.ogg       # Boss final, 160-170 BPM, epico gotico
+```
+
+## Timeline Musical Completa
+
+```
+ 0:00 ──── cemetery_intro (misterioso, 120-130 BPM)
+            │
+10:00 ──── cemetery_horde (intenso, 150-160 BPM)
+            │
+            ├── [Mini-boss spawna] → cemetery_miniboss (pesado, 90-100 BPM)
+            │   └── [Mini-boss morre] → volta pra track do tempo atual
+            │
+20:00 ──── cemetery_climax (frenetico, 170-180 BPM)
+            │
+25:00 ──── cemetery_boss / Necromancer King (epico, 160-170 BPM)
+            └── Toca ate o fim da fase
 ```
 
 ## Criterios de Aceitacao
 
-- [ ] As 3 tracks tocam nos momentos corretos durante a fase cemiterio
+- [ ] As 5 tracks tocam nos momentos corretos durante a fase cemiterio
 - [ ] Crossfade suave (3s) entre transicoes de musica
 - [ ] Mini-boss override funciona e retorna a track correta ao morrer
+- [ ] Boss final override funciona e toca ate o fim
 - [ ] Sem crash se arquivos de audio nao existirem (fallback graceful)
 - [ ] Tracks fazem loop seamless (sem click/pop na transicao)
 - [ ] Funciona em multiplayer (host controla a musica)
+- [ ] Escalada de BPM perceptivel (120 → 150 → 170 → 160)
 
 ## Ordem de Execucao
 
@@ -193,5 +248,7 @@ game/assets/audio/music/stages/
 ## Notas
 
 - Este sistema de musica dinamica fica generico no `BaseStage`, permitindo que outras fases usem o mesmo padrao no futuro
-- A track `boss` existente continua sendo usada para o boss final (Necromancer King)
+- A track `cemetery_boss` substitui a track `boss` generica para o Necromancer King — mais tematica e epica
 - Se nenhum arquivo `.ogg` existir, o jogo continua sem crash (comportamento atual do AudioManager)
+- A escalada de BPM (120 → 150 → 170) cria uma sensacao natural de urgencia crescente
+- O boss final tem BPM ligeiramente menor (160) que o climax (170) porque o foco muda de "caos" pra "epico"
