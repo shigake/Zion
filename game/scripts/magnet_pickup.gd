@@ -11,6 +11,7 @@ var _collected := false
 var _spawn_time: float = 0.0
 
 @onready var mesh: MeshInstance3D = $Mesh
+var _pickup_sprite: Sprite3D = null
 
 func _ready() -> void:
 	add_to_group("pickups")
@@ -20,6 +21,21 @@ func _ready() -> void:
 	# Glow cinza/branco magnetico
 	if mesh:
 		mesh.material_override = VisualSetup.create_glow_material(Color(0.7, 0.8, 1.0), 3.0)
+	# Billboard sprite (hides mesh if sprite texture exists)
+	var sprite_path = "res://assets/sprites/pickups/magnet.png"
+	if ResourceLoader.exists(sprite_path):
+		if mesh:
+			mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.025
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "PickupSprite"
+		add_child(sprite)
+		_pickup_sprite = sprite
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:
@@ -28,9 +44,12 @@ func _physics_process(delta: float) -> void:
 	# Bobbing + rotacao
 	var t = GameManager.game_time
 	var bob = sin(t * 4.0 + global_position.z * 2.0) * 0.1
-	position.y = 0.35 + bob
-	if mesh:
-		mesh.rotation.y += delta * 5.0
+	if _pickup_sprite:
+		_pickup_sprite.position.y = bob
+	else:
+		position.y = 0.35 + bob
+		if mesh:
+			mesh.rotation.y += delta * 5.0
 
 	# Atracao ao jogador
 	if not being_attracted:

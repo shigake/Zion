@@ -15,6 +15,7 @@ var attract_target: Node3D = null
 var _frame_counter: int = 0
 
 @onready var mesh: MeshInstance3D = $Mesh
+var _pickup_sprite: Sprite3D = null
 
 func _ready() -> void:
 	add_to_group("xp_gems")
@@ -25,6 +26,21 @@ func _ready() -> void:
 	# Apply glow shader to XP gem mesh
 	if mesh:
 		mesh.material_override = VisualSetup.create_glow_material(Color(0.2, 0.6, 1.0), 2.0)
+	# Billboard sprite (hides mesh if sprite texture exists)
+	var sprite_path = "res://assets/sprites/pickups/xp_gem.png"
+	if ResourceLoader.exists(sprite_path):
+		if mesh:
+			mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.025
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "PickupSprite"
+		add_child(sprite)
+		_pickup_sprite = sprite
 	# Enforce pickup cap — auto-collect oldest if over limit
 	_enforce_pickup_cap()
 
@@ -44,7 +60,10 @@ func _physics_process(delta: float) -> void:
 
 	# Bobbing animation — runs every frame for smooth visuals
 	var bob = sin(GameManager.game_time * 4.0 + global_position.x) * 0.1
-	position.y = 0.3 + bob
+	if _pickup_sprite:
+		_pickup_sprite.position.y = bob
+	else:
+		position.y = 0.3 + bob
 
 	# Attraction check — only every 5 physics frames for performance
 	_frame_counter += 1
