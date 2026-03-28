@@ -589,15 +589,6 @@ func _generate_torches() -> void:
 		smoke.position.y = 3.5
 		torch.add_child(smoke)
 
-		## Luz pontual quente
-		var light = OmniLight3D.new()
-		light.position.y = 2.9
-		light.light_color = Color(1.0, 0.65, 0.25)
-		light.light_energy = 1.2
-		light.omni_range = 12.0
-		light.omni_attenuation = 1.8
-		torch.add_child(light)
-
 		add_child(torch)
 
 ## ---- RACKS DE ARMAS ----
@@ -787,15 +778,6 @@ func _generate_victory_podium() -> void:
 	step3_inst.mesh = step3_mesh
 	step3_inst.position.y = 1.25
 	podium.add_child(step3_inst)
-
-	## Leve brilho dourado acima do podio
-	var podium_light = OmniLight3D.new()
-	podium_light.position.y = 2.5
-	podium_light.light_color = Color(1.0, 0.85, 0.4)
-	podium_light.light_energy = 0.6
-	podium_light.omni_range = 6.0
-	podium_light.omni_attenuation = 2.0
-	podium.add_child(podium_light)
 
 	add_child(podium)
 

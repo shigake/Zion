@@ -578,24 +578,6 @@ func _generate_control_room() -> void:
 	arm_inst.position.y = 4.8
 	room.add_child(arm_inst)
 
-	## Luz interior
-	var room_light = OmniLight3D.new()
-	room_light.position = Vector3(0, 3.5, 0)
-	room_light.light_color = Color(0.4, 0.6, 1.0)
-	room_light.light_energy = 0.8
-	room_light.omni_range = 10.0
-	room_light.omni_attenuation = 1.5
-	room.add_child(room_light)
-
-	add_child(room)
-
-## ---- CRIOPODS ----
-func _generate_cryopods() -> void:
-	for i in range(6):
-		var pod = Node3D.new()
-		var angle = (float(i) / 6.0) * TAU + 0.5
-		var pod_radius = rng.randf_range(area_size * 0.25, area_size * 0.45)
-		pod.position = Vector3(
 			cos(angle) * pod_radius,
 			0,
 			sin(angle) * pod_radius
@@ -673,24 +655,6 @@ func _generate_cryopods() -> void:
 			crack_inst.rotation.z = rng.randf_range(-0.5, 0.5)
 			pod.add_child(crack_inst)
 
-		## Brilho azul do pod
-		var pod_light = OmniLight3D.new()
-		pod_light.position = Vector3(0, 1.2, 0.6)
-		pod_light.light_color = Color(0.3, 0.5, 1.0)
-		pod_light.light_energy = 0.5
-		pod_light.omni_range = 4.0
-		pod_light.omni_attenuation = 2.0
-		pod.add_child(pod_light)
-
-		add_child(pod)
-
-## ---- CONTAINERS DE CARGA ----
-func _generate_cargo_containers() -> void:
-	var container_colors: Array[Color] = [
-		Color(0.8, 0.4, 0.1),
-		Color(0.2, 0.4, 0.7),
-		Color(0.2, 0.6, 0.25),
-		Color(0.45, 0.45, 0.48),
 	]
 	var stencil_colors: Array[Color] = [
 		Color(0.95, 0.95, 0.95),
@@ -851,24 +815,6 @@ func _generate_holographic_displays() -> void:
 		ray_inst.position.y = 1.0 + ray_mesh.height / 2.0
 		holo.add_child(ray_inst)
 
-		## Leve luz no holograma
-		var holo_light = OmniLight3D.new()
-		holo_light.position.y = holo_inst.position.y
-		holo_light.light_color = Color(holo_tint.r, holo_tint.g, holo_tint.b)
-		holo_light.light_energy = 0.4
-		holo_light.omni_range = 4.0
-		holo_light.omni_attenuation = 2.0
-		holo.add_child(holo_light)
-
-		add_child(holo)
-
-## ---- SECOES DANIFICADAS ----
-func _generate_damaged_sections() -> void:
-	for i in range(4):
-		var section = Node3D.new()
-		var x = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-		var z = rng.randf_range(-area_size * 0.6, area_size * 0.6)
-		if abs(x) < 7 and abs(z) < 7:
 			x += 10.0
 		section.position = Vector3(x, 0, z)
 		section.rotation.y = rng.randf_range(0, TAU)
@@ -956,24 +902,6 @@ func _generate_damaged_sections() -> void:
 		sparks.position = Vector3(0, 1.5, 0)
 		section.add_child(sparks)
 
-		## Luz vermelha de emergencia
-		var red_light = OmniLight3D.new()
-		red_light.position = Vector3(0, 2.0, 0)
-		red_light.light_color = Color(1.0, 0.15, 0.1)
-		red_light.light_energy = 0.8
-		red_light.omni_range = 6.0
-		red_light.omni_attenuation = 2.0
-		section.add_child(red_light)
-
-		## Sinalizador visual vermelho (esfera emissiva)
-		var warn_mesh = SphereMesh.new()
-		warn_mesh.radius = 0.1
-		warn_mesh.height = 0.2
-		var warn_mat = StandardMaterial3D.new()
-		warn_mat.albedo_color = Color(1.0, 0.1, 0.05, 0.8)
-		warn_mat.emission_enabled = true
-		warn_mat.emission = Color(1.0, 0.1, 0.05)
-		warn_mat.emission_energy_multiplier = 4.0
 		warn_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		warn_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		warn_mesh.surface_set_material(0, warn_mat)

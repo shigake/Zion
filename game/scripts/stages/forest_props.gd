@@ -622,15 +622,6 @@ func _generate_fairy_circles() -> void:
 		disc.position.y = 0.02
 		circle.add_child(disc)
 
-		## Luz no centro
-		var fairy_light = OmniLight3D.new()
-		fairy_light.light_color = Color(0.4, 0.9, 0.4)
-		fairy_light.light_energy = rng.randf_range(1.0, 2.0)
-		fairy_light.omni_range = circle_radius * 2.5
-		fairy_light.omni_attenuation = 1.5
-		fairy_light.position.y = 0.5
-		circle.add_child(fairy_light)
-
 		## Cogumelos pequenos formando o circulo (8-14)
 		var num_shrooms = rng.randi_range(8, 14)
 		for s in range(num_shrooms):

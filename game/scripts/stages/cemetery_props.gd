@@ -642,14 +642,6 @@ func _generate_floating_lanterns() -> void:
 		hook.position.y = 0.27
 		lantern.add_child(hook)
 
-		## Luz pontual da lanterna
-		var light = OmniLight3D.new()
-		light.light_color = color
-		light.light_energy = rng.randf_range(1.5, 2.5)
-		light.omni_range = rng.randf_range(6.0, 10.0)
-		light.omni_attenuation = 1.5
-		lantern.add_child(light)
-
 		add_child(lantern)
 
 ## -------------------------------------------------------
@@ -726,15 +718,6 @@ func _generate_candle_graves() -> void:
 			flame.mesh = flame_mesh
 			flame.position = Vector3(candle_x, candle_height + 0.02, candle_z)
 			grave.add_child(flame)
-
-		## Luz quente da vela
-		var candle_light = OmniLight3D.new()
-		candle_light.light_color = Color(1.0, 0.7, 0.3)
-		candle_light.light_energy = rng.randf_range(0.6, 1.2)
-		candle_light.omni_range = rng.randf_range(3.0, 5.0)
-		candle_light.omni_attenuation = 1.8
-		candle_light.position = Vector3(0, 0.4, 0.15)
-		grave.add_child(candle_light)
 
 		add_child(grave)
 

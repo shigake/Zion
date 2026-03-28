@@ -343,15 +343,6 @@ func _generate_candelabras() -> void:
 			candle_inst.position = Vector3(cos(arm_angle) * arm_length, 1.9, sin(arm_angle) * arm_length)
 			cand.add_child(candle_inst)
 
-		## Luz do candelabro
-		var light = OmniLight3D.new()
-		light.position.y = 2.1
-		light.light_color = Color(1.0, 0.7, 0.3)
-		light.light_energy = 0.6
-		light.omni_range = 6.0
-		light.omni_attenuation = 2.0
-		cand.add_child(light)
-
 		add_child(cand)
 
 ## ---- Vitrais com moldura de chumbo e piscinas de luz ----
@@ -686,15 +677,6 @@ func _generate_torches() -> void:
 		flame.position.y = 2.1
 		torch.add_child(flame)
 
-		## Luz quente
-		var light = OmniLight3D.new()
-		light.position.y = 2.3
-		light.light_color = Color(1.0, 0.7, 0.3)
-		light.light_energy = 1.0
-		light.omni_range = 10.0
-		light.omni_attenuation = 2.0
-		torch.add_child(light)
-
 		## Safe zone area (cancela buff de escuridao)
 		var safe_area = Area3D.new()
 		safe_area.collision_layer = 0
@@ -980,15 +962,6 @@ func _generate_chandeliers() -> void:
 			candle_inst.mesh = candle_mesh
 			candle_inst.position = Vector3(cx, 0.16, cz)
 			chandelier.add_child(candle_inst)
-
-		## Luz principal do lustre (quente)
-		var light = OmniLight3D.new()
-		light.position.y = 0.3
-		light.light_color = Color(1.0, 0.75, 0.4)
-		light.light_energy = 1.2
-		light.omni_range = 14.0
-		light.omni_attenuation = 1.8
-		chandelier.add_child(light)
 
 		add_child(chandelier)
 

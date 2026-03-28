@@ -527,15 +527,6 @@ func _generate_vending_machines() -> void:
 		screen_inst.position.y = vm_h * 0.55
 		vm.add_child(screen_inst)
 
-		## Luz pontual perto da tela
-		var vm_light = OmniLight3D.new()
-		vm_light.position = Vector3(0, vm_h * 0.5, vm_d / 2.0 + 0.5)
-		vm_light.light_color = screen_color
-		vm_light.light_energy = 0.3
-		vm_light.omni_range = 3.0
-		vm_light.omni_attenuation = 2.0
-		vm.add_child(vm_light)
-
 		add_child(vm)
 
 ## ===================== POCAS REFLEXIVAS =====================
