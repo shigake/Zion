@@ -11,6 +11,7 @@ signal weapon_upgraded(weapon_id: String, new_level: int)
 signal miniboss_spawned(boss_name: String)
 signal boss_spawned(boss_name: String)
 signal boss_died(boss_name: String)
+signal boss_phase_changed(boss_name: String, phase: int)
 
 # Tempo e dificuldade
 var game_time: float = 0.0

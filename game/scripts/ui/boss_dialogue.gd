@@ -1,72 +1,58 @@
 extends CanvasLayer
 
-## Boss dialogue overlay — shows intro line when boss spawns, death line when boss dies.
-## Auto-dismisses after 3 seconds or on any input.
+## Boss dialogue overlay — shows intro, phase change, and death lines for Sentinelas.
+## Uses typewriter effect and boss-themed border colors.
+## Text sourced from LocaleManager for i18n support.
 
-const BOSS_LINES := {
-	"BossNecromancer": {
-		"intro": "Eu guardava a fronteira entre vida e morte.\nAgora SOU a fronteira!",
-		"death": "Livre... finalmente livre.\nObrigado, Fragmentado...",
-	},
-	"BossFairyQueen": {
-		"intro": "A floresta era minha para proteger.\nAgora é minha para devorar!",
-		"death": "A harmonia... eu lembro agora.\nEu era... a guardiã...",
-	},
-	"BossAlienCow": {
-		"intro": "MUUUU! O cristal me deu\nconsciência! E FOME!",
-		"death": "Muu... o brilho... está sumindo...\n*static*",
-	},
-	"BossAiOverlord": {
-		"intro": "SENTINELA DA LÓGICA ONLINE.\nVARIÁVEIS ORGÂNICAS: ELIMINAR.",
-		"death": "ERRO... eu era protetor?\nDados corrompidos... restaurando...",
-	},
-	"BossDemonLord": {
-		"intro": "Não fui corrompido. EU NASCI\nda destruição de Zion!",
-		"death": "A raiva se dissolve...\nO que resta... é vazio...",
-	},
-	"BossLeviathan": {
-		"intro": "Eu existo desde antes de Zion ter nome.\nVocês são efêmeros!",
-		"death": "As profundezas... se aquietam.\nO mais antigo... descansa...",
-	},
-	"BossEmperor": {
-		"intro": "Ajoelhem-se! Nesta arena,\nEU SOU ETERNO!",
-		"death": "O loop... se quebra.\nRoma... pode descansar...",
-	},
-	"BossSingularity": {
-		"intro": "EU GUARDO AS FRONTEIRAS DO ESPAÇO-TEMPO.\nNADA PASSA.",
-		"death": "O horizonte... colapsa.\nAs fronteiras... se abrem...",
-	},
-	"BossDracula": {
-		"intro": "Eu não fui corrompido. Eu ESCOLHI.\nZion não deve ser restaurado!",
-		"death": "Talvez... eu estivesse errado.\nTalvez vocês mereçam... um novo Zion...",
-	},
-	"BossSugarKing": {
-		"intro": "Eu sou tudo que resta do Coração!\nE NÃO VOU SER CONSERTADO!",
-		"death": "O último fragmento...\nO coração... bate de novo...",
-	},
+const BOSS_KEY_MAP := {
+	"BossNecromancer": "necromancer",
+	"BossFairyQueen": "fairy_queen",
+	"BossAlienCow": "alien_cow",
+	"BossAiOverlord": "ai_overlord",
+	"BossDemonLord": "demon_lord",
+	"BossLeviathan": "leviathan",
+	"BossEmperor": "emperor",
+	"BossSingularity": "singularity",
+	"BossDracula": "dracula",
+	"BossSugarKing": "sugar_king",
 }
 
-const BOSS_TAUNTS := {
-	"BossNecromancer": ["Sintam o poder da morte!", "Levantem-se, meus servos!"],
-	"BossFairyQueen": ["A floresta me protege!", "Nao podem me tocar!"],
-	"BossAlienCow": ["MUUUU INTENSIFIES!", "Abducao em progresso!"],
-	"BossAiOverlord": ["PROCESSANDO... ELIMINACAO.", "FIREWALL ATIVADO."],
-	"BossDemonLord": ["Queimem!", "O inferno eh eterno!"],
-	"BossLeviathan": ["As profundezas chamam!", "Ninguem escapa!"],
-	"BossEmperor": ["Sou invencivel!", "Roma nunca cai!"],
-	"BossSingularity": ["GRAVIDADE ESMAGADORA.", "TUDO COLAPSA."],
-	"BossDracula": ["Seu sangue eh meu!", "A noite eh eterna!"],
-	"BossSugarKing": ["Mais doces! MAIS!", "Ninguem resiste!"],
+## Border color per boss — matches their elemental identity
+const BOSS_COLORS := {
+	"necromancer": Color(0.5, 0.1, 0.7, 0.8),    # Purple (dark/death)
+	"fairy_queen": Color(0.2, 0.8, 0.3, 0.8),     # Green (nature)
+	"alien_cow": Color(0.3, 1.0, 0.3, 0.8),       # Bright green (alien)
+	"ai_overlord": Color(0.2, 0.8, 1.0, 0.8),     # Cyan (tech)
+	"demon_lord": Color(1.0, 0.3, 0.1, 0.8),      # Red-orange (fire)
+	"leviathan": Color(0.1, 0.4, 0.9, 0.8),       # Deep blue (ocean)
+	"emperor": Color(0.9, 0.7, 0.2, 0.8),         # Gold (arena)
+	"singularity": Color(0.6, 0.2, 1.0, 0.8),     # Violet (space)
+	"dracula": Color(0.7, 0.0, 0.1, 0.8),         # Dark red (blood)
+	"sugar_king": Color(1.0, 0.5, 0.7, 0.8),      # Pink (candy)
+}
+
+## Stage-to-boss key for LocaleManager title lookup
+const STAGE_BOSS_MAP := {
+	"necromancer": "cemetery",
+	"fairy_queen": "forest",
+	"alien_cow": "farm",
+	"ai_overlord": "tokyo",
+	"demon_lord": "volcano",
+	"leviathan": "ocean",
+	"emperor": "arena",
+	"singularity": "space",
+	"dracula": "castle",
+	"sugar_king": "candy",
 }
 
 var _panel: PanelContainer
-var _label: Label
+var _title_label: Label
+var _body_label: Label
 var _dismiss_timer: Timer
 var _visible: bool = false
-var _taunt_timer: float = 0.0
-var _taunt_interval: float = 30.0
-var _current_boss_name: String = ""
-var _boss_alive: bool = false
+var _typewriter_tween: Tween = null
+var _full_text: String = ""
+var _stylebox: StyleBoxFlat
 
 func _ready() -> void:
 	layer = 8
@@ -75,29 +61,43 @@ func _ready() -> void:
 	# Build UI
 	_panel = PanelContainer.new()
 	_panel.name = "BossDialoguePanel"
-	var stylebox = StyleBoxFlat.new()
-	stylebox.bg_color = Color(0.0, 0.0, 0.0, 0.85)
-	stylebox.corner_radius_top_left = 8
-	stylebox.corner_radius_top_right = 8
-	stylebox.corner_radius_bottom_left = 8
-	stylebox.corner_radius_bottom_right = 8
-	stylebox.content_margin_left = 24.0
-	stylebox.content_margin_right = 24.0
-	stylebox.content_margin_top = 16.0
-	stylebox.content_margin_bottom = 16.0
-	stylebox.border_width_top = 2
-	stylebox.border_width_bottom = 2
-	stylebox.border_width_left = 2
-	stylebox.border_width_right = 2
-	stylebox.border_color = Color(0.8, 0.2, 0.2, 0.7)
-	_panel.add_theme_stylebox_override("panel", stylebox)
+	_stylebox = StyleBoxFlat.new()
+	_stylebox.bg_color = Color(0.0, 0.0, 0.0, 0.9)
+	_stylebox.corner_radius_top_left = 10
+	_stylebox.corner_radius_top_right = 10
+	_stylebox.corner_radius_bottom_left = 10
+	_stylebox.corner_radius_bottom_right = 10
+	_stylebox.content_margin_left = 28.0
+	_stylebox.content_margin_right = 28.0
+	_stylebox.content_margin_top = 14.0
+	_stylebox.content_margin_bottom = 16.0
+	_stylebox.border_width_top = 2
+	_stylebox.border_width_bottom = 2
+	_stylebox.border_width_left = 2
+	_stylebox.border_width_right = 2
+	_stylebox.border_color = Color(0.8, 0.2, 0.2, 0.7)
+	_panel.add_theme_stylebox_override("panel", _stylebox)
 
-	_label = Label.new()
-	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_label.add_theme_font_size_override("font_size", 22)
-	_label.add_theme_color_override("font_color", Color.WHITE)
-	_panel.add_child(_label)
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	# Sentinel title
+	_title_label = Label.new()
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.add_theme_font_size_override("font_size", 16)
+	_title_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
+	_title_label.uppercase = true
+	vbox.add_child(_title_label)
+
+	# Dialogue text
+	_body_label = Label.new()
+	_body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_body_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_body_label.add_theme_font_size_override("font_size", 22)
+	_body_label.add_theme_color_override("font_color", Color.WHITE)
+	vbox.add_child(_body_label)
+
+	_panel.add_child(vbox)
 
 	# Center at bottom of screen
 	_panel.anchors_preset = Control.PRESET_CENTER_BOTTOM
@@ -108,7 +108,7 @@ func _ready() -> void:
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_panel.offset_bottom = -40.0
-	_panel.offset_top = -120.0
+	_panel.offset_top = -140.0
 
 	_panel.visible = false
 	add_child(_panel)
@@ -116,65 +116,97 @@ func _ready() -> void:
 	# Auto-dismiss timer
 	_dismiss_timer = Timer.new()
 	_dismiss_timer.one_shot = true
-	_dismiss_timer.wait_time = 3.0
+	_dismiss_timer.wait_time = 4.0
 	_dismiss_timer.timeout.connect(_dismiss)
 	add_child(_dismiss_timer)
 
 	# Connect signals
 	GameManager.boss_spawned.connect(_on_boss_spawned)
 	GameManager.boss_died.connect(_on_boss_died)
-
-func _process(delta: float) -> void:
-	if _boss_alive and _current_boss_name != "":
-		_taunt_timer += delta
-		if _taunt_timer >= _taunt_interval:
-			_taunt_timer = 0.0
-			var key = _normalize_boss_name(_current_boss_name)
-			if BOSS_TAUNTS.has(key):
-				var taunts: Array = BOSS_TAUNTS[key]
-				var taunt: String = taunts[randi() % taunts.size()]
-				_show_dialogue(taunt, 2.0)
+	GameManager.boss_phase_changed.connect(_on_boss_phase_changed)
 
 func _on_boss_spawned(boss_name: String) -> void:
-	var key = _normalize_boss_name(boss_name)
-	_current_boss_name = boss_name
-	_boss_alive = true
-	_taunt_timer = 0.0
-	if BOSS_LINES.has(key):
-		AudioManager.play_sfx("boss_roar")
-		_show_dialogue(BOSS_LINES[key]["intro"])
+	var key = _get_boss_key(boss_name)
+	if key.is_empty():
+		return
+	var title = _get_boss_title(key)
+	var text = LocaleManager.tr_key("boss_intro_" + key)
+	_show_dialogue(title, text, key)
 
 func _on_boss_died(boss_name: String) -> void:
-	_boss_alive = false
-	_current_boss_name = ""
-	_taunt_timer = 0.0
-	var key = _normalize_boss_name(boss_name)
-	if BOSS_LINES.has(key):
-		_show_dialogue(BOSS_LINES[key]["death"])
+	var key = _get_boss_key(boss_name)
+	if key.is_empty():
+		return
+	var title = _get_boss_title(key)
+	var text = LocaleManager.tr_key("boss_death_" + key)
+	_show_dialogue(title, text, key)
 
-func _normalize_boss_name(boss_name: String) -> String:
-	## Boss node names may have @-suffix or spaces. Convert to dict key format.
-	## e.g. "BossNecromancer", "BossNecromancer@2", "Boss Necromancer" -> "BossNecromancer"
-	var clean = boss_name.split("@")[0].strip_edges()
-	clean = clean.replace(" ", "")
-	return clean
+func _on_boss_phase_changed(boss_name: String, phase: int) -> void:
+	if phase < 2:
+		return
+	var key = _get_boss_key(boss_name)
+	if key.is_empty():
+		return
+	var locale_key = "boss_phase" + str(phase) + "_" + key
+	var text = LocaleManager.tr_key(locale_key)
+	if text == locale_key:
+		return  # No translation found
+	var title = _get_boss_title(key)
+	_show_dialogue(title, text, key)
 
-func _show_dialogue(text: String, duration: float = 3.0) -> void:
-	_label.text = text
+func _get_boss_key(boss_name: String) -> String:
+	var clean = boss_name.split("@")[0].strip_edges().replace(" ", "")
+	if BOSS_KEY_MAP.has(clean):
+		return BOSS_KEY_MAP[clean]
+	return ""
+
+func _get_boss_title(key: String) -> String:
+	var stage = STAGE_BOSS_MAP.get(key, "")
+	if stage.is_empty():
+		return ""
+	return LocaleManager.tr_key("boss_" + stage)
+
+func _show_dialogue(title: String, text: String, boss_key: String) -> void:
+	# Update border color per boss
+	var border_color = BOSS_COLORS.get(boss_key, Color(0.8, 0.2, 0.2, 0.7))
+	_stylebox.border_color = border_color
+	_title_label.add_theme_color_override("font_color", Color(border_color.r * 0.9 + 0.1, border_color.g * 0.9 + 0.1, border_color.b * 0.9 + 0.1))
+
+	_title_label.text = title
+	_full_text = text
+	_body_label.text = ""
 	_panel.visible = true
 	_visible = true
-	_dismiss_timer.wait_time = duration
+	_dismiss_timer.wait_time = 4.0
 	_dismiss_timer.start()
-	# Fade-in via modulate
+
+	# Fade-in
 	_panel.modulate = Color(1, 1, 1, 0)
 	var tween = create_tween()
 	tween.tween_property(_panel, "modulate", Color(1, 1, 1, 1), 0.3)
+
+	# Typewriter effect
+	_start_typewriter(text)
+
+func _start_typewriter(text: String) -> void:
+	if _typewriter_tween and _typewriter_tween.is_valid():
+		_typewriter_tween.kill()
+	_body_label.text = ""
+	_body_label.visible_characters = 0
+	_body_label.text = text
+	var char_count = text.length()
+	var duration = char_count * 0.03  # 30ms per character
+	duration = clampf(duration, 0.5, 3.0)
+	_typewriter_tween = create_tween()
+	_typewriter_tween.tween_property(_body_label, "visible_characters", char_count, duration)
 
 func _dismiss() -> void:
 	if not _visible:
 		return
 	_visible = false
 	_dismiss_timer.stop()
+	if _typewriter_tween and _typewriter_tween.is_valid():
+		_typewriter_tween.kill()
 	var tween = create_tween()
 	tween.tween_property(_panel, "modulate", Color(1, 1, 1, 0), 0.25)
 	tween.tween_callback(func(): _panel.visible = false)
@@ -182,5 +214,12 @@ func _dismiss() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _visible and (event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton):
 		if event.is_pressed():
-			_dismiss()
+			# If typewriter still running, show full text instead of dismissing
+			if _typewriter_tween and _typewriter_tween.is_valid():
+				_typewriter_tween.kill()
+				_body_label.visible_characters = -1
+				# Reset dismiss timer so player can read
+				_dismiss_timer.start()
+			else:
+				_dismiss()
 			get_viewport().set_input_as_handled()
