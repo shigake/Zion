@@ -37,12 +37,16 @@ func _attack(level: int) -> void:
 	if enemies.is_empty():
 		return
 
+	if not is_inside_tree():
+		return
 	var player = _get_player_node()
-	if not player:
+	if not player or not is_instance_valid(player):
 		return
 	var player_pos = player.global_position
 
-	var area = WeaponDB.get_area("chain_whip", level) * GameManager.area_mult
+	var base_area = WeaponDB.weapons.get("chain_whip", {}).get("base_area", 3.5)
+	var area_per_lvl = WeaponDB.weapons.get("chain_whip", {}).get("area_per_level", 0.3)
+	var area = (base_area + area_per_lvl * (level - 1)) * GameManager.area_mult
 	var chain_range = 4.0 + level * 0.3
 
 	# Find nearest enemy within melee area range

@@ -83,25 +83,6 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_inside_tree():
 		global_position += direction * speed * delta
-		_trail_counter += 1
-		if _trail_counter % 4 == 0 and Engine.get_frames_per_second() > 45:
-			var trail = Sprite3D.new()
-			var existing_sprite = get_node_or_null("ProjectileSprite")
-			if existing_sprite and existing_sprite.texture:
-				trail.texture = existing_sprite.texture
-			else:
-				return
-			trail.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			trail.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			trail.pixel_size = 0.025  # Smaller than bullet
-			trail.shaded = false
-			trail.transparent = true
-			trail.modulate = Color(1, 1, 1, 0.3)
-			trail.global_position = global_position
-			get_tree().current_scene.add_child(trail)
-			var tw = trail.create_tween()
-			tw.tween_property(trail, "modulate:a", 0.0, 0.12)
-			tw.tween_callback(trail.queue_free)
 
 func _on_body_entered(body: Node3D) -> void:
 	if _returning:

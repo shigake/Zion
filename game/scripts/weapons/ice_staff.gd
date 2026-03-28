@@ -89,10 +89,13 @@ func _fire(level: int) -> void:
 
 	# Override behavior: on hit, freeze area
 	bullet.body_entered.connect(func(body: Node3D) -> void:
+		if not is_instance_valid(bullet) or not bullet.is_inside_tree():
+			return
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
 			GameManager._last_attacking_weapon = "ice_staff"
+			var hit_pos = bullet.global_position
 			body.call_deferred("take_damage", dmg, "ice")
-			_freeze_area(bullet.global_position, level)
+			_freeze_area(hit_pos, level)
 			bullet.queue_free()
 	, CONNECT_ONE_SHOT)
 
