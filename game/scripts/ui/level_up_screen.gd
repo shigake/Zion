@@ -4,19 +4,22 @@ extends CanvasLayer
 
 signal choice_made()
 
+@onready var overlay: ColorRect = $Overlay
 @onready var panel: PanelContainer = $Panel
-@onready var option1_btn: Button = $Panel/VBox/Options/Option1
-@onready var option2_btn: Button = $Panel/VBox/Options/Option2
-@onready var option3_btn: Button = $Panel/VBox/Options/Option3
+@onready var option1_btn: Button = $Panel/VBox/CardArea/Options/Option1
+@onready var option2_btn: Button = $Panel/VBox/CardArea/Options/Option2
+@onready var option3_btn: Button = $Panel/VBox/CardArea/Options/Option3
 @onready var title_label: Label = $Panel/VBox/TitleLabel
-@onready var options_container: HBoxContainer = $Panel/VBox/Options
-@onready var reroll_btn: Button = $Panel/VBox/RerollButton
-@onready var banish_btn: Button = $Panel/VBox/BanishButton
+@onready var subtitle_label: Label = $Panel/VBox/SubtitleLabel
+@onready var options_container: HBoxContainer = $Panel/VBox/CardArea/Options
+@onready var reroll_btn: Button = $Panel/VBox/ButtonRow/RerollButton
+@onready var banish_btn: Button = $Panel/VBox/ButtonRow/BanishButton
 
 var options: Array = []
 var pending_levels: int = 0
 var banish_mode: bool = false
 var _card_buttons: Array[Button] = []
+var _card_panels: Array[PanelContainer] = []
 var _auto_check: CheckBox = null
 
 # Multiplayer waiting overlay
@@ -28,6 +31,12 @@ const TYPE_COLORS = {
 	"ranged": Color(0.2, 0.5, 0.85),
 	"summon": Color(0.6, 0.3, 0.8),
 	"item": Color(0.2, 0.75, 0.35),
+}
+const TYPE_GLOW_COLORS = {
+	"melee": Color(0.3, 0.08, 0.05),
+	"ranged": Color(0.05, 0.08, 0.3),
+	"summon": Color(0.15, 0.05, 0.3),
+	"item": Color(0.05, 0.2, 0.08),
 }
 const ELEMENT_COLORS = {
 	"fire": Color(1.0, 0.4, 0.1),
@@ -44,9 +53,18 @@ const TYPE_ICONS = {
 	"summon": "✨",
 	"item": "💎",
 }
+const ELEMENT_ICONS = {
+	"fire": "🔥",
+	"ice": "❄",
+	"electric": "⚡",
+	"dark": "🌑",
+	"poison": "☠",
+	"arcane": "🔮",
+}
 
 func _ready() -> void:
 	panel.visible = false
+	overlay.visible = false
 	# Esconde os botoes originais (usaremos cards dinamicos)
 	option1_btn.visible = false
 	option2_btn.visible = false
@@ -55,14 +73,31 @@ func _ready() -> void:
 	reroll_btn.pressed.connect(_on_reroll)
 	banish_btn.pressed.connect(_on_banish)
 
+	# Style the panel to be transparent (we handle background ourselves)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0, 0, 0, 0)
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	# Style title
+	title_label.add_theme_font_size_override("font_size", 28)
+	title_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+
+	# Style subtitle
+	subtitle_label.add_theme_font_size_override("font_size", 14)
+	subtitle_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
+
+	# Style reroll button
+	_style_action_button(reroll_btn, Color(0.15, 0.25, 0.45), Color(0.3, 0.5, 0.85))
+	# Style banish button
+	_style_action_button(banish_btn, Color(0.4, 0.12, 0.12), Color(0.85, 0.25, 0.2))
+
 	# Auto-pick checkbox (toggle random auto-selection)
 	_auto_check = CheckBox.new()
 	_auto_check.text = "Auto"
 	_auto_check.button_pressed = GameManager.auto_play
 	_auto_check.add_theme_font_size_override("font_size", 12)
-	_auto_check.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+	_auto_check.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
 	_auto_check.toggled.connect(_on_auto_toggled)
-	# Add next to reroll/banish buttons
 	var btn_parent = reroll_btn.get_parent()
 	if btn_parent:
 		btn_parent.add_child(_auto_check)
@@ -75,6 +110,36 @@ func _ready() -> void:
 	MultiplayerManager.level_up_waiting.connect(_on_mp_waiting)
 	MultiplayerManager.level_up_resumed.connect(_on_mp_resumed)
 
+func _style_action_button(btn: Button, bg_color: Color, border_color: Color) -> void:
+	var normal = StyleBoxFlat.new()
+	normal.bg_color = bg_color
+	normal.border_color = border_color
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(8)
+	normal.content_margin_left = 16
+	normal.content_margin_right = 16
+	normal.content_margin_top = 8
+	normal.content_margin_bottom = 8
+	btn.add_theme_stylebox_override("normal", normal)
+
+	var hover = normal.duplicate()
+	hover.bg_color = bg_color.lightened(0.15)
+	hover.border_color = border_color.lightened(0.2)
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed = normal.duplicate()
+	pressed.bg_color = bg_color.darkened(0.1)
+	btn.add_theme_stylebox_override("pressed", pressed)
+
+	var focus = hover.duplicate()
+	focus.border_color = border_color.lightened(0.4)
+	focus.set_border_width_all(2)
+	btn.add_theme_stylebox_override("focus", focus)
+
+	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_color_override("font_color", Color(0.9, 0.9, 0.95))
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+
 func _on_level_up(_new_level: int) -> void:
 	pending_levels += 1
 	if MultiplayerManager.is_online:
@@ -86,8 +151,6 @@ func _on_level_up(_new_level: int) -> void:
 	if not panel.visible:
 		_show_choices()
 	elif panel.visible and GameManager.paused:
-		# Se o painel ja esta visivel mas paused foi true por outro motivo (ex: pause menu),
-		# garante que continua visivel
 		panel.visible = true
 
 func _show_choices() -> void:
@@ -102,29 +165,50 @@ func _show_choices() -> void:
 		call_deferred("_choose", rand_idx)
 		return
 
-	title_label.text = LocaleManager.tr_key("level_up_title") % GameManager.player_level
+	# --- Animate overlay fade in ---
+	overlay.visible = true
+	overlay.color = Color(0, 0, 0, 0)
+	var overlay_tween = create_tween()
+	overlay_tween.tween_property(overlay, "color", Color(0, 0, 0, 0.6), 0.25)
+
+	# Title with level number
+	if banish_mode:
+		title_label.text = LocaleManager.tr_key("banish_select")
+		subtitle_label.text = ""
+	else:
+		title_label.text = "NIVEL %d!" % GameManager.player_level
+		subtitle_label.text = "Escolha um upgrade"
+
+	# Title bounce animation
+	title_label.pivot_offset = title_label.size / 2.0
+	title_label.scale = Vector2(0.5, 0.5)
+	var title_tween = create_tween()
+	title_tween.set_ease(Tween.EASE_OUT)
+	title_tween.set_trans(Tween.TRANS_BACK)
+	title_tween.tween_property(title_label, "scale", Vector2.ONE, 0.4)
 
 	# Limpa cards antigos
 	_card_buttons.clear()
+	_card_panels.clear()
 	for child in options_container.get_children():
 		if child != option1_btn and child != option2_btn and child != option3_btn:
 			child.queue_free()
 
-	# Cria cards visuais
+	# Cria cards visuais com animacao staggered
 	for i in range(options.size()):
 		_build_card(options[i], i)
 
 	# Reroll button
 	if GameManager.rerolls > 0:
 		reroll_btn.visible = true
-		reroll_btn.text = LocaleManager.tr_key("reroll") % GameManager.rerolls + " [ESPAÇO]"
+		reroll_btn.text = "🎲 " + LocaleManager.tr_key("reroll") % GameManager.rerolls + " [ESPAÇO]"
 	else:
 		reroll_btn.visible = false
 
 	# Banish button
 	if GameManager.banishes > 0:
 		banish_btn.visible = true
-		banish_btn.text = LocaleManager.tr_key("banish") % GameManager.banishes
+		banish_btn.text = "✕ " + LocaleManager.tr_key("banish") % GameManager.banishes
 	else:
 		banish_btn.visible = false
 
@@ -132,11 +216,7 @@ func _show_choices() -> void:
 	panel.visible = true
 	GameManager.paused = true
 	if not MultiplayerManager.is_online:
-		# Solo: don't pause the tree (allows pause_menu to work normally on top)
 		get_tree().paused = false
-	# else: Multiplayer — tree is already paused by Host via RPC; keep it paused.
-	# The UI has process_mode = PROCESS_MODE_ALWAYS so it still works.
-	# Gamepad: foca na primeira opcao
 	_setup_levelup_focus()
 	GamepadUI.notify_menu_opened()
 
@@ -193,51 +273,115 @@ func _input(event: InputEvent) -> void:
 					if get_viewport(): get_viewport().set_input_as_handled()
 
 func _build_card(opt: Dictionary, index: int) -> void:
-	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(200, 260)
-
-	# Card style
+	# --- Determine card type and colors ---
 	var opt_type = opt.get("type", "item")
 	var weapon_type = ""
 	if opt_type == "weapon":
 		weapon_type = WeaponDB.get_weapon(opt["id"]).get("type", "melee")
 	var card_type = weapon_type if opt_type == "weapon" else "item"
 	var type_color = TYPE_COLORS.get(card_type, Color(0.4, 0.4, 0.4))
+	var glow_color = TYPE_GLOW_COLORS.get(card_type, Color(0.1, 0.1, 0.1))
+
+	# Check if this is an evolution (level 8 weapon upgrade)
+	var is_evolution = false
+	if opt_type == "weapon" and GameManager.has_weapon(opt["id"]):
+		var w = GameManager.player_weapons.filter(func(x): return x["id"] == opt["id"])
+		if not w.is_empty() and w[0]["level"] >= 7:
+			is_evolution = true
+
+	var is_new = not GameManager.has_weapon(opt["id"]) if opt_type == "weapon" else not GameManager.has_item(opt["id"])
+
+	# --- Outer wrapper for glow effect ---
+	var card_wrapper = Control.new()
+	card_wrapper.custom_minimum_size = Vector2(220, 300)
+
+	# Glow background (ColorRect behind the card)
+	var glow_rect = ColorRect.new()
+	glow_rect.custom_minimum_size = Vector2(240, 320)
+	glow_rect.position = Vector2(-10, -10)
+	glow_rect.color = Color(glow_color.r, glow_color.g, glow_color.b, 0.4)
+	glow_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card_wrapper.add_child(glow_rect)
+
+	# --- Card panel ---
+	var card = PanelContainer.new()
+	card.custom_minimum_size = Vector2(220, 300)
+	card.size = Vector2(220, 300)
+
+	var border_color = Color(1.0, 0.85, 0.3) if is_evolution else type_color
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.12, 0.12, 0.16, 0.95)
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
-	style.border_width_top = 3
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.border_color = type_color
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 10
+	# Dark gradient-like background
+	style.bg_color = Color(glow_color.r * 0.5 + 0.08, glow_color.g * 0.5 + 0.08, glow_color.b * 0.5 + 0.1, 0.97)
+	style.set_corner_radius_all(12)
+	style.border_width_top = 2
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = border_color
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 12
 	style.content_margin_bottom = 10
+	# Shadow for depth
+	style.shadow_color = Color(glow_color.r, glow_color.g, glow_color.b, 0.5)
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(0, 4)
 	card.add_theme_stylebox_override("panel", style)
+	card_wrapper.add_child(card)
 
 	var vbox = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+	vbox.add_theme_constant_override("separation", 4)
 	card.add_child(vbox)
 
-	# Type badge
+	# --- 1. Type badge at top ---
+	var badge_container = CenterContainer.new()
+	vbox.add_child(badge_container)
+	var badge_panel = PanelContainer.new()
+	var badge_style = StyleBoxFlat.new()
+	badge_style.bg_color = Color(type_color.r, type_color.g, type_color.b, 0.25)
+	badge_style.set_corner_radius_all(4)
+	badge_style.content_margin_left = 8
+	badge_style.content_margin_right = 8
+	badge_style.content_margin_top = 2
+	badge_style.content_margin_bottom = 2
+	badge_panel.add_theme_stylebox_override("panel", badge_style)
+	badge_container.add_child(badge_panel)
 	var badge = Label.new()
 	var icon = TYPE_ICONS.get(card_type, "")
 	badge.text = "%s %s" % [icon, card_type.to_upper()]
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	badge.add_theme_font_size_override("font_size", 11)
-	badge.add_theme_color_override("font_color", type_color.lightened(0.3))
-	vbox.add_child(badge)
+	badge.add_theme_font_size_override("font_size", 10)
+	badge.add_theme_color_override("font_color", type_color.lightened(0.4))
+	badge_panel.add_child(badge)
 
-	# Icon area with sprite or fallback
+	# --- Evolution badge ---
+	if is_evolution:
+		var evo_container = CenterContainer.new()
+		vbox.add_child(evo_container)
+		var evo_badge = Label.new()
+		evo_badge.text = "★ EVOLUÇÃO ★"
+		evo_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		evo_badge.add_theme_font_size_override("font_size", 10)
+		evo_badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+		evo_container.add_child(evo_badge)
+
+	# Small spacer
+	var spacer1 = Control.new()
+	spacer1.custom_minimum_size = Vector2(0, 4)
+	vbox.add_child(spacer1)
+
+	# --- 2. Weapon/Item sprite (64x64 at center) ---
 	var icon_container = CenterContainer.new()
-	icon_container.custom_minimum_size = Vector2(0, 70)
+	icon_container.custom_minimum_size = Vector2(0, 80)
 	vbox.add_child(icon_container)
+
+	# Sprite background circle/glow
+	var sprite_bg = ColorRect.new()
+	sprite_bg.custom_minimum_size = Vector2(72, 72)
+	sprite_bg.color = Color(glow_color.r * 2.0, glow_color.g * 2.0, glow_color.b * 2.0, 0.3)
+	icon_container.add_child(sprite_bg)
+
 	var _icon_category = "weapons" if opt_type == "weapon" else "items"
 	var _icon_path = "res://assets/sprites/%s/%s.png" % [_icon_category, opt["id"]]
 	var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
@@ -247,74 +391,183 @@ func _build_card(opt: Dictionary, index: int) -> void:
 		tex_rect.custom_minimum_size = Vector2(64, 64)
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		icon_container.add_child(tex_rect)
+		tex_rect.anchors_preset = Control.PRESET_CENTER
+		tex_rect.position = Vector2(4, 4)
+		sprite_bg.add_child(tex_rect)
 	else:
-		var icon_rect = ColorRect.new()
-		icon_rect.custom_minimum_size = Vector2(64, 64)
-		var element = _get_element(opt)
-		var elem_color = ELEMENT_COLORS.get(element, Color(0.5, 0.5, 0.5))
-		icon_rect.color = elem_color.darkened(0.4)
-		icon_container.add_child(icon_rect)
-		# Type icon overlay
 		var icon_label = Label.new()
 		icon_label.text = TYPE_ICONS.get(card_type, "?")
-		icon_label.add_theme_font_size_override("font_size", 28)
+		icon_label.add_theme_font_size_override("font_size", 36)
 		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		icon_label.anchors_preset = Control.PRESET_FULL_RECT
-		icon_rect.add_child(icon_label)
+		icon_label.anchor_right = 1.0
+		icon_label.anchor_bottom = 1.0
+		sprite_bg.add_child(icon_label)
 
-	# Name
+	# --- 3. Name (bold white, 16pt) ---
 	var name_label = Label.new()
 	name_label.text = _get_opt_name(opt)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 15)
-	name_label.add_theme_color_override("font_color", Color.WHITE)
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_color_override("font_color", Color.WHITE if not is_evolution else Color(1.0, 0.92, 0.5))
 	vbox.add_child(name_label)
 
-	# Level / New badge
+	# --- 4. Level indicator (yellow, or green NEW) ---
 	var level_label = Label.new()
 	level_label.text = _get_level_text(opt)
 	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	level_label.add_theme_font_size_override("font_size", 12)
-	var is_new = not GameManager.has_weapon(opt["id"]) if opt_type == "weapon" else not GameManager.has_item(opt["id"])
-	level_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4) if is_new else Color(0.9, 0.85, 0.5))
+	if is_new:
+		level_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+	elif is_evolution:
+		level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	else:
+		level_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
 	vbox.add_child(level_label)
 
-	# Description
+	# --- 5. Description (11pt, gray) ---
 	var desc_label = Label.new()
 	desc_label.text = _get_description(opt)
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.add_theme_font_size_override("font_size", 11)
-	desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	desc_label.custom_minimum_size = Vector2(170, 0)
+	desc_label.add_theme_color_override("font_color", Color(0.65, 0.65, 0.7))
+	desc_label.custom_minimum_size = Vector2(190, 0)
 	vbox.add_child(desc_label)
 
-	# Keyboard shortcut indicator
+	# --- 6. Element icon badge ---
+	var element = _get_element(opt)
+	if element != "physical" and element != "":
+		var elem_container = CenterContainer.new()
+		vbox.add_child(elem_container)
+		var elem_panel = PanelContainer.new()
+		var elem_color = ELEMENT_COLORS.get(element, Color(0.5, 0.5, 0.5))
+		var elem_style = StyleBoxFlat.new()
+		elem_style.bg_color = Color(elem_color.r, elem_color.g, elem_color.b, 0.2)
+		elem_style.set_corner_radius_all(4)
+		elem_style.content_margin_left = 6
+		elem_style.content_margin_right = 6
+		elem_style.content_margin_top = 1
+		elem_style.content_margin_bottom = 1
+		elem_panel.add_theme_stylebox_override("panel", elem_style)
+		elem_container.add_child(elem_panel)
+		var elem_label = Label.new()
+		var elem_icon = ELEMENT_ICONS.get(element, "")
+		elem_label.text = "%s %s" % [elem_icon, element.capitalize()]
+		elem_label.add_theme_font_size_override("font_size", 10)
+		elem_label.add_theme_color_override("font_color", elem_color.lightened(0.3))
+		elem_panel.add_child(elem_label)
+
+	# --- 7. Stats preview (DPS change) ---
+	var stats_text = _get_stats_preview(opt)
+	if stats_text != "":
+		var stats_label = Label.new()
+		stats_label.text = stats_text
+		stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stats_label.add_theme_font_size_override("font_size", 10)
+		stats_label.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+		vbox.add_child(stats_label)
+
+	# Flexible spacer to push shortcut to bottom
+	var spacer_bottom = Control.new()
+	spacer_bottom.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(spacer_bottom)
+
+	# --- Keyboard shortcut at bottom ---
 	var shortcut_label = Label.new()
-	shortcut_label.text = "Pressione %d" % (index + 1)
+	shortcut_label.text = "[%d]" % (index + 1)
 	shortcut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shortcut_label.add_theme_font_size_override("font_size", 10)
-	shortcut_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
+	shortcut_label.add_theme_font_size_override("font_size", 11)
+	shortcut_label.add_theme_color_override("font_color", Color(0.45, 0.55, 0.7))
 	vbox.add_child(shortcut_label)
 
-	# Clickable button overlay
+	# --- Clickable button overlay ---
 	var btn = Button.new()
 	btn.flat = true
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.anchors_preset = Control.PRESET_FULL_RECT
 	btn.anchor_right = 1.0
 	btn.anchor_bottom = 1.0
+	# Make button transparent when focused too
+	var btn_style_empty = StyleBoxEmpty.new()
+	btn.add_theme_stylebox_override("normal", btn_style_empty)
+	btn.add_theme_stylebox_override("hover", btn_style_empty)
+	btn.add_theme_stylebox_override("pressed", btn_style_empty)
+	var btn_focus_style = StyleBoxFlat.new()
+	btn_focus_style.bg_color = Color(0, 0, 0, 0)
+	btn_focus_style.border_color = Color(1.0, 1.0, 1.0, 0.5)
+	btn_focus_style.set_border_width_all(2)
+	btn_focus_style.set_corner_radius_all(12)
+	btn.add_theme_stylebox_override("focus", btn_focus_style)
+
 	var idx = index
 	btn.pressed.connect(func(): _choose(idx))
-	# Hover effect
-	btn.mouse_entered.connect(func(): style.border_color = type_color.lightened(0.4); card.add_theme_stylebox_override("panel", style))
-	btn.mouse_exited.connect(func(): style.border_color = type_color; card.add_theme_stylebox_override("panel", style))
+
+	# Hover: scale up card + brighten border + increase glow
+	var _style_ref = style
+	var _glow_ref = glow_rect
+	var _card_ref = card
+	var _border_base = border_color
+	var _glow_base_alpha = 0.4
+	btn.mouse_entered.connect(func():
+		var tw = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		tw.tween_property(card_wrapper, "scale", Vector2(1.05, 1.05), 0.15)
+		# Center the scale from pivot
+		card_wrapper.pivot_offset = card_wrapper.size / 2.0
+		_style_ref.border_color = _border_base.lightened(0.35)
+		_style_ref.shadow_size = 14
+		_glow_ref.color.a = 0.65
+		_card_ref.add_theme_stylebox_override("panel", _style_ref)
+	)
+	btn.mouse_exited.connect(func():
+		var tw = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		tw.tween_property(card_wrapper, "scale", Vector2.ONE, 0.15)
+		_style_ref.border_color = _border_base
+		_style_ref.shadow_size = 8
+		_glow_ref.color.a = _glow_base_alpha
+		_card_ref.add_theme_stylebox_override("panel", _style_ref)
+	)
 	card.add_child(btn)
 	_card_buttons.append(btn)
+	_card_panels.append(card)
 
-	options_container.add_child(card)
+	options_container.add_child(card_wrapper)
+
+	# --- Slide-in animation (staggered from bottom with bounce) ---
+	card_wrapper.pivot_offset = Vector2(110, 150)
+	card_wrapper.modulate = Color(1, 1, 1, 0)
+	card_wrapper.position.y += 60
+	var slide_tween = create_tween()
+	slide_tween.set_ease(Tween.EASE_OUT)
+	slide_tween.set_trans(Tween.TRANS_BACK)
+	var delay = index * 0.1
+	slide_tween.tween_interval(delay)
+	slide_tween.tween_property(card_wrapper, "position:y", card_wrapper.position.y - 60, 0.4)
+	var fade_tween = create_tween()
+	fade_tween.tween_interval(delay)
+	fade_tween.tween_property(card_wrapper, "modulate:a", 1.0, 0.3)
+
+func _get_stats_preview(opt: Dictionary) -> String:
+	if opt["type"] != "weapon":
+		return ""
+	var wdata = WeaponDB.get_weapon(opt["id"])
+	var damage = wdata.get("damage", 0)
+	var cooldown = wdata.get("cooldown", 1.0)
+	if damage <= 0 or cooldown <= 0:
+		return ""
+	var current_dps = damage / cooldown
+	# Estimate next level DPS (roughly +20% damage per level)
+	if GameManager.has_weapon(opt["id"]):
+		var w = GameManager.player_weapons.filter(func(x): return x["id"] == opt["id"])
+		if not w.is_empty():
+			var lvl = w[0]["level"]
+			var cur_dmg = damage * (1.0 + (lvl - 1) * 0.2)
+			var next_dmg = damage * (1.0 + lvl * 0.2)
+			var cur_dps_val = cur_dmg / cooldown
+			var next_dps_val = next_dmg / cooldown
+			return "DPS: %.0f → %.0f" % [cur_dps_val, next_dps_val]
+	return "DPS: %.0f" % current_dps
 
 func _get_opt_name(opt: Dictionary) -> String:
 	if opt["type"] == "weapon":
@@ -327,14 +580,14 @@ func _get_level_text(opt: Dictionary) -> String:
 		if GameManager.has_weapon(opt["id"]):
 			var w = GameManager.player_weapons.filter(func(x): return x["id"] == opt["id"])
 			if not w.is_empty():
-				return "Lv.%d → %d" % [w[0]["level"], w[0]["level"] + 1]
-		return LocaleManager.tr_key("new").to_upper()
+				return "Lv. %d → %d" % [w[0]["level"], w[0]["level"] + 1]
+		return "★ " + LocaleManager.tr_key("new").to_upper()
 	else:
 		if GameManager.has_item(opt["id"]):
 			var it = GameManager.player_items.filter(func(x): return x["id"] == opt["id"])
 			if not it.is_empty():
-				return "Lv.%d → %d" % [it[0]["level"], it[0]["level"] + 1]
-		return LocaleManager.tr_key("new").to_upper()
+				return "Lv. %d → %d" % [it[0]["level"], it[0]["level"] + 1]
+		return "★ " + LocaleManager.tr_key("new").to_upper()
 
 func _get_description(opt: Dictionary) -> String:
 	if opt["type"] == "weapon":
@@ -346,7 +599,6 @@ func _get_element(opt: Dictionary) -> String:
 	if opt["type"] == "weapon":
 		return WeaponDB.get_weapon(opt["id"]).get("element", "physical")
 	return "physical"
-	# ja impede gameplay de rodar.
 
 func _choose(index: int) -> void:
 	if index >= options.size():
@@ -357,23 +609,33 @@ func _choose(index: int) -> void:
 		return
 
 	var opt = options[index]
+
+	# --- Click flash animation ---
+	if index < _card_panels.size():
+		var flash_card = _card_panels[index]
+		var flash_tween = create_tween()
+		flash_tween.tween_property(flash_card, "modulate", Color(2.0, 2.0, 2.0, 1.0), 0.05)
+		flash_tween.tween_property(flash_card, "modulate", Color.WHITE, 0.15)
+
 	# Apply the upgrade locally
 	_apply_choice(opt)
+
+	# Small delay to show the flash before hiding
+	await get_tree().create_timer(0.15).timeout
+
+	# Fade out overlay
+	var fade_tween = create_tween()
+	fade_tween.tween_property(overlay, "color", Color(0, 0, 0, 0), 0.2)
 
 	panel.visible = false
 	pending_levels -= 1
 
 	if MultiplayerManager.is_online:
-		# Multiplayer: notify Host that we made our choice
 		var choice_data = {"type": opt["type"], "id": opt["id"]}
 		MultiplayerManager.submit_level_up_choice(MultiplayerManager.local_player_id, choice_data)
-		# Don't unpause locally; Host controls pause state.
-		# If we have more pending levels, they will trigger new requests via _on_level_up.
 		if pending_levels > 0:
-			# Request another level-up pause from Host
 			MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
 	else:
-		# Solo: original behavior
 		if pending_levels > 0:
 			call_deferred("_show_choices")
 		else:
@@ -483,6 +745,7 @@ func _on_banish() -> void:
 		return
 	banish_mode = true
 	title_label.text = LocaleManager.tr_key("banish_select")
+	subtitle_label.text = ""
 	banish_btn.visible = false
 
 func _banish_option(index: int) -> void:

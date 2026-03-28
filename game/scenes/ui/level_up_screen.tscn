@@ -12,55 +12,68 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.0)
 
 [node name="Panel" type="PanelContainer" parent="."]
 process_mode = 3
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -350.0
-offset_top = -200.0
-offset_right = 350.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
 
 [node name="VBox" type="VBoxContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/separation = 16
+alignment = 1
+theme_override_constants/separation = 12
 
 [node name="TitleLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 text = "LEVEL UP!"
 horizontal_alignment = 1
 
-[node name="Options" type="HBoxContainer" parent="Panel/VBox"]
+[node name="SubtitleLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
+text = "Escolha um upgrade"
+horizontal_alignment = 1
+
+[node name="CardArea" type="CenterContainer" parent="Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 320)
+
+[node name="Options" type="HBoxContainer" parent="Panel/VBox/CardArea"]
+layout_mode = 2
+theme_override_constants/separation = 20
 alignment = 1
 
-[node name="Option1" type="Button" parent="Panel/VBox/Options"]
+[node name="Option1" type="Button" parent="Panel/VBox/CardArea/Options"]
+visible = false
 layout_mode = 2
 custom_minimum_size = Vector2(150, 60)
 text = "Opcao 1"
 
-[node name="Option2" type="Button" parent="Panel/VBox/Options"]
+[node name="Option2" type="Button" parent="Panel/VBox/CardArea/Options"]
+visible = false
 layout_mode = 2
 custom_minimum_size = Vector2(150, 60)
 text = "Opcao 2"
 
-[node name="Option3" type="Button" parent="Panel/VBox/Options"]
+[node name="Option3" type="Button" parent="Panel/VBox/CardArea/Options"]
+visible = false
 layout_mode = 2
 custom_minimum_size = Vector2(150, 60)
 text = "Opcao 3"
 
-[node name="RerollButton" type="Button" parent="Panel/VBox"]
+[node name="ButtonRow" type="HBoxContainer" parent="Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 35)
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="RerollButton" type="Button" parent="Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 40)
 text = "Reroll (1)"
 
-[node name="BanishButton" type="Button" parent="Panel/VBox"]
+[node name="BanishButton" type="Button" parent="Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 35)
+custom_minimum_size = Vector2(180, 40)
 text = "Banish (0)"
