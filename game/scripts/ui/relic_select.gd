@@ -237,7 +237,7 @@ func _on_start() -> void:
 		"candy": "res://scenes/stages/stage_candy.tscn",
 	}
 	var scene = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
-	get_tree().change_scene_to_file(scene)
+	LoadingScreen.load_stage(scene)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

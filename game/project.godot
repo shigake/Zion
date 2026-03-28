@@ -51,6 +51,7 @@ DebugOverlay="*res://scripts/ui/debug_overlay.gd"
 Telemetry="*res://scripts/autoload/telemetry.gd"
 MutationManager="*res://scripts/autoload/mutation_manager.gd"
 DailyChallenge="*res://scripts/autoload/daily_challenge.gd"
+LoadingScreen="*res://scripts/autoload/loading_screen.gd"
 
 [display]
 

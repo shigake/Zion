@@ -426,7 +426,7 @@ func _on_random_start() -> void:
 		"candy": "res://scenes/stages/stage_candy.tscn",
 	}
 	var scene_path = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
-	get_tree().change_scene_to_file(scene_path)
+	LoadingScreen.load_stage(scene_path)
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")

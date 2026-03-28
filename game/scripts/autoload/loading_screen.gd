@@ -1,0 +1,591 @@
+extends CanvasLayer
+
+## Tela de loading assincrona com pre-warming de sistemas pesados.
+## Uso: LoadingScreen.load_stage("res://scenes/stages/stage_cemetery.tscn")
+## Carrega a cena em background, pre-aquece pools, shaders, audio, e MultiMesh.
+
+signal loading_finished
+
+# — State —
+var _target_scene_path: String = ""
+var _progress: Array = []
+var _is_loading: bool = false
+var _load_complete: bool = false
+var _waiting_for_input: bool = false
+var _prewarm_done: bool = false
+var _prewarm_step: int = 0
+var _total_prewarm_steps: int = 6
+var _fade_alpha: float = 0.0
+
+# — UI refs (criados programaticamente) —
+var _root: Control
+var _bg_rect: TextureRect
+var _bg_color: ColorRect
+var _overlay: ColorRect
+var _progress_bar: ProgressBar
+var _progress_label: Label
+var _tip_label: Label
+var _press_label: Label
+var _title_label: Label
+var _fade_rect: ColorRect
+var _spinner_dots: Array[ColorRect] = []
+
+# — Stage metadata —
+const STAGE_NAMES: Dictionary = {
+	"cemetery": "Cemiterio assombrado",
+	"forest": "Floresta sombria",
+	"farm": "Fazenda abandonada",
+	"tokyo": "Tokyo em chamas",
+	"volcano": "Vulcao infernal",
+	"ocean": "Oceano profundo",
+	"arena": "Arena de combate",
+	"space": "Estacao espacial",
+	"castle": "Castelo maldito",
+	"candy": "Mundo doce",
+}
+
+const STAGE_COLORS: Dictionary = {
+	"cemetery": Color(0.3, 0.15, 0.5),
+	"forest": Color(0.1, 0.35, 0.15),
+	"farm": Color(0.5, 0.35, 0.1),
+	"tokyo": Color(0.5, 0.1, 0.2),
+	"volcano": Color(0.6, 0.15, 0.05),
+	"ocean": Color(0.05, 0.2, 0.5),
+	"arena": Color(0.4, 0.3, 0.1),
+	"space": Color(0.05, 0.05, 0.25),
+	"castle": Color(0.25, 0.1, 0.3),
+	"candy": Color(0.5, 0.2, 0.4),
+}
+
+const TIPS: Array = [
+	"Combine armas do mesmo elemento para ativar sinergias poderosas.",
+	"Gemas de XP desaparecem depois de um tempo. Fique atento!",
+	"Cada personagem tem um passivo unico que muda o estilo de jogo.",
+	"Evolua uma arma ao nivel 8 com o item correto no nivel 5.",
+	"Reliquias dao bonus permanentes para a run inteira.",
+	"O modo Ascensao aumenta a dificuldade, mas tambem os cristais.",
+	"Sinergias de agua criam combinacoes devastadoras com gelo e eletrico.",
+	"Inimigos especiais como o Mimic soltam recompensas melhores.",
+	"O dash tem invencibilidade nos primeiros frames. Use com sabedoria!",
+	"Bosses tem 3 fases. Cada fase muda seus ataques e comportamento.",
+	"No co-op, sinergias cruzadas entre jogadores sao ainda mais fortes.",
+	"Cada fase tem um evento especial que aparece em momentos aleatorios.",
+	"O Chef cura o dobro. Combine com itens de lifesteal para ficar imortal.",
+	"Eletricidade causa dano em cadeia. Perfeito contra hordas densas.",
+	"Cristais compram upgrades permanentes na loja entre as runs.",
+	"O Ronin tem 20%% de chance de critico. Foque em dano por hit.",
+	"Armas de invocacao escalam com o bonus do Necromancer e da Bruxa.",
+	"Fique perto dos aliados caidos para revive-los no co-op.",
+]
+
+# — Scenes to pre-warm in ObjectPool —
+const PREWARM_ENEMIES: Array = [
+	"res://scenes/enemies/slime.tscn",
+	"res://scenes/enemies/bat.tscn",
+	"res://scenes/enemies/skeleton.tscn",
+	"res://scenes/enemies/ghost.tscn",
+	"res://scenes/enemies/zombie_runner.tscn",
+]
+
+const PREWARM_PICKUPS: Array = [
+	"res://scenes/xp_gem.tscn",
+	"res://scenes/crystal_pickup.tscn",
+	"res://scenes/health_pickup.tscn",
+]
+
+const PREWARM_COUNTS: Dictionary = {
+	"enemy": 10,
+	"pickup": 15,
+	"projectile": 8,
+}
+
+func _ready() -> void:
+	layer = 100  # Acima de tudo
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	visible = false
+
+func load_stage(scene_path: String) -> void:
+	if _is_loading:
+		LogManager.warn("Loading", "Ja esta carregando, ignorando chamada duplicada")
+		return
+
+	_target_scene_path = scene_path
+	_is_loading = true
+	_load_complete = false
+	_waiting_for_input = false
+	_prewarm_done = false
+	_prewarm_step = 0
+	_fade_alpha = 0.0
+
+	visible = true
+	_build_ui()
+	_update_stage_visuals()
+
+	# Inicia carregamento assincrono
+	var err = ResourceLoader.load_threaded_request(_target_scene_path, "PackedScene", true)
+	if err != OK:
+		LogManager.error("Loading", "Falha ao iniciar carregamento: %s (erro %d)" % [_target_scene_path, err])
+		# Fallback: carregamento sincrono
+		_force_sync_load()
+		return
+
+	LogManager.info("Loading", "Iniciando loading: %s" % _target_scene_path)
+
+func _process(delta: float) -> void:
+	if not _is_loading:
+		return
+
+	# Animacao do spinner
+	_animate_spinner(delta)
+
+	# Monitora progresso do ResourceLoader
+	if not _load_complete:
+		var status = ResourceLoader.load_threaded_get_status(_target_scene_path, _progress)
+		match status:
+			ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				var scene_progress = _progress[0] if not _progress.is_empty() else 0.0
+				# Scene loading = 60% do total, prewarm = 40%
+				var total = scene_progress * 0.6
+				_update_progress(total, "Carregando fase...")
+			ResourceLoader.THREAD_LOAD_LOADED:
+				if not _prewarm_done:
+					_start_prewarm()
+				else:
+					_on_all_complete()
+			ResourceLoader.THREAD_LOAD_FAILED:
+				LogManager.error("Loading", "Falha no carregamento: %s" % _target_scene_path)
+				_force_sync_load()
+			ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+				LogManager.error("Loading", "Recurso invalido: %s" % _target_scene_path)
+				_force_sync_load()
+	elif _prewarm_done and not _waiting_for_input:
+		_on_all_complete()
+
+	# Aguarda input do jogador
+	if _waiting_for_input:
+		# Pisca o label "Pressione qualquer botao"
+		if _press_label:
+			var t = fmod(Time.get_ticks_msec() / 1000.0, 1.0)
+			_press_label.modulate.a = 0.5 + 0.5 * sin(t * TAU)
+
+func _start_prewarm() -> void:
+	# Executa pre-warming em etapas distribuidas ao longo de frames
+	_do_prewarm_step()
+
+func _do_prewarm_step() -> void:
+	match _prewarm_step:
+		0:
+			_prewarm_object_pool()
+			_prewarm_step += 1
+			_update_progress(0.65, "Pre-aquecendo object pool...")
+			call_deferred("_do_prewarm_step")
+		1:
+			_prewarm_projectiles()
+			_prewarm_step += 1
+			_update_progress(0.72, "Carregando projeteis...")
+			call_deferred("_do_prewarm_step")
+		2:
+			_prewarm_shaders()
+			_prewarm_step += 1
+			_update_progress(0.80, "Compilando shaders...")
+			call_deferred("_do_prewarm_step")
+		3:
+			_prewarm_multimesh()
+			_prewarm_step += 1
+			_update_progress(0.87, "Inicializando MultiMesh...")
+			call_deferred("_do_prewarm_step")
+		4:
+			_prewarm_audio()
+			_prewarm_step += 1
+			_update_progress(0.93, "Carregando audio...")
+			call_deferred("_do_prewarm_step")
+		5:
+			_prewarm_step += 1
+			_update_progress(1.0, "Pronto!")
+			_prewarm_done = true
+
+func _prewarm_object_pool() -> void:
+	LogManager.info("Loading", "Pre-warming object pool...")
+	# Pre-warm inimigos base
+	for scene_path in PREWARM_ENEMIES:
+		if not ResourceLoader.exists(scene_path):
+			continue
+		var scene = load(scene_path)
+		if scene == null:
+			continue
+		var instances: Array = []
+		for i in range(PREWARM_COUNTS["enemy"]):
+			var inst = ObjectPool.get_instance(scene)
+			instances.append(inst)
+		# Devolve ao pool
+		for inst in instances:
+			ObjectPool.return_instance(inst, scene_path)
+
+	# Pre-warm pickups
+	for scene_path in PREWARM_PICKUPS:
+		if not ResourceLoader.exists(scene_path):
+			continue
+		var scene = load(scene_path)
+		if scene == null:
+			continue
+		var instances: Array = []
+		for i in range(PREWARM_COUNTS["pickup"]):
+			var inst = ObjectPool.get_instance(scene)
+			instances.append(inst)
+		for inst in instances:
+			ObjectPool.return_instance(inst, scene_path)
+
+func _prewarm_projectiles() -> void:
+	LogManager.info("Loading", "Pre-warming projectiles...")
+	# Pre-warm projeteis das armas comuns
+	var projectile_scenes: Array = [
+		"res://scenes/weapons/bullet.tscn",
+		"res://scenes/weapons/staff_projectile.tscn",
+		"res://scenes/weapons/elven_bow_arrow.tscn",
+		"res://scenes/weapons/ice_staff_projectile.tscn",
+		"res://scenes/weapons/rocket.tscn",
+	]
+	for scene_path in projectile_scenes:
+		if not ResourceLoader.exists(scene_path):
+			continue
+		var scene = load(scene_path)
+		if scene == null:
+			continue
+		var instances: Array = []
+		for i in range(PREWARM_COUNTS["projectile"]):
+			var inst = ObjectPool.get_instance(scene)
+			instances.append(inst)
+		for inst in instances:
+			ObjectPool.return_instance(inst, scene_path)
+
+func _prewarm_shaders() -> void:
+	LogManager.info("Loading", "Pre-warming shaders...")
+	# Compila cel-shader criando uma mesh temporaria fora da camera
+	var temp_viewport = SubViewport.new()
+	temp_viewport.size = Vector2i(64, 64)
+	temp_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+	var temp_world = World3D.new()
+	temp_viewport.world_3d = temp_world
+
+	# Camera
+	var cam = Camera3D.new()
+	cam.position = Vector3(0, 2, 5)
+	cam.look_at(Vector3.ZERO)
+	temp_viewport.add_child(cam)
+
+	# Luz
+	var light = DirectionalLight3D.new()
+	light.position = Vector3(0, 5, 0)
+	temp_viewport.add_child(light)
+
+	# Mesh com cel-shader
+	var mesh_inst = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.5
+	sphere.height = 1.0
+	mesh_inst.mesh = sphere
+
+	var shader_path = "res://assets/materials/cel_shader.gdshader"
+	if ResourceLoader.exists(shader_path):
+		var shader = load(shader_path)
+		if shader:
+			var mat = ShaderMaterial.new()
+			mat.shader = shader
+			mat.set_shader_parameter("albedo_color", Color(0.8, 0.2, 0.2))
+			mat.set_shader_parameter("toon_steps", 3.0)
+			mat.set_shader_parameter("shadow_color", Color(0.15, 0.1, 0.2))
+			mat.set_shader_parameter("rim_amount", 0.4)
+			mat.set_shader_parameter("rim_color", Color(1.0, 1.0, 1.0, 0.6))
+			mat.set_shader_parameter("rim_threshold", 0.5)
+			mesh_inst.material_override = mat
+	temp_viewport.add_child(mesh_inst)
+
+	# Adiciona temporariamente para forcar compilacao
+	add_child(temp_viewport)
+
+	# Remove no proximo frame (apos renderizar)
+	temp_viewport.set_meta("_cleanup", true)
+	get_tree().create_timer(0.1).timeout.connect(func():
+		if is_instance_valid(temp_viewport):
+			temp_viewport.queue_free()
+	)
+
+func _prewarm_multimesh() -> void:
+	LogManager.info("Loading", "Pre-warming MultiMeshManager...")
+	# Garante que o MultiMeshManager esta resetado e pronto
+	MultiMeshManager.on_scene_changed()
+
+func _prewarm_audio() -> void:
+	LogManager.info("Loading", "Pre-warming audio...")
+	var stage_id = _get_stage_id()
+	# Pre-carrega musica da fase
+	AudioManager._load_audio("res://assets/audio/music/" + stage_id, [".ogg", ".mp3", ".wav"])
+	# Pre-carrega SFX principais
+	var sfx_to_load: Array = ["hit", "kill", "collect_xp", "level_up", "player_hurt", "dash"]
+	for sfx_name in sfx_to_load:
+		AudioManager._load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
+
+func _on_all_complete() -> void:
+	_load_complete = true
+	_waiting_for_input = true
+	if _press_label:
+		_press_label.visible = true
+	if _progress_label:
+		_progress_label.text = "Pronto!"
+	LogManager.info("Loading", "Carregamento completo, aguardando input")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _waiting_for_input:
+		return
+
+	# Aceita qualquer input (tecla, mouse, gamepad)
+	var is_valid_input = false
+	if event is InputEventKey and event.pressed and not event.echo:
+		is_valid_input = true
+	elif event is InputEventJoypadButton and event.pressed:
+		is_valid_input = true
+	elif event is InputEventMouseButton and event.pressed:
+		is_valid_input = true
+
+	if is_valid_input:
+		_waiting_for_input = false
+		if get_viewport():
+			get_viewport().set_input_as_handled()
+		_transition_to_scene()
+
+func _transition_to_scene() -> void:
+	# Fade out
+	var tween = create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	if _fade_rect:
+		_fade_rect.visible = true
+		_fade_rect.modulate.a = 0.0
+		tween.tween_property(_fade_rect, "modulate:a", 1.0, 0.4)
+	tween.tween_callback(_do_scene_change)
+
+func _do_scene_change() -> void:
+	var packed_scene = ResourceLoader.load_threaded_get(_target_scene_path)
+	if packed_scene:
+		get_tree().change_scene_to_packed(packed_scene)
+	else:
+		LogManager.error("Loading", "Cena nao carregou: %s" % _target_scene_path)
+		get_tree().change_scene_to_file(_target_scene_path)
+
+	# Cleanup
+	_cleanup()
+	loading_finished.emit()
+
+func _force_sync_load() -> void:
+	LogManager.warn("Loading", "Fallback para carregamento sincrono")
+	get_tree().change_scene_to_file(_target_scene_path)
+	_cleanup()
+
+func _cleanup() -> void:
+	_is_loading = false
+	_load_complete = false
+	_waiting_for_input = false
+	_prewarm_done = false
+	visible = false
+	# Remove UI criada
+	if _root and is_instance_valid(_root):
+		_root.queue_free()
+		_root = null
+	_spinner_dots.clear()
+
+# ==================== UI ====================
+
+func _build_ui() -> void:
+	# Remove UI anterior se existir
+	if _root and is_instance_valid(_root):
+		_root.queue_free()
+
+	_root = Control.new()
+	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_root)
+
+	# Background escuro base
+	_bg_color = ColorRect.new()
+	_bg_color.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bg_color.color = Color(0.05, 0.05, 0.08)
+	_root.add_child(_bg_color)
+
+	# Background art da fase
+	_bg_rect = TextureRect.new()
+	_bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_bg_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_bg_rect.modulate = Color(0.4, 0.4, 0.4, 0.8)  # Escurecido para legibilidade
+	_bg_rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_root.add_child(_bg_rect)
+
+	# Overlay gradiente escuro (bottom)
+	_overlay = ColorRect.new()
+	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.color = Color(0, 0, 0, 0)  # Transparent, replaced by gradient below
+	_root.add_child(_overlay)
+
+	# Vignette / gradient overlay via shader-like approach (simple dark bottom)
+	var gradient_bottom = ColorRect.new()
+	gradient_bottom.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	gradient_bottom.custom_minimum_size = Vector2(0, 300)
+	gradient_bottom.anchor_top = 0.55
+	gradient_bottom.color = Color(0.0, 0.0, 0.0, 0.7)
+	_root.add_child(gradient_bottom)
+
+	# VBox central
+	var center_vbox = VBoxContainer.new()
+	center_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center_vbox.anchor_top = 0.1
+	center_vbox.anchor_bottom = 0.95
+	center_vbox.anchor_left = 0.1
+	center_vbox.anchor_right = 0.9
+	center_vbox.alignment = BoxContainer.ALIGNMENT_END
+	center_vbox.add_theme_constant_override("separation", 16)
+	_root.add_child(center_vbox)
+
+	# Spacer para empurrar conteudo para baixo
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	center_vbox.add_child(spacer)
+
+	# Titulo da fase
+	_title_label = Label.new()
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.add_theme_font_size_override("font_size", 42)
+	_title_label.add_theme_color_override("font_color", Color.WHITE)
+	center_vbox.add_child(_title_label)
+
+	# Spinner animado (3 dots)
+	var spinner_hbox = HBoxContainer.new()
+	spinner_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	spinner_hbox.add_theme_constant_override("separation", 8)
+	_spinner_dots.clear()
+	for i in range(3):
+		var dot = ColorRect.new()
+		dot.custom_minimum_size = Vector2(10, 10)
+		dot.color = UITheme.ACCENT_BLUE
+		spinner_hbox.add_child(dot)
+		_spinner_dots.append(dot)
+	center_vbox.add_child(spinner_hbox)
+
+	# Label de progresso
+	_progress_label = Label.new()
+	_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_progress_label.add_theme_font_size_override("font_size", 18)
+	_progress_label.add_theme_color_override("font_color", UITheme.TEXT_SECONDARY)
+	_progress_label.text = "Carregando..."
+	center_vbox.add_child(_progress_label)
+
+	# Progress bar
+	var bar_container = CenterContainer.new()
+	_progress_bar = ProgressBar.new()
+	_progress_bar.custom_minimum_size = Vector2(500, 14)
+	_progress_bar.min_value = 0.0
+	_progress_bar.max_value = 1.0
+	_progress_bar.value = 0.0
+	_progress_bar.show_percentage = false
+
+	# Estilo da barra
+	var bar_bg = StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0.1, 0.1, 0.15, 0.8)
+	bar_bg.set_corner_radius_all(7)
+	bar_bg.set_border_width_all(1)
+	bar_bg.border_color = UITheme.BORDER_COLOR
+	_progress_bar.add_theme_stylebox_override("background", bar_bg)
+
+	var bar_fill = StyleBoxFlat.new()
+	bar_fill.bg_color = UITheme.ACCENT_BLUE
+	bar_fill.set_corner_radius_all(7)
+	_progress_bar.add_theme_stylebox_override("fill", bar_fill)
+
+	bar_container.add_child(_progress_bar)
+	center_vbox.add_child(bar_container)
+
+	# Separador
+	var sep = Control.new()
+	sep.custom_minimum_size = Vector2(0, 20)
+	center_vbox.add_child(sep)
+
+	# Dica de gameplay
+	_tip_label = Label.new()
+	_tip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tip_label.add_theme_font_size_override("font_size", 16)
+	_tip_label.add_theme_color_override("font_color", UITheme.ACCENT_GOLD)
+	_tip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_tip_label.text = TIPS[randi() % TIPS.size()]
+	center_vbox.add_child(_tip_label)
+
+	# "Pressione qualquer botao"
+	_press_label = Label.new()
+	_press_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_press_label.add_theme_font_size_override("font_size", 22)
+	_press_label.add_theme_color_override("font_color", Color.WHITE)
+	_press_label.text = "Pressione qualquer botao para iniciar"
+	_press_label.visible = false
+	center_vbox.add_child(_press_label)
+
+	# Fade rect (para transicao final)
+	_fade_rect = ColorRect.new()
+	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade_rect.color = Color.BLACK
+	_fade_rect.modulate.a = 0.0
+	_fade_rect.visible = false
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_fade_rect)
+
+func _update_stage_visuals() -> void:
+	var stage_id = _get_stage_id()
+
+	# Nome da fase
+	var stage_name = STAGE_NAMES.get(stage_id, stage_id.capitalize())
+	_title_label.text = stage_name
+
+	# Art da fase como background
+	var art_path = "res://assets/sprites/stages/%s.png" % stage_id
+	if ResourceLoader.exists(art_path):
+		var tex = load(art_path)
+		if tex and _bg_rect:
+			_bg_rect.texture = tex
+
+	# Cor do gradiente
+	var stage_color = STAGE_COLORS.get(stage_id, Color(0.1, 0.1, 0.2))
+	if _bg_color:
+		_bg_color.color = stage_color.darkened(0.7)
+
+	# Cor da barra de progresso baseada na fase
+	if _progress_bar:
+		var bar_fill = StyleBoxFlat.new()
+		bar_fill.bg_color = stage_color.lightened(0.3)
+		bar_fill.set_corner_radius_all(7)
+		_progress_bar.add_theme_stylebox_override("fill", bar_fill)
+
+func _update_progress(value: float, text: String) -> void:
+	if _progress_bar:
+		# Smooth interpolation
+		var tween = create_tween()
+		tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tween.tween_property(_progress_bar, "value", value, 0.15)
+	if _progress_label:
+		_progress_label.text = text
+
+func _animate_spinner(delta: float) -> void:
+	if _spinner_dots.is_empty():
+		return
+	var t = fmod(Time.get_ticks_msec() / 1000.0, 1.5)
+	for i in range(_spinner_dots.size()):
+		var dot = _spinner_dots[i]
+		if not is_instance_valid(dot):
+			continue
+		var phase = t - (i * 0.2)
+		var scale_val = 0.6 + 0.4 * maxf(0.0, sin(phase * TAU))
+		dot.custom_minimum_size = Vector2(10 * scale_val, 10 * scale_val)
+		dot.modulate.a = 0.4 + 0.6 * maxf(0.0, sin(phase * TAU))
+
+func _get_stage_id() -> String:
+	# Extrai stage id do path: "res://scenes/stages/stage_cemetery.tscn" -> "cemetery"
+	var filename = _target_scene_path.get_file().get_basename()  # "stage_cemetery"
+	if filename.begins_with("stage_"):
+		return filename.substr(6)  # "cemetery"
+	return GameManager.selected_stage
