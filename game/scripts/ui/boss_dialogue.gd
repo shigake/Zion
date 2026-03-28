@@ -46,10 +46,27 @@ const BOSS_LINES := {
 	},
 }
 
+const BOSS_TAUNTS := {
+	"BossNecromancer": ["Sintam o poder da morte!", "Levantem-se, meus servos!"],
+	"BossFairyQueen": ["A floresta me protege!", "Nao podem me tocar!"],
+	"BossAlienCow": ["MUUUU INTENSIFIES!", "Abducao em progresso!"],
+	"BossAiOverlord": ["PROCESSANDO... ELIMINACAO.", "FIREWALL ATIVADO."],
+	"BossDemonLord": ["Queimem!", "O inferno eh eterno!"],
+	"BossLeviathan": ["As profundezas chamam!", "Ninguem escapa!"],
+	"BossEmperor": ["Sou invencivel!", "Roma nunca cai!"],
+	"BossSingularity": ["GRAVIDADE ESMAGADORA.", "TUDO COLAPSA."],
+	"BossDracula": ["Seu sangue eh meu!", "A noite eh eterna!"],
+	"BossSugarKing": ["Mais doces! MAIS!", "Ninguem resiste!"],
+}
+
 var _panel: PanelContainer
 var _label: Label
 var _dismiss_timer: Timer
 var _visible: bool = false
+var _taunt_timer: float = 0.0
+var _taunt_interval: float = 30.0
+var _current_boss_name: String = ""
+var _boss_alive: bool = false
 
 func _ready() -> void:
 	layer = 8
@@ -107,13 +124,30 @@ func _ready() -> void:
 	GameManager.boss_spawned.connect(_on_boss_spawned)
 	GameManager.boss_died.connect(_on_boss_died)
 
+func _process(delta: float) -> void:
+	if _boss_alive and _current_boss_name != "":
+		_taunt_timer += delta
+		if _taunt_timer >= _taunt_interval:
+			_taunt_timer = 0.0
+			var key = _normalize_boss_name(_current_boss_name)
+			if BOSS_TAUNTS.has(key):
+				var taunts: Array = BOSS_TAUNTS[key]
+				var taunt: String = taunts[randi() % taunts.size()]
+				_show_dialogue(taunt, 2.0)
+
 func _on_boss_spawned(boss_name: String) -> void:
 	var key = _normalize_boss_name(boss_name)
+	_current_boss_name = boss_name
+	_boss_alive = true
+	_taunt_timer = 0.0
 	if BOSS_LINES.has(key):
 		AudioManager.play_sfx("boss_roar")
 		_show_dialogue(BOSS_LINES[key]["intro"])
 
 func _on_boss_died(boss_name: String) -> void:
+	_boss_alive = false
+	_current_boss_name = ""
+	_taunt_timer = 0.0
 	var key = _normalize_boss_name(boss_name)
 	if BOSS_LINES.has(key):
 		_show_dialogue(BOSS_LINES[key]["death"])
@@ -125,10 +159,11 @@ func _normalize_boss_name(boss_name: String) -> String:
 	clean = clean.replace(" ", "")
 	return clean
 
-func _show_dialogue(text: String) -> void:
+func _show_dialogue(text: String, duration: float = 3.0) -> void:
 	_label.text = text
 	_panel.visible = true
 	_visible = true
+	_dismiss_timer.wait_time = duration
 	_dismiss_timer.start()
 	# Fade-in via modulate
 	_panel.modulate = Color(1, 1, 1, 0)

@@ -211,7 +211,7 @@ Cada stage tem inimigos com comportamentos unicos alem dos genericos:
 - Camada narrativa (dialogos de boss, loading screens com lore)
 
 ### v2.0 - Full Release
-- Todos os 14 Fragmentados (incluindo ???)
+- Todos os 15 Fragmentados (incluindo ??? e Fragmentado)
 - 28 armas e 12 evolucoes
 - 10 fendas (7 campanha + 3 anomalias)
 - Todos os modos de jogo

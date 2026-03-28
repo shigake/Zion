@@ -1,4 +1,4 @@
-# Zion — Checklist Final Completo (v2.93)
+# Zion — Checklist Final Completo (v2.94)
 
 ## BUGS CRITICOS
 - [x] Chef starting_weapon = "flamethrower" (desabilitado) — trocar pra outra arma
@@ -147,7 +147,7 @@
 - [x] Reduzir props por stage: cemetery 105→65, outros similar
 - [x] Expandir ObjectPool pra staff_projectile, ice_crystal, magic_book page, shuriken
 - [x] Cachear texturas de sprites (evitar load() repetido) — static _sprite_cache dict em enemy_base.gd:36
-- [ ] Bullet trail — adicionar rastro visual (so quando FPS > 45)
+- [x] Bullet trail — adicionar rastro visual (so quando FPS > 45)
 - [ ] MultiMesh pra pickups quando > 100 no chao
 
 ## UI/UX
@@ -167,8 +167,8 @@
 - [ ] Sync de weapon_damage_dealt pro game over screen multiplayer
 
 ## CONTEUDO
-- [ ] Mais dialogos de boss (falas durante a luta, nao so intro/morte)
-- [ ] Descricoes de stages no mapa (lore text)
+- [x] Mais dialogos de boss (falas durante a luta, nao so intro/morte)
+- [x] Descricoes de stages no mapa (lore text)
 - [x] Tips de loading variados (adicionar 20+ tips) — agora 41 tips
 - [x] Personagem desbloqueavel por completar todos stages: "Fragmentado" — adicionado
 - [x] Evento especial: "Eclipse Total" — tela escurece, inimigos brilham, bonus XP
@@ -184,12 +184,12 @@
 - [x] Camera shake diferenciado: enemy hit 0.03, enemy kill 0.03, player hit 0.08+, boss entrance 0.35, boss death 0.5
 
 ## DOCUMENTACAO
-- [ ] Atualizar CLAUDE.md com estado atual (sprites, 32 armas, 14 chars, etc.)
-- [ ] Atualizar README.md pro publico
-- [ ] Atualizar gdd.md com mecanicas novas (sinergias, mutacoes, etc.)
-- [ ] Atualizar personagens.md com Amazona e Bruxa
-- [ ] Atualizar fases.md com mecanicas de stage
-- [ ] Atualizar itens.md com 4 novas armas
+- [x] Atualizar CLAUDE.md com estado atual (sprites, 32 armas, 15 chars, etc.)
+- [x] Atualizar README.md pro publico
+- [x] Atualizar gdd.md com mecanicas novas (sinergias, mutacoes, etc.)
+- [x] Atualizar personagens.md com Amazona e Bruxa
+- [x] Atualizar fases.md com mecanicas de stage
+- [x] Atualizar itens.md com 4 novas armas
 - [x] Atualizar balance_analysis.md com DPS das novas armas
 
 ## BUILD/DEPLOY
@@ -199,9 +199,9 @@
 - [ ] Trailer de 30s (captura de gameplay)
 - [ ] Steam store page (requer App ID)
 
-## TOTAL: ~150 items (~125 concluidos, ~25 pendentes)
+## TOTAL: ~150 items (~134 concluidos, ~16 pendentes)
 ### Por prioridade:
 - **Critico (5/5 DONE)**: Chef weapon, barrier errors, health pickup, circle placeholders, gen3 mapping
 - **Alto (35/35 DONE)**: SFX conexoes, musica conexoes, 4 armas novas
-- **Medio (~10 pendentes)**: UI/UX restantes (1), conteudo (2), performance (2)
-- **Baixo (~15 pendentes)**: Multiplayer (2), docs (5), build (5)
+- **Medio (~4 pendentes)**: UI/UX restantes (1), performance (1: MultiMesh pickups)
+- **Baixo (~12 pendentes)**: Multiplayer (2), build/deploy (5), tela titulo (1), gamepad sensitivity (1), level up async (1), weapon sync (1)

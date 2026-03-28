@@ -5,7 +5,7 @@
 ## Visao Geral
 
 Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragmentados.
-14 Fragmentados, 28 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
 
 **Premissa:** O Coracao de Zion estilhacou. Os jogadores sao Fragmentados — pessoas de diferentes realidades com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um Sentinela Corrompido a ser libertado. A narrativa completa esta em [story.md](story.md).
 
@@ -14,8 +14,8 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragme
 ## Estado Atual (Implementado)
 
 ### Core Game
-- [x] 14 personagens jogaveis (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
-- [x] 28 armas (10 melee, 10 ranged, 8 summon/special)
+- [x] 15 personagens jogaveis (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa, fragmentado)
+- [x] 32 armas (11 melee, 11 ranged, 10 summon/special)
 - [x] 19 itens passivos com 5 niveis cada
 - [x] 12 evolucoes de arma (arma lv8 + item lv5)
 - [x] 7 reliquias pre-run
@@ -31,7 +31,7 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragme
 - [x] Desafio Diario com leaderboard local
 
 ### Visual
-- [x] 279+ sprites pixel art (personagens, inimigos, bosses, armas, pickups, props, UI)
+- [x] 333+ sprites pixel art (personagens, inimigos, bosses, armas, pickups, props, UI)
 - [x] Billboard Sprite3D com NEAREST filter
 - [x] Themed HP bar por personagem
 - [x] HUD com armas separadas de itens
@@ -43,8 +43,8 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragme
 - [x] Boss entrance (shake + slowmo + flash)
 
 ### Audio
-- [x] 15 musicas (12 Suno AI chiptune + 3 extras)
-- [x] 50 SFX (10 base + 33 gerados via sfx_generator_v3 + 7 extras)
+- [x] 16 musicas (12 Suno AI chiptune + 4 extras)
+- [x] 43 SFX (10 base + 33 gerados via sfx_generator_v3)
 - [x] AudioManager com crossfade, pool, cooldown
 - [ ] Musica dinamica por fase (ver docs/prd_cemetery_music.md)
 

@@ -56,6 +56,19 @@ const BOSS_NAMES := {
 	"candy": "Sugar king",
 }
 
+const STAGE_LORE := {
+	"cemetery": "Um cemiterio amaldicoado onde os mortos nao descansam.",
+	"forest": "Uma floresta encantada corrompida por magia negra.",
+	"farm": "Uma fazenda abandonada infestada de criaturas mutantes.",
+	"tokyo": "Uma metropole cyberpunk dominada por IAs rebeldes.",
+	"volcano": "Um vulcao infernal habitado por demonios.",
+	"ocean": "As profundezas do oceano guardam horrores antigos.",
+	"arena": "Um coliseu romano onde gladiadores lutam eternamente.",
+	"space": "Uma estacao espacial invadida por parasitas alienigenas.",
+	"castle": "O castelo do Conde Dracula, cheio de mortos-vivos.",
+	"candy": "Um mundo doce e colorido... mortalmente perigoso.",
+}
+
 const ICON_SIZE := 32.0
 const NODE_RADIUS := 22.0
 const PATH_WIDTH := 3.0
@@ -349,7 +362,11 @@ func _update_info_panel() -> void:
 		info_boss.text = "Boss: %s" % boss_lore_name
 	else:
 		info_boss.text = "Boss: %s" % BOSS_NAMES.get(selected_stage, "???")
-	info_desc.text = stage["description"]
+	# Use lore description if available, fallback to localized description
+	if selected_stage in STAGE_LORE:
+		info_desc.text = STAGE_LORE[selected_stage]
+	else:
+		info_desc.text = stage["description"]
 
 	# Best time
 	var best := SaveManager.data.get("best_time", 0.0) as float

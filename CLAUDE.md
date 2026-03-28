@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 333+ sprites, 43 SFX, 16 musicas.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -48,7 +48,7 @@ Zion/
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
 │   ├── itens.md                 # Itens, evolucoes, reliquias
 │   ├── mecanicas.md             # Mecanicas de gameplay
-│   ├── personagens.md           # 14 Fragmentados + backstories
+│   ├── personagens.md           # 15 Fragmentados + backstories
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
 │   ├── art_prompts.md           # Prompts de arte para assets
@@ -137,7 +137,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 
 ## Content Summary
 
-- **Fragmentados**: 14 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
+- **Fragmentados**: 15 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa, fragmentado)
 - **Weapons**: 32 (11 melee, 11 ranged, 10 summon/special)
 - **Fendas**: 7 campanha (cemetery, forest, tokyo, volcano, ocean, space, castle) + 3 anomalias (farm, arena, candy)
 - **Sentinelas**: 10 (1 por fenda, 3 fases cada — guardioes corrompidos, nao viloes)
@@ -179,13 +179,13 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano. FASE B (gameplay) parcial — 10 mecanicas de fenda, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global, dialogos de Sentinelas. FASE D (audio) quase completa — 50 SFX, 15 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) pendente.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 333+ sprites, 43 SFX, 16 musicas. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano, bullet trails. FASE B (gameplay) parcial — 10 mecanicas de fenda, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global, dialogos de Sentinelas com taunts mid-fight, lore no mapa. FASE D (audio) quase completa — 43 SFX, 16 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) pendente.
 
 Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
 ## Remaining Work
 
-- **Sprites**: 333+ pixel art sprites (personagens, inimigos, armas, itens, UI)
+- **Sprites**: 333+ pixel art sprites implementados (personagens, inimigos, armas, itens, UI)
 - **Audio**: 16 musicas + 43 SFX implementados; falta musica dinamica por fenda
 - **Visual Polish**: walk animations, slash trails melee, props animados
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
