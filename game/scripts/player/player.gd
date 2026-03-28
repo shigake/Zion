@@ -291,6 +291,10 @@ var weapon_scenes: Dictionary = {
 	"boxing_gloves": preload("res://scenes/weapons/boxing_gloves.tscn"),
 	"time_bomb": preload("res://scenes/weapons/time_bomb.tscn"),
 	"portal_weapon": preload("res://scenes/weapons/portal_weapon.tscn"),
+	"boomerang": preload("res://scenes/weapons/boomerang.tscn"),
+	"tornado": preload("res://scenes/weapons/tornado.tscn"),
+	"chain_whip": preload("res://scenes/weapons/chain_whip.tscn"),
+	"blood_orb": preload("res://scenes/weapons/blood_orb.tscn"),
 }
 
 func _spawn_weapon(weapon_id: String) -> void:
