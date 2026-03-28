@@ -107,8 +107,8 @@ func _ready() -> void:
 	xp_bar.add_theme_stylebox_override("background", xp_bg)
 
 	# Level label styling — integrate above XP bar
-	level_label.theme_override_font_sizes = { "font_size": 13 }
-	level_label.theme_override_colors = { "font_color": Color(0.6, 0.8, 1.0, 0.9) }
+	level_label.add_theme_font_size_override("font_size", 13)
+	level_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0, 0.9))
 
 	# Boss HP bar styling (red)
 	var boss_fill = StyleBoxFlat.new()
@@ -428,11 +428,11 @@ func _update_weapon_icons() -> void:
 		# Level badge (bottom-right corner)
 		var lbl := Label.new()
 		lbl.text = str(w.level)
-		lbl.theme_override_font_sizes = { "font_size": 9 }
+		lbl.add_theme_font_size_override("font_size", 9)
 		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 		lbl.offset_left = -12
 		lbl.offset_top = -14
-		lbl.theme_override_colors = { "font_color": Color(1, 0.9, 0.3) }
+		lbl.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 		icon_node.add_child(lbl)
 
 		weapon_container.add_child(panel)
@@ -486,11 +486,11 @@ func _update_item_icons() -> void:
 		# Level badge (bottom-right corner)
 		var lbl := Label.new()
 		lbl.text = str(it.level)
-		lbl.theme_override_font_sizes = { "font_size": 9 }
+		lbl.add_theme_font_size_override("font_size", 9)
 		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 		lbl.offset_left = -12
 		lbl.offset_top = -14
-		lbl.theme_override_colors = { "font_color": Color(0.5, 0.9, 1.0) }
+		lbl.add_theme_color_override("font_color", Color(0.5, 0.9, 1.0))
 		icon_node.add_child(lbl)
 
 		item_container.add_child(panel)

@@ -127,8 +127,8 @@ func _ready() -> void:
 	_hp_text_label = Label.new()
 	_hp_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_hp_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_hp_text_label.theme_override_font_sizes = { "font_size": 11 }
-	_hp_text_label.theme_override_colors = { "font_color": Color(1, 1, 1, 0.9) }
+	_hp_text_label.add_theme_font_size_override("font_size", 11)
+	_hp_text_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
 	add_child(_hp_text_label)
 
 	# Theme label (left side, small)
@@ -136,8 +136,8 @@ func _ready() -> void:
 	_theme_label.text = _theme.get("label", "HP")
 	_theme_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_theme_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_theme_label.theme_override_font_sizes = { "font_size": 9 }
-	_theme_label.theme_override_colors = { "font_color": _theme["border_color"] }
+	_theme_label.add_theme_font_size_override("font_size", 9)
+	_theme_label.add_theme_color_override("font_color", _theme["border_color"])
 	add_child(_theme_label)
 
 	custom_minimum_size = Vector2(260, 28)
