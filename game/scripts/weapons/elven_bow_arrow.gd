@@ -78,12 +78,6 @@ func _spawn_ricochet_flash() -> void:
 	tween.tween_property(flash, "scale", Vector3.ZERO, 0.075).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 	tween.tween_callback(flash.queue_free)
 
-	# Green flash light
-	var light = OmniLight3D.new()
-	light.light_color = Color(0.2, 1.0, 0.3)
-	light.light_energy = 3.0
-	light.omni_range = 2.0
-	flash.add_child(light)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):

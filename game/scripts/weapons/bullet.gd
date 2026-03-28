@@ -71,15 +71,6 @@ func _spawn_muzzle_flash() -> void:
 	var tween = create_tween()
 	tween.tween_property(mesh_instance, "scale", original_scale, 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
-	# Bright flash light that fades quickly
-	var flash_light = OmniLight3D.new()
-	flash_light.light_color = Color(1.0, 0.9, 0.4)
-	flash_light.light_energy = 3.0
-	flash_light.omni_range = 1.5
-	add_child(flash_light)
-	var light_tween = create_tween()
-	light_tween.tween_property(flash_light, "light_energy", 0.0, 0.12).set_ease(Tween.EASE_OUT)
-	light_tween.tween_callback(flash_light.queue_free)
 
 func _physics_process(delta: float) -> void:
 	if _returning:
