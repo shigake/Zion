@@ -19,6 +19,7 @@ var _prop_defs: Dictionary = {
 
 
 func _ready() -> void:
+	_create_ground()
 	_scatter_props()
 
 
@@ -41,6 +42,7 @@ func _create_ground() -> void:
 		mat.albedo_color = Color(0.35, 0.2, 0.25)
 
 	ground.material_override = mat
+	ground.position.y = 0.01
 	ground.name = "Ground"
 	add_child(ground)
 
