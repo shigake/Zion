@@ -87,7 +87,7 @@ func _apply_sprite() -> void:
 	sprite.pixel_size = 0.06 if enemy_type.begins_with("Boss") else 0.05
 	sprite.shaded = false
 	sprite.transparent = true
-	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 	sprite.name = "EnemySprite"
 	sprite.position.y = 0.65
 	add_child(sprite)

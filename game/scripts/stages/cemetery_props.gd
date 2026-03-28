@@ -22,32 +22,9 @@ var _prop_defs: Dictionary = {
 
 
 func _ready() -> void:
-	_create_ground()
+	# O ground ja esta definido na cena (.tscn) — nao criar outro aqui
+	# para evitar Z-fighting (dois planos no mesmo Y=0 causam flickering).
 	_scatter_props()
-
-
-func _create_ground() -> void:
-	var ground = MeshInstance3D.new()
-	var plane = PlaneMesh.new()
-	plane.size = Vector2(area_size * 2, area_size * 2)
-	ground.mesh = plane
-
-	var mat = StandardMaterial3D.new()
-	mat.roughness = 1.0
-
-	var ground_tex_path = "res://assets/sprites/props/cemetery/ground_cemetery.png"
-	if ResourceLoader.exists(ground_tex_path):
-		var tex = load(ground_tex_path)
-		mat.albedo_texture = tex
-		mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		mat.uv1_scale = Vector3(20, 20, 1)
-	else:
-		# Fallback: dark earthy color if texture not found
-		mat.albedo_color = Color(0.12, 0.15, 0.08)
-
-	ground.material_override = mat
-	ground.name = "Ground"
-	add_child(ground)
 
 
 func _scatter_props() -> void:
@@ -70,7 +47,7 @@ func _scatter_props() -> void:
 			sprite.pixel_size = 0.05
 			sprite.shaded = false
 			sprite.transparent = true
-			sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+			sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 
 			var x = rng.randf_range(-area_size * 0.8, area_size * 0.8)
 			var z = rng.randf_range(-area_size * 0.8, area_size * 0.8)
