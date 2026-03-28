@@ -73,9 +73,13 @@ func _fire(level: int) -> void:
 	if level >= 7:
 		num_arrows = 3
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	for i in range(num_arrows):
 		var arrow = ObjectPool.get_instance(arrow_scene)
-		arrow.global_position = player_pos + Vector3(0, 0.5, 0)
+		var pos = player_pos + Vector3(0, 0.5, 0)
 		var spread = (randf() - 0.5) * 0.2 * i
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		arrow.direction = spread_dir.normalized()
@@ -85,7 +89,8 @@ func _fire(level: int) -> void:
 		arrow.damage_type = "physical"
 		arrow.pierce = true
 		arrow.ricochet_distance = 15.0
-		get_tree().current_scene.call_deferred("add_child", arrow)
+		arrow.position = pos
+		scene_root.add_child(arrow)
 
 	AudioManager.play_sfx("hit")
 
@@ -124,9 +129,13 @@ func _fire_visual_only(level: int) -> void:
 	if level >= 7:
 		num_arrows = 3
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	for i in range(num_arrows):
 		var arrow = arrow_scene.instantiate()
-		arrow.global_position = player_pos + Vector3(0, 0.5, 0)
+		var pos = player_pos + Vector3(0, 0.5, 0)
 		var spread = (randf() - 0.5) * 0.2 * i
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		arrow.direction = spread_dir.normalized()
@@ -138,6 +147,7 @@ func _fire_visual_only(level: int) -> void:
 		arrow.collision_mask = 0
 		arrow.set_deferred("monitorable", false)
 		arrow.set_deferred("monitoring", false)
-		get_tree().current_scene.call_deferred("add_child", arrow)
+		arrow.position = pos
+		scene_root.add_child(arrow)
 
 	AudioManager.play_sfx("hit")

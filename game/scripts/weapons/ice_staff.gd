@@ -73,9 +73,13 @@ func _fire(level: int) -> void:
 
 	var dmg = int(WeaponDB.get_damage("ice_staff", level))
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	# Create ice crystal projectile
 	var bullet = ObjectPool.get_instance(projectile_scene)
-	bullet.global_position = player_pos + Vector3(0, 0.5, 0)
+	var pos = player_pos + Vector3(0, 0.5, 0)
 	bullet.direction = direction.normalized()
 	bullet.damage = dmg
 	bullet.speed = 10.0  # Slow projectile
@@ -92,7 +96,8 @@ func _fire(level: int) -> void:
 			bullet.queue_free()
 	, CONNECT_ONE_SHOT)
 
-	get_tree().current_scene.call_deferred("add_child", bullet)
+	bullet.position = pos
+	scene_root.add_child(bullet)
 
 ## Client-only: spawns visual ice projectile without collision (no damage/freeze).
 func _fire_visual_only(level: int) -> void:
@@ -126,8 +131,12 @@ func _fire_visual_only(level: int) -> void:
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))
 	AudioManager.play_sfx("hit")
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	var proj = projectile_scene.instantiate()
-	proj.global_position = player_pos + Vector3(0, 0.5, 0)
+	var pos = player_pos + Vector3(0, 0.5, 0)
 	proj.direction = direction.normalized()
 	proj.damage = 0
 	proj.speed = 10.0
@@ -137,7 +146,8 @@ func _fire_visual_only(level: int) -> void:
 	proj.collision_mask = 0
 	proj.set_deferred("monitorable", false)
 	proj.set_deferred("monitoring", false)
-	get_tree().current_scene.call_deferred("add_child", proj)
+	proj.position = pos
+	scene_root.add_child(proj)
 
 func _freeze_area(pos: Vector3, level: int) -> void:
 	var freeze_radius = 3.0 + (level - 1) * 0.3

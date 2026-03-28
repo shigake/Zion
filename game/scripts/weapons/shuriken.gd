@@ -80,9 +80,13 @@ func _fire(level: int) -> void:
 	var dmg = int(WeaponDB.get_damage("shuriken", level))
 	var speed = 18.0 + (level - 1) * 1.0
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	for dir in dirs:
 		var bullet = ObjectPool.get_instance(projectile_scene)
-		bullet.global_position = player_pos + Vector3(0, 0.5, 0)
+		var pos = player_pos + Vector3(0, 0.5, 0)
 		bullet.direction = dir.normalized()
 		bullet.damage = dmg
 		bullet.speed = speed
@@ -90,7 +94,8 @@ func _fire(level: int) -> void:
 		bullet.damage_type = "ice"
 		bullet.weapon_id = "shuriken"
 		_apply_shuriken_mesh(bullet)
-		get_tree().current_scene.call_deferred("add_child", bullet)
+		bullet.position = pos
+		scene_root.add_child(bullet)
 
 ## Client-only: spawns visual shurikens without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -101,9 +106,13 @@ func _fire_visual_only(level: int) -> void:
 	var dirs: Array[Vector3] = directions_4 if level < 4 else directions_8
 	var speed = 18.0 + (level - 1) * 1.0
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	for dir in dirs:
 		var proj = projectile_scene.instantiate()
-		proj.global_position = player_pos + Vector3(0, 0.5, 0)
+		var pos = player_pos + Vector3(0, 0.5, 0)
 		proj.direction = dir.normalized()
 		proj.damage = 0
 		proj.speed = speed
@@ -114,7 +123,8 @@ func _fire_visual_only(level: int) -> void:
 		proj.set_deferred("monitorable", false)
 		proj.set_deferred("monitoring", false)
 		_apply_shuriken_mesh(proj)
-		get_tree().current_scene.call_deferred("add_child", proj)
+		proj.position = pos
+		scene_root.add_child(proj)
 
 func _apply_shuriken_mesh(bullet: Node) -> void:
 	## Replace bullet's default mesh with a billboard sprite or spinning ninja-star shape.

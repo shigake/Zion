@@ -73,9 +73,13 @@ func _fire(level: int) -> void:
 
 	var dmg = int(WeaponDB.get_damage("crossbow", level))
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	# Create piercing bolt — does NOT destroy on hit
 	var bolt = ObjectPool.get_instance(projectile_scene)
-	bolt.global_position = player_pos + Vector3(0, 0.5, 0)
+	var pos = player_pos + Vector3(0, 0.5, 0)
 	bolt.direction = direction.normalized()
 	bolt.damage = dmg
 	bolt.speed = 28.0  # Fast bolt
@@ -95,7 +99,8 @@ func _fire(level: int) -> void:
 			ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
 	)
 
-	get_tree().current_scene.call_deferred("add_child", bolt)
+	bolt.position = pos
+	scene_root.add_child(bolt)
 
 ## Client-only: spawns visual bolt without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -129,8 +134,12 @@ func _fire_visual_only(level: int) -> void:
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
 	AudioManager.play_sfx("hit")
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	var proj = projectile_scene.instantiate()
-	proj.global_position = player_pos + Vector3(0, 0.5, 0)
+	var pos = player_pos + Vector3(0, 0.5, 0)
 	proj.direction = direction.normalized()
 	proj.damage = 0
 	proj.speed = 28.0
@@ -140,4 +149,5 @@ func _fire_visual_only(level: int) -> void:
 	proj.collision_mask = 0
 	proj.set_deferred("monitorable", false)
 	proj.set_deferred("monitoring", false)
-	get_tree().current_scene.call_deferred("add_child", proj)
+	proj.position = pos
+	scene_root.add_child(proj)

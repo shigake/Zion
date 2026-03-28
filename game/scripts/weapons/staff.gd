@@ -73,13 +73,14 @@ func _fire(level: int) -> void:
 		# Manual aim: fire straight projectiles (no homing)
 		for i in range(num_projectiles):
 			var proj = ObjectPool.get_instance(projectile_scene)
-			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = null  # No homing target
 			proj.direction = GameManager.aim_direction
 			var spread = (randf() - 0.5) * 0.2 * i
 			proj.direction = proj.direction.rotated(Vector3.UP, spread).normalized()
 			proj.damage = int(WeaponDB.get_damage("staff", level))
-			scene_root.call_deferred("add_child", proj)
+			proj.position = pos
+			scene_root.add_child(proj)
 	else:
 		# Auto-aim: homing projectiles
 		var targets = _get_nearest_enemies(player_pos, num_projectiles)
@@ -87,10 +88,11 @@ func _fire(level: int) -> void:
 			if not is_instance_valid(t):
 				continue
 			var proj = ObjectPool.get_instance(projectile_scene)
-			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = int(WeaponDB.get_damage("staff", level))
-			scene_root.call_deferred("add_child", proj)
+			proj.position = pos
+			scene_root.add_child(proj)
 
 ## Client-only: spawns visual projectile without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -117,7 +119,7 @@ func _fire_visual_only(level: int) -> void:
 	if GameManager.manual_aim:
 		for i in range(num_projectiles):
 			var proj = projectile_scene.instantiate()
-			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = null
 			proj.direction = GameManager.aim_direction
 			var spread = (randf() - 0.5) * 0.2 * i
@@ -127,21 +129,23 @@ func _fire_visual_only(level: int) -> void:
 			proj.collision_mask = 0
 			proj.set_deferred("monitorable", false)
 			proj.set_deferred("monitoring", false)
-			scene_root.call_deferred("add_child", proj)
+			proj.position = pos
+			scene_root.add_child(proj)
 	else:
 		var targets = _get_nearest_enemies(player_pos, num_projectiles)
 		for t in targets:
 			if not is_instance_valid(t):
 				continue
 			var proj = projectile_scene.instantiate()
-			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = 0
 			proj.collision_layer = 0
 			proj.collision_mask = 0
 			proj.set_deferred("monitorable", false)
 			proj.set_deferred("monitoring", false)
-			scene_root.call_deferred("add_child", proj)
+			proj.position = pos
+			scene_root.add_child(proj)
 
 func _get_nearest_enemies(from: Vector3, count: int) -> Array:
 	var enemies = GameManager.get_enemies()

@@ -80,8 +80,11 @@ func _fire(level: int) -> void:
 
 	var dmg = int(WeaponDB.get_damage("dual_pistol", level))
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	var bullet = ObjectPool.get_instance(projectile_scene)
-	bullet.global_position = spawn_pos
 	# Small spread
 	var spread = (randf() - 0.5) * 0.15
 	var spread_dir = direction.rotated(Vector3.UP, spread)
@@ -91,7 +94,8 @@ func _fire(level: int) -> void:
 	bullet.lifetime = 2.0
 	bullet.damage_type = "physical"
 	bullet.weapon_id = "dual_pistol"
-	get_tree().current_scene.call_deferred("add_child", bullet)
+	bullet.position = spawn_pos
+	scene_root.add_child(bullet)
 
 ## Client-only: spawns visual projectile without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -130,8 +134,11 @@ func _fire_visual_only(level: int) -> void:
 	ParticleFactory.spawn_hit_particles(spawn_pos, Color(1.0, 0.9, 0.3))
 	AudioManager.play_sfx("hit")
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
 	var proj = projectile_scene.instantiate()
-	proj.global_position = spawn_pos
 	var spread = (randf() - 0.5) * 0.15
 	var spread_dir = direction.rotated(Vector3.UP, spread)
 	proj.direction = spread_dir.normalized()
@@ -143,4 +150,5 @@ func _fire_visual_only(level: int) -> void:
 	proj.collision_mask = 0
 	proj.set_deferred("monitorable", false)
 	proj.set_deferred("monitoring", false)
-	get_tree().current_scene.call_deferred("add_child", proj)
+	proj.position = spawn_pos
+	scene_root.add_child(proj)
