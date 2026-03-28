@@ -142,3 +142,5 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "cloud_sword"
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
+		# Blue energy sparks
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.4, 0.6, 1.0), 5)

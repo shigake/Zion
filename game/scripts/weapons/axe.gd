@@ -19,6 +19,7 @@ var current_distance: float = 0.0
 var hit_enemies_out: Array = []
 var hit_enemies_back: Array = []
 var _slash_tex: Texture2D = null
+var _trail: Node3D = null
 
 func _ready() -> void:
 	axe_mesh.visible = false
@@ -33,6 +34,13 @@ func _ready() -> void:
 	# Build procedural axe model (blade + handle)
 	_build_axe_model()
 	_setup_billboard_sprite()
+	# Fire trail for flight
+	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
+	_trail.trail_color = Color(1.0, 0.5, 0.1, 0.8)
+	_trail.trail_color_tip = Color(1.0, 0.2, 0.0, 0.9)
+	_trail.max_points = 16
+	_trail.trail_width = 0.15
+	axe_mesh.add_child(_trail)
 
 var _axe_sprite: Sprite3D = null
 
@@ -211,6 +219,8 @@ func _on_body_entered(body: Node3D) -> void:
 
 	# Slash trail visual at hit position
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
+	# Impact fire sparks
+	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.5, 0.1), 4)
 
 func _spawn_slash_trail(pos: Vector3) -> void:
 	if not is_inside_tree():

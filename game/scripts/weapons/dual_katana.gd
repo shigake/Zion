@@ -165,3 +165,5 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "dual_katana"
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
+		# Light blue impact sparks
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.8, 1.0), 4)

@@ -482,3 +482,28 @@ func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 			draw_mat.emission_energy_multiplier = 4.0
 
 	_setup_and_emit(particles, pos, 1.5)
+
+## Weapon impact sparks — colored sparks at hit position
+func spawn_weapon_sparks(pos: Vector3, color: Color, count: int = 4) -> void:
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 100.0
+	mat.initial_velocity_min = 2.5
+	mat.initial_velocity_max = 5.0
+	mat.gravity = Vector3(0, -7, 0)
+	mat.scale_min = 0.02
+	mat.scale_max = 0.04
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.15
+	particles.explosiveness = 1.0
+
+	particles.draw_pass_1 = _spark_draw_pass
+	var draw_mat: StandardMaterial3D = _spark_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = color
+
+	_setup_and_emit(particles, pos, 0.5)

@@ -12,6 +12,7 @@ var attack_duration: float = 0.35
 
 var hit_enemies: Array = []
 var _slash_tex: Texture2D = null
+var _trail: Node3D = null
 
 func _ready() -> void:
 	slam_mesh.visible = false
@@ -34,6 +35,13 @@ func _ready() -> void:
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
 		slam_mesh.get_parent().add_child(sprite)
+	# Brief slam trail
+	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
+	_trail.trail_color = Color(0.7, 0.45, 0.2, 0.7)
+	_trail.trail_color_tip = Color(0.9, 0.6, 0.2, 0.8)
+	_trail.max_points = 10
+	_trail.trail_width = 0.2
+	slam_mesh.add_child(_trail)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

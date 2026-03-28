@@ -14,6 +14,7 @@ var attack_duration: float = 0.08
 
 var hit_enemies_this_step: Array = []
 var _slash_tex: Texture2D = null
+var _trail: Node3D = null
 
 func _ready() -> void:
 	punch_mesh.visible = false
@@ -36,6 +37,12 @@ func _ready() -> void:
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
 		punch_mesh.get_parent().add_child(sprite)
+	# Short punch trail
+	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
+	_trail.trail_color = Color(1.0, 0.3, 0.2, 0.7)
+	_trail.max_points = 6
+	_trail.trail_width = 0.12
+	punch_mesh.add_child(_trail)
 
 func _get_player_node() -> Node3D:
 	var candidate = get_parent().get_parent() if get_parent() else null
@@ -144,6 +151,8 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "boxing_gloves"
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies_this_step.append(body)
+		# Punch impact sparks
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.9, 0.7), 3)
 
 		# Knockback forte
 		var player = _get_player_node()

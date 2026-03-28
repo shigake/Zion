@@ -92,6 +92,8 @@ func _on_body_entered(body: Node3D) -> void:
 	body.call_deferred("take_damage", dmg, "dark")
 	hit_timers[eid] = hit_cooldown
 	AudioManager.play_sfx("scythe_swoosh")
+	# Dark impact sparks
+	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.1, 0.7), 3)
 
 	# Slash trail visual at hit position
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
