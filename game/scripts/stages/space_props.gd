@@ -15,10 +15,3 @@ func _ready() -> void:
 	mat.roughness = 1.0
 	ground.material_override = mat
 	add_child(ground)
-
-	# Stage light — cold blue
-	var light = DirectionalLight3D.new()
-	light.rotation.x = deg_to_rad(-45)
-	light.light_color = Color(0.4, 0.5, 0.9)
-	light.light_energy = 1.5
-	add_child(light)
