@@ -104,12 +104,12 @@ func _build_ui() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):
 		_set_visible(not _visible)
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("cycle_log_filter") and _visible:
 		_filter_index = (_filter_index + 1) % FILTER_MODES.size()
 		_current_filter = FILTER_MODES[_filter_index]
 		_rebuild_log()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:

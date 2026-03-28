@@ -141,21 +141,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_1:
 				if options.size() > 0:
 					_choose(0)
-					get_viewport().set_input_as_handled()
+					if get_viewport(): get_viewport().set_input_as_handled()
 			KEY_2:
 				if options.size() > 1:
 					_choose(1)
-					get_viewport().set_input_as_handled()
+					if get_viewport(): get_viewport().set_input_as_handled()
 			KEY_3:
 				if options.size() > 2:
 					_choose(2)
-					get_viewport().set_input_as_handled()
+					if get_viewport(): get_viewport().set_input_as_handled()
 
 	# Atalho ESPAÇO para reroll
 	if event.is_action_pressed("level_up_reroll"):
 		if reroll_btn.visible:
 			_on_reroll()
-			get_viewport().set_input_as_handled()
+			if get_viewport(): get_viewport().set_input_as_handled()
 
 func _build_card(opt: Dictionary, index: int) -> void:
 	var card = PanelContainer.new()

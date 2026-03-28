@@ -23,6 +23,8 @@ var _start_btn: Button
 var _back_btn: Button
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_load_character_list()
 	_find_first_unlocked()
 	_build_ui()
@@ -368,21 +370,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
 		current_index = (current_index - 1) % all_character_ids.size()
 		_update_selection()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
 		current_index = (current_index + 1) % all_character_ids.size()
 		_update_selection()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		_on_start()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		_on_back()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 
 func _on_start() -> void:
 	var char_id = all_character_ids[current_index]
 	if SaveManager.is_character_unlocked(char_id):
+		AudioManager.play_sfx("menu_click")
 		GameManager.selected_character = char_id
 		GameManager.auto_play = false
 		get_tree().change_scene_to_file("res://scenes/ui/mutations_panel.tscn")
@@ -426,4 +429,5 @@ func _on_random_start() -> void:
 	get_tree().change_scene_to_file(scene_path)
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

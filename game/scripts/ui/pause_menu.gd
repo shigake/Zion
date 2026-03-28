@@ -58,7 +58,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KeybindingManager.rebind_action(waiting_for_key, event.physical_keycode)
 			keybind_buttons[waiting_for_key].text = KeybindingManager.get_key_name(waiting_for_key)
 			waiting_for_key = ""
-			get_viewport().set_input_as_handled()
+			if get_viewport(): get_viewport().set_input_as_handled()
 		return
 
 	if event.is_action_pressed("pause") and not GameManager.is_game_over:
@@ -104,6 +104,7 @@ func _setup_pause_focus() -> void:
 			btn.focus_neighbor_bottom = buttons[0].get_path()
 
 func _on_resume() -> void:
+	AudioManager.play_sfx("menu_click")
 	if options_panel and is_instance_valid(options_panel):
 		options_panel.queue_free()
 		options_panel = null
@@ -235,6 +236,7 @@ func _add_stat_line(parent: Control, label_text: String, value_text: String) -> 
 	parent.add_child(hbox)
 
 func _on_options() -> void:
+	AudioManager.play_sfx("menu_click")
 	if options_panel and is_instance_valid(options_panel):
 		options_panel.queue_free()
 		options_panel = null
@@ -456,6 +458,7 @@ func _start_rebind(action: String, btn: Button) -> void:
 	btn.text = "..."
 
 func _on_menu() -> void:
+	AudioManager.play_sfx("menu_click")
 	if options_panel and is_instance_valid(options_panel):
 		options_panel.queue_free()
 		options_panel = null

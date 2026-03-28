@@ -165,7 +165,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not panel.visible:
 		return
 	if event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 		_on_menu()
 
 func _on_menu() -> void:

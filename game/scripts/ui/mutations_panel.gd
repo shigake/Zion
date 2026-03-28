@@ -9,6 +9,8 @@ extends Control
 @onready var mutation_grid: GridContainer = $MarginContainer/VBox/ScrollContainer/MutationGrid
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	back_button.pressed.connect(_on_back)
 	confirm_button.pressed.connect(_on_confirm)
 	_style_button(back_button)
@@ -116,13 +118,15 @@ func _update_multiplier() -> void:
 		multiplier_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 
 func _on_confirm() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	MutationManager.reset()
 	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_back()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()

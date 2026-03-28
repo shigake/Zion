@@ -104,7 +104,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if joystick and joystick.has_method("handle_touch_input"):
 		if joystick.handle_touch_input(event):
-			get_viewport().set_input_as_handled()
+			if get_viewport(): get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:

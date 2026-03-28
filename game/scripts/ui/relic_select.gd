@@ -22,6 +22,8 @@ var total_pages: int = 1
 var _selected_btn: Button = null
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	start_btn.pressed.connect(_on_start)
 	back_btn.pressed.connect(_on_back)
 	left_arrow.pressed.connect(_prev_page)
@@ -209,6 +211,7 @@ func _on_mode_new_game_plus() -> void:
 	info_label.text = "New Game+: Comeca com armas da run anterior (cap lv3). Armas: " + ", ".join(weapon_names)
 
 func _on_start() -> void:
+	AudioManager.play_sfx("menu_click")
 	GameManager.selected_relic = selected_relic
 	GameManager.game_mode = selected_mode
 	match selected_mode:
@@ -238,7 +241,8 @@ func _on_start() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_back()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/stage_select.tscn")

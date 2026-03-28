@@ -551,13 +551,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if waiting_for_key.is_empty():
 		if event.is_action_pressed("ui_cancel"):
 			_on_back()
-			get_viewport().set_input_as_handled()
+			if get_viewport(): get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed:
 		KeybindingManager.rebind_action(waiting_for_key, event.physical_keycode)
 		keybind_buttons[waiting_for_key].text = KeybindingManager.get_key_name(waiting_for_key)
 		waiting_for_key = ""
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 
 # ---------------------------------------------------------------------------
 # Reset current tab defaults
@@ -584,4 +584,5 @@ func _on_reset_tab() -> void:
 # Back
 # ---------------------------------------------------------------------------
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

@@ -51,6 +51,8 @@ func _get_stage_data(stage_id: String) -> Dictionary:
 	}
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	next_btn.pressed.connect(_on_next)
 	back_btn.pressed.connect(_on_back)
 	left_arrow.pressed.connect(_prev_page)
@@ -384,11 +386,13 @@ func _setup_grid_focus() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_back()
-		get_viewport().set_input_as_handled()
+		if get_viewport(): get_viewport().set_input_as_handled()
 
 func _on_next() -> void:
+	AudioManager.play_sfx("menu_click")
 	GameManager.selected_stage = selected_stage
 	get_tree().change_scene_to_file("res://scenes/ui/relic_select.tscn")
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
