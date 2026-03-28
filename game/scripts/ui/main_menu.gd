@@ -39,6 +39,11 @@ const COLOR_CREDITS := Color(0.5, 0.5, 0.58)
 
 
 func _ready() -> void:
+	# Safety: garante que o jogo nao esta pausado ao entrar no menu principal
+	get_tree().paused = false
+	GameManager.paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 	_style_background()
 	_style_title()
 	_style_crystals()
@@ -463,6 +468,32 @@ func _on_credits() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/credits_screen.tscn")
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_show_quit_confirmation()
+		get_viewport().set_input_as_handled()
+
+
+func _show_quit_confirmation() -> void:
+	# Verifica se ja existe um dialogo aberto
+	if has_node("QuitDialog"):
+		return
+	var dialog := AcceptDialog.new()
+	dialog.name = "QuitDialog"
+	dialog.title = "Sair"
+	dialog.dialog_text = "Deseja sair do jogo?"
+	dialog.ok_button_text = "Sair"
+	dialog.add_cancel_button("Cancelar")
+	dialog.confirmed.connect(func():
+		get_tree().quit()
+	)
+	dialog.canceled.connect(func():
+		dialog.queue_free()
+	)
+	add_child(dialog)
+	dialog.popup_centered()
+
+
 func _on_quit() -> void:
 	AudioManager.play_sfx("menu_click")
-	get_tree().quit()
+	_show_quit_confirmation()

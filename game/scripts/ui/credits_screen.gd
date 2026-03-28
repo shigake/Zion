@@ -31,17 +31,14 @@ var _time: float = 0.0
 @onready var back_btn: Button = $BackButton
 
 func _ready() -> void:
-	# Garanta que o botão funciona mesmo se a tree estiver pausada
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.pressed.connect(_on_back)
-
-	# Habilitar input
-	self.set_process_input(true)
 
 	_setup_top_section()
 	_setup_3d_scene()
 	_setup_twinkling_stars()
-	AudioManager.play_sfx("menu_click")
 
 func _process(delta: float) -> void:
 	_time += delta
