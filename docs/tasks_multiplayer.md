@@ -45,8 +45,8 @@ O Host monitora ativamente a variavel `players_alive`. O Game Over so acontece s
 
 | Tarefa | Status | Arquivo principal |
 |--------|--------|-------------------|
-| 1. Estado do Lobby | Parcial | multiplayer_manager.gd, lobby_screen.gd |
-| 2. Visual do Lobby | Parcial | lobby_screen.gd |
+| 1. Estado do Lobby | Implementado | multiplayer_manager.gd, lobby_screen.gd |
+| 2. Visual do Lobby | Implementado | lobby_screen.gd |
 | 3. Pausa Level Up | Implementado | level_up_screen.gd, multiplayer_manager.gd |
 | 4. Escolhas Level Up | Implementado | level_up_screen.gd, multiplayer_manager.gd |
 | 5. Game Design Review | Pendente | — |
