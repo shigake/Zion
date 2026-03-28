@@ -36,6 +36,10 @@ Formula: `DPS = (base_dmg + dmg_per_lvl * (lvl-1)) / max(0.05, base_cd + cd_per_
 | Boxing Gloves | melee | 13.3 | 31.7 | 77.5 | OK |
 | Time Bomb | area/AoE | 7.0 | 15.3 | 32.3 | OK (3 bombs) |
 | Portal | special | 2.4 | 6.4 | 14.5 | BUFFED ✓ |
+| Boomerang | ranged/pierce | 10.7 | 25.3 | 63.8 | NEW |
+| Tornado | summon/area | 1.0 | 2.6 | 5.1/tick | NEW (area) |
+| Chain Whip | melee/chain | 10.0 | 24.1 | 60.8 | NEW |
+| Blood Orb | summon/area | 0.8 | 2.1 | 5.5/tick | NEW (area+lifesteal) |
 
 ## 2. Balance Issues Identified
 

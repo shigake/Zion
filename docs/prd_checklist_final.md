@@ -41,8 +41,8 @@
 - [x] enemy_growl.wav — conectar em enemy_spawner.gd (spawn de elite/special)
 - [x] chest_open.wav — conectar em evolution_chest.gd
 - [x] portal_hum.wav — conectar em portal_weapon.gd, event_manager.gd (portal dimensional)
-- [ ] lava_bubble.wav — conectar em volcano_props.gd (ambient loop)
-- [ ] wind.wav — conectar em space_props.gd, cemetery_props.gd (ambient loop)
+- [x] lava_bubble.wav — conectar em volcano_props.gd (ambient loop)
+- [x] wind.wav — conectar em space_props.gd, cemetery_props.gd (ambient loop)
 
 ### Boss
 - [x] boss_roar.wav — conectar em boss_dialogue.gd (intro)
@@ -177,7 +177,7 @@
 - [ ] Tela titulo: logo do jogo (sprite ou texto estilizado)
 - [ ] Animacao de transicao entre menus (fade + slide)
 - [ ] Efeito de poeira ao andar (particula simples no pe do player)
-- [ ] Inimigos piscam vermelho ao tomar dano (adicionar ao squash-stretch)
+- [x] Inimigos piscam vermelho ao tomar dano (adicionar ao squash-stretch)
 - [ ] XP gems brilham mais (aumentar emission)
 - [ ] Cristais giram mais rapido
 - [ ] Boss HP bar pulsa quando boss < 25% HP
@@ -190,7 +190,7 @@
 - [ ] Atualizar personagens.md com Amazona e Bruxa
 - [ ] Atualizar fases.md com mecanicas de stage
 - [ ] Atualizar itens.md com 4 novas armas
-- [ ] Atualizar balance_analysis.md com DPS das novas armas
+- [x] Atualizar balance_analysis.md com DPS das novas armas
 
 ## BUILD/DEPLOY
 - [ ] Export preset Windows Desktop

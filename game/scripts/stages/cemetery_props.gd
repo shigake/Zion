@@ -9,17 +9,17 @@ var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"tombstone1": 45,
-	"tombstone2": 35,
-	"tombstone3": 25,
-	"dead_tree1": 12,
-	"dead_tree2": 15,
-	"iron_fence": 20,
-	"cross": 15,
-	"skull_pile": 8,
-	"lantern": 6,
-	"pumpkin": 5,
-	"mushroom": 10,
+	"tombstone1": 20,
+	"tombstone2": 15,
+	"tombstone3": 10,
+	"dead_tree1": 8,
+	"dead_tree2": 8,
+	"iron_fence": 10,
+	"cross": 8,
+	"skull_pile": 5,
+	"lantern": 4,
+	"pumpkin": 3,
+	"mushroom": 5,
 }
 
 
@@ -36,6 +36,9 @@ var _animated_props: Array = []  # Cached list of props that need animation
 func _process(delta: float) -> void:
 	_anim_time += delta
 	_anim_frame += 1
+	# Ambient wind SFX every ~8 seconds
+	if fmod(_anim_time, 8.0) < delta:
+		AudioManager.play_sfx("wind")
 	if _anim_frame % 4 != 0:
 		return  # Only animate every 4th frame
 	# Cache animated props on first pass

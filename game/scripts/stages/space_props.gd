@@ -35,6 +35,9 @@ var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 func _process(delta: float) -> void:
 	_anim_time += delta
 	_anim_frame += 1
+	# Ambient wind SFX every ~10 seconds
+	if fmod(_anim_time, 10.0) < delta:
+		AudioManager.play_sfx("wind")
 	if _anim_frame % 4 != 0:
 		return
 	if _animated_props.is_empty():

@@ -147,6 +147,9 @@ var _animated_props: Array = []
 func _process(delta: float) -> void:
 	_anim_time += delta
 	_anim_frame += 1
+	# Ambient lava bubble SFX every ~6 seconds
+	if fmod(_anim_time, 6.0) < delta:
+		AudioManager.play_sfx("lava_bubble")
 	if _anim_frame % 4 == 0:
 		if _animated_props.is_empty():
 			for child in get_children():
