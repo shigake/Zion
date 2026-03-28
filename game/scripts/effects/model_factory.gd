@@ -981,10 +981,21 @@ const KENNEY_DUNGEON_CHARS := "res://assets/models/downloaded/kenney/mini-dungeo
 
 # ===================== QUATERNIUS PATHS =====================
 const QUAT_MONSTERS := "res://assets/models/quaternius/monsters/FBX/"
+const QUAT_EASY_ENEMIES := "res://assets/models/quaternius/easy_enemies/Easy Animated Enemy Pack - Jan 2019/FBX/"
+const QUAT_ANIMALS := "res://assets/models/quaternius/animals/FBX/"
+const QUAT_KNIGHT := "res://assets/models/quaternius/knight/FBX/"
 const QUAT_WEAPONS := "res://assets/models/quaternius/weapons/FBX/"
 const QUAT_CHARACTERS := "res://assets/models/quaternius/characters/Universal Base Characters[Standard]/Base Characters/Godot - UE/"
 
-## Mapa inimigo -> arquivo Quaternius FBX (Godot importa como PackedScene)
+## Path lookup by pack name
+var _quat_paths := {
+	"monsters": QUAT_MONSTERS,
+	"easy_enemies": QUAT_EASY_ENEMIES,
+	"animals": QUAT_ANIMALS,
+	"knight": QUAT_KNIGHT,
+}
+
+## Mapa inimigo -> arquivo Quaternius (pack monsters)
 const QUAT_ENEMY_MAP := {
 	"Bat":            "Bat.fbx",
 	"Skeleton":       "Skeleton.fbx",
@@ -996,16 +1007,56 @@ const QUAT_ENEMY_MAP := {
 	"BossLeviathan":  "Dragon.fbx",
 }
 
-## Mapa inimigo -> escala Quaternius (podem diferir dos KayKit)
+## Mapa inimigo -> [pack_name, arquivo] (packs extras)
+const QUAT_EXTRA_ENEMY_MAP := {
+	"ZombieRunner":     ["easy_enemies", "Rat.fbx"],
+	"Ghost":            ["easy_enemies", "Frog.fbx"],
+	"GhostWhite":       ["easy_enemies", "Frog.fbx"],
+	"GhostGreen":       ["easy_enemies", "Frog.fbx"],
+	"GhostBlue":        ["easy_enemies", "Frog.fbx"],
+	"GhostRed":         ["easy_enemies", "Frog.fbx"],
+	"Tank":             ["animals", "Horse.fbx"],
+	"Bomber":           ["easy_enemies", "Spider.fbx"],
+	"Swarm":            ["easy_enemies", "Wasp.fbx"],
+	"Mimic":            ["easy_enemies", "Snake.fbx"],
+	"ToothFairy":       ["easy_enemies", "Wasp.fbx"],
+	"BossNecromancer":  ["monsters", "Skeleton.fbx"],
+	"BossFairyQueen":   ["easy_enemies", "Frog.fbx"],
+	"BossAlienCow":     ["animals", "Cow.fbx"],
+	"BossAiOverlord":   ["easy_enemies", "Spider.fbx"],
+	"BossEmperor":      ["knight", "KnightCharacter.fbx"],
+	"BossSingularity":  ["monsters", "Dragon.fbx"],
+	"BossSugarKing":    ["animals", "Pig.fbx"],
+}
+
+## Mapa inimigo -> escala Quaternius
 const QUAT_ENEMY_SCALE_MAP := {
 	"Bat":            Vector3(0.3, 0.3, 0.3),
 	"Skeleton":       Vector3(0.5, 0.5, 0.5),
 	"SkeletonArcher": Vector3(0.5, 0.5, 0.5),
 	"Slime":          Vector3(0.35, 0.35, 0.35),
 	"SlimeBig":       Vector3(0.6, 0.6, 0.6),
+	"ZombieRunner":   Vector3(0.4, 0.4, 0.4),
+	"Ghost":          Vector3(0.35, 0.35, 0.35),
+	"GhostWhite":     Vector3(0.35, 0.35, 0.35),
+	"GhostGreen":     Vector3(0.35, 0.35, 0.35),
+	"GhostBlue":      Vector3(0.35, 0.35, 0.35),
+	"GhostRed":       Vector3(0.4, 0.4, 0.4),
+	"Tank":           Vector3(0.6, 0.6, 0.6),
+	"Bomber":         Vector3(0.35, 0.35, 0.35),
+	"Swarm":          Vector3(0.2, 0.2, 0.2),
+	"Mimic":          Vector3(0.4, 0.4, 0.4),
+	"ToothFairy":     Vector3(0.25, 0.25, 0.25),
 	"BossDemonLord":  Vector3(1.2, 1.2, 1.2),
 	"BossDracula":    Vector3(1.2, 1.2, 1.2),
 	"BossLeviathan":  Vector3(1.4, 1.4, 1.4),
+	"BossNecromancer": Vector3(1.0, 1.0, 1.0),
+	"BossFairyQueen": Vector3(0.8, 0.8, 0.8),
+	"BossAlienCow":   Vector3(1.3, 1.3, 1.3),
+	"BossAiOverlord": Vector3(1.0, 1.0, 1.0),
+	"BossEmperor":    Vector3(1.2, 1.2, 1.2),
+	"BossSingularity": Vector3(1.5, 1.5, 1.5),
+	"BossSugarKing":  Vector3(1.0, 1.0, 1.0),
 }
 
 ## Mapa arma -> arquivo Quaternius FBX
@@ -1364,14 +1415,25 @@ func get_model_for_enemy(enemy_name: String) -> Node3D:
 		s = ENEMY_SCALE_MAP[clean_name]
 	else:
 		s = ENEMY_SCALE
-	# Try Quaternius monsters FIRST (higher quality models)
+	# Try Quaternius models FIRST (higher quality)
+	var quat_scale: Vector3 = QUAT_ENEMY_SCALE_MAP.get(clean_name, s)
+	# Check main monsters pack
 	var quat_file: String = QUAT_ENEMY_MAP.get(clean_name, "")
 	if quat_file != "":
-		var quat_scale: Vector3 = QUAT_ENEMY_SCALE_MAP.get(clean_name, s)
 		var quat_path = QUAT_MONSTERS + quat_file
 		var loaded_quat = _try_load_glb(quat_path, quat_scale)
 		if loaded_quat:
 			return loaded_quat
+	# Check extra packs (easy enemies, animals, knight)
+	if QUAT_EXTRA_ENEMY_MAP.has(clean_name):
+		var extra = QUAT_EXTRA_ENEMY_MAP[clean_name]
+		var pack_name: String = extra[0]
+		var file_name_q: String = extra[1]
+		var base_path: String = _quat_paths.get(pack_name, "")
+		if base_path != "":
+			var loaded_extra = _try_load_glb(base_path + file_name_q, quat_scale)
+			if loaded_extra:
+				return loaded_extra
 	# Try KayKit Skeletons second
 	var skel_file: String = ENEMY_GLB_MAP.get(clean_name, "")
 	if skel_file != "":
