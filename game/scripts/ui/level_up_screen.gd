@@ -143,9 +143,17 @@ func _setup_levelup_focus() -> void:
 	if not focusable.is_empty():
 		focusable[0].grab_focus()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	# Apenas processa se o painel de level up estiver visivel
 	if not panel.visible:
+		return
+
+	# Intercepta ESPAÇO antes dos botoes (senao ui_accept seleciona o card focado)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
+		if reroll_btn.visible:
+			_on_reroll()
+		# Sempre consome o espaco para nao ativar o botao focado
+		if get_viewport(): get_viewport().set_input_as_handled()
 		return
 
 	# Atalhos numericos para escolher opcoes (1, 2, 3)
@@ -163,12 +171,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				if options.size() > 2:
 					_choose(2)
 					if get_viewport(): get_viewport().set_input_as_handled()
-
-	# Atalho ESPAÇO para reroll
-	if event.is_action_pressed("level_up_reroll"):
-		if reroll_btn.visible:
-			_on_reroll()
-			if get_viewport(): get_viewport().set_input_as_handled()
 
 func _build_card(opt: Dictionary, index: int) -> void:
 	var card = PanelContainer.new()
