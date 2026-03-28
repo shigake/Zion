@@ -306,11 +306,12 @@ void fragment() {
 """
 
 	# 4 paredes: +X, -X, +Z, -Z
+	# QuadMesh default: plano XY (spana eixo X). rot=PI/2 gira para spanar eixo Z.
 	var configs = [
-		{"pos": Vector3(half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": 0.0, "len": wall_length},       # +X (leste)
-		{"pos": Vector3(-half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": 0.0, "len": wall_length},      # -X (oeste)
-		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, half), "rot": PI * 0.5, "len": wall_length},   # +Z (sul)
-		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, -half), "rot": PI * 0.5, "len": wall_length},  # -Z (norte)
+		{"pos": Vector3(half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": PI * 0.5, "len": wall_length},   # +X (leste) — perpendicular ao X
+		{"pos": Vector3(-half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": PI * 0.5, "len": wall_length},  # -X (oeste) — perpendicular ao X
+		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, half), "rot": 0.0, "len": wall_length},        # +Z (sul) — perpendicular ao Z
+		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, -half), "rot": 0.0, "len": wall_length},       # -Z (norte) — perpendicular ao Z
 	]
 
 	for i in range(configs.size()):
