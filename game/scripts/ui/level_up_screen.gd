@@ -19,6 +19,10 @@ var banish_mode: bool = false
 var _card_buttons: Array[Button] = []
 var _auto_check: CheckBox = null
 
+# Multiplayer waiting overlay
+var _waiting_overlay: ColorRect = null
+var _waiting_label: Label = null
+
 const TYPE_COLORS = {
 	"melee": Color(0.85, 0.25, 0.2),
 	"ranged": Color(0.2, 0.5, 0.85),
@@ -63,8 +67,22 @@ func _ready() -> void:
 	if btn_parent:
 		btn_parent.add_child(_auto_check)
 
+	# Build waiting overlay (hidden by default)
+	_build_waiting_overlay()
+
+	# Multiplayer signals
+	MultiplayerManager.level_up_show.connect(_on_mp_level_up_show)
+	MultiplayerManager.level_up_waiting.connect(_on_mp_waiting)
+	MultiplayerManager.level_up_resumed.connect(_on_mp_resumed)
+
 func _on_level_up(_new_level: int) -> void:
 	pending_levels += 1
+	if MultiplayerManager.is_online:
+		# Multiplayer: notify Host to pause globally and coordinate
+		MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
+		# Don't show choices yet; wait for Host's RPC signal
+		return
+	# Solo: show choices immediately (original behavior)
 	if not panel.visible:
 		_show_choices()
 	elif panel.visible and GameManager.paused:
@@ -113,9 +131,11 @@ func _show_choices() -> void:
 	banish_mode = false
 	panel.visible = true
 	GameManager.paused = true
-	# Garante que a tree nao sera pausada enquanto o levelup estiver aberto
-	# (permite que pause_menu funcione normalmente por cima)
-	get_tree().paused = false
+	if not MultiplayerManager.is_online:
+		# Solo: don't pause the tree (allows pause_menu to work normally on top)
+		get_tree().paused = false
+	# else: Multiplayer — tree is already paused by Host via RPC; keep it paused.
+	# The UI has process_mode = PROCESS_MODE_ALWAYS so it still works.
 	# Gamepad: foca na primeira opcao
 	_setup_levelup_focus()
 	GamepadUI.notify_menu_opened()
@@ -337,6 +357,31 @@ func _choose(index: int) -> void:
 		return
 
 	var opt = options[index]
+	# Apply the upgrade locally
+	_apply_choice(opt)
+
+	panel.visible = false
+	pending_levels -= 1
+
+	if MultiplayerManager.is_online:
+		# Multiplayer: notify Host that we made our choice
+		var choice_data = {"type": opt["type"], "id": opt["id"]}
+		MultiplayerManager.submit_level_up_choice(MultiplayerManager.local_player_id, choice_data)
+		# Don't unpause locally; Host controls pause state.
+		# If we have more pending levels, they will trigger new requests via _on_level_up.
+		if pending_levels > 0:
+			# Request another level-up pause from Host
+			MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
+	else:
+		# Solo: original behavior
+		if pending_levels > 0:
+			call_deferred("_show_choices")
+		else:
+			GameManager.paused = false
+	choice_made.emit()
+
+## Applies the chosen upgrade to local GameManager state.
+func _apply_choice(opt: Dictionary) -> void:
 	match opt["type"]:
 		"weapon":
 			if GameManager.has_weapon(opt["id"]):
@@ -349,16 +394,6 @@ func _choose(index: int) -> void:
 					player.add_weapon_node(opt["id"])
 		"item":
 			GameManager.add_item(opt["id"])
-
-	panel.visible = false
-	pending_levels -= 1
-
-	if pending_levels > 0:
-		# Mostra proxima escolha
-		call_deferred("_show_choices")
-	else:
-		GameManager.paused = false
-	choice_made.emit()
 
 func _generate_options() -> Array:
 	var pool: Array = []
@@ -456,3 +491,52 @@ func _banish_option(index: int) -> void:
 	GameManager.banishes -= 1
 	banish_mode = false
 	_show_choices()
+
+# ---- Multiplayer Level Up Coordination ----
+
+## Build the "Aguardando..." overlay (created once, shown/hidden as needed).
+func _build_waiting_overlay() -> void:
+	_waiting_overlay = ColorRect.new()
+	_waiting_overlay.name = "WaitingOverlay"
+	_waiting_overlay.color = Color(0, 0, 0, 0.7)
+	_waiting_overlay.anchors_preset = Control.PRESET_FULL_RECT
+	_waiting_overlay.anchor_right = 1.0
+	_waiting_overlay.anchor_bottom = 1.0
+	_waiting_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_waiting_overlay.visible = false
+	# Must work while tree is paused
+	_waiting_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_waiting_overlay)
+
+	_waiting_label = Label.new()
+	_waiting_label.text = "Aguardando..."
+	_waiting_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_waiting_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_waiting_label.anchors_preset = Control.PRESET_CENTER
+	_waiting_label.anchor_left = 0.5
+	_waiting_label.anchor_top = 0.5
+	_waiting_label.anchor_right = 0.5
+	_waiting_label.anchor_bottom = 0.5
+	_waiting_label.offset_left = -200
+	_waiting_label.offset_top = -30
+	_waiting_label.offset_right = 200
+	_waiting_label.offset_bottom = 30
+	_waiting_label.add_theme_font_size_override("font_size", 28)
+	_waiting_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	_waiting_overlay.add_child(_waiting_label)
+
+## Host tells this player to show their level-up choices.
+func _on_mp_level_up_show(_peer_id: int) -> void:
+	_waiting_overlay.visible = false
+	if pending_levels > 0 and not panel.visible:
+		_show_choices()
+
+## Another player is leveling up; show "Aguardando..." overlay.
+func _on_mp_waiting() -> void:
+	if not panel.visible:
+		_waiting_overlay.visible = true
+
+## Host has unpaused the game; hide all overlays.
+func _on_mp_resumed() -> void:
+	_waiting_overlay.visible = false
+	GameManager.paused = false

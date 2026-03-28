@@ -20,6 +20,7 @@ signal reconnection_attempted(attempt: int, max_attempts: int)
 signal reconnection_succeeded()
 signal reconnection_failed()
 signal ping_updated(ping_ms: int)
+signal lobby_state_updated()
 
 const DEFAULT_PORT := 7777
 const MAX_PLAYERS := 4
@@ -55,6 +56,10 @@ var _migration_in_progress: bool = false
 # peer_id -> Array de {pos: Vector3, time: float} (últimas 3 posições)
 var _remote_positions: Dictionary = {}
 const MAX_POSITION_HISTORY := 3
+
+# --- Lobby state sync (Tasks 1 & 2) ---
+# peer_id -> {char_id: String, relic_id: String, is_ready: bool}
+var lobby_state: Dictionary = {}
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -142,6 +147,7 @@ func disconnect_from_game() -> void:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
 	players.clear()
+	lobby_state.clear()
 	_remote_positions.clear()
 	local_player_id = 0
 	is_online = false
@@ -216,6 +222,7 @@ func _on_peer_connected(id: int) -> void:
 func _on_peer_disconnected(id: int) -> void:
 	LogManager.info("MP", "Peer disconnected: %d" % id)
 	players.erase(id)
+	lobby_state.erase(id)
 	clear_remote_position(id)
 	player_disconnected.emit(id)
 
@@ -371,6 +378,47 @@ func _receive_host_migration(new_host_id: int, game_state: Dictionary) -> void:
 func is_migrating() -> bool:
 	return _migration_in_progress
 
+# ---- Lobby State Sync (Tasks 1 & 2) ----
+
+## Called by any peer to update their lobby selection (character, relic, ready status).
+## Host collects the state and broadcasts it back to all clients.
+@rpc("any_peer", "call_remote", "reliable")
+func update_player_state(char_id: String, relic_id: String, is_ready: bool) -> void:
+	var sender = multiplayer.get_remote_sender_id()
+	if sender == 0:
+		sender = multiplayer.get_unique_id()
+	lobby_state[sender] = {"char_id": char_id, "relic_id": relic_id, "is_ready": is_ready}
+	if multiplayer.is_server():
+		_broadcast_lobby_state.rpc(lobby_state)
+		# Also update locally on the host
+		lobby_state_updated.emit()
+
+## Sends the full lobby state from host to all clients.
+@rpc("authority", "call_remote", "reliable")
+func _broadcast_lobby_state(state: Dictionary) -> void:
+	lobby_state = state
+	lobby_state_updated.emit()
+
+## Host calls this locally to set its own state and broadcast.
+func set_local_player_state(char_id: String, relic_id: String, is_ready: bool) -> void:
+	lobby_state[local_player_id] = {"char_id": char_id, "relic_id": relic_id, "is_ready": is_ready}
+	if multiplayer.is_server():
+		_broadcast_lobby_state.rpc(lobby_state)
+		lobby_state_updated.emit()
+	else:
+		update_player_state.rpc_id(1, char_id, relic_id, is_ready)
+
+## Returns true if all connected players are ready.
+func all_players_ready() -> bool:
+	if lobby_state.is_empty():
+		return false
+	for pid in players:
+		if pid not in lobby_state:
+			return false
+		if not lobby_state[pid].get("is_ready", false):
+			return false
+	return true
+
 # ---- HP Sync ----
 
 @rpc("any_peer", "unreliable")
@@ -519,3 +567,98 @@ func get_interpolated_position(peer_id: int, current_pos: Vector3) -> Vector3:
 ## Limpa dados de posição de um peer (chamado ao desconectar)
 func clear_remote_position(peer_id: int) -> void:
 	_remote_positions.erase(peer_id)
+
+# ---- Level Up Pause System (Tasks 3 & 4) ----
+
+## Host tracks which players still need to make a level-up choice.
+var players_pending_choice: Array = []
+
+signal level_up_show(peer_id: int)          # Emitted on the client that must choose
+signal level_up_waiting()                    # Emitted on clients that should show "Aguardando..."
+signal level_up_resumed()                    # Emitted on all clients when game unpauses
+
+## Called by level_up_screen when local player levels up in multiplayer.
+## Notifies the Host so it can pause globally and track pending choices.
+func request_level_up_pause(peer_id: int) -> void:
+	if not is_online:
+		return
+	if multiplayer.is_server():
+		_handle_level_up_request(peer_id)
+	else:
+		_request_level_up_pause_rpc.rpc_id(1, peer_id)
+
+@rpc("any_peer", "reliable")
+func _request_level_up_pause_rpc(peer_id: int) -> void:
+	# Only the Host processes this
+	if not multiplayer.is_server():
+		return
+	_handle_level_up_request(peer_id)
+
+## Host-side: pause the game, tell the affected player to show level-up UI,
+## tell everyone else to show "Aguardando..." overlay.
+func _handle_level_up_request(peer_id: int) -> void:
+	if peer_id not in players_pending_choice:
+		players_pending_choice.append(peer_id)
+
+	# Pause the tree for everyone
+	get_tree().paused = true
+	_set_global_pause.rpc(true)
+
+	# Tell the leveling-up player to show their choices
+	if peer_id == 1:
+		# Host is the one leveling up
+		level_up_show.emit(peer_id)
+	else:
+		_show_level_up_rpc.rpc_id(peer_id)
+
+	# Tell all OTHER players to show waiting overlay
+	for pid in players:
+		if pid != peer_id and pid != 1:
+			_show_waiting_rpc.rpc_id(pid)
+	# If host is not the one choosing, host shows waiting too
+	if peer_id != 1:
+		level_up_waiting.emit()
+	# If host IS the one choosing, still notify other local signals
+	# (waiting overlay for host handled by checking if host is in pending list)
+
+@rpc("authority", "reliable")
+func _show_level_up_rpc() -> void:
+	level_up_show.emit(local_player_id)
+
+@rpc("authority", "reliable")
+func _show_waiting_rpc() -> void:
+	level_up_waiting.emit()
+
+@rpc("authority", "reliable")
+func _set_global_pause(paused: bool) -> void:
+	get_tree().paused = paused
+	if not paused:
+		level_up_resumed.emit()
+
+## Called by level_up_screen when a player makes their choice.
+## Sends the choice to the Host for application and tracking.
+func submit_level_up_choice(peer_id: int, choice_data: Dictionary) -> void:
+	if not is_online:
+		return
+	if multiplayer.is_server():
+		_handle_level_up_choice(peer_id, choice_data)
+	else:
+		_submit_level_up_choice_rpc.rpc_id(1, peer_id, choice_data)
+
+@rpc("any_peer", "reliable")
+func _submit_level_up_choice_rpc(peer_id: int, choice_data: Dictionary) -> void:
+	if not multiplayer.is_server():
+		return
+	_handle_level_up_choice(peer_id, choice_data)
+
+## Host-side: remove player from pending list. If list is empty, unpause.
+func _handle_level_up_choice(peer_id: int, _choice_data: Dictionary) -> void:
+	players_pending_choice.erase(peer_id)
+	LogManager.info("MP", "Level up choice received from peer %d. Pending: %s" % [peer_id, str(players_pending_choice)])
+
+	if players_pending_choice.is_empty():
+		# Unpause for everyone
+		get_tree().paused = false
+		_set_global_pause.rpc(false)
+		level_up_resumed.emit()
+		LogManager.info("MP", "All level-up choices made, game resumed")
