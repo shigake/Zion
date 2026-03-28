@@ -19,9 +19,18 @@ var _prop_defs: Dictionary = {
 }
 
 
+## Stage mechanic: Water currents — 4 large zones that push all bodies in a direction
+const CURRENT_ZONE_COUNT: int = 4
+const CURRENT_ZONE_SIZE: float = 12.0
+const CURRENT_PUSH_FORCE: float = 4.0
+var _current_zones: Array[Dictionary] = []  # {zone: Area3D, direction: Vector3}
+var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
 func _ready() -> void:
+	_mech_rng.randomize()
 	_create_ground()
 	_scatter_props()
+	_create_stage_mechanics()
 
 
 func _create_ground() -> void:
@@ -98,3 +107,82 @@ func _scatter_props() -> void:
 			sprite.position = Vector3(x, base_y, z)
 			sprite.name = "%s_%d" % [prop_name, i]
 			add_child(sprite)
+
+
+## -------------------------------------------------------
+## Mecanica do stage: Water currents
+## 4 zonas grandes que empurram todos os corpos em uma direcao
+## -------------------------------------------------------
+func _create_stage_mechanics() -> void:
+	var directions = [
+		Vector3(1, 0, 0),
+		Vector3(-1, 0, 0),
+		Vector3(0, 0, 1),
+		Vector3(0, 0, -1),
+	]
+	for i in range(CURRENT_ZONE_COUNT):
+		var zone = Area3D.new()
+		zone.name = "CurrentZone_%d" % i
+		zone.collision_layer = 0
+		zone.collision_mask = 1 | 2  # Players + Enemies
+
+		var shape = CollisionShape3D.new()
+		var box = BoxShape3D.new()
+		box.size = Vector3(CURRENT_ZONE_SIZE, 2, CURRENT_ZONE_SIZE)
+		shape.shape = box
+		zone.add_child(shape)
+
+		zone.position = Vector3(
+			_mech_rng.randf_range(-area_size * 0.5, area_size * 0.5),
+			0,
+			_mech_rng.randf_range(-area_size * 0.5, area_size * 0.5)
+		)
+
+		# Water current visual: blue translucent zone
+		var visual = _create_zone_visual(Color(0.1, 0.4, 0.9, 0.25), CURRENT_ZONE_SIZE)
+		zone.add_child(visual)
+
+		# Direction arrow indicator (rotated sprite)
+		var arrow = Sprite3D.new()
+		arrow.name = "ArrowIndicator"
+		arrow.pixel_size = 0.15
+		arrow.position.y = 0.1
+		arrow.rotation.x = deg_to_rad(-90)
+		arrow.modulate = Color(0.3, 0.6, 1.0, 0.5)
+		arrow.shaded = false
+		# Arrow points in the current direction — rotate around Y
+		var dir = directions[i % directions.size()]
+		arrow.rotation.z = atan2(dir.x, dir.z)
+		zone.add_child(arrow)
+
+		_current_zones.append({"zone": zone, "direction": dir})
+		add_child(zone)
+
+
+func _physics_process(delta: float) -> void:
+	for entry in _current_zones:
+		var zone: Area3D = entry["zone"]
+		var dir: Vector3 = entry["direction"]
+		if not is_instance_valid(zone):
+			continue
+		var bodies = zone.get_overlapping_bodies()
+		for body in bodies:
+			if body is CharacterBody3D:
+				body.velocity += dir * CURRENT_PUSH_FORCE * delta * 60.0
+
+
+func _create_zone_visual(color: Color, zone_size: float) -> Sprite3D:
+	var visual = Sprite3D.new()
+	visual.name = "ZoneVisual"
+	visual.pixel_size = 0.1
+	visual.position.y = 0.05
+	visual.rotation.x = deg_to_rad(-90)
+	visual.modulate = color
+	visual.shaded = false
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var tex = ImageTexture.create_from_image(img)
+	visual.texture = tex
+	var desired_scale = zone_size / (32 * 0.1)
+	visual.scale = Vector3(desired_scale, desired_scale, 1.0)
+	return visual

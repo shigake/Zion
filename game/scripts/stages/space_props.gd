@@ -18,9 +18,21 @@ var _prop_defs: Dictionary = {
 }
 
 
+## Stage mechanic: Zero-G zones — 6 zones, +50% speed but -30% control (inertia/slide)
+const ZEROG_ZONE_COUNT: int = 6
+const ZEROG_ZONE_SIZE: float = 6.0
+const ZEROG_SPEED_BOOST: float = 1.5
+var _zerog_zones: Array[Area3D] = []
+var _player_in_zerog: bool = false
+var _zerog_count: int = 0  # Track overlapping zones
+var _prev_speed_mult: float = 1.0
+var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
 func _ready() -> void:
+	_mech_rng.randomize()
 	_create_ground()
 	_scatter_props()
+	_create_stage_mechanics()
 
 
 func _create_ground() -> void:
@@ -91,3 +103,97 @@ func _scatter_props() -> void:
 			sprite.position = Vector3(x, base_y, z)
 			sprite.name = "%s_%d" % [prop_name, i]
 			add_child(sprite)
+
+
+## -------------------------------------------------------
+## Mecanica do stage: Zero-G zones
+## 6 zonas com gravidade zero: +50% speed, -30% controle (slide effect)
+## -------------------------------------------------------
+func _create_stage_mechanics() -> void:
+	for i in range(ZEROG_ZONE_COUNT):
+		var zone = Area3D.new()
+		zone.name = "ZeroGZone_%d" % i
+		zone.collision_layer = 0
+		zone.collision_mask = 1  # Players
+
+		var shape = CollisionShape3D.new()
+		var box = BoxShape3D.new()
+		box.size = Vector3(ZEROG_ZONE_SIZE, 2, ZEROG_ZONE_SIZE)
+		shape.shape = box
+		zone.add_child(shape)
+
+		zone.position = Vector3(
+			_mech_rng.randf_range(-area_size * 0.6, area_size * 0.6),
+			0,
+			_mech_rng.randf_range(-area_size * 0.6, area_size * 0.6)
+		)
+
+		# Zero-G visual: purple/blue glow
+		var visual = _create_zone_visual(Color(0.5, 0.2, 1.0, 0.25), ZEROG_ZONE_SIZE)
+		zone.add_child(visual)
+
+		# Floating particles effect
+		var light = OmniLight3D.new()
+		light.name = "ZeroGGlow"
+		light.light_color = Color(0.6, 0.3, 1.0)
+		light.light_energy = 0.5
+		light.omni_range = 6.0
+		light.position.y = 1.5
+		zone.add_child(light)
+
+		_zerog_zones.append(zone)
+		zone.body_entered.connect(_on_zerog_entered)
+		zone.body_exited.connect(_on_zerog_exited)
+		add_child(zone)
+
+
+func _on_zerog_entered(body: Node3D) -> void:
+	if not body.is_in_group("players") and not (body is CharacterBody3D and body.has_method("take_damage") and body.get("is_local") != null):
+		return
+	_zerog_count += 1
+	if _zerog_count == 1:
+		_prev_speed_mult = GameManager.speed_mult
+		GameManager.speed_mult *= ZEROG_SPEED_BOOST
+		_player_in_zerog = true
+		LogManager.info("Stage", "Entered zero-G zone: +50%% speed, reduced control")
+
+
+func _on_zerog_exited(body: Node3D) -> void:
+	if not body.is_in_group("players") and not (body is CharacterBody3D and body.has_method("take_damage") and body.get("is_local") != null):
+		return
+	_zerog_count = maxi(0, _zerog_count - 1)
+	if _zerog_count <= 0:
+		GameManager.speed_mult = _prev_speed_mult
+		_player_in_zerog = false
+		LogManager.info("Stage", "Left zero-G zone")
+
+
+func _physics_process(_delta: float) -> void:
+	# Apply slide/inertia effect when in zero-G
+	if not _player_in_zerog:
+		return
+	var players = get_tree().get_nodes_in_group("players")
+	for player in players:
+		if player is CharacterBody3D and player.get("is_local") == true:
+			# Add inertia by blending previous velocity (reduces control by 30%)
+			var current_vel = player.velocity
+			if current_vel.length() > 0.5:
+				# Dampen direction changes — keep 30% of previous velocity
+				player.velocity = player.velocity.lerp(current_vel, 0.3)
+
+
+func _create_zone_visual(color: Color, zone_size: float) -> Sprite3D:
+	var visual = Sprite3D.new()
+	visual.name = "ZoneVisual"
+	visual.pixel_size = 0.1
+	visual.position.y = 0.05
+	visual.rotation.x = deg_to_rad(-90)
+	visual.modulate = color
+	visual.shaded = false
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var tex = ImageTexture.create_from_image(img)
+	visual.texture = tex
+	var desired_scale = zone_size / (32 * 0.1)
+	visual.scale = Vector3(desired_scale, desired_scale, 1.0)
+	return visual

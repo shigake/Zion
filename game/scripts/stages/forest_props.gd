@@ -19,9 +19,18 @@ var _prop_defs: Dictionary = {
 }
 
 
+## Stage mechanic: Buff mushrooms — 8 glowing zones, touch = random +20% speed/damage/area for 10s
+const MUSHROOM_ZONE_COUNT: int = 8
+const MUSHROOM_ZONE_SIZE: float = 3.0
+const MUSHROOM_BUFF_DURATION: float = 10.0
+var _mushroom_zones_used: Dictionary = {}  # zone -> bool
+var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
 func _ready() -> void:
+	_mech_rng.randomize()
 	_create_ground()
 	_scatter_props()
+	_create_stage_mechanics()
 
 
 func _create_ground() -> void:
@@ -94,3 +103,108 @@ func _scatter_props() -> void:
 			sprite.position = Vector3(x, base_y, z)
 			sprite.name = "%s_%d" % [prop_name, i]
 			add_child(sprite)
+
+
+## -------------------------------------------------------
+## Mecanica do stage: Buff mushrooms
+## 8 zonas brilhantes, ao tocar = +20% speed/damage/area aleatorio por 10s
+## Mushrooms respawnam apos 30s
+## -------------------------------------------------------
+func _create_stage_mechanics() -> void:
+	for i in range(MUSHROOM_ZONE_COUNT):
+		var zone = Area3D.new()
+		zone.name = "MushroomZone_%d" % i
+		zone.collision_layer = 0
+		zone.collision_mask = 1  # Players
+
+		var shape = CollisionShape3D.new()
+		var box = BoxShape3D.new()
+		box.size = Vector3(MUSHROOM_ZONE_SIZE, 2, MUSHROOM_ZONE_SIZE)
+		shape.shape = box
+		zone.add_child(shape)
+
+		zone.position = Vector3(
+			_mech_rng.randf_range(-area_size * 0.6, area_size * 0.6),
+			0,
+			_mech_rng.randf_range(-area_size * 0.6, area_size * 0.6)
+		)
+
+		# Glowing visual
+		var visual = _create_zone_visual(Color(0.2, 1.0, 0.4, 0.3), MUSHROOM_ZONE_SIZE)
+		zone.add_child(visual)
+
+		# Mushroom glow light
+		var light = OmniLight3D.new()
+		light.name = "MushroomGlow"
+		light.light_color = Color(0.3, 1.0, 0.5)
+		light.light_energy = 0.6
+		light.omni_range = 4.0
+		light.position.y = 1.0
+		zone.add_child(light)
+
+		_mushroom_zones_used[zone] = false
+		zone.body_entered.connect(_on_mushroom_zone_entered.bind(zone))
+		add_child(zone)
+
+
+func _on_mushroom_zone_entered(body: Node3D, zone: Area3D) -> void:
+	if _mushroom_zones_used.get(zone, true):
+		return
+	if not body.is_in_group("players") and not (body is CharacterBody3D and body.has_method("take_damage")):
+		return
+	_mushroom_zones_used[zone] = true
+
+	# Dim the visual
+	var glow = zone.get_node_or_null("MushroomGlow")
+	if glow:
+		glow.light_energy = 0.1
+
+	# Random buff
+	var buff_type = _mech_rng.randi_range(0, 2)
+	var prev_value: float
+	match buff_type:
+		0:  # Speed
+			prev_value = GameManager.speed_mult
+			GameManager.speed_mult *= 1.2
+			LogManager.info("Stage", "Mushroom buff: +20%% speed for %.0fs" % MUSHROOM_BUFF_DURATION)
+			get_tree().create_timer(MUSHROOM_BUFF_DURATION).timeout.connect(func():
+				GameManager.speed_mult = prev_value
+			)
+		1:  # Damage
+			prev_value = GameManager.perm_damage_mult
+			GameManager.perm_damage_mult *= 1.2
+			LogManager.info("Stage", "Mushroom buff: +20%% damage for %.0fs" % MUSHROOM_BUFF_DURATION)
+			get_tree().create_timer(MUSHROOM_BUFF_DURATION).timeout.connect(func():
+				GameManager.perm_damage_mult = prev_value
+			)
+		2:  # Area
+			prev_value = GameManager.area_mult
+			GameManager.area_mult *= 1.2
+			LogManager.info("Stage", "Mushroom buff: +20%% area for %.0fs" % MUSHROOM_BUFF_DURATION)
+			get_tree().create_timer(MUSHROOM_BUFF_DURATION).timeout.connect(func():
+				GameManager.area_mult = prev_value
+			)
+
+	# Respawn after 30s
+	get_tree().create_timer(30.0).timeout.connect(func():
+		_mushroom_zones_used[zone] = false
+		if glow:
+			glow.light_energy = 0.6
+	)
+
+
+func _create_zone_visual(color: Color, zone_size: float) -> Sprite3D:
+	var visual = Sprite3D.new()
+	visual.name = "ZoneVisual"
+	visual.pixel_size = 0.1
+	visual.position.y = 0.05
+	visual.rotation.x = deg_to_rad(-90)
+	visual.modulate = color
+	visual.shaded = false
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var tex = ImageTexture.create_from_image(img)
+	visual.texture = tex
+	var desired_scale = zone_size / (32 * 0.1)
+	visual.scale = Vector3(desired_scale, desired_scale, 1.0)
+	return visual

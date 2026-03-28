@@ -19,9 +19,19 @@ var _prop_defs: Dictionary = {
 }
 
 
+## Stage mechanic: Crowd throws — every 30s, spawn a random pickup in a random zone
+const CROWD_ZONE_COUNT: int = 4
+const CROWD_ZONE_SIZE: float = 6.0
+const CROWD_THROW_INTERVAL: float = 30.0
+var _crowd_zones: Array[Area3D] = []
+var _crowd_timer: float = 0.0
+var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
 func _ready() -> void:
+	_mech_rng.randomize()
 	_create_ground()
 	_scatter_props()
+	_create_stage_mechanics()
 
 
 func _create_ground() -> void:
@@ -98,3 +108,94 @@ func _scatter_props() -> void:
 			sprite.position = Vector3(x, base_y, z)
 			sprite.name = "%s_%d" % [prop_name, i]
 			add_child(sprite)
+
+
+## -------------------------------------------------------
+## Mecanica do stage: Crowd throws
+## 4 zonas na arena, a cada 30s a plateia joga um pickup aleatorio
+## -------------------------------------------------------
+func _create_stage_mechanics() -> void:
+	for i in range(CROWD_ZONE_COUNT):
+		var zone = Area3D.new()
+		zone.name = "CrowdZone_%d" % i
+		zone.collision_layer = 0
+		zone.collision_mask = 1  # Players
+
+		var shape = CollisionShape3D.new()
+		var box = BoxShape3D.new()
+		box.size = Vector3(CROWD_ZONE_SIZE, 2, CROWD_ZONE_SIZE)
+		shape.shape = box
+		zone.add_child(shape)
+
+		# Place zones around the edges (crowd sits around the arena)
+		var angle = (float(i) / CROWD_ZONE_COUNT) * TAU
+		zone.position = Vector3(
+			cos(angle) * area_size * 0.5,
+			0,
+			sin(angle) * area_size * 0.5
+		)
+
+		# Arena crowd zone visual: golden zone
+		var visual = _create_zone_visual(Color(1.0, 0.85, 0.2, 0.2), CROWD_ZONE_SIZE)
+		zone.add_child(visual)
+
+		_crowd_zones.append(zone)
+		add_child(zone)
+
+
+func _process(delta: float) -> void:
+	_crowd_timer += delta
+	if _crowd_timer < CROWD_THROW_INTERVAL:
+		return
+	_crowd_timer -= CROWD_THROW_INTERVAL
+	_crowd_throw_pickup()
+
+
+func _crowd_throw_pickup() -> void:
+	if _crowd_zones.is_empty():
+		return
+	var zone = _crowd_zones[_mech_rng.randi_range(0, _crowd_zones.size() - 1)]
+	if not is_instance_valid(zone):
+		return
+
+	# Random pickup type
+	var pickup_type = _mech_rng.randi_range(0, 2)
+	var scene_path: String
+	match pickup_type:
+		0:
+			scene_path = "res://scenes/xp_gem.tscn"
+		1:
+			scene_path = "res://scenes/crystal_pickup.tscn"
+		2:
+			scene_path = "res://scenes/health_pickup.tscn"
+
+	if not ResourceLoader.exists(scene_path):
+		return
+
+	var pickup_scene = load(scene_path)
+	var pickup = pickup_scene.instantiate()
+	# Spawn at zone center with small random offset
+	pickup.global_position = zone.global_position + Vector3(
+		_mech_rng.randf_range(-2.0, 2.0),
+		0.5,
+		_mech_rng.randf_range(-2.0, 2.0)
+	)
+	get_tree().current_scene.add_child(pickup)
+	LogManager.info("Stage", "Arena crowd threw a pickup!")
+
+
+func _create_zone_visual(color: Color, zone_size: float) -> Sprite3D:
+	var visual = Sprite3D.new()
+	visual.name = "ZoneVisual"
+	visual.pixel_size = 0.1
+	visual.position.y = 0.05
+	visual.rotation.x = deg_to_rad(-90)
+	visual.modulate = color
+	visual.shaded = false
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var tex = ImageTexture.create_from_image(img)
+	visual.texture = tex
+	var desired_scale = zone_size / (32 * 0.1)
+	visual.scale = Vector3(desired_scale, desired_scale, 1.0)
+	return visual
