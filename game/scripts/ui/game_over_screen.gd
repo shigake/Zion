@@ -160,8 +160,8 @@ func _show() -> void:
 	var unlocked = SaveManager.check_unlocks()
 	if not unlocked.is_empty():
 		for char_id in unlocked:
-			var char_data = CharacterDB.get_character(char_id)
-			crystals_label.text += "\n" + LocaleManager.tr_key("unlocked") % char_data["name"]
+			var unlocked_data = CharacterDB.get_character(char_id)
+			crystals_label.text += "\n" + LocaleManager.tr_key("unlocked") % unlocked_data["name"]
 	overlay.visible = true
 	panel.visible = true
 	GameManager.paused = true
