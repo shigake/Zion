@@ -189,6 +189,7 @@ func _apply_stage_behavior() -> void:
 	var themed_name = stage_map[enemy_type]
 	_original_speed = speed
 	match themed_name:
+		# --- Original 4-per-stage behaviors ---
 		"cemetery_wraith":
 			_behavior = "teleport"
 			_behavior_timer = 5.0
@@ -219,6 +220,72 @@ func _apply_stage_behavior() -> void:
 			_behavior = "flying"
 		"candy_gummy":
 			_behavior = "split"
+		# --- New stage-exclusive enemy behaviors ---
+		"cemetery_banshee":
+			_behavior = "teleport"
+			_behavior_timer = 4.0
+			_behavior_cooldown = 4.0
+		"cemetery_bone_knight":
+			_behavior = "charge"
+			_behavior_timer = 5.0
+			_behavior_cooldown = 5.0
+		"forest_bear":
+			_behavior = "charge"
+			_behavior_timer = 6.0
+			_behavior_cooldown = 6.0
+		"forest_wisp":
+			_behavior = "flying"
+		"farm_phantom_horse":
+			_behavior = "charge"
+			_behavior_timer = 3.0
+			_behavior_cooldown = 3.0
+		"farm_dynamite_goat":
+			_behavior = "explode_on_death"
+		"tokyo_hologram":
+			_behavior = "stealth"
+			_stealth_range = 8.0
+		"tokyo_kamikaze_drone":
+			_behavior = "explode_on_death"
+		"volcano_ash_wraith":
+			_behavior = "teleport"
+			_behavior_timer = 4.0
+			_behavior_cooldown = 4.0
+		"volcano_obsidian_titan":
+			_behavior = "ambush"
+			_ambush_speed = speed * 2.5
+			speed = 0.8
+		"ocean_pufferfish":
+			_behavior = "explode_on_death"
+		"ocean_piranha_swarm":
+			_behavior = "ambush"
+			_ambush_speed = speed * 2.0
+			speed = 1.5
+		"arena_phantom_champion":
+			_behavior = "stealth"
+			_stealth_range = 7.0
+			damage *= 2
+		"arena_war_elephant":
+			_behavior = "charge"
+			_behavior_timer = 5.0
+			_behavior_cooldown = 5.0
+		"space_void_specter":
+			_behavior = "teleport"
+			_behavior_timer = 3.5
+			_behavior_cooldown = 3.5
+		"space_mine_layer":
+			_behavior = "ranged"
+			_behavior_timer = 4.0
+			_behavior_cooldown = 4.0
+		"castle_poltergeist":
+			_behavior = "flying"
+		"castle_iron_golem":
+			_behavior = "ambush"
+			_ambush_speed = speed * 2.0
+			speed = 0.5
+		"candy_cotton_ghost":
+			_behavior = "flying"
+		"candy_popcorn_bomber":
+			_behavior = "explode_on_death"
 	if _behavior != "":
 		LogManager.debug("Enemy", "Stage behavior '%s' applied to %s" % [_behavior, themed_name])
 
@@ -237,17 +304,78 @@ func _apply_procedural_model() -> void:
 		VisualSetup.apply_cel_shader_to_mesh(mesh, enemy_color)
 
 ## Stage-themed enemy sprite mapping
+## 9 generic types mapped per stage: Slime, Bat, Skeleton, ZombieRunner, Ghost, SlimeBig, Tank, Bomber, Swarm
 const STAGE_ENEMY_SPRITES := {
-	"cemetery": {"Slime": "cemetery_zombie", "Bat": "cemetery_wraith", "Skeleton": "cemetery_reaper", "Ghost": "cemetery_hand"},
-	"forest": {"Slime": "forest_mushroom", "Bat": "forest_spider", "Skeleton": "forest_treant", "ZombieRunner": "forest_wolf"},
-	"farm": {"Slime": "farm_chicken", "Bat": "farm_crow", "Skeleton": "farm_scarecrow", "ZombieRunner": "farm_pig"},
-	"tokyo": {"Slime": "tokyo_robot", "Bat": "tokyo_drone", "Skeleton": "tokyo_hacker", "ZombieRunner": "tokyo_mecha"},
-	"volcano": {"Slime": "volcano_magma_slime", "Bat": "volcano_imp", "Skeleton": "volcano_golem", "ZombieRunner": "volcano_hellhound"},
-	"ocean": {"Slime": "ocean_crab", "Bat": "ocean_squid", "Skeleton": "ocean_fish", "ZombieRunner": "ocean_urchin"},
-	"arena": {"Slime": "arena_gladiator", "Bat": "arena_lion", "Skeleton": "arena_centurion", "ZombieRunner": "arena_chariot"},
-	"space": {"Slime": "space_alien", "Bat": "space_drone_enemy", "Skeleton": "space_xenomorph", "ZombieRunner": "space_parasite"},
-	"castle": {"Slime": "castle_vampire", "Bat": "castle_gargoyle", "Skeleton": "castle_knight", "ZombieRunner": "castle_werewolf"},
-	"candy": {"Slime": "candy_gummy", "Bat": "candy_cupcake", "Skeleton": "candy_jawbreaker", "ZombieRunner": "candy_licorice"},
+	"cemetery": {
+		"Slime": "cemetery_zombie", "Bat": "cemetery_wraith",
+		"Skeleton": "cemetery_reaper", "ZombieRunner": "cemetery_hand",
+		"Ghost": "cemetery_banshee", "SlimeBig": "cemetery_ghoul",
+		"Tank": "cemetery_bone_knight", "Bomber": "cemetery_gravedigger",
+		"Swarm": "cemetery_rat_swarm",
+	},
+	"forest": {
+		"Slime": "forest_mushroom", "Bat": "forest_spider",
+		"Skeleton": "forest_treant", "ZombieRunner": "forest_wolf",
+		"Ghost": "forest_wisp", "SlimeBig": "forest_bear",
+		"Tank": "forest_vine", "Bomber": "forest_owl",
+		"Swarm": "forest_fairy",
+	},
+	"farm": {
+		"Slime": "farm_chicken", "Bat": "farm_crow",
+		"Skeleton": "farm_scarecrow", "ZombieRunner": "farm_pig",
+		"Ghost": "farm_phantom_horse", "SlimeBig": "farm_bull",
+		"Tank": "farm_tractor", "Bomber": "farm_dynamite_goat",
+		"Swarm": "farm_locust_swarm",
+	},
+	"tokyo": {
+		"Slime": "tokyo_robot", "Bat": "tokyo_drone",
+		"Skeleton": "tokyo_hacker", "ZombieRunner": "tokyo_mecha",
+		"Ghost": "tokyo_hologram", "SlimeBig": "tokyo_sumo_bot",
+		"Tank": "tokyo_tank_mech", "Bomber": "tokyo_kamikaze_drone",
+		"Swarm": "tokyo_nanite_swarm",
+	},
+	"volcano": {
+		"Slime": "volcano_magma_slime", "Bat": "volcano_imp",
+		"Skeleton": "volcano_golem", "ZombieRunner": "volcano_hellhound",
+		"Ghost": "volcano_ash_wraith", "SlimeBig": "volcano_lava_blob",
+		"Tank": "volcano_obsidian_titan", "Bomber": "volcano_fire_bomber",
+		"Swarm": "volcano_ember_swarm",
+	},
+	"ocean": {
+		"Slime": "ocean_crab", "Bat": "ocean_squid",
+		"Skeleton": "ocean_fish", "ZombieRunner": "ocean_urchin",
+		"Ghost": "ocean_jellyfish", "SlimeBig": "ocean_pufferfish",
+		"Tank": "ocean_whale", "Bomber": "ocean_blowfish",
+		"Swarm": "ocean_piranha_swarm",
+	},
+	"arena": {
+		"Slime": "arena_gladiator", "Bat": "arena_lion",
+		"Skeleton": "arena_centurion", "ZombieRunner": "arena_chariot",
+		"Ghost": "arena_phantom_champion", "SlimeBig": "arena_minotaur",
+		"Tank": "arena_war_elephant", "Bomber": "arena_fire_juggler",
+		"Swarm": "arena_sand_scarabs",
+	},
+	"space": {
+		"Slime": "space_alien", "Bat": "space_drone_enemy",
+		"Skeleton": "space_xenomorph", "ZombieRunner": "space_parasite",
+		"Ghost": "space_void_specter", "SlimeBig": "space_blob",
+		"Tank": "space_mech_sentinel", "Bomber": "space_mine_layer",
+		"Swarm": "space_spore_cloud",
+	},
+	"castle": {
+		"Slime": "castle_vampire", "Bat": "castle_gargoyle",
+		"Skeleton": "castle_knight", "ZombieRunner": "castle_werewolf",
+		"Ghost": "castle_poltergeist", "SlimeBig": "castle_ogre",
+		"Tank": "castle_iron_golem", "Bomber": "castle_alchemist",
+		"Swarm": "castle_bat_swarm",
+	},
+	"candy": {
+		"Slime": "candy_gummy", "Bat": "candy_cupcake",
+		"Skeleton": "candy_jawbreaker", "ZombieRunner": "candy_licorice",
+		"Ghost": "candy_cotton_ghost", "SlimeBig": "candy_chocolate_blob",
+		"Tank": "candy_cake_golem", "Bomber": "candy_popcorn_bomber",
+		"Swarm": "candy_sprinkle_swarm",
+	},
 }
 
 ## Separacao entre inimigos — raio e forca de repulsao
