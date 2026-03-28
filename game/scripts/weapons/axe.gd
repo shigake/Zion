@@ -41,7 +41,7 @@ func _setup_billboard_sprite() -> void:
 		_axe_sprite.texture = load(sprite_path)
 		_axe_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		_axe_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		_axe_sprite.pixel_size = 0.02
+		_axe_sprite.pixel_size = 0.04
 		_axe_sprite.shaded = false
 		_axe_sprite.transparent = true
 		_axe_sprite.name = "ProjectileSprite"
