@@ -136,9 +136,9 @@ func _build_ui() -> void:
 	# Luz direcional
 	var light = DirectionalLight3D.new()
 	light.position = Vector3(2, 2, 2)
-	light.look_at(Vector3(0, 0, 0), Vector3.UP)
 	light.light_energy = 1.5
 	detail_viewport.add_child(light)
+	light.look_at(Vector3(0, 0, 0), Vector3.UP)
 
 	detail_name = Label.new()
 	detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
