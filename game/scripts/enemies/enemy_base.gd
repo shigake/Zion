@@ -282,12 +282,17 @@ func _get_damage_color(damage_type: String) -> Color:
 func _flash_white() -> void:
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:
-		sprite.modulate = Color(10, 10, 10)  # Bright flash
+		sprite.modulate = Color(8, 8, 8)  # Bright flash
+		# Squash-stretch on hit
+		var orig_scale = sprite.scale
+		sprite.scale = Vector3(orig_scale.x * 1.3, orig_scale.y * 0.7, orig_scale.z)
 		# Reuse tween to avoid creating hundreds per second
 		if _flash_tween and _flash_tween.is_valid():
 			_flash_tween.kill()
 		_flash_tween = create_tween()
-		_flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+		_flash_tween.set_parallel(true)
+		_flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+		_flash_tween.tween_property(sprite, "scale", orig_scale, 0.12).set_trans(Tween.TRANS_ELASTIC)
 		return
 	var proc_model = get_node_or_null("ProceduralModel")
 	if proc_model:
@@ -354,6 +359,17 @@ func _die() -> void:
 		# Gasoline item: fire ground on enemy death
 		if GameManager.fire_ground_active:
 			_spawn_fire_ground(pos)
+	# Death animation on sprite: flash white, scale up then shrink, fade out
+	var sprite = get_node_or_null("EnemySprite")
+	if sprite:
+		sprite.modulate = Color(10, 10, 10)
+		var death_tween = create_tween()
+		death_tween.set_parallel(true)
+		death_tween.tween_property(sprite, "modulate", Color(1, 1, 1, 0), 0.3)
+		death_tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.15)
+		death_tween.chain().tween_property(sprite, "scale", sprite.scale * 0.1, 0.15)
+		death_tween.chain().tween_callback(queue_free)
+		return  # Don't queue_free immediately — tween handles it
 	if _animator:
 		_animator.play_death()
 		# Delay queue_free for death animation

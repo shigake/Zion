@@ -217,6 +217,16 @@ func take_damage(amount: int, source_pos: Vector3 = Vector3.ZERO) -> void:
 	# Flash vermelho no mesh
 	_set_color(Color(1, 0.2, 0.2))
 	hurt_flash_timer = 0.12
+	# Red flash + squash-stretch on sprite
+	var sprite = get_node_or_null("PlayerSprite")
+	if sprite:
+		sprite.modulate = Color(3, 0.3, 0.3)  # Bright red flash
+		var orig_scale = sprite.scale
+		sprite.scale = Vector3(orig_scale.x * 1.3, orig_scale.y * 0.7, orig_scale.z)
+		var hit_tween = create_tween()
+		hit_tween.set_parallel(true)
+		hit_tween.tween_property(sprite, "modulate", Color.WHITE, 0.15)
+		hit_tween.tween_property(sprite, "scale", orig_scale, 0.18).set_trans(Tween.TRANS_ELASTIC)
 	# Full damage feedback (shake, flash, freeze, indicator, vibration)
 	ScreenEffects.damage_feedback(amount, source_pos)
 
