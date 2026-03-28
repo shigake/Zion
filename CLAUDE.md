@@ -39,7 +39,8 @@ Zion/
 │   ├── gdd.md                   # Game Design Document
 │   ├── prd.md                   # Product Requirements (roadmap fases A-E)
 │   ├── spec.md                  # Especificacao tecnica
-│   ├── fases.md                 # 10 fases detalhadas
+│   ├── story.md                 # Historia, lore, narrativa completa
+│   ├── fases.md                 # 7 fases campanha + 3 bonus detalhadas
 │   ├── itens.md                 # Itens, evolucoes, reliquias
 │   ├── mecanicas.md             # Mecanicas de gameplay
 │   ├── personagens.md           # 14 personagens
@@ -123,7 +124,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 
 - **Characters**: 14 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
 - **Weapons**: 28 (10 melee, 10 ranged, 8 summon/special)
-- **Stages**: 10 (cemetery, forest, farm, tokyo, volcano, ocean, arena, space, castle, candy)
+- **Stages**: 10 total — 7 campanha (cemetery, forest, tokyo, volcano, ocean, space, castle) + 3 bonus (farm, arena, candy)
 - **Bosses**: 10 (one per stage, each with 3 phases)
 - **Enemies**: 11 genericos + 6 especiais + 40 tematicos (4 por stage)
 - **Items**: 19 passive items
