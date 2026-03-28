@@ -54,6 +54,12 @@ func _process(delta: float) -> void:
 		attack_timer = cooldown
 		_fire(level)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _fire(level: int) -> void:
 	if not is_inside_tree():
 		return
@@ -63,7 +69,10 @@ func _fire(level: int) -> void:
 		_fire_visual_only(level)
 		return
 
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 
 	# At level 4+, fire in 8 directions instead of 4
 	var dirs: Array[Vector3] = directions_4 if level < 4 else directions_8
@@ -84,7 +93,10 @@ func _fire(level: int) -> void:
 
 ## Client-only: spawns visual shurikens without collision (no damage).
 func _fire_visual_only(level: int) -> void:
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 	var dirs: Array[Vector3] = directions_4 if level < 4 else directions_8
 	var speed = 18.0 + (level - 1) * 1.0
 
