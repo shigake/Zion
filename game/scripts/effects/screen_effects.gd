@@ -1,6 +1,7 @@
 extends Node
 
-## Screen shake, flash, slow motion, low-HP vignette, damage feedback.
+## Screen shake, flash, slow motion, low-HP vignette, damage feedback,
+## level-up flash, kill streak text, boss entrance effects.
 
 var shake_amount: float = 0.0
 var shake_decay: float = 8.0
@@ -14,12 +15,23 @@ var _damage_flash_rect: ColorRect = null
 var _damage_flash_timer: float = 0.0
 var _damage_flash_duration: float = 0.0
 
+# Generic flash overlay (white flash for level-up, boss, etc.)
+var _flash_overlay: ColorRect = null
+
 # Directional damage indicator
 var _damage_indicator_container: Control = null
 var _damage_indicators: Array = []  # Array of {rect: ColorRect, timer: float, angle: float}
 
 # Chromatic aberration / damage intensity
 var _damage_intensity: float = 0.0  # 0-1, decays over time
+
+# Kill streak tracking
+var _kill_times: Array[float] = []  # Timestamps of recent kills
+var _kill_streak_label: Label = null
+var _kill_streak_tween: Tween = null
+const KILL_STREAK_WINDOW: float = 2.0  # seconds to count kills
+const KILL_STREAK_MIN: int = 5  # minimum kills for streak text
+var _streak_messages: Array[String] = ["COMBO x%d!", "MASSACRE!", "UNSTOPPABLE!", "GODLIKE!"]
 
 signal player_took_damage  # Emitted so HUD can react
 
@@ -42,6 +54,27 @@ func _ready() -> void:
 	_damage_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vignette_canvas.add_child(_damage_flash_rect)
 
+	# Generic flash overlay (white, for level-up / boss entrance)
+	_flash_overlay = ColorRect.new()
+	_flash_overlay.anchors_preset = Control.PRESET_FULL_RECT
+	_flash_overlay.color = Color(1.0, 1.0, 1.0, 0.0)
+	_flash_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flash_overlay.visible = false
+	_vignette_canvas.add_child(_flash_overlay)
+
+	# Kill streak label (centered, large, bold)
+	_kill_streak_label = Label.new()
+	_kill_streak_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_kill_streak_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_kill_streak_label.anchors_preset = Control.PRESET_FULL_RECT
+	_kill_streak_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_kill_streak_label.add_theme_font_size_override("font_size", 48)
+	_kill_streak_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0))
+	_kill_streak_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
+	_kill_streak_label.add_theme_constant_override("outline_size", 4)
+	_kill_streak_label.visible = false
+	_vignette_canvas.add_child(_kill_streak_label)
+
 	# Directional damage indicator container
 	_damage_indicator_container = Control.new()
 	_damage_indicator_container.anchors_preset = Control.PRESET_FULL_RECT
@@ -49,6 +82,11 @@ func _ready() -> void:
 	_vignette_canvas.add_child(_damage_indicator_container)
 
 	add_child(_vignette_canvas)
+
+	# Connect signals for juice effects
+	GameManager.player_leveled_up.connect(_on_player_leveled_up)
+	GameManager.enemy_killed.connect(_on_enemy_killed_streak)
+	GameManager.miniboss_spawned.connect(_on_boss_entrance)
 
 func _process(delta: float) -> void:
 	# Re-acquire camera if freed (after scene change)
@@ -75,6 +113,11 @@ func _process(delta: float) -> void:
 	# Directional damage indicators
 	_update_damage_indicators(delta)
 
+	# Prune expired kill timestamps from streak tracking
+	var now = GameManager.game_time
+	while not _kill_times.is_empty() and _kill_times[0] < now - KILL_STREAK_WINDOW:
+		_kill_times.remove_at(0)
+
 func _update_vignette() -> void:
 	if not _vignette_rect:
 		return
@@ -82,11 +125,12 @@ func _update_vignette() -> void:
 	if max_hp <= 0:
 		return
 	var hp_pct = float(GameManager.player_hp) / float(max_hp)
-	if hp_pct < 0.4:
-		# Pulse intensity based on HP%
-		var intensity = (0.4 - hp_pct) / 0.4  # 0 at 40%, 1 at 0%
-		var pulse = (sin(GameManager.game_time * 4.0) * 0.5 + 0.5) * 0.15
-		_vignette_rect.color.a = intensity * 0.3 + pulse
+	if hp_pct < 0.3:
+		# Pulse intensity based on HP% — stronger pulse at lower HP
+		var intensity = (0.3 - hp_pct) / 0.3  # 0 at 30%, 1 at 0%
+		var pulse_speed = lerpf(4.0, 8.0, intensity)  # Faster pulse at lower HP
+		var pulse = (sin(GameManager.game_time * pulse_speed) * 0.5 + 0.5) * 0.2
+		_vignette_rect.color.a = intensity * 0.35 + pulse
 	else:
 		_vignette_rect.color.a = 0.0
 
@@ -139,12 +183,13 @@ func slow_motion(duration: float = 0.5, scale: float = 0.3) -> void:
 
 ## Brief white flash overlay (e.g. on heavy swing)
 func flash(duration: float = 0.05, alpha: float = 0.1) -> void:
-	if not _vignette_rect:
+	if not _flash_overlay:
 		return
-	var original_color = _vignette_rect.color
-	_vignette_rect.color = Color(1.0, 1.0, 1.0, alpha)
-	await get_tree().create_timer(duration).timeout
-	_vignette_rect.color = original_color
+	_flash_overlay.color = Color(1.0, 1.0, 1.0, alpha)
+	_flash_overlay.visible = true
+	var tween = create_tween()
+	tween.tween_property(_flash_overlay, "color:a", 0.0, duration)
+	tween.tween_callback(func(): _flash_overlay.visible = false)
 
 ## Full damage feedback package — call this when player takes damage
 func damage_feedback(damage_amount: int, damage_source_pos: Vector3 = Vector3.ZERO) -> void:
@@ -217,3 +262,84 @@ func _vibrate_gamepad(intensity: float) -> void:
 	var strong = clampf(intensity * 0.6, 0.1, 0.5)
 	var weak = clampf(intensity * 0.8, 0.2, 0.7)
 	Input.start_joy_vibration(0, weak, strong, 0.2)
+
+# ---- Level Up Flash ----
+
+func _on_player_leveled_up(_new_level: int) -> void:
+	level_up_flash()
+
+## Brief white flash when player levels up
+func level_up_flash() -> void:
+	if not _flash_overlay:
+		return
+	_flash_overlay.color = Color(1.0, 1.0, 1.0, 0.4)
+	_flash_overlay.visible = true
+	var tween = create_tween()
+	tween.tween_property(_flash_overlay, "color:a", 0.0, 0.3)
+	tween.tween_callback(func(): _flash_overlay.visible = false)
+
+# ---- Kill Streak ----
+
+func _on_enemy_killed_streak(_position: Vector3, _xp_value: int) -> void:
+	_kill_times.append(GameManager.game_time)
+	var streak_count = _kill_times.size()
+	if streak_count >= KILL_STREAK_MIN:
+		_show_kill_streak(streak_count)
+
+## Show kill streak text with bounce animation
+func _show_kill_streak(count: int) -> void:
+	if not _kill_streak_label:
+		return
+	# Pick message based on streak tier
+	var msg: String
+	if count >= 30:
+		msg = _streak_messages[3]  # GODLIKE!
+	elif count >= 20:
+		msg = _streak_messages[2]  # UNSTOPPABLE!
+	elif count >= 10:
+		msg = _streak_messages[1]  # MASSACRE!
+	else:
+		msg = _streak_messages[0] % count  # COMBO x5!
+
+	_kill_streak_label.text = msg
+	_kill_streak_label.visible = true
+	_kill_streak_label.modulate = Color(1, 1, 1, 1)
+	_kill_streak_label.scale = Vector2(0.5, 0.5)
+	_kill_streak_label.pivot_offset = _kill_streak_label.size / 2.0
+
+	# Kill previous tween if still running
+	if _kill_streak_tween and _kill_streak_tween.is_valid():
+		_kill_streak_tween.kill()
+
+	_kill_streak_tween = create_tween()
+	# Scale bounce in
+	_kill_streak_tween.tween_property(_kill_streak_label, "scale", Vector2(1.2, 1.2), 0.1).set_ease(Tween.EASE_OUT)
+	_kill_streak_tween.tween_property(_kill_streak_label, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_IN)
+	# Hold briefly, then fade out
+	_kill_streak_tween.tween_interval(0.6)
+	_kill_streak_tween.tween_property(_kill_streak_label, "modulate:a", 0.0, 0.4)
+	_kill_streak_tween.tween_callback(func(): _kill_streak_label.visible = false)
+
+# ---- Boss Entrance Effect ----
+
+func _on_boss_entrance(_boss_name: String) -> void:
+	boss_entrance_effect()
+
+## Dramatic boss entrance: shake + slow-mo + flash
+func boss_entrance_effect() -> void:
+	# 1. Strong screen shake
+	shake(0.35)
+
+	# 2. White flash
+	if _flash_overlay:
+		_flash_overlay.color = Color(1.0, 1.0, 1.0, 0.5)
+		_flash_overlay.visible = true
+		var flash_tween = create_tween()
+		flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.4)
+		flash_tween.tween_callback(func(): _flash_overlay.visible = false)
+
+	# 3. Brief slow-motion for dramatic effect
+	slow_motion(0.5, 0.3)
+
+	# 4. Gamepad rumble
+	Input.start_joy_vibration(0, 0.7, 0.5, 0.5)
