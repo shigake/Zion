@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-14 Fragmentados, 28 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+14 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -113,6 +113,15 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 - **Drops**: Health pickups (5%) e magnet pickups (1%) de inimigos
 - **Themed HP Bar**: Barra de HP unica por Fragmentado
 - **Narrativa**: Loading screens com lore, dialogos de Sentinelas, backstories, telas de morte/vitoria narrativas
+- **Billboard Sprites**: Sistema de sprites 2D em billboard para personagens e inimigos no mundo 3D
+- **Themed Enemies**: 4 inimigos tematicos por fenda, com aparencia e comportamento unicos
+- **Daily Challenge**: Micro-fraturas diarias com modificadores e leaderboard dedicado
+- **Leaderboard**: Rankings globais por fenda e modo de jogo
+- **Achievement Popup**: Notificacao visual in-game ao desbloquear conquistas
+- **Inventory Overlay**: Overlay de inventario acessivel durante gameplay (itens e armas ativas)
+- **World Map**: Selecao de fendas via mapa do mundo com progressao visual
+- **Tutorial**: Sequencia de tutorial narrativo para novos Fragmentados
+- **Boss Dialogues**: Dialogos dos Sentinelas antes e durante boss fights
 
 ### Physics Layers
 1. Players
@@ -129,7 +138,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 ## Content Summary
 
 - **Fragmentados**: 14 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
-- **Weapons**: 28 (10 melee, 10 ranged, 8 summon/special)
+- **Weapons**: 32 (11 melee, 11 ranged, 10 summon/special)
 - **Fendas**: 7 campanha (cemetery, forest, tokyo, volcano, ocean, space, castle) + 3 anomalias (farm, arena, candy)
 - **Sentinelas**: 10 (1 por fenda, 3 fases cada — guardioes corrompidos, nao viloes)
 - **Enemies**: 11 genericos + 6 especiais + 40 tematicos (4 por fenda)
@@ -176,7 +185,8 @@ Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
 ## Remaining Work
 
-- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fenda
+- **Sprites**: 333+ pixel art sprites (personagens, inimigos, armas, itens, UI)
+- **Audio**: 16 musicas + 43 SFX implementados; falta musica dinamica por fenda
 - **Visual Polish**: walk animations, slash trails melee, props animados
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
 - **Narrativa**: cutscene do ??? (Zion despertando), cinematica de intro, tutorial narrativo

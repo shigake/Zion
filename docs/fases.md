@@ -9,7 +9,7 @@
 - **Inimigos:** zombies lentos, zombies corredores, maos saindo do chao
 - **Mini-boss:** Zombie Gigante (agarra e esmaga)
 - **Boss final:** Necromancer King - invoca hordas e lanca magias negras
-- **Mecanica especial:** lapides destrutiveis dropam power-ups
+- **Mecanica especial:** tombstones destrutiveis dropam buffs temporarios
 
 ### Fenda 2 - Floresta Encantada (Fadas e Unicornios)
 - **Ambiente:** floresta magica colorida, cogumelos gigantes, rios brilhantes
@@ -30,7 +30,7 @@
 - **Inimigos:** demonios, salamandras de fogo, golems de magma, imps voadores
 - **Mini-boss:** Cerberus (3 cabecas, cada uma ataca diferente)
 - **Boss final:** Demon Lord - arena muda, lava sobe, ataques apocalipticos
-- **Mecanica especial:** chao racha e lava aparece criando zonas de perigo
+- **Mecanica especial:** lava pools surgem quando o chao racha, criando zonas de perigo persistentes
 
 ### Fenda 5 - Fundo do Oceano
 - **Ambiente:** ruinas submarinas, corais, bolhas, luz filtrada

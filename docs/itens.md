@@ -44,3 +44,14 @@ Quando uma arma atinge poder maximo (lv8) e um artefato complementar se alinha (
 | Necromante | Grimorio Negro | **Senhor dos Mortos** | Invoca boss esqueleto gigante |
 | Lanca-chamas | Gasolina | **Inferno Walker** | Deixa rastro de fogo por onde anda |
 | Chicote | Sangue de Vampiro | **Vampire Whip** | Lifesteal massivo |
+
+---
+
+## Novas Armas
+
+| Arma | Tipo | Elemento | Descricao |
+|---|---|---|---|
+| **Boomerang** | Ranged / Physical | Fisico | Vai e volta, perfura inimigos no caminho |
+| **Tornado** | Summon / Ice | Gelo | Invoca vortex que puxa inimigos para o centro |
+| **Chain Whip** | Melee / Electric | Eletrico | Chicote que faz chain entre inimigos proximos |
+| **Blood Orb** | Summon / Dark | Dark | Orbe que drena vida de inimigos em area |

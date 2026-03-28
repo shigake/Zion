@@ -17,8 +17,8 @@
 | **Vampiro** | Transilvania, sec. XVIII | Chicote | Lifesteal natural 3% | Liberte Dracula sem dano de morcego (Fenda 7) |
 | **Gladiador** | Roma Antiga | Lanca | +20% armadura | Derrote o eco do Imperador (Anomalia β) |
 | **Chef** | Paris, Belle Epoque | Lanca-chamas | Comida cura 2x | Desperte o Mundo Doce (Anomalia γ) |
-| **Amazona** | Floresta Amazonica primordial | Arco Elfico | +15% dano a distancia | Sobreviva a Anomalia α (Fazenda) |
-| **Bruxa** | Salem, 1692 | Garrafa de Veneno | +20% dano magico | Liberte a Rainha das Fadas (Fenda 2) |
+| **Amazona** | Floresta Amazonica primordial | Lanca | +15% velocidade +10% dano | Inicio |
+| **Bruxa** | Salem, 1692 | Necromante | +2 invocacoes +20% dano de invocacao | Inicio |
 | **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (13 desbloqueados) |
 
 ### Backstories
