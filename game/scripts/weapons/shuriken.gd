@@ -57,6 +57,12 @@ func _process(delta: float) -> void:
 func _fire(level: int) -> void:
 	if not is_inside_tree():
 		return
+
+	# In multiplayer, only host fires real projectiles
+	if MultiplayerManager.is_online and not multiplayer.is_server():
+		_fire_visual_only(level)
+		return
+
 	var player_pos = get_parent().get_parent().global_position
 
 	# At level 4+, fire in 8 directions instead of 4
@@ -75,6 +81,27 @@ func _fire(level: int) -> void:
 		bullet.damage_type = "ice"
 		_apply_shuriken_mesh(bullet)
 		get_tree().current_scene.call_deferred("add_child", bullet)
+
+## Client-only: spawns visual shurikens without collision (no damage).
+func _fire_visual_only(level: int) -> void:
+	var player_pos = get_parent().get_parent().global_position
+	var dirs: Array[Vector3] = directions_4 if level < 4 else directions_8
+	var speed = 18.0 + (level - 1) * 1.0
+
+	for dir in dirs:
+		var proj = projectile_scene.instantiate()
+		proj.global_position = player_pos + Vector3(0, 0.5, 0)
+		proj.direction = dir.normalized()
+		proj.damage = 0
+		proj.speed = speed
+		proj.lifetime = 2.5
+		# Disable collision for visual-only projectile
+		proj.collision_layer = 0
+		proj.collision_mask = 0
+		proj.set_deferred("monitorable", false)
+		proj.set_deferred("monitoring", false)
+		_apply_shuriken_mesh(proj)
+		get_tree().current_scene.call_deferred("add_child", proj)
 
 func _apply_shuriken_mesh(bullet: Node) -> void:
 	## Replace bullet's default mesh with a billboard sprite or spinning ninja-star shape.

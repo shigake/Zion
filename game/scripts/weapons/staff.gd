@@ -43,6 +43,11 @@ func _fire(level: int) -> void:
 	if not is_inside_tree():
 		return
 
+	# In multiplayer, only host fires real projectiles
+	if MultiplayerManager.is_online and not multiplayer.is_server():
+		_fire_visual_only(level)
+		return
+
 	var player_node = get_parent().get_parent() if get_parent() != null else null
 	if not is_instance_valid(player_node):
 		return
@@ -85,6 +90,57 @@ func _fire(level: int) -> void:
 			proj.global_position = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = int(WeaponDB.get_damage("staff", level))
+			scene_root.call_deferred("add_child", proj)
+
+## Client-only: spawns visual projectile without collision (no damage).
+func _fire_visual_only(level: int) -> void:
+	var player_node = get_parent().get_parent() if get_parent() != null else null
+	if not is_instance_valid(player_node):
+		return
+
+	var enemies = GameManager.get_enemies()
+	if enemies.is_empty() and not GameManager.manual_aim:
+		return
+
+	var player_pos = player_node.global_position
+
+	var num_projectiles = 1
+	if level >= 3:
+		num_projectiles = 2
+	if level >= 6:
+		num_projectiles = 3
+
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
+	if GameManager.manual_aim:
+		for i in range(num_projectiles):
+			var proj = projectile_scene.instantiate()
+			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			proj.target = null
+			proj.direction = GameManager.aim_direction
+			var spread = (randf() - 0.5) * 0.2 * i
+			proj.direction = proj.direction.rotated(Vector3.UP, spread).normalized()
+			proj.damage = 0
+			proj.collision_layer = 0
+			proj.collision_mask = 0
+			proj.set_deferred("monitorable", false)
+			proj.set_deferred("monitoring", false)
+			scene_root.call_deferred("add_child", proj)
+	else:
+		var targets = _get_nearest_enemies(player_pos, num_projectiles)
+		for t in targets:
+			if not is_instance_valid(t):
+				continue
+			var proj = projectile_scene.instantiate()
+			proj.global_position = player_pos + Vector3(0, 0.5, 0)
+			proj.target = t
+			proj.damage = 0
+			proj.collision_layer = 0
+			proj.collision_mask = 0
+			proj.set_deferred("monitorable", false)
+			proj.set_deferred("monitoring", false)
 			scene_root.call_deferred("add_child", proj)
 
 func _get_nearest_enemies(from: Vector3, count: int) -> Array:

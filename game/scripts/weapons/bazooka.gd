@@ -26,6 +26,11 @@ func _fire(level: int) -> void:
 	if not is_inside_tree():
 		return
 
+	# In multiplayer, only host fires real projectiles
+	if MultiplayerManager.is_online and not multiplayer.is_server():
+		_fire_visual_only(level)
+		return
+
 	var player_node = get_parent().get_parent() if get_parent() != null else null
 	if not is_instance_valid(player_node):
 		return
@@ -78,4 +83,45 @@ func _fire(level: int) -> void:
 	rocket.damage = int(WeaponDB.get_damage("bazooka", level))
 	rocket.explosion_radius = 3.0 + (level - 1) * 0.4
 	rocket.explosion_radius *= GameManager.area_mult
+	scene_root.call_deferred("add_child", rocket)
+
+## Client-only: spawns visual rocket without collision (no damage/explosion).
+func _fire_visual_only(level: int) -> void:
+	var player_node = get_parent().get_parent() if get_parent() != null else null
+	if not is_instance_valid(player_node):
+		return
+
+	var enemies = GameManager.get_enemies()
+	if enemies.is_empty() and not GameManager.manual_aim:
+		return
+
+	var player_pos = player_node.global_position
+	var best_target: Vector3
+
+	if GameManager.manual_aim:
+		best_target = player_pos + GameManager.aim_direction * 12.0
+	else:
+		var found_initial := false
+		for e in enemies:
+			if is_instance_valid(e):
+				best_target = e.global_position
+				found_initial = true
+				break
+		if not found_initial:
+			return
+
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
+
+	var rocket = rocket_scene.instantiate()
+	rocket.global_position = player_pos + Vector3(0, 0.5, 0)
+	rocket.target_pos = best_target
+	rocket.damage = 0
+	rocket.explosion_radius = 0.0
+	# Disable collision for visual-only projectile
+	rocket.collision_layer = 0
+	rocket.collision_mask = 0
+	rocket.set_deferred("monitorable", false)
+	rocket.set_deferred("monitoring", false)
 	scene_root.call_deferred("add_child", rocket)
