@@ -571,6 +571,10 @@ func _apply_character_bonuses() -> void:
 	if selected_character == "gladiador":
 		perm_armor += 8
 		max_hp_mult += 0.15
+	# Bruxa: +2 summons + 20% summon damage
+	if selected_character == "bruxa":
+		extra_projectiles += 2
+		summon_damage_mult += 0.20
 	# Mystery: starts with 3 random weapons (not all)
 	if selected_character == "mystery":
 		MAX_WEAPONS = 8  # Higher cap but not unlimited

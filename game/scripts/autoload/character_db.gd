@@ -11,6 +11,16 @@ var characters: Dictionary = {
 		"speed_bonus": 0.15,
 		"damage_bonus": 0.10,
 	},
+	"bruxa": {
+		"name": "Bruxa",
+		"starting_weapon": "necro",
+		"passive": "+2 invocacoes extras, summons 20% mais fortes",
+		"color": Color(0.45, 0.15, 0.55),
+		"speed_bonus": 0.0,
+		"damage_bonus": 0.0,
+		"summon_bonus": 2,
+		"summon_damage_bonus": 0.20,
+	},
 	"ronin": {
 		"name": "Ronin",
 		"starting_weapon": "katana",

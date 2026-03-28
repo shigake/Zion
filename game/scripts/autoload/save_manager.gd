@@ -73,7 +73,7 @@ func load_game() -> void:
 
 func _ensure_default_unlocks() -> void:
 	## Ensure starter characters are always unlocked (handles existing saves)
-	var defaults = ["amazona", "ronin", "soldado", "mago"]
+	var defaults = ["amazona", "bruxa", "ronin", "soldado", "mago"]
 	for char_id in defaults:
 		if char_id not in data["unlocked_characters"]:
 			data["unlocked_characters"].append(char_id)
