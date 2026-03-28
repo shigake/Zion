@@ -49,8 +49,8 @@ var _retry_allowed: bool = true  # Permite retry se morrer antes de 5 min
 func _ready() -> void:
 	_load_data()
 	_update_streak()
-	LogManager.info("DailyChallenge", "Daily challenge ready. Seed: %d, Stage: %s" % [
-		get_daily_seed(), get_daily_stage()
+	LogManager.info("DailyChallenge", "Daily challenge ready. Seed: %d, Stage: %s, Char: %s" % [
+		get_daily_seed(), get_daily_stage(), get_daily_character()
 	])
 
 
@@ -66,42 +66,41 @@ func get_today_string() -> String:
 
 func get_daily_seed() -> int:
 	## Gera seed deterministica baseada na data UTC.
-	var date_str := get_today_string()
-	return hash("zion_daily_" + date_str)
+	## Formula: year * 10000 + month * 100 + day
+	var dt := Time.get_datetime_dict_from_system(true)
+	return dt["year"] * 10000 + dt["month"] * 100 + dt["day"]
 
 
 func get_daily_stage() -> String:
-	## Retorna o stage determinado pela seed diaria.
+	## Retorna o stage determinado pela seed diaria via modulo.
 	var seed_val := get_daily_seed()
-	_daily_rng.seed = seed_val
-	var idx := _daily_rng.randi() % ALL_STAGES.size()
-	return ALL_STAGES[idx]
+	return ALL_STAGES[seed_val % ALL_STAGES.size()]
+
+
+func get_daily_character() -> String:
+	## Retorna o personagem fixo do dia determinado pela seed via modulo.
+	var seed_val := get_daily_seed()
+	return ALL_CHARACTERS[(seed_val / ALL_STAGES.size()) % ALL_CHARACTERS.size()]
 
 
 func get_daily_characters() -> Array[String]:
-	## Retorna 3 personagens disponiveis para o desafio de hoje.
-	var seed_val := get_daily_seed()
-	_daily_rng.seed = seed_val
-	# Avanca o RNG uma vez (stage ja consumiu uma chamada)
-	_daily_rng.randi()
+	## Retrocompatibilidade — retorna array com o personagem unico do dia.
+	return [get_daily_character()]
 
-	var available: Array[String] = ALL_CHARACTERS.duplicate()
-	var result: Array[String] = []
-	for i in range(3):
-		if available.is_empty():
-			break
-		var idx := _daily_rng.randi() % available.size()
-		result.append(available[idx])
-		available.remove_at(idx)
-	return result
+
+func get_daily_starting_weapon() -> String:
+	## Retorna a arma inicial do personagem do dia.
+	var char_id := get_daily_character()
+	var char_data: Dictionary = CharacterDB.get_character(char_id)
+	return char_data.get("starting_weapon", "katana")
 
 
 func get_daily_mutations() -> Array[String]:
 	## Retorna 0-2 mutacoes determinadas pela seed diaria.
 	var seed_val := get_daily_seed()
 	_daily_rng.seed = seed_val
-	# Avanca o RNG (stage + 3 personagens = 4 chamadas)
-	for i in range(4):
+	# Avanca o RNG (stage + character = 2 chamadas consumidas)
+	for i in range(2):
 		_daily_rng.randi()
 
 	var mutation_count := _daily_rng.randi() % 3  # 0, 1, ou 2 mutacoes
@@ -179,9 +178,10 @@ func start_daily_run() -> void:
 		LogManager.warn("DailyChallenge", "Tentativa de jogar daily ja completado")
 		return
 
-	# Configurar GameManager
+	# Configurar GameManager com loadout fixo do dia
 	GameManager.game_mode = "daily"
 	GameManager.selected_stage = get_daily_stage()
+	GameManager.selected_character = get_daily_character()
 
 	# Aplicar mutacoes do dia
 	MutationManager.reset()
@@ -192,8 +192,8 @@ func start_daily_run() -> void:
 	_current_daily_active = true
 	_retry_allowed = true
 
-	LogManager.info("DailyChallenge", "Daily run started: stage=%s, char=%s, mutations=%s" % [
-		GameManager.selected_stage, GameManager.selected_character, str(mutations)
+	LogManager.info("DailyChallenge", "Daily run started: stage=%s, char=%s, weapon=%s, mutations=%s" % [
+		GameManager.selected_stage, GameManager.selected_character, get_daily_starting_weapon(), str(mutations)
 	])
 
 	# Navegar para o stage
@@ -214,12 +214,23 @@ func start_daily_run() -> void:
 	get_tree().change_scene_to_file(scene_path)
 
 
-func submit_daily_score(time_survived: float, kills: int, character: String) -> void:
-	## Salva o score da daily run.
+func calculate_score(kills: int, survived_seconds: float, crystals_earned: int) -> int:
+	## Calcula score composto: kills * 10 + survived_seconds + crystals_earned
+	return kills * 10 + int(survived_seconds) + crystals_earned
+
+
+func submit_score(kills: int, survived_seconds: float, crystals_earned: int) -> Dictionary:
+	## Salva o score da daily run e retorna o entry salvo.
+	## Alias principal conforme spec. Mantem top 10 por dia.
 	var today := get_today_string()
+	var character := get_daily_character()
+	var total_score := calculate_score(kills, survived_seconds, crystals_earned)
+
 	var score := {
-		"time": time_survived,
+		"score": total_score,
 		"kills": kills,
+		"time": survived_seconds,
+		"crystals": crystals_earned,
 		"character": character,
 		"date": today,
 		"mutations": MutationManager.get_active_ids(),
@@ -230,6 +241,13 @@ func submit_daily_score(time_survived: float, kills: int, character: String) -> 
 	if not data["daily_scores"].has(today):
 		data["daily_scores"][today] = []
 	data["daily_scores"][today].append(score)
+
+	# Ordenar por score descendente e manter top 10
+	data["daily_scores"][today].sort_custom(func(a, b):
+		return a.get("score", 0) > b.get("score", 0)
+	)
+	if data["daily_scores"][today].size() > 10:
+		data["daily_scores"][today].resize(10)
 
 	# Atualizar streak
 	_record_daily_played(today)
@@ -245,9 +263,15 @@ func submit_daily_score(time_survived: float, kills: int, character: String) -> 
 	_current_daily_active = false
 	daily_completed.emit(score)
 
-	LogManager.info("DailyChallenge", "Daily score submitted: time=%.1f, kills=%d, char=%s" % [
-		time_survived, kills, character
+	LogManager.info("DailyChallenge", "Daily score submitted: score=%d (kills=%d, time=%.1f, crystals=%d), char=%s" % [
+		total_score, kills, survived_seconds, crystals_earned, character
 	])
+	return score
+
+
+func submit_daily_score(time_survived: float, kills: int, character: String) -> void:
+	## Retrocompatibilidade — redireciona para submit_score.
+	submit_score(kills, time_survived, GameManager.crystals_this_run)
 
 
 func is_daily_active() -> bool:
@@ -266,8 +290,9 @@ func get_daily_crystal_multiplier() -> float:
 # Leaderboard local
 # --------------------------------------------------------------------------
 
-func get_daily_leaderboard(date: String = "") -> Array[Dictionary]:
-	## Retorna o leaderboard local para uma data especifica (padrao: hoje).
+func get_leaderboard(date: String = "") -> Array[Dictionary]:
+	## Retorna o leaderboard local (top 10) para uma data especifica (padrao: hoje).
+	## Ordenado por score composto descendente.
 	if date.is_empty():
 		date = get_today_string()
 	if not data["daily_scores"].has(date):
@@ -275,18 +300,24 @@ func get_daily_leaderboard(date: String = "") -> Array[Dictionary]:
 	var scores: Array[Dictionary] = []
 	for s in data["daily_scores"][date]:
 		scores.append(s)
-	# Ordenar por kills descendente, depois por tempo descendente
+	# Ordenar por score composto descendente
 	scores.sort_custom(func(a, b):
-		if a.get("kills", 0) != b.get("kills", 0):
-			return a.get("kills", 0) > b.get("kills", 0)
-		return a.get("time", 0.0) > b.get("time", 0.0)
+		return a.get("score", 0) > b.get("score", 0)
 	)
+	# Limitar a top 10
+	if scores.size() > 10:
+		scores.resize(10)
 	return scores
 
 
+func get_daily_leaderboard(date: String = "") -> Array[Dictionary]:
+	## Alias para retrocompatibilidade.
+	return get_leaderboard(date)
+
+
 func get_today_best_score() -> Dictionary:
-	## Retorna o melhor score de hoje (por kills).
-	var lb := get_daily_leaderboard()
+	## Retorna o melhor score de hoje (por score composto).
+	var lb := get_leaderboard()
 	if lb.is_empty():
 		return {}
 	return lb[0]

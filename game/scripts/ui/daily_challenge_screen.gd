@@ -1,7 +1,7 @@
 extends Control
 
-## Tela do Desafio Diario — mostra info do dia, personagens disponiveis,
-## mutacoes ativas, streak, countdown ate reset, e leaderboard online.
+## Tela do Desafio Diario — mostra info do dia, personagem fixo, arma inicial,
+## mutacoes ativas, streak, countdown ate reset, e leaderboard local (top 10).
 
 # --- Colors (matching main_menu theme) ---
 const COLOR_BG := Color(0.04, 0.04, 0.06)
@@ -21,7 +21,8 @@ const COLOR_BTN_HOVER := Color(0.18, 0.17, 0.24)
 var _title_label: Label
 var _countdown_label: Label
 var _stage_label: Label
-var _characters_label: Label
+var _character_label: Label
+var _weapon_label: Label
 var _mutations_label: Label
 var _streak_label: Label
 var _best_score_label: Label
@@ -30,13 +31,6 @@ var _leaderboard_container: VBoxContainer
 var _leaderboard_title: Label
 var _status_label: Label
 var _back_btn: Button
-var _online_scores: Array[Dictionary] = []
-var _selected_character_idx: int = 0
-var _daily_characters: Array[String] = []
-var _char_buttons: Array[Button] = []
-
-# HTTP request for online leaderboard
-var _http_request: HTTPRequest
 
 
 func _ready() -> void:
@@ -44,7 +38,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_populate_daily_info()
-	_fetch_online_leaderboard()
+	_populate_local_leaderboard()
 	GamepadUI.notify_menu_opened()
 
 
@@ -108,25 +102,13 @@ func _build_ui() -> void:
 	_stage_label = _create_info_label()
 	info_vbox.add_child(_stage_label)
 
-	# Characters selection
-	_characters_label = _create_info_label()
-	info_vbox.add_child(_characters_label)
+	# Character (fixed for the day)
+	_character_label = _create_info_label()
+	info_vbox.add_child(_character_label)
 
-	var char_hbox := HBoxContainer.new()
-	char_hbox.add_theme_constant_override("separation", 8)
-	info_vbox.add_child(char_hbox)
-
-	# Character buttons will be added in _populate_daily_info
-	_char_buttons = []
-	for i in range(3):
-		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(160, 40)
-		btn.focus_mode = Control.FOCUS_ALL
-		var idx := i
-		btn.pressed.connect(func(): _select_character(idx))
-		_style_char_button(btn, false)
-		char_hbox.add_child(btn)
-		_char_buttons.append(btn)
+	# Starting weapon
+	_weapon_label = _create_info_label()
+	info_vbox.add_child(_weapon_label)
 
 	# Mutations
 	_mutations_label = _create_info_label()
@@ -163,9 +145,9 @@ func _build_ui() -> void:
 	_play_btn.pressed.connect(_on_play)
 	main_vbox.add_child(_play_btn)
 
-	# --- Online Leaderboard ---
+	# --- Local Leaderboard ---
 	_leaderboard_title = Label.new()
-	_leaderboard_title.text = "Leaderboard global"
+	_leaderboard_title.text = "Top 10 de hoje"
 	_leaderboard_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_leaderboard_title.add_theme_font_size_override("font_size", 22)
 	_leaderboard_title.add_theme_color_override("font_color", COLOR_GOLD)
@@ -178,12 +160,6 @@ func _build_ui() -> void:
 	_leaderboard_container.add_theme_constant_override("separation", 4)
 	lb_panel.add_child(_leaderboard_container)
 
-	var loading_label := Label.new()
-	loading_label.text = "Carregando leaderboard..."
-	loading_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
-	loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_leaderboard_container.add_child(loading_label)
-
 	# --- Back button ---
 	_back_btn = Button.new()
 	_back_btn.text = "Voltar"
@@ -195,10 +171,6 @@ func _build_ui() -> void:
 	_back_btn.pressed.connect(_on_back)
 	main_vbox.add_child(_back_btn)
 
-	# HTTP Request node
-	_http_request = HTTPRequest.new()
-	add_child(_http_request)
-	_http_request.request_completed.connect(_on_leaderboard_response)
 
 
 # ---------------------------------------------------------------------------
@@ -206,26 +178,23 @@ func _build_ui() -> void:
 # ---------------------------------------------------------------------------
 
 func _populate_daily_info() -> void:
+	# Stage
 	var stage := DailyChallenge.get_daily_stage()
 	var stage_display := stage.replace("_", " ").capitalize()
 	_stage_label.text = "Fase: %s" % stage_display
 
-	_daily_characters = DailyChallenge.get_daily_characters()
-	_characters_label.text = "Escolha seu personagem:"
+	# Fixed character for the day
+	var char_id := DailyChallenge.get_daily_character()
+	var char_data: Dictionary = CharacterDB.get_character(char_id)
+	var char_name: String = char_data.get("name", char_id.capitalize())
+	_character_label.text = "Personagem: %s" % char_name
+	_character_label.add_theme_color_override("font_color", COLOR_ACCENT)
 
-	for i in range(mini(_daily_characters.size(), _char_buttons.size())):
-		var char_id := _daily_characters[i]
-		var char_data: Dictionary = CharacterDB.get_character(char_id)
-		var char_name: String = char_data.get("name", char_id.capitalize())
-		_char_buttons[i].text = char_name
-		_char_buttons[i].visible = true
-
-	# Hide unused buttons
-	for i in range(_daily_characters.size(), _char_buttons.size()):
-		_char_buttons[i].visible = false
-
-	# Auto-select first
-	_select_character(0)
+	# Starting weapon
+	var weapon_id := DailyChallenge.get_daily_starting_weapon()
+	var weapon_data: Dictionary = WeaponDB.get_weapon(weapon_id)
+	var weapon_name: String = weapon_data.get("name", weapon_id.capitalize())
+	_weapon_label.text = "Arma inicial: %s" % weapon_name
 
 	# Mutations
 	var mutations := DailyChallenge.get_daily_mutations()
@@ -250,25 +219,20 @@ func _populate_daily_info() -> void:
 	# Best score today
 	var best := DailyChallenge.get_today_best_score()
 	if not best.is_empty():
-		var t := int(best.get("time", 0))
-		var time_str := "%02d:%02d" % [t / 60, t % 60]
-		_best_score_label.text += "\nHoje: %s - %d kills" % [time_str, best.get("kills", 0)]
+		_best_score_label.text += "\nMelhor hoje: %d pts" % best.get("score", 0)
+
+	# Scoring formula hint
+	_status_label.add_theme_font_size_override("font_size", 13)
 
 	# Play availability
 	if DailyChallenge.can_play_daily():
 		_play_btn.disabled = false
-		_status_label.text = "Desafio disponivel!"
-		_status_label.add_theme_color_override("font_color", COLOR_GREEN)
+		_status_label.text = "Score = kills x 10 + tempo (s) + cristais"
+		_status_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
 	else:
 		_play_btn.disabled = true
 		_status_label.text = "Desafio ja completado hoje"
 		_status_label.add_theme_color_override("font_color", COLOR_RED)
-
-
-func _select_character(idx: int) -> void:
-	_selected_character_idx = idx
-	for i in range(_char_buttons.size()):
-		_style_char_button(_char_buttons[i], i == idx)
 
 
 func _update_countdown() -> void:
@@ -280,89 +244,26 @@ func _update_countdown() -> void:
 
 
 # ---------------------------------------------------------------------------
-# Online leaderboard
+# Local leaderboard (top 10)
 # ---------------------------------------------------------------------------
 
-func _fetch_online_leaderboard() -> void:
-	var url := Telemetry.server_url + "/daily-leaderboard?date=" + DailyChallenge.get_today_string()
-	var err := _http_request.request(url)
-	if err != OK:
-		_show_leaderboard_error("Falha ao conectar")
-
-
-func _on_leaderboard_response(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	# Clear loading
+func _populate_local_leaderboard() -> void:
+	## Mostra o top 10 local para o dia de hoje.
 	for child in _leaderboard_container.get_children():
 		child.queue_free()
 
-	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-		_show_leaderboard_error("Servidor offline")
-		# Show local leaderboard as fallback
-		_show_local_leaderboard()
+	var scores := DailyChallenge.get_leaderboard()
+	if scores.is_empty():
+		var empty_label := Label.new()
+		empty_label.text = "Nenhum score hoje. Seja o primeiro!"
+		empty_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
+		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_leaderboard_container.add_child(empty_label)
 		return
 
-	var json := JSON.new()
-	var parse_result := json.parse(body.get_string_from_utf8())
-	if parse_result != OK:
-		_show_leaderboard_error("Erro ao processar dados")
-		_show_local_leaderboard()
-		return
-
-	var data = json.data
-	if not data is Dictionary:
-		_show_leaderboard_error("Formato invalido")
-		_show_local_leaderboard()
-		return
-
-	_online_scores = []
-	var scores = data.get("scores", [])
-	if scores is Array:
-		for s in scores:
-			if s is Dictionary:
-				_online_scores.append(s)
-
-	if _online_scores.is_empty():
-		_show_leaderboard_empty()
-		return
-
-	_render_leaderboard(_online_scores)
-
-
-func _show_leaderboard_error(msg: String) -> void:
-	var label := Label.new()
-	label.text = msg
-	label.add_theme_color_override("font_color", COLOR_RED)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 14)
-	_leaderboard_container.add_child(label)
-
-
-func _show_leaderboard_empty() -> void:
-	var label := Label.new()
-	label.text = "Nenhum score hoje. Seja o primeiro!"
-	label.add_theme_color_override("font_color", COLOR_SUBTITLE)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_leaderboard_container.add_child(label)
-
-
-func _show_local_leaderboard() -> void:
-	var local_scores := DailyChallenge.get_daily_leaderboard()
-	if local_scores.is_empty():
-		return
-	var sep := HSeparator.new()
-	_leaderboard_container.add_child(sep)
-	var local_title := Label.new()
-	local_title.text = "Leaderboard local"
-	local_title.add_theme_color_override("font_color", COLOR_ACCENT)
-	local_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_leaderboard_container.add_child(local_title)
-	_render_leaderboard(local_scores)
-
-
-func _render_leaderboard(scores: Array) -> void:
 	# Header
 	var header := Label.new()
-	header.text = "  #   |  Tempo   |  Kills  |  Personagem"
+	header.text = "  #   |  Score  |  Kills  |  Tempo   |  Personagem"
 	header.add_theme_font_size_override("font_size", 14)
 	header.add_theme_color_override("font_color", COLOR_SUBTITLE)
 	_leaderboard_container.add_child(header)
@@ -376,15 +277,16 @@ func _render_leaderboard(scores: Array) -> void:
 		Color(0.8, 0.5, 0.2),    # Bronze
 	]
 
-	for i in range(mini(scores.size(), 20)):
+	for i in range(mini(scores.size(), 10)):
 		var entry: Dictionary = scores[i]
-		var t := int(entry.get("time", entry.get("survived_seconds", 0)))
+		var total_score: int = entry.get("score", 0)
+		var kills: int = entry.get("kills", 0)
+		var t := int(entry.get("time", 0))
 		var time_str := "%02d:%02d" % [t / 60, t % 60]
-		var kills: int = entry.get("kills", entry.get("total_kills", 0))
 		var character: String = entry.get("character", "???")
 
 		var label := Label.new()
-		label.text = "  %d   |  %s   |  %d   |  %s" % [i + 1, time_str, kills, character.capitalize()]
+		label.text = "  %d   |  %d  |  %d  |  %s   |  %s" % [i + 1, total_score, kills, time_str, character.capitalize()]
 		label.add_theme_font_size_override("font_size", 15)
 
 		if i < rank_colors.size():
@@ -420,31 +322,6 @@ func _create_info_label() -> Label:
 	label.add_theme_color_override("font_color", COLOR_TEXT)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
-
-
-func _style_char_button(btn: Button, selected: bool) -> void:
-	var sb := StyleBoxFlat.new()
-	if selected:
-		sb.bg_color = Color(0.2, 0.18, 0.3)
-		sb.border_color = COLOR_GOLD
-		sb.set_border_width_all(2)
-		btn.add_theme_color_override("font_color", COLOR_GOLD)
-	else:
-		sb.bg_color = COLOR_BTN_NORMAL
-		sb.border_color = COLOR_BORDER
-		sb.set_border_width_all(1)
-		btn.add_theme_color_override("font_color", COLOR_TEXT)
-	sb.set_corner_radius_all(6)
-	sb.content_margin_left = 12
-	sb.content_margin_right = 12
-	sb.content_margin_top = 6
-	sb.content_margin_bottom = 6
-	btn.add_theme_stylebox_override("normal", sb)
-
-	var sb_hover := sb.duplicate()
-	sb_hover.bg_color = COLOR_BTN_HOVER
-	sb_hover.border_color = COLOR_GOLD_DIM
-	btn.add_theme_stylebox_override("hover", sb_hover)
 
 
 func _style_play_button(btn: Button) -> void:
@@ -510,11 +387,7 @@ func _on_play() -> void:
 	AudioManager.play_sfx("menu_click")
 	if not DailyChallenge.can_play_daily():
 		return
-	# Set selected character
-	if _selected_character_idx >= 0 and _selected_character_idx < _daily_characters.size():
-		GameManager.selected_character = _daily_characters[_selected_character_idx]
-	else:
-		GameManager.selected_character = _daily_characters[0]
+	# Character is fixed by the daily seed — start_daily_run sets it automatically
 	DailyChallenge.start_daily_run()
 
 
