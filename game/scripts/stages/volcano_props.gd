@@ -141,18 +141,35 @@ func _create_stage_mechanics() -> void:
 		add_child(zone)
 
 
+var _anim_frame: int = 0
+var _animated_props: Array = []
+
 func _process(delta: float) -> void:
 	_anim_time += delta
-	for child in get_children():
-		if not child is Sprite3D:
-			continue
-		var n: String = child.name
-		if n.begins_with("fire_geyser"):
-			var pulse = 1.0 + sin(_anim_time * 5.0 + child.position.x * 2.0) * 0.15
-			child.scale = Vector3(pulse, pulse, pulse)
-		elif n.begins_with("magma_pool"):
-			var t = sin(_anim_time * 2.0 + child.position.z) * 0.5 + 0.5
-			child.modulate = Color(1.0, 0.3 + t * 0.4, 0.0 + t * 0.1, 0.8 + t * 0.2)
+	_anim_frame += 1
+	if _anim_frame % 4 == 0:
+		if _animated_props.is_empty():
+			for child in get_children():
+				if child is Sprite3D and (child.name.begins_with("fire_geyser") or child.name.begins_with("magma_pool")):
+					_animated_props.append(child)
+		var players = GameManager.get_players()
+		for child in _animated_props:
+			if not is_instance_valid(child):
+				continue
+			var close_enough = false
+			for p in players:
+				if is_instance_valid(p) and child.position.distance_squared_to(p.global_position) < 900.0:
+					close_enough = true
+					break
+			if not close_enough:
+				continue
+			var n: String = child.name
+			if n.begins_with("fire_geyser"):
+				var pulse = 1.0 + sin(_anim_time * 5.0 + child.position.x * 2.0) * 0.15
+				child.scale = Vector3(pulse, pulse, pulse)
+			elif n.begins_with("magma_pool"):
+				var t = sin(_anim_time * 2.0 + child.position.z) * 0.5 + 0.5
+				child.modulate = Color(1.0, 0.3 + t * 0.4, 0.0 + t * 0.1, 0.8 + t * 0.2)
 
 	_lava_tick_timer += delta
 	if _lava_tick_timer < LAVA_TICK_INTERVAL:

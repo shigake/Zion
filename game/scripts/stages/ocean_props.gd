@@ -26,13 +26,30 @@ const CURRENT_PUSH_FORCE: float = 4.0
 var _current_zones: Array[Dictionary] = []  # {zone: Area3D, direction: Vector3}
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _anim_time: float = 0.0
+var _anim_frame: int = 0
+var _animated_props: Array = []
 var _jellyfish_base_y: Dictionary = {}
 
 
 func _process(delta: float) -> void:
 	_anim_time += delta
-	for child in get_children():
-		if not child is Sprite3D:
+	_anim_frame += 1
+	if _anim_frame % 4 != 0:
+		return
+	if _animated_props.is_empty():
+		for child in get_children():
+			if child is Sprite3D and (child.name.begins_with("seaweed") or child.name.begins_with("jellyfish")):
+				_animated_props.append(child)
+	var players = GameManager.get_players()
+	for child in _animated_props:
+		if not is_instance_valid(child):
+			continue
+		var close_enough = false
+		for p in players:
+			if is_instance_valid(p) and child.position.distance_squared_to(p.global_position) < 900.0:
+				close_enough = true
+				break
+		if not close_enough:
 			continue
 		var n: String = child.name
 		if n.begins_with("seaweed"):

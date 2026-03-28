@@ -27,6 +27,8 @@ const ELECTRIC_TICK_INTERVAL: float = 1.0
 var _electric_zones: Array[Area3D] = []
 var _electric_tick_timer: float = 0.0
 var _anim_time: float = 0.0
+var _anim_frame: int = 0
+var _animated_props: Array = []
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -143,15 +145,30 @@ func _create_stage_mechanics() -> void:
 
 func _process(delta: float) -> void:
 	_anim_time += delta
-	for child in get_children():
-		if not child is Sprite3D:
-			continue
-		var n: String = child.name
-		if n.begins_with("neon_sign"):
-			var hue = fmod(_anim_time * 0.3 + child.position.x * 0.1, 1.0)
-			child.modulate = Color.from_hsv(hue, 0.8, 1.0)
-		elif n.begins_with("vending_machine"):
-			child.modulate.a = 0.8 + sin(_anim_time * 8.0 + child.position.z * 3.0) * 0.2
+	_anim_frame += 1
+	# Prop animations every 4th frame with distance culling
+	if _anim_frame % 4 == 0:
+		if _animated_props.is_empty():
+			for child in get_children():
+				if child is Sprite3D and (child.name.begins_with("neon_sign") or child.name.begins_with("vending_machine")):
+					_animated_props.append(child)
+		var players = GameManager.get_players()
+		for child in _animated_props:
+			if not is_instance_valid(child):
+				continue
+			var close_enough = false
+			for p in players:
+				if is_instance_valid(p) and child.position.distance_squared_to(p.global_position) < 900.0:
+					close_enough = true
+					break
+			if not close_enough:
+				continue
+			var n: String = child.name
+			if n.begins_with("neon_sign"):
+				var hue = fmod(_anim_time * 0.3 + child.position.x * 0.1, 1.0)
+				child.modulate = Color.from_hsv(hue, 0.8, 1.0)
+			elif n.begins_with("vending_machine"):
+				child.modulate.a = 0.8 + sin(_anim_time * 8.0 + child.position.z * 3.0) * 0.2
 
 	_electric_tick_timer += delta
 	if _electric_tick_timer < ELECTRIC_TICK_INTERVAL:

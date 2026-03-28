@@ -24,6 +24,8 @@ const CARAMEL_ZONE_SIZE: float = 4.0
 const CARAMEL_SLOW_FACTOR: float = 0.5  # 50% speed reduction
 var _caramel_zones: Array[Area3D] = []
 var _anim_time: float = 0.0
+var _anim_frame: int = 0
+var _animated_props: Array = []
 var _gummy_base_y: Dictionary = {}
 var _player_caramel_count: int = 0
 var _prev_speed_mult: float = 1.0
@@ -33,8 +35,23 @@ var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _process(delta: float) -> void:
 	_anim_time += delta
-	for child in get_children():
-		if not child is Sprite3D:
+	_anim_frame += 1
+	if _anim_frame % 4 != 0:
+		return
+	if _animated_props.is_empty():
+		for child in get_children():
+			if child is Sprite3D and (child.name.begins_with("lollipop") or child.name.begins_with("gummy_bear")):
+				_animated_props.append(child)
+	var players = GameManager.get_players()
+	for child in _animated_props:
+		if not is_instance_valid(child):
+			continue
+		var close_enough = false
+		for p in players:
+			if is_instance_valid(p) and child.position.distance_squared_to(p.global_position) < 900.0:
+				close_enough = true
+				break
+		if not close_enough:
 			continue
 		var n: String = child.name
 		if n.begins_with("lollipop"):

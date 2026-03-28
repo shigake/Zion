@@ -30,6 +30,8 @@ var _stealth_range: float = 0.0
 var _original_speed: float = 0.0
 var _charge_dir: Vector3 = Vector3.ZERO
 var _is_charging: bool = false
+var _frame_counter: int = 0  # Performance: stagger per-enemy work across frames
+var _cached_separation: Vector3 = Vector3.ZERO  # Cached separation vector (updated every 3rd frame)
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
@@ -387,10 +389,13 @@ func _physics_process(delta: float) -> void:
 	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
-	# Boss aura pulse
-	var aura = get_node_or_null("BossAura")
-	if aura:
-		aura.modulate.a = 0.2 + sin(Time.get_ticks_msec() * 0.004) * 0.15
+	_frame_counter += 1
+
+	# Boss aura pulse (every 3rd frame)
+	if _frame_counter % 3 == 0:
+		var aura = get_node_or_null("BossAura")
+		if aura:
+			aura.modulate.a = 0.2 + sin(Time.get_ticks_msec() * 0.004) * 0.15
 
 	# Knockback decay
 	if knockback_velocity.length() > 0.1:
@@ -401,9 +406,11 @@ func _physics_process(delta: float) -> void:
 
 	_find_target()
 
-	# --- Stage behavior processing ---
+	# --- Stage behavior processing (every other frame for non-critical behaviors) ---
 	if _behavior != "" and target and is_instance_valid(target):
-		_process_stage_behavior(delta)
+		var is_critical_behavior = _behavior == "charge" or _behavior == "teleport" or _is_charging
+		if is_critical_behavior or _frame_counter % 2 == 0:
+			_process_stage_behavior(delta)
 
 	if target and is_instance_valid(target):
 		# Charging override: move in straight line ignoring target
@@ -419,9 +426,10 @@ func _physics_process(delta: float) -> void:
 			effective_speed *= 1.15
 		# Mutation: speed demons
 		effective_speed *= MutationManager.get_enemy_speed_modifier()
-		# Separacao: repulsao de inimigos proximos
-		var separation = _get_separation_vector()
-		var final_dir = (direction * effective_speed + separation).normalized()
+		# Separacao: repulsao de inimigos proximos (every 3rd frame, cache result)
+		if _frame_counter % 3 == 0:
+			_cached_separation = _get_separation_vector()
+		var final_dir = (direction * effective_speed + _cached_separation).normalized()
 		velocity = final_dir * effective_speed
 		# Flying behavior: erratic vertical movement
 		if _behavior == "flying":
@@ -590,31 +598,37 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 
 	if not is_inside_tree():
 		return
-	# Damage number - color by type (crits are yellow and larger)
-	var dmg_color: Color
-	if is_crit:
-		dmg_color = Color(1.0, 0.9, 0.2)
-	else:
-		dmg_color = _get_damage_color(damage_type)
-	var pos = global_position
-	var dmg_label = ParticleFactory.get_damage_number()
-	dmg_label.text = str(final_damage) + ("!" if is_crit else "")
-	dmg_label.font_size = 64 if is_crit else 48
-	dmg_label.outline_size = 10
-	dmg_label.modulate = dmg_color
-	dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	dmg_label.position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
-	dmg_label.visible = true
-	dmg_label.set_process(true)
-	if not dmg_label.get_parent():
-		get_tree().current_scene.call_deferred("add_child", dmg_label)
-	elif dmg_label.is_inside_tree():
-		dmg_label.global_position = pos + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
+	# Damage number - skip at low FPS to reduce draw calls (Label3D = 1 draw call each)
+	var fps = Engine.get_frames_per_second()
+	var show_dmg_number = true
+	if fps < 25:
+		show_dmg_number = is_crit  # Only show crits at very low FPS
+	elif fps < 35:
+		show_dmg_number = is_crit or randf() < 0.3  # 30% chance at low FPS
+	if show_dmg_number:
+		var dmg_color: Color
+		if is_crit:
+			dmg_color = Color(1.0, 0.9, 0.2)
+		else:
+			dmg_color = _get_damage_color(damage_type)
+		var pos = global_position
+		var dmg_label = ParticleFactory.get_damage_number()
+		dmg_label.text = str(final_damage) + ("!" if is_crit else "")
+		dmg_label.font_size = 64 if is_crit else 48
+		dmg_label.outline_size = 10
+		dmg_label.modulate = dmg_color
+		dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		dmg_label.position = global_position + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
+		dmg_label.visible = true
+		dmg_label.set_process(true)
+		if not dmg_label.get_parent():
+			get_tree().current_scene.call_deferred("add_child", dmg_label)
+		elif dmg_label.is_inside_tree():
+			dmg_label.global_position = global_position + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
 
 	# Hit particles + screen shake (throttled: skip particles at low FPS to save performance)
-	var fps = Engine.get_frames_per_second()
 	if fps > 30 or randf() < 0.3:
-		ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color.WHITE, 3 if fps < 40 else 6)
+		ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color.WHITE, 3 if fps < 40 else 6)
 	if fps > 20:
 		ScreenEffects.shake(0.04)
 

@@ -107,6 +107,8 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 		return
 	if not _slash_tex:
 		return
+	if Engine.get_frames_per_second() < 40:
+		return
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return

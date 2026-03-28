@@ -127,6 +127,8 @@ func _spawn_slash_trail() -> void:
 		return
 	if not _slash_tex:
 		return
+	if Engine.get_frames_per_second() < 40:
+		return
 	var pos = global_position
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
