@@ -10,6 +10,7 @@ var summon_timer: float = 0.0
 var attack_timer: float = 0.0
 var teleport_timer: float = 0.0
 var clone_spawned: bool = false
+var _fury_active := false
 var bat_scene: PackedScene = preload("res://scenes/enemies/bat.tscn")
 var bullet_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
@@ -43,11 +44,21 @@ func _physics_process(delta: float) -> void:
 	else:
 		phase = 3
 
+	# Fury phase (HP < 10%)
+	if hp < max_hp * 0.1 and not _fury_active:
+		_fury_active = true
+		speed *= 1.5
+		var sprite = get_node_or_null("EnemySprite")
+		if sprite:
+			sprite.modulate = Color(1.5, 0.5, 0.5)
+
 	# Velocidade por fase
 	match phase:
 		1: speed = 2.0
 		2: speed = 3.0
 		3: speed = 4.0
+	if _fury_active:
+		speed *= 1.5
 
 	# Movimento
 	_find_target()
@@ -70,17 +81,22 @@ func _physics_process(delta: float) -> void:
 				_teleport_near_player()
 			if summon_timer <= 0:
 				summon_timer = 4.0
+				_telegraph_attack(global_position, 3.0)
 				_summon_fairies(3)
 		2:
 			# Clones + thorn rain
 			if not clone_spawned:
 				clone_spawned = true
+				_telegraph_attack(global_position, 4.0)
 				_spawn_clones(2)
 			if attack_timer <= 0:
 				attack_timer = 3.0
+				if target and is_instance_valid(target):
+					_telegraph_attack(target.global_position, 6.0)
 				_thorn_rain(6)
 			if summon_timer <= 0:
 				summon_timer = 5.0
+				_telegraph_attack(global_position, 3.0)
 				_summon_fairies(4)
 			if teleport_timer <= 0:
 				teleport_timer = 4.0
@@ -92,9 +108,12 @@ func _physics_process(delta: float) -> void:
 				_teleport_near_player()
 			if attack_timer <= 0:
 				attack_timer = 1.5
+				if target and is_instance_valid(target):
+					_telegraph_attack(target.global_position, 6.0)
 				_thorn_rain(10)
 			if summon_timer <= 0:
 				summon_timer = 3.0
+				_telegraph_attack(global_position, 4.0)
 				_summon_fairies(6)
 
 func _teleport_near_player() -> void:
@@ -152,6 +171,28 @@ func _thorn_rain(count: int) -> void:
 		proj.collision_layer = 16  # Layer 5 = EnemyAttacks
 		proj.collision_mask = 1    # Layer 1 = Players
 		get_tree().current_scene.call_deferred("add_child", proj)
+
+func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
+	var indicator = Sprite3D.new()
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	for x in range(32):
+		for y in range(32):
+			var dx = x - 16
+			var dy = y - 16
+			if dx * dx + dy * dy < 14 * 14:
+				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
+	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	indicator.rotation.x = deg_to_rad(-90)
+	indicator.pixel_size = radius * 0.06
+	indicator.position = pos + Vector3(0, 0.05, 0)
+	indicator.shaded = false
+	indicator.transparent = true
+	get_tree().current_scene.add_child(indicator)
+	var tween = get_tree().create_tween()
+	tween.tween_property(indicator, "modulate:a", 0.6, 0.3)
+	tween.tween_property(indicator, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(indicator.queue_free)
 
 func _die() -> void:
 	if is_dead:

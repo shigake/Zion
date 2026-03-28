@@ -11,6 +11,7 @@ var attack_timer: float = 0.0
 var charge_timer: float = 0.0
 var slam_timer: float = 0.0
 var lava_damage_timer: float = 0.0
+var _fury_active := false
 var is_charging: bool = false
 var charge_direction: Vector3 = Vector3.ZERO
 var charge_speed: float = 15.0
@@ -49,11 +50,21 @@ func _physics_process(delta: float) -> void:
 	else:
 		phase = 3
 
+	# Fury phase (HP < 10%)
+	if hp < max_hp * 0.1 and not _fury_active:
+		_fury_active = true
+		speed *= 1.5
+		var sprite = get_node_or_null("EnemySprite")
+		if sprite:
+			sprite.modulate = Color(1.5, 0.5, 0.5)
+
 	# Velocidade por fase
 	match phase:
 		1: speed = 1.5
 		2: speed = 3.0
 		3: speed = 4.5
+	if _fury_active:
+		speed *= 1.5
 
 	# Charge movement override
 	if is_charging:
@@ -84,9 +95,11 @@ func _physics_process(delta: float) -> void:
 			# Flame rings + spawn imps
 			if attack_timer <= 0:
 				attack_timer = 3.0
+				_telegraph_attack(global_position, 3.0)
 				_fire_flame_ring(8)
 			if summon_timer <= 0:
 				summon_timer = 5.0
+				_telegraph_attack(global_position, 3.0)
 				_summon_imps(3)
 		2:
 			# Lava floor damage + charge + ground slam
@@ -95,26 +108,33 @@ func _physics_process(delta: float) -> void:
 				_lava_floor_damage()
 			if charge_timer <= 0:
 				charge_timer = 4.0
+				_telegraph_attack(global_position, 4.0)
 				_charge_at_player()
 			if slam_timer <= 0:
 				slam_timer = 5.0
+				_telegraph_attack(global_position, 4.0)
 				_ground_slam(4.0)
 			if attack_timer <= 0:
 				attack_timer = 3.5
+				_telegraph_attack(global_position, 3.0)
 				_fire_flame_ring(6)
 			if summon_timer <= 0:
 				summon_timer = 6.0
+				_telegraph_attack(global_position, 3.0)
 				_summon_imps(4)
 		3:
 			# Apocalypse: spiral flames, fast, lava golems
 			if attack_timer <= 0:
 				attack_timer = 1.5
+				_telegraph_attack(global_position, 4.0)
 				_fire_flame_spiral(12)
 			if summon_timer <= 0:
 				summon_timer = 5.0
+				_telegraph_attack(global_position, 4.0)
 				_summon_lava_golems(2)
 			if slam_timer <= 0:
 				slam_timer = 3.0
+				_telegraph_attack(global_position, 4.0)
 				_ground_slam(4.0)
 			if lava_damage_timer <= 0:
 				lava_damage_timer = 0.8
@@ -205,6 +225,28 @@ func _lava_floor_damage() -> void:
 	for player in players:
 		if is_instance_valid(player) and player.has_method("take_damage"):
 			player.take_damage(int(damage * 0.1), global_position)
+
+func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
+	var indicator = Sprite3D.new()
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	for x in range(32):
+		for y in range(32):
+			var dx = x - 16
+			var dy = y - 16
+			if dx * dx + dy * dy < 14 * 14:
+				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
+	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	indicator.rotation.x = deg_to_rad(-90)
+	indicator.pixel_size = radius * 0.06
+	indicator.position = pos + Vector3(0, 0.05, 0)
+	indicator.shaded = false
+	indicator.transparent = true
+	get_tree().current_scene.add_child(indicator)
+	var tween = get_tree().create_tween()
+	tween.tween_property(indicator, "modulate:a", 0.6, 0.3)
+	tween.tween_property(indicator, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(indicator.queue_free)
 
 func _die() -> void:
 	if is_dead:
