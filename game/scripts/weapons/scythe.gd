@@ -118,10 +118,10 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 	sprite.shaded = false
 	sprite.transparent = true
 	sprite.no_depth_test = true
+	scene.add_child(sprite)
 	sprite.global_position = pos
 	sprite.scale = Vector3(0.5, 0.5, 0.5)
 	sprite.modulate = Color(1, 1, 1, 1)
-	scene.add_child(sprite)
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
@@ -132,10 +132,11 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 func _spawn_soul_wisps(from_pos: Vector3) -> void:
 	if not is_inside_tree():
 		return
+	var pos = global_position
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return
-	var player_pos = global_position + Vector3(0, 0.5, 0)
+	var player_pos = pos + Vector3(0, 0.5, 0)
 	for i in range(3):
 		var wisp = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
@@ -152,8 +153,8 @@ func _spawn_soul_wisps(from_pos: Vector3) -> void:
 		wisp.mesh = sphere
 		# Offset each wisp slightly
 		var offset = Vector3(randf_range(-0.3, 0.3), randf_range(0.2, 0.7), randf_range(-0.3, 0.3))
-		wisp.global_position = from_pos + offset
 		scene.add_child(wisp)
+		wisp.global_position = from_pos + offset
 		# Tween from enemy to player
 		var tween = create_tween()
 		tween.tween_property(wisp, "global_position", player_pos, 0.4 + i * 0.08).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)

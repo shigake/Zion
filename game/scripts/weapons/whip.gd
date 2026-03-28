@@ -104,6 +104,7 @@ func _spawn_slash_trail() -> void:
 		return
 	if not _slash_tex:
 		return
+	var pos = global_position
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return
@@ -115,10 +116,10 @@ func _spawn_slash_trail() -> void:
 	sprite.shaded = false
 	sprite.transparent = true
 	sprite.no_depth_test = true
-	sprite.global_position = global_position + Vector3(0, 0.5, 0)
+	scene.add_child(sprite)
+	sprite.global_position = pos + Vector3(0, 0.5, 0)
 	sprite.scale = Vector3(0.5, 0.5, 0.5)
 	sprite.modulate = Color(1, 1, 1, 1)
-	scene.add_child(sprite)
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
@@ -139,6 +140,7 @@ func _on_body_entered(body: Node3D) -> void:
 func _spawn_crack_flash() -> void:
 	if not is_inside_tree():
 		return
+	var tip_pos = slash_mesh.global_position + slash_mesh.global_transform.basis.z * 1.5
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return
@@ -155,10 +157,10 @@ func _spawn_crack_flash() -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	sphere.surface_set_material(0, mat)
 	flash.mesh = sphere
-	# Position at the tip of the whip (end of slash_mesh forward direction)
-	flash.global_position = slash_mesh.global_position + slash_mesh.global_transform.basis.z * 1.5
 	flash.scale = Vector3.ZERO
 	scene.add_child(flash)
+	# Position at the tip of the whip (end of slash_mesh forward direction)
+	flash.global_position = tip_pos
 	# Scale up then down quickly
 	var tween = create_tween()
 	tween.tween_property(flash, "scale", Vector3(0.1, 0.1, 0.1), 0.05)

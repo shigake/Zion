@@ -69,7 +69,7 @@ func _throw_bottle(level: int) -> void:
 	# Create poison pool
 	var pool = Node3D.new()
 	pool.name = "PoisonPool"
-	pool.global_position = target_pos
+	pool.position = target_pos
 
 	# Visual — billboard sprite or bubbling toxic slime pool fallback
 	var pool_radius = 2.0 + (level - 1) * 0.3

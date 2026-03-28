@@ -9,6 +9,7 @@ extends Area3D
 var direction: Vector3 = Vector3.FORWARD
 var timer: float = 0.0
 var damage_type: String = "ice"
+var weapon_id: String = ""
 var _returning: bool = false
 var _spin_speed: float = 3.0
 

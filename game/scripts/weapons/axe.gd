@@ -224,10 +224,10 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 	sprite.shaded = false
 	sprite.transparent = true
 	sprite.no_depth_test = true
+	scene.add_child(sprite)
 	sprite.global_position = pos
 	sprite.scale = Vector3(0.5, 0.5, 0.5)
 	sprite.modulate = Color(1, 1, 1, 1)
-	scene.add_child(sprite)
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)

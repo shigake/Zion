@@ -97,6 +97,7 @@ func _spawn_slash_trail() -> void:
 		return
 	if not _slash_tex:
 		return
+	var pos = global_position
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return
@@ -108,10 +109,10 @@ func _spawn_slash_trail() -> void:
 	sprite.shaded = false
 	sprite.transparent = true
 	sprite.no_depth_test = true
-	sprite.global_position = global_position + Vector3(0, 0.15, 0)
+	scene.add_child(sprite)
+	sprite.global_position = pos + Vector3(0, 0.15, 0)
 	sprite.scale = Vector3(0.5, 0.5, 0.5)
 	sprite.modulate = Color(1, 1, 1, 1)
-	scene.add_child(sprite)
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(sprite, "scale", Vector3(1.5, 1.5, 1.5), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
@@ -132,6 +133,7 @@ func _on_body_entered(body: Node3D) -> void:
 func _spawn_shockwave_ring(area_scale: float) -> void:
 	if not is_inside_tree():
 		return
+	var pos = global_position
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return
@@ -149,9 +151,9 @@ func _spawn_shockwave_ring(area_scale: float) -> void:
 	mat.no_depth_test = true
 	torus.surface_set_material(0, mat)
 	ring.mesh = torus
-	ring.global_position = global_position + Vector3(0, 0.05, 0)
 	ring.rotation.x = 0  # Flat on ground
 	scene.add_child(ring)
+	ring.global_position = pos + Vector3(0, 0.05, 0)
 	# Expand from small to area_radius, then fade out
 	ring.scale = Vector3(0.3, 0.1, 0.3)
 	var target_scale = Vector3(area_scale, 0.1, area_scale)
