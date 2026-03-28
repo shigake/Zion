@@ -12,10 +12,15 @@ var attack_duration: float = 0.4
 
 var hit_enemies: Array = []
 var _trail: Node3D = null
+var _slash_tex: Texture2D = null
 
 func _ready() -> void:
 	slash_mesh.visible = false
 	slash_area.body_entered.connect(_on_body_entered)
+	# Load slash trail sprite
+	var _slash_path2 = "res://assets/sprites/effects/slashes/cloud_sword_wave.png"
+	if ResourceLoader.exists(_slash_path2):
+		_slash_tex = load(_slash_path2)
 	# Weapon trail — wider blue energy glow
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(0.4, 0.6, 1.0, 0.85)
@@ -89,6 +94,34 @@ func _attack(level: int) -> void:
 
 	# Ground dust at player position
 	ParticleFactory.spawn_ground_dust(global_position, 8)
+
+	# Slash trail visual
+	_spawn_slash_trail()
+
+func _spawn_slash_trail() -> void:
+	if not _slash_tex:
+		return
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var sprite = Sprite3D.new()
+	sprite.texture = _slash_tex
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.04
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.no_depth_test = true
+	sprite.global_position = global_position + Vector3(0, 0.6, 0)
+	sprite.scale = Vector3(0.5, 0.5, 0.5)
+	sprite.modulate = Color(1, 1, 1, 1)
+	scene.add_child(sprite)
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "scale", Vector3(1.5, 1.5, 1.5), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.2).set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	tween.tween_callback(sprite.queue_free)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body in hit_enemies:

@@ -15,12 +15,17 @@ var attack_duration: float = 0.22
 var hit_enemies: Array = []
 var _trail_l: Node3D = null
 var _trail_r: Node3D = null
+var _slash_tex: Texture2D = null
 
 func _ready() -> void:
 	slash_mesh_l.visible = false
 	slash_mesh_r.visible = false
 	slash_area_l.body_entered.connect(_on_body_entered)
 	slash_area_r.body_entered.connect(_on_body_entered)
+	# Load slash trail sprite
+	var _slash_path2 = "res://assets/sprites/effects/slashes/dual_katana_slash.png"
+	if ResourceLoader.exists(_slash_path2):
+		_slash_tex = load(_slash_path2)
 	# Weapon trails
 	_trail_l = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail_l.trail_color = Color(0.8, 0.9, 1.0, 0.6)
@@ -109,6 +114,34 @@ func _attack(level: int) -> void:
 	slash_area_r.scale = Vector3.ONE * area_scale
 	slash_mesh_l.scale = Vector3.ONE * area_scale
 	slash_mesh_r.scale = Vector3.ONE * area_scale
+
+	# Slash trail visual
+	_spawn_slash_trail()
+
+func _spawn_slash_trail() -> void:
+	if not _slash_tex:
+		return
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var sprite = Sprite3D.new()
+	sprite.texture = _slash_tex
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.03
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.no_depth_test = true
+	sprite.global_position = global_position + Vector3(0, 0.5, 0)
+	sprite.scale = Vector3(0.5, 0.5, 0.5)
+	sprite.modulate = Color(1, 1, 1, 1)
+	scene.add_child(sprite)
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.18).set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	tween.tween_callback(sprite.queue_free)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body in hit_enemies:

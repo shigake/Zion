@@ -13,9 +13,14 @@ var hit_timers: Dictionary = {}  # enemy_id -> timer
 @onready var scythe_mesh: MeshInstance3D = $ScytheMesh
 
 var _trail: Node3D = null
+var _slash_tex: Texture2D = null
 
 func _ready() -> void:
 	scythe_area.body_entered.connect(_on_body_entered)
+	# Load slash trail sprite
+	var _slash_path2 = "res://assets/sprites/effects/slashes/scythe_slash.png"
+	if ResourceLoader.exists(_slash_path2):
+		_slash_tex = load(_slash_path2)
 	# Weapon trail — darker purple with ghostly wisps, slower fade
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(0.45, 0.1, 0.65, 0.7)
@@ -83,6 +88,9 @@ func _on_body_entered(body: Node3D) -> void:
 	body.call_deferred("take_damage", dmg, "dark")
 	hit_timers[eid] = hit_cooldown
 
+	# Slash trail visual at hit position
+	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
+
 	# Lifesteal
 	var lifesteal = 0.02 * level
 	var heal_amount = int(dmg * lifesteal)
@@ -90,6 +98,31 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager.heal(heal_amount)
 		# Soul wisps: green dots travel from enemy to player
 		_spawn_soul_wisps(body.global_position)
+
+func _spawn_slash_trail(pos: Vector3) -> void:
+	if not _slash_tex:
+		return
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var sprite = Sprite3D.new()
+	sprite.texture = _slash_tex
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.03
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.no_depth_test = true
+	sprite.global_position = pos
+	sprite.scale = Vector3(0.5, 0.5, 0.5)
+	sprite.modulate = Color(1, 1, 1, 1)
+	scene.add_child(sprite)
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.15).set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	tween.tween_callback(sprite.queue_free)
 
 func _spawn_soul_wisps(from_pos: Vector3) -> void:
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null

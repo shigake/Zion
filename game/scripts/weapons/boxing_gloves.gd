@@ -13,10 +13,15 @@ var attack_duration: float = 0.08
 @onready var punch_mesh: MeshInstance3D = $PunchMesh
 
 var hit_enemies_this_step: Array = []
+var _slash_tex: Texture2D = null
 
 func _ready() -> void:
 	punch_mesh.visible = false
 	punch_area.body_entered.connect(_on_body_entered)
+	# Load slash trail sprite
+	var _slash_path2 = "res://assets/sprites/effects/slashes/boxing_punch.png"
+	if ResourceLoader.exists(_slash_path2):
+		_slash_tex = load(_slash_path2)
 	# Billboard sprite
 	var _sprite_path = "res://assets/sprites/weapons/boxing_gloves.png"
 	if ResourceLoader.exists(_sprite_path):
@@ -92,6 +97,34 @@ func _do_punch(level: int) -> void:
 	punch_mesh.position = offsets[idx]
 
 	AudioManager.play_sfx("hit")
+
+	# Slash trail visual at punch position
+	_spawn_slash_trail(punch_mesh.global_position)
+
+func _spawn_slash_trail(pos: Vector3) -> void:
+	if not _slash_tex:
+		return
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var sprite = Sprite3D.new()
+	sprite.texture = _slash_tex
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.03
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.no_depth_test = true
+	sprite.global_position = pos
+	sprite.scale = Vector3(0.5, 0.5, 0.5)
+	sprite.modulate = Color(1, 1, 1, 1)
+	scene.add_child(sprite)
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.15).set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	tween.tween_callback(sprite.queue_free)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body in hit_enemies_this_step:
