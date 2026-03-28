@@ -58,23 +58,34 @@ func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var sprite_path = "res://assets/sprites/enemies/%s.png" % enemy_type.to_snake_case()
 	if not ResourceLoader.exists(sprite_path):
+		LogManager.debug("Enemy", "Sprite not found: %s, trying slime fallback" % sprite_path)
 		sprite_path = "res://assets/sprites/enemies/slime.png"
-	var tex = load(sprite_path) as Texture2D
-	if tex == null:
-		# Fallback to procedural model if no sprite found
+	if not ResourceLoader.exists(sprite_path):
+		LogManager.debug("Enemy", "No sprites found at all, using procedural model")
 		_apply_procedural_model()
 		return
-	mesh.visible = false  # Hide the old mesh
+	var tex = load(sprite_path) as Texture2D
+	if tex == null:
+		_apply_procedural_model()
+		return
+	# Hide ALL old visuals
+	mesh.visible = false
+	for child in get_children():
+		if child is MeshInstance3D and child != mesh:
+			child.visible = false
+	# Create billboard sprite
 	var sprite = Sprite3D.new()
 	sprite.texture = tex
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sprite.pixel_size = 0.04
+	sprite.pixel_size = 0.05  # Slightly bigger for visibility
 	sprite.shaded = false
 	sprite.transparent = true
+	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
 	sprite.name = "EnemySprite"
 	sprite.position.y = 0.65
 	add_child(sprite)
+	LogManager.debug("Enemy", "Sprite loaded: %s for %s" % [sprite_path, enemy_type])
 
 func _apply_procedural_model() -> void:
 	var enemy_type = _get_base_enemy_type()
