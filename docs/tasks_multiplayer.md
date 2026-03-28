@@ -14,8 +14,25 @@ Ao encher a XP, o Host ativa `get_tree().paused = true` (garanta `PROCESS_MODE_W
 ### Tarefa 4: Escolhas e Retomada (Level Up)
 O jogador escolhe as opcoes e envia `rpc_id(1, "submit_upgrade", id)`. O Host aplica o status, remove o ID do Array e atualiza a UI para "Aguardando...". Quando o Array esvaziar, o Host faz `get_tree().paused = false` para retomarem juntos.
 
-### Tarefa 5: Revisao de Game Design (Aviso)
-**Atencao**: Atingindo o nivel 40 com 4 jogadores, pausar para todos gerara ~160 pausas em 30 min. Isso pode destruir o fluxo. Discutam futuramente fazer o menu de level up assincrono (dando invulnerabilidade a quem esta escolhendo).
+### Tarefa 5: Revisao de Game Design — Level Up Assincrono
+
+**Problema**: Com 4 jogadores nivel 40, haveria ~160 pausas em 30 min (1 pausa a cada ~11 segundos). Isso destroi o fluxo do jogo.
+
+**Solucao proposta**: Level up assincrono
+- Quando um jogador sobe de nivel, APENAS ele ve o menu de escolha
+- O jogador ganha invulnerabilidade temporaria (3s) enquanto escolhe
+- O jogo NAO pausa para os outros jogadores
+- Um indicador visual mostra quem esta escolhendo (icone sobre o personagem)
+- Se o jogador nao escolher em 10s, auto-pick aleatorio
+
+**Implementacao**:
+1. Remover `get_tree().paused = true` do level up em multiplayer
+2. Aplicar invulnerabilidade via `can_be_hurt = false` no player
+3. Adicionar timer de 10s com auto-pick
+4. Mostrar icone "escolhendo..." sobre o sprite do jogador
+5. Manter pausa sincrona como opcao no menu (toggle)
+
+**Status**: Design aprovado, implementacao futura
 
 ---
 
@@ -49,10 +66,10 @@ O Host monitora ativamente a variavel `players_alive`. O Game Over so acontece s
 | 2. Visual do Lobby | Implementado | lobby_screen.gd |
 | 3. Pausa Level Up | Implementado | level_up_screen.gd, multiplayer_manager.gd |
 | 4. Escolhas Level Up | Implementado | level_up_screen.gd, multiplayer_manager.gd |
-| 5. Game Design Review | Pendente | — |
+| 5. Game Design Review | Design aprovado | — |
 | 6. Scaling Dificuldade | Implementado | game_manager.gd |
 | 7. MultiMesh Spawning | Parcial | multimesh_manager.gd, enemy_spawner.gd |
-| 8. Projeteis Falsos | Pendente | weapons/*.gd |
+| 8. Projeteis Falsos | Implementado | weapons/*.gd |
 | 9. Morte/Sacrificio | Implementado | tombstone.gd, player.gd |
 | 10. Reviver Aliados | Implementado | tombstone.gd |
 | 11. Game Over | Implementado | game_manager.gd |
