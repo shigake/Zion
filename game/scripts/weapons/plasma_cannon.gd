@@ -25,8 +25,19 @@ func _ready() -> void:
 	charge_mesh.visible = false
 	beam_area.monitoring = false
 	beam_area.body_entered.connect(_on_body_entered)
-	# 3D model
-	ModelFactory.attach_weapon_model(charge_mesh, "plasma_cannon")
+	# Billboard sprite
+	var _sprite_path = "res://assets/sprites/weapons/plasma_cannon.png"
+	if ResourceLoader.exists(_sprite_path):
+		charge_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.03
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "WeaponSprite"
+		charge_mesh.get_parent().add_child(sprite)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:

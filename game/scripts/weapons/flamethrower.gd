@@ -21,8 +21,19 @@ var _shimmer_time: float = 0.0
 func _ready() -> void:
 	flame_mesh.visible = false
 	flame_area.monitoring = false
-	# 3D model
-	ModelFactory.attach_weapon_model(flame_mesh, "flamethrower")
+	# Billboard sprite
+	var _sprite_path = "res://assets/sprites/weapons/flamethrower.png"
+	if ResourceLoader.exists(_sprite_path):
+		flame_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.03
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "WeaponSprite"
+		flame_mesh.get_parent().add_child(sprite)
 	# Ember/spark particles
 	_create_ember_particles()
 	# Heat shimmer overlay

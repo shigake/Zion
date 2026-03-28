@@ -30,9 +30,29 @@ func _ready() -> void:
 	_trail_r.trail_color = Color(0.8, 0.9, 1.0, 0.6)
 	_trail_r.max_points = 10
 	slash_mesh_r.add_child(_trail_r)
-	# 3D models
-	ModelFactory.attach_weapon_model(slash_mesh_l, "dual_katana")
-	ModelFactory.attach_weapon_model(slash_mesh_r, "dual_katana")
+	# Billboard sprites
+	var _sprite_path = "res://assets/sprites/weapons/dual_katana.png"
+	if ResourceLoader.exists(_sprite_path):
+		slash_mesh_l.visible = false
+		var sprite_l = Sprite3D.new()
+		sprite_l.texture = load(_sprite_path)
+		sprite_l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite_l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite_l.pixel_size = 0.03
+		sprite_l.shaded = false
+		sprite_l.transparent = true
+		sprite_l.name = "WeaponSprite"
+		slash_mesh_l.get_parent().add_child(sprite_l)
+		slash_mesh_r.visible = false
+		var sprite_r = Sprite3D.new()
+		sprite_r.texture = load(_sprite_path)
+		sprite_r.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite_r.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite_r.pixel_size = 0.03
+		sprite_r.shaded = false
+		sprite_r.transparent = true
+		sprite_r.name = "WeaponSprite"
+		slash_mesh_r.get_parent().add_child(sprite_r)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

@@ -20,8 +20,19 @@ func _ready() -> void:
 	_trail.trail_color = Color(0.8, 0.7, 0.2, 0.6)
 	_trail.max_points = 8
 	thrust_mesh.add_child(_trail)
-	# 3D model
-	ModelFactory.attach_weapon_model(thrust_mesh, "lance")
+	# Billboard sprite
+	var _sprite_path = "res://assets/sprites/weapons/lance.png"
+	if ResourceLoader.exists(_sprite_path):
+		thrust_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.03
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "WeaponSprite"
+		thrust_mesh.get_parent().add_child(sprite)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

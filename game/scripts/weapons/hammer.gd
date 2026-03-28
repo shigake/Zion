@@ -15,8 +15,19 @@ var hit_enemies: Array = []
 func _ready() -> void:
 	slam_mesh.visible = false
 	slam_area.body_entered.connect(_on_body_entered)
-	# 3D model
-	ModelFactory.attach_weapon_model(slam_mesh, "hammer", Vector3(0.6, 0.6, 0.6))
+	# Billboard sprite
+	var _sprite_path = "res://assets/sprites/weapons/hammer.png"
+	if ResourceLoader.exists(_sprite_path):
+		slam_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.03
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "WeaponSprite"
+		slam_mesh.get_parent().add_child(sprite)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
