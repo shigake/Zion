@@ -17,6 +17,12 @@ extends Control
 @onready var gradient_overlay: ColorRect = $GradientOverlay
 
 var _char_sprite: TextureRect = null
+var _title_base_y: float = 0.0
+var _char_base_y: float = 0.0
+var _title_time: float = 0.0
+var _particles: Array[ColorRect] = []
+var _particle_speeds: Array[float] = []
+var _particle_base_x: Array[float] = []
 
 # Colors
 const COLOR_BG := Color(0.04, 0.04, 0.06)
@@ -47,6 +53,7 @@ func _ready() -> void:
 	_style_all_buttons()
 	_style_bottom_right()
 	_setup_3d_background()
+	_setup_floating_particles()
 
 	# Connect scene buttons
 	play_btn.pressed.connect(_on_play)
@@ -55,11 +62,11 @@ func _ready() -> void:
 	quit_btn.pressed.connect(_on_quit)
 	credits_btn.pressed.connect(_on_credits)
 
-	# Localized text for scene buttons
-	play_btn.text = LocaleManager.tr_key("menu_play_solo")
-	multi_btn.text = LocaleManager.tr_key("menu_multiplayer")
-	shop_btn.text = LocaleManager.tr_key("menu_shop")
-	quit_btn.text = LocaleManager.tr_key("menu_quit")
+	# Localized text for scene buttons with icons
+	play_btn.text = "⚔  " + LocaleManager.tr_key("menu_play_solo")
+	multi_btn.text = "👥  " + LocaleManager.tr_key("menu_multiplayer")
+	shop_btn.text = "🏪  " + LocaleManager.tr_key("menu_shop")
+	quit_btn.text = "🚪  " + LocaleManager.tr_key("menu_quit")
 
 	# Disable multiplayer on mobile
 	if PlatformHelper.is_mobile():
@@ -68,7 +75,7 @@ func _ready() -> void:
 
 	# --- Programmatic buttons (inserted before QuitButton) ---
 	# Daily Challenge
-	var daily_btn := _create_menu_button("Desafio diario")
+	var daily_btn := _create_menu_button("📅  Desafio diario")
 	daily_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
 		get_tree().change_scene_to_file("res://scenes/ui/daily_challenge_screen.tscn")
@@ -76,7 +83,7 @@ func _ready() -> void:
 	buttons_container.add_child(daily_btn)
 
 	# Leaderboard
-	var leaderboard_btn := _create_menu_button(LocaleManager.tr_key("menu_leaderboard"))
+	var leaderboard_btn := _create_menu_button("🏆  " + LocaleManager.tr_key("menu_leaderboard"))
 	leaderboard_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
 		get_tree().change_scene_to_file("res://scenes/ui/leaderboard_screen.tscn")
@@ -84,7 +91,7 @@ func _ready() -> void:
 	buttons_container.add_child(leaderboard_btn)
 
 	# Bestiary
-	var bestiary_btn := _create_menu_button(LocaleManager.tr_key("bestiary"))
+	var bestiary_btn := _create_menu_button("📖  " + LocaleManager.tr_key("bestiary"))
 	bestiary_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
 		get_tree().change_scene_to_file("res://scenes/ui/bestiary_screen.tscn")
@@ -92,7 +99,7 @@ func _ready() -> void:
 	buttons_container.add_child(bestiary_btn)
 
 	# Codex
-	var codex_btn := _create_menu_button(LocaleManager.tr_key("codex"))
+	var codex_btn := _create_menu_button("📜  " + LocaleManager.tr_key("codex"))
 	codex_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
 		get_tree().change_scene_to_file("res://scenes/ui/codex_screen.tscn")
@@ -100,7 +107,7 @@ func _ready() -> void:
 	buttons_container.add_child(codex_btn)
 
 	# Options
-	var options_btn := _create_menu_button(LocaleManager.tr_key("menu_options"))
+	var options_btn := _create_menu_button("⚙  " + LocaleManager.tr_key("menu_options"))
 	options_btn.pressed.connect(func():
 		AudioManager.play_sfx("menu_click")
 		get_tree().change_scene_to_file("res://scenes/ui/options_screen.tscn")
@@ -159,14 +166,18 @@ void fragment() {
 
 func _style_title() -> void:
 	var scale := PlatformHelper.get_ui_scale()
-	# Title
-	title_label.add_theme_font_size_override("font_size", int(52 * scale))
+	# Title — large and dramatic
+	title_label.add_theme_font_size_override("font_size", int(56 * scale))
 	title_label.add_theme_color_override("font_color", COLOR_GOLD)
 	title_label.add_theme_constant_override("shadow_offset_x", 0)
-	title_label.add_theme_constant_override("shadow_offset_y", 3)
-	title_label.add_theme_color_override("font_shadow_color", Color(0.3, 0.25, 0.0, 0.5))
+	title_label.add_theme_constant_override("shadow_offset_y", 4)
+	title_label.add_theme_color_override("font_shadow_color", Color(0.4, 0.32, 0.0, 0.6))
+	title_label.add_theme_constant_override("outline_size", int(3 * scale))
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.9, 0.4, 0.35))
+	# Store base position for floating animation
+	_title_base_y = title_label.position.y
 	# Subtitle
-	subtitle_label.add_theme_font_size_override("font_size", int(14 * scale))
+	subtitle_label.add_theme_font_size_override("font_size", int(15 * scale))
 	subtitle_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
 
 
@@ -325,7 +336,39 @@ func _setup_3d_background() -> void:
 		1280.0 * 0.65 - display_size.x * 0.5,
 		720.0 * 0.5 - display_size.y * 0.5
 	)
+	_char_base_y = _char_sprite.position.y
 	container.add_child(_char_sprite)
+
+
+# ---------------------------------------------------------------------------
+# Floating Particles (atmospheric background dots)
+# ---------------------------------------------------------------------------
+
+func _setup_floating_particles() -> void:
+	var container := Control.new()
+	container.name = "ParticlesContainer"
+	container.anchors_preset = Control.PRESET_FULL_RECT
+	container.anchor_right = 1.0
+	container.anchor_bottom = 1.0
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(container)
+	# Place behind UI (index 2 = after Background + GradientOverlay)
+	move_child(container, 2)
+
+	var particle_count := 30
+	for i in range(particle_count):
+		var dot := ColorRect.new()
+		var dot_size := randf_range(1.5, 3.5)
+		dot.size = Vector2(dot_size, dot_size)
+		dot.color = Color(0.9, 0.8, 0.4, randf_range(0.06, 0.18))
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var px := randf_range(0.0, 1280.0)
+		var py := randf_range(0.0, 740.0)
+		dot.position = Vector2(px, py)
+		container.add_child(dot)
+		_particles.append(dot)
+		_particle_speeds.append(randf_range(12.0, 30.0))
+		_particle_base_x.append(px)
 
 
 # ---------------------------------------------------------------------------
@@ -356,8 +399,24 @@ func _setup_gamepad_focus() -> void:
 # Updates
 # ---------------------------------------------------------------------------
 
-func _process(_delta: float) -> void:
-	pass
+func _process(delta: float) -> void:
+	_title_time += delta
+	# Title floating bob (subtle, ~3px amplitude)
+	title_label.position.y = _title_base_y + sin(_title_time * 1.8) * 3.0
+	# Character sprite bob (slower, ~5px amplitude)
+	if _char_sprite:
+		_char_sprite.position.y = _char_base_y + sin(_title_time * 1.2) * 5.0
+	# Update floating particles
+	for i in range(_particles.size()):
+		var p: ColorRect = _particles[i]
+		p.position.y -= _particle_speeds[i] * delta
+		# Gentle horizontal sway
+		p.position.x = _particle_base_x[i] + sin(_title_time * 0.6 + float(i)) * 12.0
+		# Reset when off-screen
+		if p.position.y < -10.0:
+			p.position.y = 740.0
+			_particle_base_x[i] = randf_range(0.0, 1280.0)
+			p.position.x = _particle_base_x[i]
 
 
 func _update_version() -> void:
