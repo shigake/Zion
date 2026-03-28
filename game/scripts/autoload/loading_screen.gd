@@ -543,13 +543,27 @@ func _build_ui() -> void:
 	sep.custom_minimum_size = Vector2(0, 20)
 	center_vbox.add_child(sep)
 
-	# Frase de lore da fase (curta, italica, acima da dica)
+	# Fragment intro text (narrative, larger)
+	var _intro_label = Label.new()
+	_intro_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_intro_label.add_theme_font_size_override("font_size", 18)
+	_intro_label.add_theme_color_override("font_color", Color(0.9, 0.82, 0.55, 0.95))
+	_intro_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var stage_id = _get_stage_id()
+	var intro_key = "stage_intro_" + stage_id
+	var intro_text = LocaleManager.tr_key(intro_key)
+	if intro_text != intro_key:
+		_intro_label.text = intro_text
+	else:
+		_intro_label.text = ""
+	center_vbox.add_child(_intro_label)
+
+	# Frase de lore da fase (curta, italica, abaixo do intro)
 	var _lore_label = Label.new()
 	_lore_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lore_label.add_theme_font_size_override("font_size", 14)
 	_lore_label.add_theme_color_override("font_color", Color(0.65, 0.6, 0.8, 0.9))
 	_lore_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var stage_id = _get_stage_id()
 	var lore_key = "stage_" + stage_id + "_lore"
 	var lore_text = LocaleManager.tr_key(lore_key)
 	if lore_text != lore_key:

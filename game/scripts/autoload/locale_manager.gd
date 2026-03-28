@@ -259,6 +259,33 @@ var translations: Dictionary = {
 	"stage_castle_lore_full": {"pt": "A fortaleza de Drácula. Ele absorveu o cristal voluntariamente — acredita que Zion não deve ser restaurado.", "en": "Dracula's fortress. He absorbed the crystal willingly — he believes Zion shouldn't be restored."},
 	"stage_candy_lore_full": {"pt": "Alucinação dimensional — o subconsciente de Zion tentando lembrar do paraíso. Mas a memória está corrompida.", "en": "Dimensional hallucination — Zion's subconscious trying to remember paradise. But the memory is corrupted."},
 
+	# ---- Stage intro lore (fragment narrative) ----
+	"stage_intro_cemetery": {"pt": "O Primeiro Fragmento: onde os mortos ainda caminham.", "en": "The First Fragment: where the dead still walk."},
+	"stage_intro_forest": {"pt": "O Segundo Fragmento: uma floresta que devora quem entra.", "en": "The Second Fragment: a forest that devours all who enter."},
+	"stage_intro_farm": {"pt": "O Terceiro Fragmento: a terra que alimentava, agora consome.", "en": "The Third Fragment: the land that once fed, now consumes."},
+	"stage_intro_tokyo": {"pt": "O Quarto Fragmento: a cidade que nunca dorme... nem morre.", "en": "The Fourth Fragment: the city that never sleeps... nor dies."},
+	"stage_intro_volcano": {"pt": "O Quinto Fragmento: as chamas da corrupcao queimam eternas.", "en": "The Fifth Fragment: the flames of corruption burn eternal."},
+	"stage_intro_ocean": {"pt": "O Sexto Fragmento: abaixo das ondas, horrores antigos esperam.", "en": "The Sixth Fragment: below the waves, ancient horrors await."},
+	"stage_intro_arena": {"pt": "O Setimo Fragmento: um coliseu onde a morte eh espetaculo.", "en": "The Seventh Fragment: a coliseum where death is spectacle."},
+	"stage_intro_space": {"pt": "O Oitavo Fragmento: no vazio do espaco, ninguem ouve seus gritos.", "en": "The Eighth Fragment: in the void of space, no one hears your screams."},
+	"stage_intro_castle": {"pt": "O Nono Fragmento: o castelo do vampiro, trono da escuridao.", "en": "The Ninth Fragment: the vampire's castle, throne of darkness."},
+	"stage_intro_candy": {"pt": "O Decimo Fragmento: docura que esconde veneno mortal.", "en": "The Tenth Fragment: sweetness that hides deadly poison."},
+
+	# ---- Victory lore per stage ----
+	"victory_lore_cemetery": {"pt": "O Primeiro Fragmento foi restaurado. Os mortos finalmente descansam.", "en": "The First Fragment has been restored. The dead finally rest."},
+	"victory_lore_forest": {"pt": "O Segundo Fragmento brilha novamente. A floresta renasce.", "en": "The Second Fragment shines again. The forest is reborn."},
+	"victory_lore_farm": {"pt": "O Terceiro Fragmento pulsa com vida. A terra volta a dar frutos.", "en": "The Third Fragment pulses with life. The land bears fruit again."},
+	"victory_lore_tokyo": {"pt": "O Quarto Fragmento se estabiliza. A cidade respira.", "en": "The Fourth Fragment stabilizes. The city breathes."},
+	"victory_lore_volcano": {"pt": "O Quinto Fragmento esfria. As chamas cedem ao silencio.", "en": "The Fifth Fragment cools. The flames yield to silence."},
+	"victory_lore_ocean": {"pt": "O Sexto Fragmento emerge. O mar se acalma.", "en": "The Sixth Fragment emerges. The sea grows calm."},
+	"victory_lore_arena": {"pt": "O Setimo Fragmento reverbera. O coliseu finalmente descansa.", "en": "The Seventh Fragment reverberates. The coliseum finally rests."},
+	"victory_lore_space": {"pt": "O Oitavo Fragmento orbita em paz. O vazio recua.", "en": "The Eighth Fragment orbits in peace. The void recedes."},
+	"victory_lore_castle": {"pt": "O Nono Fragmento se liberta. A escuridao perde seu trono.", "en": "The Ninth Fragment is freed. Darkness loses its throne."},
+	"victory_lore_candy": {"pt": "O Decimo Fragmento se encaixa. O sonho se torna real.", "en": "The Tenth Fragment falls into place. The dream becomes real."},
+
+	# ---- Final victory (all stages complete) ----
+	"victory_all_stages": {"pt": "Todos os fragmentos restaurados.\nZion renasce das cinzas.\n\nVoce e um verdadeiro Fragmentado.\nO paraiso esta salvo... por enquanto.", "en": "All fragments restored.\nZion rises from the ashes.\n\nYou are a true Fragmented.\nParadise is saved... for now."},
+
 	# ---- Nomes narrativos dos bosses ----
 	"boss_cemetery": {"pt": "Necromancer King — Sentinela da morte", "en": "Necromancer King — Sentinel of death"},
 	"boss_forest": {"pt": "Rainha das Fadas — Sentinela da natureza", "en": "Fairy Queen — Sentinel of nature"},

@@ -20,6 +20,7 @@ var data: Dictionary = {
 	"player_name": "Anonymous",  # Player name for online leaderboard
 	"pending_leaderboard_scores": [],  # Offline fallback: scores to submit later
 	"best_run": {},  # Best run stats for comparison {time, kills, dps, level, crystals, damage}
+	"story_seen": false,  # Whether the story intro has been shown
 }
 
 func _ready() -> void:

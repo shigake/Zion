@@ -140,6 +140,10 @@ func _ready() -> void:
 	AudioManager.play_music("menu")
 	_setup_gamepad_focus()
 
+	# Show story intro on first ever play
+	if not SaveManager.data.get("story_seen", false):
+		_show_story_intro()
+
 
 # ---------------------------------------------------------------------------
 # Styling
@@ -520,6 +524,14 @@ func _show_quit_confirmation() -> void:
 	)
 	add_child(dialog)
 	dialog.popup_centered()
+
+
+func _show_story_intro() -> void:
+	var story_intro_script = load("res://scripts/ui/story_intro.gd")
+	if story_intro_script:
+		var intro = CanvasLayer.new()
+		intro.set_script(story_intro_script)
+		add_child(intro)
 
 
 func _on_quit() -> void:
