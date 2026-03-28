@@ -144,7 +144,7 @@ func _populate_grid() -> void:
 
 	for id in keys:
 		var ach: Dictionary = all_achievements[id]
-		var is_unlocked := id in unlocked_list
+		var is_unlocked: bool = id in unlocked_list
 		if is_unlocked:
 			unlocked_count += 1
 		var card := _create_card(id, ach, is_unlocked)
