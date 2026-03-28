@@ -79,6 +79,7 @@ var attack_size_mult: float = 1.0
 var explosion_damage_mult: float = 1.0
 var fire_ground_active: bool = false
 var master_key_active: bool = false
+var auto_play: bool = false  # Auto-pick random choices on level up
 var weapon_level_bonus: int = 0
 var accuracy_mult: float = 1.0
 var low_hp_damage_bonus: float = 0.0

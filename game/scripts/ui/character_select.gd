@@ -384,6 +384,7 @@ func _on_start() -> void:
 	var char_id = all_character_ids[current_index]
 	if SaveManager.is_character_unlocked(char_id):
 		GameManager.selected_character = char_id
+		GameManager.auto_play = false
 		get_tree().change_scene_to_file("res://scenes/ui/mutations_panel.tscn")
 
 func _on_random_start() -> void:
@@ -401,11 +402,12 @@ func _on_random_start() -> void:
 	var stages = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
 	GameManager.selected_stage = stages[randi() % stages.size()]
 
-	# No mutations, no relic, normal mode
+	# No mutations, no relic, normal mode, auto-play ON
 	MutationManager.reset()
 	GameManager.selected_relic = ""
 	GameManager.game_mode = "normal"
 	GameManager.run_time_limit = 1800.0
+	GameManager.auto_play = true
 
 	# Go straight to game
 	var stage_scenes = {

@@ -65,6 +65,12 @@ func _show_choices() -> void:
 		pending_levels = 0
 		return
 
+	# Auto-pick random if auto_play is enabled
+	if GameManager.auto_play:
+		var rand_idx = randi() % options.size()
+		_choose(rand_idx)
+		return
+
 	title_label.text = LocaleManager.tr_key("level_up_title") % GameManager.player_level
 
 	# Limpa cards antigos
