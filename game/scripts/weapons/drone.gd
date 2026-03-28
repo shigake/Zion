@@ -96,9 +96,12 @@ func _fire(level: int) -> void:
 	if level >= 8:
 		num_bullets = 3
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
 	for i in range(num_bullets):
 		var bullet = ObjectPool.get_instance(projectile_scene)
-		bullet.global_position = drone_global_pos
+		bullet.position = drone_global_pos
 		var spread = (randf() - 0.5) * 0.15
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		bullet.direction = spread_dir.normalized()
@@ -107,7 +110,7 @@ func _fire(level: int) -> void:
 		bullet.lifetime = 2.5
 		bullet.damage_type = "electric"
 		bullet.weapon_id = "drone"
-		get_tree().current_scene.call_deferred("add_child", bullet)
+		scene_root.add_child(bullet)
 
 	AudioManager.play_sfx("hit")
 	ParticleFactory.spawn_hit_particles(drone_global_pos, Color(0.3, 0.7, 1.0))

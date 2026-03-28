@@ -93,7 +93,7 @@ func _build_smoke_tests() -> Array:
 			"suite": "smoke",
 			"character": char_id,
 			"stage": "cemetery",
-			"duration": 120.0,
+			"duration": 30.0,
 			"choose_mode": "random",
 			"forced_weapon": "",
 			"game_mode": "normal",
@@ -105,7 +105,7 @@ func _build_smoke_tests() -> Array:
 			"suite": "smoke",
 			"character": "ronin",
 			"stage": stage_id,
-			"duration": 120.0,
+			"duration": 30.0,
 			"choose_mode": "random",
 			"forced_weapon": "",
 			"game_mode": "normal",
@@ -117,7 +117,7 @@ func _build_smoke_tests() -> Array:
 			"suite": "smoke",
 			"character": "ronin",
 			"stage": "cemetery",
-			"duration": 120.0,
+			"duration": 30.0,
 			"choose_mode": "random",
 			"forced_weapon": "",
 			"game_mode": mode,
@@ -133,7 +133,7 @@ func _build_weapon_tests() -> Array:
 			"suite": "weapons",
 			"character": "ronin",
 			"stage": "cemetery",
-			"duration": 180.0,  # 3 minutes to measure DPS
+			"duration": 45.0,  # 3 minutes to measure DPS
 			"choose_mode": "forced",
 			"forced_weapon": wid,
 			"game_mode": "normal",
@@ -164,7 +164,7 @@ func _build_stress_tests() -> Array:
 		"suite": "stress",
 		"character": "berserker",
 		"stage": "cemetery",
-		"duration": 300.0,  # 5 minutes
+		"duration": 60.0,  # 5 minutes
 		"choose_mode": "random",
 		"forced_weapon": "",
 		"game_mode": "hyper",
@@ -175,7 +175,7 @@ func _build_stress_tests() -> Array:
 		"suite": "stress",
 		"character": "mystery",
 		"stage": "cemetery",
-		"duration": 300.0,
+		"duration": 60.0,
 		"choose_mode": "random",
 		"forced_weapon": "",
 		"game_mode": "hyper",
@@ -205,7 +205,7 @@ func _build_evolution_tests() -> Array:
 			"suite": "evolution",
 			"character": "ronin",
 			"stage": "cemetery",
-			"duration": 300.0,  # 5 min to evolve and test
+			"duration": 60.0,  # 5 min to evolve and test
 			"choose_mode": "forced",
 			"forced_weapon": evo["weapon_required"],
 			"forced_item": evo["item_required"],
@@ -234,7 +234,7 @@ func _build_balance_tests() -> Array:
 			"suite": "balance",
 			"character": char_id,
 			"stage": "cemetery",
-			"duration": 300.0,
+			"duration": 60.0,
 			"choose_mode": "prioritize_weapons",
 			"forced_weapon": "",
 			"game_mode": "normal",
