@@ -1,332 +1,180 @@
-# Zion
+# ZION
 
 > *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
-Survivors roguelite 3D feito com **Godot 4** (GDScript).
+**ZION** is a **Survivors Roguelite** built with **Godot 4** (GDScript) featuring pixel art sprites and chiptune audio. Fight through dimensional rifts with up to 4 players in online co-op.
 
-## Sobre
+## Features
 
-**Zion** era o ultimo santuario entre dimensoes, mantido por um cristal primordial. Algo o estilhacou. Voce e um **Fragmentado** — arrancado de outra realidade, com um estilhaco do cristal dentro de si. Sua missao: fechar as **7 fendas dimensionais**, libertar os **Sentinelas Corrompidos**, e reconstruir Zion.
+- **15 playable characters** (Fragmentados) with unique abilities and backstories
+- **32 weapons** across melee, ranged, and summoner categories with evolution system
+- **10 stages** with unique environmental hazards and procedural props
+- **10 bosses** with 3-phase fights (Corrupted Sentinels)
+- **Online co-op** up to 4 players via ENet (Steam Networking Sockets ready)
+- **12 weapon evolutions** via crystalline resonance
+- **19 passive items** and **7 relics**
+- **Ascension mode** with 6 difficulty mutations
+- **Daily challenges** with global leaderboard
+- **Elemental synergies** (fire, ice, electric, dark, water) with cross-player combos
+- **Pixel art billboard sprites** with procedural animations
+- **Chiptune soundtrack** with dynamic per-stage music
+- **Telemetry dashboard** for balance analytics
 
-**14 Fragmentados jogaveis**, **28 armas**, **7 fendas + 3 anomalias**, **10 Sentinelas** e co-op online ate 4 jogadores via ENet.
+## Screenshots
 
-## Requisitos
+> Screenshots coming soon. The game uses a top-down 3D perspective with pixel art billboard sprites and procedural particle effects.
 
-- [Godot Engine 4.6+](https://godotengine.org/download) (versao com console recomendada para debug)
-- [Blender 3.0+](https://www.blender.org/download/) (obrigatorio para renderizar e exportar modelos 3D)
+## Requirements
+
+- [Godot Engine 4.6+](https://godotengine.org/download) (console version recommended for debug)
+- [Blender 3.0+](https://www.blender.org/download/) (required for rendering and exporting 3D models)
 - Windows 10/11 (64-bit)
 - Git
 
-## Setup Rapido
+## Quick start
 
 ```bash
-# 1. Clone o repositorio
-git clone <url-do-repo>
+# 1. Clone the repository
+git clone <repo-url>
 cd Zion
 
-# 2. Abra no editor do Godot (uma das opcoes abaixo)
+# 2. Open in Godot Editor (one of the options below)
 
-# Opcao A: Se godot esta no PATH
+# Option A: If godot is in your PATH
 godot --editor --path game
 
-# Opcao B: Defina a variavel GODOT com o caminho do seu executavel
-GODOT="/caminho/para/godot"
+# Option B: Set the GODOT variable with your executable path
+GODOT="/path/to/godot"
 "$GODOT" --editor --path game
 
-# Opcao C: Abra o Godot Editor manualmente e importe game/project.godot
+# Option C: Open Godot Editor manually and import game/project.godot
 ```
 
-Na primeira vez o Godot importa todos os assets automaticamente.
+On first run, Godot imports all assets automatically.
 
-## Como Rodar
+## How to play
 
-### Pelo Editor
-- Abra o projeto no Godot Editor
-- Pressione **F5** ou clique no botao **Play**
+### From the editor
+- Open the project in Godot Editor
+- Press **F5** or click **Play**
 
-### Pela Linha de Comando
+### From the command line
 ```bash
-# Se godot esta no PATH
 godot --path game --run
-
-# Se godot NAO esta no PATH, use o caminho completo do seu executavel
-# Exemplo: "/caminho/para/godot" --path game --run
 ```
 
-### Verificar Erros (Headless)
+### Headless error check
 ```bash
 godot --headless --import game/project.godot
 ```
 
-## Como Compilar (Export)
+## How to build (export)
 
-### Pelo Editor
-1. Abra o projeto no Godot Editor
-2. Va em **Project > Export**
-3. Adicione um preset (ex: Windows Desktop)
-4. Configure o caminho de saida
-5. Clique em **Export Project**
+### From the editor
+1. Open the project in Godot Editor
+2. Go to **Project > Export**
+3. Add a preset (e.g., Windows Desktop)
+4. Configure the output path
+5. Click **Export Project**
 
-### Pela Linha de Comando
+### From the command line
 ```bash
-# Precisa configurar export preset antes no editor
+# Requires export preset configured in editor first
 godot --headless --path game --export-release "Windows Desktop" ../build/zion.exe
 ```
 
-## Estrutura do Projeto
+## Project structure
 
 ```
 Zion/
-├── CLAUDE.md               # Guia de desenvolvimento (instrucoes para AI/devs)
-├── README.md               # Este arquivo
-├── docs/                   # Documentacao de game design (18 arquivos)
+├── CLAUDE.md               # Development guide (AI/dev instructions)
+├── README.md               # This file
+├── docs/                   # Game design documents (18+ files)
 │   ├── gdd.md              # Game Design Document
 │   ├── prd.md              # Product Requirements Document (roadmap)
-│   ├── spec.md             # Especificacao tecnica
-│   ├── fases.md            # Detalhes das 10 fases
-│   ├── itens.md            # Itens, evolucoes, reliquias
-│   ├── mecanicas.md        # Mecanicas de gameplay
-│   ├── personagens.md      # 12 personagens e armas
-│   ├── progressao.md       # Loja, cristais, meta-progressao
-│   ├── prd_*.md            # PRDs (auto_tester, achievements_popup, leaderboard_online, cemetery_music, etc.)
-│   └── balance_analysis.md # Analise de balanceamento verificada
-├── server/                 # Servidor de telemetria (Node.js)
+│   ├── spec.md             # Technical specification
+│   ├── fases.md            # 10 stages detailed
+│   ├── itens.md            # Items, evolutions, relics
+│   ├── mecanicas.md        # Gameplay mechanics
+│   ├── personagens.md      # 15 characters and weapons
+│   ├── progressao.md       # Shop, crystals, meta-progression
+│   └── prd_*.md            # Various PRDs (telemetry, auto-tester, etc.)
+├── server/                 # Telemetry server (Node.js)
 │   ├── index.js            # Express + SQLite (API + dashboard)
-│   ├── package.json        # Dependencias (express, better-sqlite3)
-│   ├── .env.example        # Variaveis de ambiente (PORT, API_KEY, DISCORD_WEBHOOK_URL)
-│   └── public/             # Dashboard web estatico
-└── game/                   # Projeto Godot 4
-    ├── project.godot       # Configuracao do projeto (autoloads, layers, display)
-    ├── VERSION             # Versao atual do jogo (sem "v")
-    ├── scenes/             # Cenas (.tscn) — 98 arquivos
-    │   ├── enemies/        # 16 inimigos genericos + 10 bosses (26 total)
-    │   ├── stages/         # 10 fases com ambientes procedurais
-    │   ├── weapons/        # 35 cenas (28 armas + projeteis)
-    │   ├── ui/             # HUD, menus, level up, shop, leaderboard, debug overlay
-    │   └── player/         # Cena do jogador
-    ├── scripts/            # GDScript (.gd) — 186 arquivos
-    │   ├── autoload/       # 27 singletons globais (ver tabela abaixo)
-    │   ├── player/         # Controlador do jogador
-    │   ├── enemies/        # Base + spawner + 10 bosses + 6 especiais
-    │   ├── weapons/        # 28 armas + projectiles/behaviors
-    │   ├── ui/             # 24 telas + debug overlay (F3/F4)
-    │   ├── stages/         # 10 stages + 10 props procedurais + camera + events
-    │   ├── effects/        # 9 scripts (particulas, shaders, animacoes procedurais)
-    │   └── tests/          # Testes
-    └── assets/             # Materiais, shaders, audio
+│   ├── package.json        # Dependencies (express, better-sqlite3)
+│   └── public/             # Static web dashboard
+└── game/                   # Godot 4 project
+    ├── project.godot       # Project configuration
+    ├── VERSION             # Current version (no "v" prefix)
+    ├── scenes/             # Scenes (.tscn)
+    ├── scripts/            # GDScript (.gd)
+    └── assets/             # Sprites, shaders, audio
 ```
 
-## Arquitetura
+## Tech stack
 
-### Autoload Singletons (30)
+| Component | Technology |
+|-----------|-----------|
+| Engine | Godot 4.6 (GDScript) |
+| Visual style | Pixel art billboard sprites (32x32) + 3D environments |
+| Audio | Chiptune / synthesized (procedural generation) |
+| Multiplayer | ENet (Steam Networking Sockets ready) |
+| Telemetry | Node.js + Express + SQLite |
+| CI/Export | Godot headless export |
 
-| Singleton | Responsabilidade |
-|-----------|-----------------|
-| LogManager | Logging centralizado, crash reports, diagnosticos (primeiro autoload) |
-| PlatformHelper | Deteccao de plataforma e helpers |
-| GameManager | Estado global, loop do jogo, timers |
-| WeaponDB | Catalogo de 28 armas e stats por level |
-| ItemDB | 19 itens passivos e seus efeitos |
-| CharacterDB | 14 Fragmentados, stats e armas iniciais |
-| EvolutionDB | 12 evolucoes (arma lv8 + item lv5) |
-| RelicDB | 7 reliquias pre-run |
-| ShopDB | 12 upgrades permanentes |
-| SaveManager | Save/load local (perfil, cristais, progresso) |
-| MultiplayerManager | ENet host-client, lobby, sync, reconexao, host migration |
-| SynergySystem | 6 sinergias base + 4 agua + 8 cross-combos |
-| AudioManager | Musica + SFX com crossfade |
-| ScreenEffects | Efeitos de tela (shake, flash, fade) |
-| ParticleFactory | Factory de particulas procedurais |
-| ObjectPool | Pool de objetos (inimigos, projeteis) |
-| UITheme | Tema visual global |
-| KeybindingManager | Rebind de teclas |
-| LocaleManager | i18n (PT-BR / EN) |
-| VisualSetup | Setup visual global (luzes, ambiente) |
-| ModelFactory | Factory de modelos 3D procedurais |
-| SteamManager | Stub para integracao Steam |
-| AchievementManager | 13 achievements |
-| MultiMeshManager | Renderizacao otimizada de hordas |
-| AutoTester | Testes automatizados in-game |
-| GamepadUI | Navegacao de UI por gamepad |
-| Telemetry | Analytics anonimo + envio de crash reports ao servidor |
-| MutationManager | 6 mutacoes do modo ascensao |
-| DailyChallenge | Desafio diario com leaderboard online |
+## Content summary
 
-### Multiplayer
-- **Host-client**: um jogador hospeda, outros conectam via ENet
-- **Steam Networking Sockets**: preparado via SteamManager stub
-- **Sync**: posicoes unreliable (20 tick/s), eventos criticos reliable
+| Category | Count |
+|----------|-------|
+| Characters | 15 (including mystery unlock) |
+| Weapons | 32 (10 melee, 10 ranged, 8 summon, 4 new elemental) |
+| Stages | 10 (7 campaign + 3 anomalies) |
+| Bosses | 10 (one per stage, 3 phases each) |
+| Items | 19 passive items |
+| Evolutions | 12 weapon evolutions |
+| Relics | 7 pre-run relics |
+| Achievements | 13 |
+| Synergies | 18 elemental combinations |
+| Mutations | 6 ascension modifiers |
 
-### Sistemas de Gameplay
-- **Armas**: nivel 1-8, evoluem no 8 com item correspondente no 5
-- **Spawner**: dificuldade escala com tempo, skins por stage
-- **Props procedurais**: cada stage gera seu ambiente (meshes, luzes, particulas)
-- **Animacoes procedurais**: idle bob, walk lean, hit squash-stretch, death tumble
-- **Sinergias**: 6 base + 4 agua (Tidal Wave, Steam Explosion, Absolute Zero, Abyssal Depths) + 8 cross-combos multiplayer
-- **Mutacoes/Ascensao**: 6 modificadores de dificuldade que aumentam recompensa de cristais
-- **Cross-Combo**: Sinergias elementais entre jogadores no multiplayer (12 combinacoes)
-- **Revive**: Sistema de lapide no multiplayer com sacrificio (debuff -30% HP)
-- **Daily Challenge**: Desafio diario com seed fixa e leaderboard online
-- **Performance**: LOD system, PerfMonitor, EnemyCuller, cap de pickups
-- **Drops**: Coracoes (5% chance, cura 8% HP) e imas (1% chance, atrai todos pickups)
-- **HP Tematica**: Barra de HP unica por personagem (katana, calice, cristal, etc.)
+## Controls
 
-## Conteudo Implementado
+| Action | Keyboard | Gamepad |
+|--------|----------|---------|
+| Move | WASD | Left Stick |
+| Dash | Space | A / X |
+| Interact | E | B / Circle |
+| Pause | ESC | Start |
+| Debug overlay | F3 | - |
+| Log filter | F4 | - |
 
-### 14 Fragmentados
-Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Gladiador, Chef, Amazona, Bruxa, ???
+## Telemetry server
 
-### 28 Armas
-| Tipo | Armas |
-|------|-------|
-| **Melee** (10) | Katana, Foice, Machado, Chicote, Lanca, Martelo, Nunchaku, Katana Dupla, Espada Cloud, Luvas de Boxe |
-| **Ranged** (10) | Metralhadora, Staff, Bazuca, Shuriken, Pistola Dupla, Lanca-chamas, Cajado de Gelo, Besta, Canhao de Plasma, Arco Elfico |
-| **Summon** (8) | Necromante, Drone, Totem, Garrafa de Veneno, Corrente Eletrica, Livro Magico, Bomba Relogio, Portal |
-
-### 7 Fendas da Campanha + 3 Anomalias
-
-**Campanha** (arco narrativo — cada fenda e mais profunda na corrupcao):
-
-| Fenda | Ambiente | Sentinela Corrompido | Mecanica |
-|------|---------|------|----------------|
-| 1. Cemiterio | Neblina, lua cheia | Necromancer King | Tumulos destrutiveis |
-| 2. Floresta | Magia selvagem | Rainha das Fadas | Cogumelos de buff |
-| 3. Toquio | Neon cyberpunk | AI Overlord | Paineis eletricos |
-| 4. Vulcao | Lava, furia | Demon Lord | Lava pools |
-| 5. Oceano | Ruinas submarinas | Leviathan | Correntes |
-| 6. Espaco | Estacao orbital | Singularidade | Zero-G zones |
-| 7. Castelo | Gotico, elegante | Conde Dracula | Zonas de sombra |
-
-**Anomalias** (desbloceaveis — realidades instaveis fora das regras):
-
-| Anomalia | Ambiente | Boss | Desbloquear |
-|------|---------|------|-------------|
-| α Fazenda | Rural apocaliptico | Mega Vaca Alienigena | Fendas 1-3 |
-| β Arena | Coliseu romano | Imperador Corrompido | 3 bosses |
-| γ Mundo Doce | Sonho corrompido | Rei Acucar | Campanha completa |
-
-### Sistemas
-- **19 itens passivos** com efeitos funcionais
-- **12 evolucoes** de armas (arma lv8 + item lv5)
-- **7 reliquias** pre-run
-- **10 eventos** especiais (Horda Dourada, Eclipse, Chuva de Meteoros, etc)
-- **13 achievements**
-- **12 upgrades** permanentes na loja
-- **Leaderboard** global com tabs (modo Endless)
-- **Multiplayer** co-op ate 4 jogadores (ENet)
-- **18 sinergias** elementais (6 base + 4 agua + 8 cross-combos)
-- **11 inimigos** genericos + 6 especiais (Skeleton Archer, Mimic, Bomber, Swarm, Tank, Tooth Fairy)
-- **6 mutacoes** do modo ascensao
-- **Desafio diario** com leaderboard online
-- **Drops** de vida e ima de inimigos
-- **HP tematica** por personagem
-
-## Telemetria e Logging
-
-### Sistema de Logging (LogManager)
-Sistema centralizado de logging com 5 niveis (DEBUG, INFO, WARNING, ERROR, FATAL):
-- **Logs em arquivo** com rotacao automatica (ultimos 10 arquivos em `user://logs/`)
-- **Crash reports JSON** automaticos com game state, scene tree e ultimas 100 entradas
-- **Buffer em memoria** com as ultimas 500 entradas
-- **Monitoramento de FPS** (alerta se cair abaixo de 20)
-- **Sinais**: `log_entry_added`, `error_logged`, `crash_reported`
-
-### Debug overlay (em jogo)
-- **F3**: Ativa/desativa overlay com FPS, HP, enemies, pool stats e logs em tempo real
-- **F4**: Filtra logs (ALL → INFO+ → WARN+ → ERROR)
-
-### Telemetria (Telemetry)
-Cliente anonimo de analytics com opt-out:
-- Envia **estatisticas de run** ao fim de cada partida (kills, dano, armas, FPS, etc)
-- Envia **crash reports** automaticamente (incluindo pendentes de sessoes anteriores)
-- Envia **eventos** (achievements, etc)
-- Servidor configuravel, sem dados pessoais
-
-### Servidor de telemetria (`server/`)
-Backend Node.js + Express + SQLite que recebe e analisa os dados:
+The game includes an optional telemetry backend for balance analytics:
 
 ```bash
 cd server && npm install && npm start
-# Dashboard em http://localhost:3456
+# Dashboard at http://localhost:3456
 ```
 
-**API endpoints:**
-| Metodo | Endpoint | Descricao |
-|--------|----------|-----------|
-| POST | `/telemetry` | Estatisticas de fim de run |
-| POST | `/crash` | Crash reports |
-| POST | `/event` | Eventos (achievements, etc) |
-| GET | `/stats` | Overview agregado |
-| GET | `/crashes` | Lista de crashes (paginado, filtros) |
-| GET | `/crashes/:id` | Detalhe de um crash |
-| GET | `/runs` | Lista de runs (paginado, filtros) |
-| GET | `/events` | Lista de eventos |
-| GET | `/balance` | Analytics de balanceamento |
-| GET | `/health` | Health check |
-| PATCH | `/crashes/:id` | Marcar crash como resolvido |
+Features: run statistics, crash reports, balance analytics, Discord webhook notifications.
 
-**Dashboard web** (`http://localhost:3456`):
-- **Overview**: total runs, crashes, win rate, FPS medio, personagens/fases populares
-- **Crashes**: lista com filtros, detalhe com game state e scene tree, marcar como resolvido
-- **Runs**: historico de partidas com filtros por personagem, fase, versao
-- **Balance**: DPS por arma, win rate por personagem, dificuldade por fase
-- **Events**: achievements e eventos do jogo
+## Credits
 
-**Recursos**: rate limiting, API key opcional, Discord webhook para crashes, auto-refresh 30s.
+- **Code**: Developed with assistance from [Claude AI](https://claude.ai) (Anthropic)
+- **Music**: Generated with [Suno AI](https://suno.ai)
+- **3D assets base**: [Quaternius](https://quaternius.com) (CC0 licensed low-poly models)
+- **Engine**: [Godot Engine](https://godotengine.org) (MIT license)
 
-## Controles
+## License
 
-| Acao | Teclado | Gamepad |
-|------|---------|---------|
-| Mover | WASD | Left Stick |
-| Dash | Space | A / X |
-| Interagir | E | B / Circle |
-| Pause | ESC | Start |
-
-## Documentacao de Design
-
-### Documentos base
-| Documento | Descricao |
-|-----------|-----------|
-| [GDD](docs/gdd.md) | Game Design Document completo |
-| [PRD](docs/prd.md) | Roadmap por fases (0-6) |
-| [Spec](docs/spec.md) | Especificacao tecnica |
-| [Fases](docs/fases.md) | Detalhes das 10 fases e bosses |
-| [Itens](docs/itens.md) | Itens, evolucoes, reliquias |
-| [Mecanicas](docs/mecanicas.md) | Gameplay e sistemas |
-| [Historia](docs/story.md) | Lore completo, backstories, narrativa |
-| [Personagens](docs/personagens.md) | 14 Fragmentados e armas |
-| [Progressao](docs/progressao.md) | Loja, cristais, meta-progressao |
-| [Balance Analysis](docs/balance_analysis.md) | Analise de balanceamento verificada |
-| [Art Prompts](docs/art_prompts.md) | Prompts de arte para geracao de assets |
-
-### PRDs ativos
-| Documento | Descricao |
-|-----------|-----------|
-| [Auto Tester](docs/prd_auto_tester.md) | PRD de testes automatizados (8 suites) |
-| [Achievements Popup](docs/prd_achievements_popup.md) | PRD de popup de conquistas |
-| [Leaderboard Online](docs/prd_leaderboard_online.md) | PRD de leaderboard global |
-| [Cemetery Music](docs/prd_cemetery_music.md) | PRD de musica dinamica do cemiterio (5 faixas) |
-
-## Configuracoes do Projeto
-
-- **Resolucao**: 1280x720 (stretch mode: canvas_items, aspect: expand)
-- **Renderer**: Forward Plus
-- **MSAA**: 2x
-- **Physics layers**: Players, Enemies, Pickups, PlayerAttacks, EnemyAttacks
-
-## Plataforma
-
-- Steam (PC Windows)
+- Game code and original assets: All rights reserved
+- Quaternius 3D model bases: **CC0** (Creative Commons Zero) - free to use for any purpose
+- Godot Engine: MIT License
+- See individual asset licenses for third-party content
 
 ## Status
 
-Em desenvolvimento ativo. Versao atual: **2.79.0**
+In active development. Current version: see `game/VERSION`.
 
-Todas as 7 fendas + 3 anomalias, 14 Fragmentados, 28 armas e 10 Sentinelas implementados. Camada narrativa completa (lore, backstories, dialogos de boss, loading screens com frases de lore). Sistema de telemetria com dashboard web. Modo ascensao (provacoes de Zion), cross-combos multiplayer (ressonancia entre Fragmentados), revive com sacrificio (estilhaco compartilhado), desafio diario, sistema de performance (LOD/culling), sprites pixel art billboard, 13 achievements com popup, leaderboard global, 50 SFX + 15 musicas, auto-tester com 8 suites.
-
-### Trabalho Restante
-- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fenda
-- **Visual Polish**: walk animations, slash trails melee, props animados
-- **Steam**: stub existe, falta plugin GodotSteam
-- **Narrativa**: cutscene do ???, cinematica de intro
+All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. Full narrative layer (lore, backstories, boss dialogues). Telemetry dashboard. Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard.

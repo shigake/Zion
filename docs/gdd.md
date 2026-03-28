@@ -104,6 +104,86 @@ Escolhe Fragmentado + Reliquia
 | **Hyper Mode** | Tudo 2x mais rapido | A fenda esta instavel — tudo acelera |
 | **Inverse** | Voce e o boss (DLC standalone) | Jogue como um Sentinela Corrompido |
 
+## Stage Mechanics (Environmental Hazards)
+
+Each stage has a unique environmental mechanic that affects gameplay:
+
+| Stage | Hazard | Effect |
+|-------|--------|--------|
+| Cemiterio | Tumulos destrutiveis | Quebrar tumulos libera esqueletos extras mas tambem drops raros |
+| Floresta | Cogumelos de buff/debuff | Pisar em cogumelos da buff aleatorio (velocidade, dano) ou debuff (slow, poison) |
+| Fazenda | Plantacoes mutantes | Areas de milho bloqueiam visao; vacas mutantes aparecem em ondas |
+| Toquio | Paineis eletricos | Zonas eletrificadas que dao dano continuo mas aumentam velocidade de ataque |
+| Vulcao | Lava pools | Piscinas de lava surgem periodicamente; ficar perto da borda da dano de calor |
+| Oceano | Correntes de agua | Correntes empurram jogadores e inimigos em direcoes fixas; mudancas de mare |
+| Arena | Armadilhas gladiatorias | Espinhos retrativeis, paredes moveis, grades que prendem |
+| Espaco | Zonas de gravidade zero | Certas areas eliminam gravidade — movimento mais lento, pulos mais altos |
+| Castelo | Zonas de sombra | Areas escuras reduzem visao e aumentam dano de inimigos dark |
+| Mundo Doce | Piso pegajoso | Certas areas de melado reduzem velocidade; areas de acucar aumentam dano |
+
+## Sinergias Elementais
+
+### 6 sinergias base
+| Combo | Elementos | Efeito |
+|-------|-----------|--------|
+| Meltdown | Fogo + Gelo | Explosao de vapor que atordoa inimigos em area |
+| Superconductor | Fogo + Eletrico | Raio de fogo que encadeia entre inimigos |
+| Shadow Fire | Fogo + Dark | Chamas negras que drenam HP e reduzem defesa |
+| Permafrost | Gelo + Eletrico | Congela e paralisa — inimigos congelados tomam dano eletrico |
+| Void Ice | Gelo + Dark | Cristais de gelo negro que explodem apos delay |
+| Dark Lightning | Eletrico + Dark | Relampago que cria zonas de escuridao com dano continuo |
+
+### 3 sinergias novas (Agua)
+| Combo | Elementos | Efeito |
+|-------|-----------|--------|
+| Tidal Wave | Agua + Fogo | Steam Explosion — onda de vapor que empurra e queima |
+| Absolute Zero | Agua + Gelo | Congelamento em area massiva com slow de 80% |
+| Abyssal Depths | Agua + Dark | Vortex que puxa inimigos para o centro e drena HP |
+
+### Cross-Combos (Multiplayer)
+No multiplayer, quando dois jogadores diferentes aplicam elementos complementares no mesmo inimigo, ocorre um **Cross-Combo** com efeito amplificado (1.5x dano da sinergia normal). Sao 12 combinacoes possiveis entre os 4 elementos + agua.
+
+## Mutations / Ascension Mode (Provacoes de Zion)
+
+Apos completar a campanha, o jogador desbloqueia o **Modo Ascensao** com 6 mutacoes que modificam a dificuldade:
+
+| Mutacao | Efeito | Multiplicador de Cristais |
+|---------|--------|---------------------------|
+| Furia dos Sentinelas | Inimigos +30% velocidade | +15% cristais |
+| Corrupcao Profunda | Inimigos +40% HP | +20% cristais |
+| Fendas Instaveis | Eventos ocorrem 50% mais frequentes | +15% cristais |
+| Estilhaco Fraco | Player -20% HP maximo | +25% cristais |
+| Silencio Arcano | Cooldowns +30% | +20% cristais |
+| Horda Infinita | Spawn rate +50% | +25% cristais |
+
+O jogador pode ativar 1 a 6 mutacoes simultaneamente. Os multiplicadores de cristais sao cumulativos. Ativar todas as 6 da um bonus adicional de +30% (total ~150% bonus).
+
+## Daily Challenge
+
+Todos os dias uma **seed fixa** e gerada baseada na data. Todos os jogadores enfrentam a mesma configuracao:
+- Stage aleatorio (fixo pela seed)
+- Personagem aleatorio (fixo pela seed)
+- Mutacoes pre-definidas (1-3 aleatorias)
+- Leaderboard global separado (tempo sobrevivido + kills)
+- Uma tentativa por dia
+
+## Enemy Behaviors per Stage
+
+Cada stage tem inimigos com comportamentos unicos alem dos genericos:
+
+| Stage | Inimigos Especiais | Comportamento |
+|-------|-------------------|---------------|
+| Cemiterio | Esqueletos, Fantasmas | Fantasmas atravessam paredes; esqueletos ressurgem de tumulos |
+| Floresta | Treants, Fadas | Treants sao lentos mas tanky; fadas curam outros inimigos |
+| Fazenda | Vacas mutantes, Espantalhos | Vacas carregam em linha reta; espantalhos invocam corvos |
+| Toquio | Drones, Androides | Drones atiram a distancia; androides se teleportam |
+| Vulcao | Imps de fogo, Golem de lava | Imps explodem ao morrer; golems deixam rastro de lava |
+| Oceano | Peixes-espada, Medusas | Peixes-espada fazem dash rapido; medusas paralisam |
+| Arena | Gladiadores, Leoes | Gladiadores bloqueiam; leoes atacam em grupo |
+| Espaco | Aliens, Meteoritos | Aliens atiram lasers; meteoritos caem do ceu |
+| Castelo | Morcegos, Cavaleiros | Morcegos vem em enxame; cavaleiros tem armadura |
+| Mundo Doce | Gummy bears, Doces vivos | Gummy bears dividem ao morrer; doces vivos grudam no player |
+
 ## Monetizacao
 
 - Jogo base pago (~R$20-30)

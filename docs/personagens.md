@@ -2,7 +2,7 @@
 
 > Quando Zion estilhacou, estilhacos microscopicos do cristal atravessaram dimensoes e se alojaram em pessoas comuns. Sao os **Fragmentados** — arrancados de seus mundos, jogados nas fendas. Ver [story.md](story.md) para lore completo.
 
-## Os 14 Fragmentados
+## Os 15 Fragmentados
 
 | Fragmentado | Origem | Arma Inicial | Passiva | Como Desbloquear |
 |---|---|---|---|---|
@@ -19,7 +19,8 @@
 | **Chef** | Paris, Belle Epoque | Lanca-chamas | Comida cura 2x | Desperte o Mundo Doce (Anomalia γ) |
 | **Amazona** | Floresta Amazonica primordial | Lanca | +15% velocidade +10% dano | Inicio |
 | **Bruxa** | Salem, 1692 | Necromante | +2 invocacoes +20% dano de invocacao | Inicio |
-| **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (13 desbloqueados) |
+| **Fragmentado** | Entre dimensoes | Corrente Eletrica | +10% a todos os stats, aparencia glitch | Sobreviva 20 min com 3 mutacoes ativas |
+| **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (14 desbloqueados) |
 
 ### Backstories
 
@@ -36,7 +37,8 @@
 - **Chef:** Confeiteiro que caiu no Mundo Doce e tentou civilizar os doces com culinaria
 - **Amazona:** Guerreira tribal que defendia sua terra quando as vacas mutantes invadiram
 - **Bruxa:** Fugiu da fogueira de Salem e caiu direto na Floresta Encantada. Adaptou-se rapido
-- **???:** Quando todos os 13 estilhacos ressoam... Zion acorda. O proprio santuario ganha consciencia
+- **Fragmentado:** Nao e uma pessoa — e um eco dimensional. Quando a corrupcao atinge massa critica, fragmentos de realidades diferentes se fundem num ser instavel. Corpo de dados, mente de caos. Aparece e desaparece como um glitch
+- **???:** Quando todos os 14 estilhacos ressoam... Zion acorda. O proprio santuario ganha consciencia
 
 ---
 
