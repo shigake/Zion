@@ -21,6 +21,7 @@ var data: Dictionary = {
 
 func _ready() -> void:
 	load_game()
+	_ensure_default_unlocks()
 	_restore_settings()
 
 func _restore_settings() -> void:
@@ -69,6 +70,14 @@ func load_game() -> void:
 		file.close()
 	else:
 		LogManager.error("Save", "Failed to open save file: %s" % SAVE_PATH)
+
+func _ensure_default_unlocks() -> void:
+	## Ensure starter characters are always unlocked (handles existing saves)
+	var defaults = ["amazona", "ronin", "soldado", "mago"]
+	for char_id in defaults:
+		if char_id not in data["unlocked_characters"]:
+			data["unlocked_characters"].append(char_id)
+			save_game()
 
 func _restore_audio() -> void:
 	var master = data.get("volume_master", 1.0)
