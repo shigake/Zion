@@ -148,15 +148,6 @@ func _create_stage_mechanics() -> void:
 		var visual = _create_zone_visual(Color(0.2, 1.0, 0.4, 0.3), MUSHROOM_ZONE_SIZE)
 		zone.add_child(visual)
 
-		# Mushroom glow light
-		var light = OmniLight3D.new()
-		light.name = "MushroomGlow"
-		light.light_color = Color(0.3, 1.0, 0.5)
-		light.light_energy = 0.6
-		light.omni_range = 4.0
-		light.position.y = 1.0
-		zone.add_child(light)
-
 		_mushroom_zones_used[zone] = false
 		zone.body_entered.connect(_on_mushroom_zone_entered.bind(zone))
 		add_child(zone)
@@ -168,11 +159,6 @@ func _on_mushroom_zone_entered(body: Node3D, zone: Area3D) -> void:
 	if not body.is_in_group("players") and not (body is CharacterBody3D and body.has_method("take_damage")):
 		return
 	_mushroom_zones_used[zone] = true
-
-	# Dim the visual
-	var glow = zone.get_node_or_null("MushroomGlow")
-	if glow:
-		glow.light_energy = 0.1
 
 	# Random buff
 	var buff_type = _mech_rng.randi_range(0, 2)
@@ -203,8 +189,6 @@ func _on_mushroom_zone_entered(body: Node3D, zone: Area3D) -> void:
 	# Respawn after 30s
 	get_tree().create_timer(30.0).timeout.connect(func():
 		_mushroom_zones_used[zone] = false
-		if glow:
-			glow.light_energy = 0.6
 	)
 
 

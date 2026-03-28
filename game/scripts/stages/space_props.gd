@@ -146,15 +146,6 @@ func _create_stage_mechanics() -> void:
 		var visual = _create_zone_visual(Color(0.5, 0.2, 1.0, 0.25), ZEROG_ZONE_SIZE)
 		zone.add_child(visual)
 
-		# Floating particles effect
-		var light = OmniLight3D.new()
-		light.name = "ZeroGGlow"
-		light.light_color = Color(0.6, 0.3, 1.0)
-		light.light_energy = 0.5
-		light.omni_range = 6.0
-		light.position.y = 1.5
-		zone.add_child(light)
-
 		_zerog_zones.append(zone)
 		zone.body_entered.connect(_on_zerog_entered)
 		zone.body_exited.connect(_on_zerog_exited)

@@ -137,15 +137,6 @@ func _create_stage_mechanics() -> void:
 		var visual = _create_zone_visual(Color(1.0, 0.3, 0.0, 0.4), LAVA_ZONE_SIZE)
 		zone.add_child(visual)
 
-		# Lava glow light
-		var light = OmniLight3D.new()
-		light.name = "LavaGlow"
-		light.light_color = Color(1.0, 0.4, 0.1)
-		light.light_energy = 1.0
-		light.omni_range = 5.0
-		light.position.y = 0.5
-		zone.add_child(light)
-
 		_lava_zones.append(zone)
 		add_child(zone)
 

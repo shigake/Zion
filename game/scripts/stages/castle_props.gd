@@ -148,15 +148,6 @@ func _create_stage_mechanics() -> void:
 		var visual = _create_zone_visual(Color(0.1, 0.0, 0.15, 0.5), DARK_ZONE_SIZE)
 		zone.add_child(visual)
 
-		# Dim negative light to darken the area
-		var light = OmniLight3D.new()
-		light.name = "DarkLight"
-		light.light_color = Color(0.2, 0.0, 0.3)
-		light.light_energy = -0.4
-		light.omni_range = 8.0
-		light.position.y = 1.0
-		zone.add_child(light)
-
 		_dark_zones.append(zone)
 		zone.body_entered.connect(_on_dark_zone_body_entered.bind(zone))
 		zone.body_exited.connect(_on_dark_zone_body_exited.bind(zone))

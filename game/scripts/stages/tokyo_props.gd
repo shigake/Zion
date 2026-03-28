@@ -137,15 +137,6 @@ func _create_stage_mechanics() -> void:
 		var visual = _create_zone_visual(Color(0.2, 0.8, 1.0, 0.3), ELECTRIC_ZONE_SIZE)
 		zone.add_child(visual)
 
-		# Flickering electric light
-		var light = OmniLight3D.new()
-		light.name = "ElectricLight"
-		light.light_color = Color(0.3, 0.7, 1.0)
-		light.light_energy = 0.8
-		light.omni_range = 5.0
-		light.position.y = 1.0
-		zone.add_child(light)
-
 		_electric_zones.append(zone)
 		add_child(zone)
 
