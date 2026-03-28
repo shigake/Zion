@@ -1,38 +1,40 @@
 extends Node
 
 ## Manages MultiMeshInstance3D for rendering large enemy hordes efficiently.
-## When enemy count exceeds THRESHOLD, switches to MultiMesh rendering
-## using a cel-shaded sphere mesh for visual consistency.
+## When enemy count exceeds THRESHOLD, switches from individual Sprite3D nodes
+## to a single MultiMesh draw call using a billboard QuadMesh with per-instance colors.
+## Below THRESHOLD: individual Sprite3D per enemy (looks good, shows unique textures).
+## Above THRESHOLD: MultiMesh with shared sprite texture (performance mode).
 
-const THRESHOLD := 200  # Switch to multimesh above this count
+const THRESHOLD := 100  # Switch to multimesh above this count
 const HYSTERESIS := 20  # Prevent flickering near threshold
 
 var _multimesh_instance: MultiMeshInstance3D = null
 var _multimesh: MultiMesh = null
 var _active: bool = false
-var _cel_material: ShaderMaterial = null
-var _hidden_meshes: Array[Dictionary] = []  # Track hidden meshes for restoration
+var _billboard_material: StandardMaterial3D = null
+var _fallback_texture: Texture2D = null
 
 func _ready() -> void:
-	_create_cel_material()
+	_create_billboard_material()
 
-func _create_cel_material() -> void:
-	var shader = load("res://assets/materials/cel_shader.gdshader")
-	if shader:
-		_cel_material = ShaderMaterial.new()
-		_cel_material.shader = shader
-		_cel_material.set_shader_parameter("albedo_color", Color(0.8, 0.2, 0.2))
-		_cel_material.set_shader_parameter("toon_steps", 3.0)
-		_cel_material.set_shader_parameter("shadow_color", Color(0.15, 0.1, 0.2))
-		_cel_material.set_shader_parameter("rim_amount", 0.4)
-		_cel_material.set_shader_parameter("rim_color", Color(1.0, 1.0, 1.0, 0.6))
-		_cel_material.set_shader_parameter("rim_threshold", 0.5)
-	else:
-		# Fallback: standard toon material
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.8, 0.2, 0.2)
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-		_cel_material = null
+func _create_billboard_material() -> void:
+	## Create a billboard material for the QuadMesh that:
+	## - Always faces the camera (billboard mode)
+	## - Uses vertex colors for per-instance tinting
+	## - Renders the enemy sprite texture with alpha discard
+	_billboard_material = StandardMaterial3D.new()
+	_billboard_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	_billboard_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_billboard_material.vertex_color_use_as_albedo = true
+	_billboard_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	_billboard_material.alpha_scissor_threshold = 0.5
+	_billboard_material.no_depth_test = false
+	_billboard_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Load fallback sprite texture (slime) for the shared multimesh
+	_fallback_texture = load("res://assets/sprites/enemies/slime.png") as Texture2D
+	if _fallback_texture:
+		_billboard_material.albedo_texture = _fallback_texture
 
 func _process(_delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -56,49 +58,51 @@ func _activate() -> void:
 	_multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	_multimesh.use_colors = true
 
-	# Sphere mesh as stand-in for all enemies
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.4
-	sphere.height = 0.8
-	sphere.radial_segments = 8
-	sphere.rings = 4
-	_multimesh.mesh = sphere
+	# Billboard QuadMesh — a flat plane that faces the camera via the material
+	var quad = QuadMesh.new()
+	quad.size = Vector2(1.2, 1.2)  # Roughly matches enemy sprite pixel_size * texture dimensions
+	_multimesh.mesh = quad
 	_multimesh.instance_count = 0
 
 	_multimesh_instance.multimesh = _multimesh
 	_multimesh_instance.name = "EnemyMultiMesh"
 	_multimesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
-	# Apply cel-shader material for visual consistency
-	if _cel_material:
-		_multimesh_instance.material_override = _cel_material
+	# Apply billboard material with shared sprite texture
+	if _billboard_material:
+		_multimesh_instance.material_override = _billboard_material
 
 	var scene = get_tree().current_scene
 	if scene:
 		scene.add_child(_multimesh_instance)
-	_hidden_meshes.clear()
 
 func _deactivate() -> void:
 	_active = false
-	# Restore individual mesh visibility before removing multimesh
-	_restore_individual_meshes()
+	# Restore individual sprite/mesh visibility before removing multimesh
+	_restore_individual_visuals()
 	if _multimesh_instance and is_instance_valid(_multimesh_instance):
 		_multimesh_instance.queue_free()
 		_multimesh_instance = null
 		_multimesh = null
-	_hidden_meshes.clear()
 
-func _restore_individual_meshes() -> void:
+func _restore_individual_visuals() -> void:
+	## Re-show the individual Sprite3D (EnemySprite) or ProceduralModel/Mesh nodes
+	## that were hidden when multimesh took over rendering.
 	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
-		var mesh_node = enemy.get_node_or_null("Mesh")
-		if mesh_node:
-			mesh_node.visible = true
+		var sprite_node = enemy.get_node_or_null("EnemySprite")
+		if sprite_node:
+			sprite_node.visible = true
+			continue
 		var proc_model = enemy.get_node_or_null("ProceduralModel")
 		if proc_model:
 			proc_model.visible = true
+			continue
+		var mesh_node = enemy.get_node_or_null("Mesh")
+		if mesh_node:
+			mesh_node.visible = true
 
 func _update_transforms() -> void:
 	if not _multimesh or not _multimesh_instance or not is_instance_valid(_multimesh_instance):
@@ -117,31 +121,41 @@ func _update_transforms() -> void:
 		# Allocate with some headroom to reduce reallocations
 		_multimesh.instance_count = int(needed * 1.25)
 
-	# Update transforms and colors; hide individual meshes
+	# Update transforms and colors; hide individual sprites
 	var valid_idx := 0
 	for i in range(count):
 		var enemy = enemies[i]
 		if not is_instance_valid(enemy):
 			continue
 
-		_multimesh.set_instance_transform(valid_idx, enemy.global_transform)
+		# Offset the quad upward to match the EnemySprite position (y=0.65)
+		var t = enemy.global_transform
+		t.origin.y += 0.65
+		_multimesh.set_instance_transform(valid_idx, t)
 
+		# Per-instance color tint — uses enemy_color from EnemyBase3D
 		if enemy is EnemyBase3D:
 			_multimesh.set_instance_color(valid_idx, enemy.enemy_color)
 		else:
 			_multimesh.set_instance_color(valid_idx, Color.RED)
 
-		# Hide individual mesh to avoid double rendering
-		var mesh_node = enemy.get_node_or_null("Mesh")
-		if mesh_node and mesh_node.visible:
-			mesh_node.visible = false
-		var proc_model = enemy.get_node_or_null("ProceduralModel")
-		if proc_model and proc_model.visible:
-			proc_model.visible = false
+		# Hide individual sprite/mesh to avoid double rendering
+		var sprite_node = enemy.get_node_or_null("EnemySprite")
+		if sprite_node and sprite_node.visible:
+			sprite_node.visible = false
+		else:
+			# Fallback: hide ProceduralModel or Mesh if no sprite
+			var proc_model = enemy.get_node_or_null("ProceduralModel")
+			if proc_model and proc_model.visible:
+				proc_model.visible = false
+			else:
+				var mesh_node = enemy.get_node_or_null("Mesh")
+				if mesh_node and mesh_node.visible:
+					mesh_node.visible = false
 
 		valid_idx += 1
 
-	# Hide unused instances by scaling them to zero
+	# Hide unused instances by moving them far away with zero scale
 	for j in range(valid_idx, _multimesh.instance_count):
 		_multimesh.set_instance_transform(j, Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), Vector3(0, -1000, 0)))
 
