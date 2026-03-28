@@ -1,11 +1,11 @@
-# Zion — Checklist Final Completo (v2.83)
+# Zion — Checklist Final Completo (v2.84)
 
 ## BUGS CRITICOS
 - [x] Chef starting_weapon = "flamethrower" (desabilitado) — trocar pra outra arma
 - [x] 50 monstros gen3 sprites existem mas nomes nao batem no STAGE_ENEMY_SPRITES mapping
 - [x] Circulos coloridos placeholder nas areas de armas melee (katana=azul, scythe=roxo, hammer=amarelo, whip=marrom)
-- [ ] Barrier walls no player.gd gera 24 erros is_inside_tree na criacao (inofensivo mas poluente)
-- [ ] health_pickup.gd ainda gera 7 erros por run
+- [x] Barrier walls no player.gd gera 24 erros is_inside_tree na criacao — corrigido com call_deferred (player.gd:139)
+- [x] health_pickup.gd ainda gera 7 erros por run — corrigido com _collected guard (health_pickup.gd:11,42,81,90)
 - [ ] Totem area visual eh um circulo generico
 
 ## SFX NAO CONECTADOS (33 gerados, ~20 nao conectados)
@@ -72,91 +72,91 @@
 - [ ] Totem aura — substituir circulo eletrico por sprite de raios
 - [ ] Poison pool — melhorar visual da poca (ja tem sprite mas pode melhorar)
 
-## MONSTROS GEN3 NAO MAPEADOS
-### Cemetery
-- [ ] cemetery_ghoul → mapear a algum enemy type
-- [ ] cemetery_banshee → ja mapeado? verificar
-- [ ] cemetery_gravedigger → mapear
-- [ ] cemetery_rat_swarm → mapear
-- [ ] cemetery_bone_knight → mapear
+## MONSTROS GEN3 — TODOS MAPEADOS
+### Cemetery (all mapped in STAGE_ENEMY_SPRITES + sprites on disk + behaviors)
+- [x] cemetery_ghoul → SlimeBig
+- [x] cemetery_banshee → Ghost, GhostWhite, ToothFairy (behavior: teleport)
+- [x] cemetery_gravedigger → Bomber, Mimic
+- [x] cemetery_rat_swarm → Swarm
+- [x] cemetery_bone_knight → Tank (behavior: charge)
 
-### Forest
-- [ ] forest_fairy → mapear
-- [ ] forest_vine → mapear
-- [ ] forest_bear → mapear
-- [ ] forest_owl → mapear
-- [ ] forest_wisp → verificar
+### Forest (all mapped + sprites on disk + behaviors)
+- [x] forest_fairy → Swarm, ToothFairy
+- [x] forest_vine → Tank
+- [x] forest_bear → SlimeBig (behavior: charge)
+- [x] forest_owl → Bomber, GhostBlue
+- [x] forest_wisp → Ghost, GhostWhite (behavior: flying)
 
-### Farm
-- [ ] farm_bull → mapear
-- [ ] farm_rat → mapear
-- [ ] farm_goat → mapear
-- [ ] farm_bee_swarm → mapear
-- [ ] farm_worm → mapear
+### Farm (all mapped + sprites on disk)
+- [x] farm_bull → SlimeBig
+- [x] farm_rat → Bomber, Mimic
+- [x] farm_goat → Tank
+- [x] farm_bee_swarm → Swarm, ToothFairy
+- [x] farm_worm → Ghost, GhostWhite
 
-### Tokyo
-- [ ] tokyo_yakuza → mapear
-- [ ] tokyo_cyborg → mapear
-- [ ] tokyo_hologram → verificar
-- [ ] tokyo_turret → mapear
-- [ ] tokyo_virus → mapear
+### Tokyo (all mapped + sprites on disk + behaviors)
+- [x] tokyo_yakuza → Swarm
+- [x] tokyo_cyborg → SlimeBig, GhostRed
+- [x] tokyo_hologram → Ghost, GhostWhite, ToothFairy (behavior: stealth)
+- [x] tokyo_turret → Tank
+- [x] tokyo_virus → Bomber, GhostGreen
 
-### Volcano
-- [ ] volcano_phoenix → mapear
-- [ ] volcano_lava_snake → mapear
-- [ ] volcano_ash_ghost → mapear
-- [ ] volcano_fire_bat → mapear
-- [ ] volcano_obsidian_golem → mapear
+### Volcano (all mapped + sprites on disk)
+- [x] volcano_phoenix → Bomber, GhostRed
+- [x] volcano_lava_snake → SlimeBig, Mimic
+- [x] volcano_ash_ghost → Ghost, GhostWhite
+- [x] volcano_fire_bat → Bat, GhostBlue
+- [x] volcano_obsidian_golem → Tank
 
-### Ocean
-- [ ] ocean_shark → mapear
-- [ ] ocean_pufferfish → mapear
-- [ ] ocean_eel → mapear
-- [ ] ocean_seahorse → mapear
-- [ ] ocean_octopus → mapear
+### Ocean (all mapped + sprites on disk)
+- [x] ocean_shark → Tank
+- [x] ocean_pufferfish → SlimeBig (behavior: explode_on_death)
+- [x] ocean_eel → Swarm, GhostGreen
+- [x] ocean_seahorse → Ghost, GhostWhite, ToothFairy
+- [x] ocean_octopus → Bomber, GhostRed
 
-### Arena
-- [ ] arena_archer → mapear
-- [ ] arena_tiger → mapear
-- [ ] arena_prisoner → mapear
-- [ ] arena_eagle → mapear
-- [ ] arena_net_fighter → mapear
+### Arena (all mapped + sprites on disk)
+- [x] arena_archer → Bomber, SkeletonArcher
+- [x] arena_tiger → SlimeBig, Mimic
+- [x] arena_prisoner → Ghost, GhostWhite
+- [x] arena_eagle → Bat, ToothFairy
+- [x] arena_net_fighter → Tank
 
-### Space
-- [ ] space_robot → mapear
-- [ ] space_tentacle → mapear
-- [ ] space_crystal → mapear
-- [ ] space_worm → mapear
-- [ ] space_sentinel → mapear
+### Space (all mapped + sprites on disk)
+- [x] space_robot → Bomber, Mimic
+- [x] space_tentacle → SlimeBig
+- [x] space_crystal → Ghost, GhostWhite, ToothFairy
+- [x] space_worm → Swarm
+- [x] space_sentinel → Tank
 
-### Castle
-- [ ] castle_ghost_maid → mapear
-- [ ] castle_rat_king → mapear
-- [ ] castle_skeleton_mage → mapear
-- [ ] castle_bat_swarm → verificar
-- [ ] castle_cursed_armor → mapear
+### Castle (all mapped + sprites on disk + behaviors)
+- [x] castle_ghost_maid → Ghost, GhostWhite, ToothFairy
+- [x] castle_rat_king → Bomber
+- [x] castle_skeleton_mage → Tank, SkeletonArcher
+- [x] castle_bat_swarm → Swarm
+- [x] castle_cursed_armor → SlimeBig, Mimic
 
-### Candy
-- [ ] candy_chocolate_golem → mapear
-- [ ] candy_ice_cream_cone → mapear
-- [ ] candy_cotton_candy_ghost → mapear
-- [ ] candy_cake_mimic → mapear
-- [ ] candy_sour_worm → mapear
+### Candy (all mapped + sprites on disk)
+- [x] candy_chocolate_golem → SlimeBig
+- [x] candy_ice_cream_cone → Bomber
+- [x] candy_cotton_candy_ghost → Ghost, GhostWhite
+- [x] candy_cake_mimic → Tank, Mimic
+- [x] candy_sour_worm → Swarm
 
 ## PERFORMANCE
 - [x] Reduzir props por stage: cemetery 105→65, outros similar
 - [x] Expandir ObjectPool pra staff_projectile, ice_crystal, magic_book page, shuriken
-- [ ] Cachear texturas de sprites (evitar load() repetido)
+- [x] Cachear texturas de sprites (evitar load() repetido) — static _sprite_cache dict em enemy_base.gd:36
 - [ ] Bullet trail — adicionar rastro visual (so quando FPS > 45)
 - [ ] MultiMesh pra pickups quando > 100 no chao
 
 ## UI/UX
-- [ ] Barra de XP — mostrar quanto falta pro proximo nivel (tooltip ou texto)
-- [ ] Timer mais visivel — font maior, cor diferente pros ultimos 3 minutos
+- [x] Barra de XP — mostrar quanto falta pro proximo nivel — texto "X/Y" sobreposto na barra (hud.gd:128-136,269)
+- [x] Timer mais visivel — font size 18, pulsa vermelho quando < 3 min restantes (hud.gd:175,274-282)
 - [x] Boss HP bar — nome do boss + icone acima da barra
-- [ ] Dash cooldown — indicador visual no HUD (barra ou icone)
+- [x] Dash cooldown — indicador visual no HUD com barra + label numerico (hud.gd:12,166-172,571-580)
 - [x] Tela de pausa — mostrar inventario resumido (armas + itens equipados)
-- [ ] Options: slider de volume com preview de som
+- [ ] Options: slider de volume com preview de som (sliders existem, falta preview)
 - [ ] Options: sensibilidade do gamepad
 - [x] Tela de creditos — atualizar com todos os assets usados (Suno, Quaternius, etc.)
 
@@ -174,14 +174,14 @@
 - [ ] Evento especial: "Eclipse Total" — tela escurece, so inimigos brilham
 
 ## POLISH
-- [ ] Tela titulo: logo do jogo (sprite ou texto estilizado)
-- [ ] Animacao de transicao entre menus (fade + slide)
-- [ ] Efeito de poeira ao andar (particula simples no pe do player)
+- [ ] Tela titulo: logo do jogo (sprite ou texto estilizado) — atualmente texto "ZION" simples
+- [x] Animacao de transicao entre menus (fade + slide) — LoadingScreen autoload com fade transitions
+- [ ] Efeito de poeira ao andar (particula simples no pe do player) — ParticleFactory tem dust mas nao conectado ao player
 - [x] Inimigos piscam vermelho ao tomar dano (adicionar ao squash-stretch)
 - [ ] XP gems brilham mais (aumentar emission)
 - [ ] Cristais giram mais rapido
-- [ ] Boss HP bar pulsa quando boss < 25% HP
-- [ ] Camera shake diferenciado: leve pra hits, medio pra kills, forte pra boss
+- [x] Boss HP bar pulsa quando boss < 25% HP — implementado em hud.gd:558-562
+- [ ] Camera shake diferenciado: leve pra hits, medio pra kills, forte pra boss — atualmente 0.03 pra tudo
 
 ## DOCUMENTACAO
 - [ ] Atualizar CLAUDE.md com estado atual (sprites, 32 armas, 14 chars, etc.)
@@ -199,10 +199,9 @@
 - [ ] Trailer de 30s (captura de gameplay)
 - [ ] Steam store page (requer App ID)
 
-## TOTAL: ~150 items
+## TOTAL: ~150 items (~110 concluidos, ~40 pendentes)
 ### Por prioridade:
-- **Critico (5)**: Chef weapon, barrier errors, health pickup, circle placeholders, gen3 mapping
-- **Alto (35)**: SFX conexoes, musica conexoes, 4 armas novas
-- **Medio (50)**: Efeitos visuais, monstros gen3, UI/UX, polish
-- **Baixo (30)**: Performance extras, multiplayer, conteudo, docs
-- **Build (5)**: Export, deploy, trailer
+- **Critico (5/5 DONE)**: Chef weapon, barrier errors, health pickup, circle placeholders, gen3 mapping
+- **Alto (35/35 DONE)**: SFX conexoes, musica conexoes, 4 armas novas
+- **Medio (~20 pendentes)**: Efeitos visuais placeholder (8), UI/UX restantes (2), polish restantes (4), conteudo (5)
+- **Baixo (~15 pendentes)**: Performance extras (2), multiplayer (2), docs (5), build (5)
