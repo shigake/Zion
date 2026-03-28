@@ -1,144 +1,300 @@
 extends CanvasLayer
 
-## Overlay de tutorial. Mostra mensagens progressivas na primeira run.
+## Interactive tutorial overlay for first run (PRD C1).
+## Shows step-by-step guidance with conditions, dark overlay, and skip button.
+## Only displays if SaveManager.data["tutorial_completed"] == false.
 
-@onready var center: CenterContainer = $CenterContainer
-@onready var panel: PanelContainer = $CenterContainer/PanelContainer
-@onready var label: Label = $CenterContainer/PanelContainer/Label
+# ---- Nodes (built in _ready, no scene dependencies) ----
+var _overlay: ColorRect = null
+var _label: Label = null
+var _skip_btn: Button = null
 
-var tutorial_steps: Array[Dictionary] = [
-	{"id": "move", "locale_key": "tutorial_move", "duration": 5.0},
-	{"id": "dash_tip", "locale_key": "tutorial_dash", "duration": 4.0},
-	{"id": "xp", "locale_key": "tutorial_xp", "duration": 5.0},
-	{"id": "levelup", "locale_key": "tutorial_levelup", "duration": 5.0},
-	{"id": "crystals", "locale_key": "tutorial_crystals", "duration": 5.0},
-	{"id": "events", "locale_key": "tutorial_events", "duration": 4.0},
-	{"id": "synergy", "locale_key": "tutorial_synergy", "duration": 5.0},
-	{"id": "evolution", "locale_key": "tutorial_evolution", "duration": 5.0},
-]
-
-var shown_steps: Dictionary = {}  # step_id -> true
-var current_timer: Timer = null
-var first_kill_connected: bool = false
-var first_levelup_connected: bool = false
-var events_checked: bool = false
-var evolution_checked: bool = false
-var synergy_checked: bool = false
+# ---- State ----
 var tutorial_active: bool = false
+var current_step: int = -1
+var _start_position: Vector3 = Vector3.ZERO
+var _xp_at_step_start: int = 0
+var _gems_collected: int = 0
+var _player_ref: WeakRef = WeakRef.new()
+var _level_up_connected: bool = false
+var _enemy_kill_connected: bool = false
+
+# Steps: each has an id, locale key, and condition type
+const STEPS: Array = [
+	{"id": "move", "key_pt": "Use WASD para mover", "key_en": "Use WASD to move", "condition": "move_distance"},
+	{"id": "auto_attack", "key_pt": "Sua arma ataca automaticamente!", "key_en": "Your weapon attacks automatically!", "condition": "enemy_killed"},
+	{"id": "collect_xp", "key_pt": "Colete as gemas azuis de XP!", "key_en": "Collect the blue XP gems!", "condition": "collect_xp"},
+	{"id": "level_up", "key_pt": "Escolha um upgrade!", "key_en": "Choose an upgrade!", "condition": "level_up_choice"},
+	{"id": "dash", "key_pt": "Use ESPACO para dar dash!", "key_en": "Use SPACE to dash!", "condition": "dash"},
+]
 
 
 func _ready() -> void:
-	center.visible = false
+	layer = 5
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
-	# Check if tutorial was already completed
-	if SaveManager.data.get("tutorial_complete", false):
+	# Check if tutorial already completed (support both old and new key)
+	if SaveManager.data.get("tutorial_completed", false) or SaveManager.data.get("tutorial_complete", false):
 		set_process(false)
+		queue_free()
 		return
 
+	_build_ui()
+	_overlay.visible = false
+	_label.visible = false
+	_skip_btn.visible = false
+
+	# Start tutorial after a short delay (let scene load)
+	var t = get_tree().create_timer(1.0, false, true)
+	t.timeout.connect(_start_tutorial)
+
+
+func _build_ui() -> void:
+	# Dark overlay
+	_overlay = ColorRect.new()
+	_overlay.name = "Overlay"
+	_overlay.color = Color(0, 0, 0, 0.3)
+	_overlay.anchors_preset = Control.PRESET_FULL_RECT
+	_overlay.anchor_right = 1.0
+	_overlay.anchor_bottom = 1.0
+	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_overlay)
+
+	# Center label
+	_label = Label.new()
+	_label.name = "InstructionLabel"
+	_label.anchors_preset = Control.PRESET_CENTER
+	_label.anchor_left = 0.5
+	_label.anchor_top = 0.4
+	_label.anchor_right = 0.5
+	_label.anchor_bottom = 0.4
+	_label.offset_left = -400
+	_label.offset_right = 400
+	_label.offset_top = -40
+	_label.offset_bottom = 40
+	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_label.add_theme_font_size_override("font_size", 28)
+	_label.add_theme_color_override("font_color", Color.WHITE)
+	_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	_label.add_theme_constant_override("shadow_offset_x", 2)
+	_label.add_theme_constant_override("shadow_offset_y", 2)
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_label)
+
+	# Skip button (bottom-right corner, small, gray)
+	_skip_btn = Button.new()
+	_skip_btn.name = "SkipButton"
+	_skip_btn.text = _get_text("Pular tutorial", "Skip tutorial")
+	_skip_btn.anchors_preset = Control.PRESET_BOTTOM_RIGHT
+	_skip_btn.anchor_left = 1.0
+	_skip_btn.anchor_top = 1.0
+	_skip_btn.anchor_right = 1.0
+	_skip_btn.anchor_bottom = 1.0
+	_skip_btn.offset_left = -160
+	_skip_btn.offset_top = -50
+	_skip_btn.offset_right = -16
+	_skip_btn.offset_bottom = -16
+	_skip_btn.add_theme_font_size_override("font_size", 14)
+	_skip_btn.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	_skip_btn.modulate = Color(0.7, 0.7, 0.7, 0.8)
+	_skip_btn.pressed.connect(_skip_tutorial)
+	add_child(_skip_btn)
+
+
+func _start_tutorial() -> void:
 	tutorial_active = true
 
-	# Step 1: movement (at game start, 0s delay)
-	_show_step_delayed("move", 0.5)
+	# Cache player start position
+	var players = GameManager.get_players()
+	if not players.is_empty():
+		_start_position = players[0].global_position
+		_player_ref = weakref(players[0])
 
-	# Step 2: first kill
-	GameManager.enemy_killed.connect(_on_first_kill)
-	first_kill_connected = true
-
-	# Step 3: first level up
-	GameManager.player_leveled_up.connect(_on_first_levelup)
-	first_levelup_connected = true
+	_advance_step()
 
 
-func _process(delta: float) -> void:
+func _advance_step() -> void:
+	current_step += 1
+	if current_step >= STEPS.size():
+		_complete_tutorial()
+		return
+
+	var step = STEPS[current_step]
+	_label.text = _get_step_text(step)
+	_overlay.visible = true
+	_label.visible = true
+	_skip_btn.visible = true
+
+	# Setup condition tracking for the new step
+	_setup_condition(step["condition"])
+
+
+func _setup_condition(condition: String) -> void:
+	match condition:
+		"move_distance":
+			# Tracked in _process
+			var players = GameManager.get_players()
+			if not players.is_empty():
+				_start_position = players[0].global_position
+				_player_ref = weakref(players[0])
+		"enemy_killed":
+			if not _enemy_kill_connected:
+				GameManager.enemy_killed.connect(_on_enemy_killed)
+				_enemy_kill_connected = true
+		"collect_xp":
+			_xp_at_step_start = GameManager.player_xp
+			_gems_collected = 0
+		"level_up_choice":
+			# Connect to level_up_screen choice_made signal
+			_connect_level_up_signal()
+		"dash":
+			# Tracked in _process via Input
+			pass
+
+
+func _process(_delta: float) -> void:
+	if not tutorial_active or current_step < 0 or current_step >= STEPS.size():
+		return
+
+	var step = STEPS[current_step]
+
+	match step["condition"]:
+		"move_distance":
+			var player = _player_ref.get_ref()
+			if player and is_instance_valid(player):
+				var dist = _start_position.distance_to(player.global_position)
+				if dist >= 3.0:
+					_on_condition_met()
+		"collect_xp":
+			# Track XP changes as proxy for gem collection
+			var xp_gained = GameManager.player_xp - _xp_at_step_start
+			# Each gem gives ~1 XP, so 3 XP gained means ~3 gems
+			if xp_gained >= 3:
+				_on_condition_met()
+			# Also check if level changed (XP resets on level up)
+			if GameManager.player_level > 1 and current_step == 2:
+				_on_condition_met()
+		"dash":
+			if Input.is_action_just_pressed("dash"):
+				var player = _player_ref.get_ref()
+				if player and is_instance_valid(player):
+					# Only count if player actually dashed (has move direction)
+					if player.move_direction.length() > 0.1:
+						_on_condition_met()
+
+
+func _on_enemy_killed(_position: Vector3, _xp_value: int) -> void:
+	if current_step >= 0 and current_step < STEPS.size():
+		if STEPS[current_step]["condition"] == "enemy_killed":
+			_on_condition_met()
+
+
+func _on_level_up_choice() -> void:
+	if current_step >= 0 and current_step < STEPS.size():
+		if STEPS[current_step]["condition"] == "level_up_choice":
+			_on_condition_met()
+
+
+func _connect_level_up_signal() -> void:
+	if _level_up_connected:
+		return
+	# Find level_up_screen in the scene tree
+	var lus_nodes = get_tree().get_nodes_in_group("level_up_screen")
+	if not lus_nodes.is_empty():
+		var lus = lus_nodes[0]
+		if lus.has_signal("choice_made"):
+			lus.choice_made.connect(_on_level_up_choice)
+			_level_up_connected = true
+			return
+	# Fallback: search by node name
+	var root = get_tree().current_scene
+	if root:
+		var lus = _find_node_by_name(root, "LevelUpScreen")
+		if lus and lus.has_signal("choice_made"):
+			lus.choice_made.connect(_on_level_up_choice)
+			_level_up_connected = true
+			return
+	# If not found yet, connect via player_leveled_up as fallback
+	# (the player leveling up implies they will make a choice)
+	if not _level_up_connected:
+		GameManager.player_leveled_up.connect(_on_level_up_from_signal)
+		_level_up_connected = true
+
+
+func _on_level_up_from_signal(_new_level: int) -> void:
+	# Delay slightly to let the level up screen appear and be dismissed
+	var t = get_tree().create_timer(0.5, false, true)
+	t.timeout.connect(func():
+		if current_step >= 0 and current_step < STEPS.size():
+			if STEPS[current_step]["condition"] == "level_up_choice":
+				_on_condition_met()
+	)
+
+
+func _find_node_by_name(node: Node, target_name: String) -> Node:
+	if node.name == target_name:
+		return node
+	for child in node.get_children():
+		var found = _find_node_by_name(child, target_name)
+		if found:
+			return found
+	return null
+
+
+func _on_condition_met() -> void:
 	if not tutorial_active:
 		return
-
-	# Dash tip: after 15 seconds
-	if "dash_tip" not in shown_steps and GameManager.game_time >= 15.0:
-		_show_step("dash_tip")
-
-	# Crystals tip: after first crystal drop (~30s into game)
-	if "crystals" not in shown_steps and GameManager.crystals_this_run > 0:
-		_show_step("crystals")
-
-	# Synergy tip: at minute 3
-	if not synergy_checked and GameManager.game_time >= 180.0:
-		synergy_checked = true
-		_show_step("synergy")
-
-	# Events tip: at minute 5
-	if not events_checked and GameManager.game_time >= 300.0:
-		events_checked = true
-		_show_step("events")
+	# Brief flash to acknowledge completion
+	_overlay.visible = false
+	_label.visible = false
+	# Small delay before next step
+	var t = get_tree().create_timer(0.8, false, true)
+	t.timeout.connect(_advance_step)
 
 
-func _show_step_delayed(step_id: String, delay: float) -> void:
-	var t = get_tree().create_timer(delay, false, true)
-	t.timeout.connect(func(): _show_step(step_id))
-
-
-func _show_step(step_id: String) -> void:
-	if step_id in shown_steps:
-		return
-	shown_steps[step_id] = true
-
-	var step: Dictionary = {}
-	for s in tutorial_steps:
-		if s["id"] == step_id:
-			step = s
-			break
-
-	if step.is_empty():
-		return
-
-	label.text = LocaleManager.tr_key(step["locale_key"])
-	center.visible = true
-
-	# Create hide timer
-	if current_timer and current_timer.time_left > 0:
-		current_timer.timeout.disconnect(_hide_message)
-		current_timer.queue_free()
-
-	current_timer = Timer.new()
-	current_timer.wait_time = step["duration"]
-	current_timer.one_shot = true
-	add_child(current_timer)
-	current_timer.timeout.connect(_hide_message)
-	current_timer.start()
-
-	# Check if all steps done
-	if shown_steps.size() == tutorial_steps.size():
-		_complete_tutorial()
-
-
-func _hide_message() -> void:
-	center.visible = false
-	if current_timer:
-		current_timer.queue_free()
-		current_timer = null
-
-
-func _on_first_kill(_position: Vector3, _xp_value: int) -> void:
-	if first_kill_connected:
-		GameManager.enemy_killed.disconnect(_on_first_kill)
-		first_kill_connected = false
-	_show_step("xp")
-
-
-func _on_first_levelup(_new_level: int) -> void:
-	if first_levelup_connected:
-		GameManager.player_leveled_up.disconnect(_on_first_levelup)
-		first_levelup_connected = false
-	_show_step("levelup")
-
-
-func show_evolution_step() -> void:
-	## Called externally when player encounters first evolution chest.
-	_show_step("evolution")
+func _skip_tutorial() -> void:
+	_complete_tutorial()
 
 
 func _complete_tutorial() -> void:
 	tutorial_active = false
-	SaveManager.data["tutorial_complete"] = true
+	current_step = -1
+	_overlay.visible = false
+	_label.visible = false
+	_skip_btn.visible = false
+
+	# Disconnect signals
+	if _enemy_kill_connected:
+		if GameManager.enemy_killed.is_connected(_on_enemy_killed):
+			GameManager.enemy_killed.disconnect(_on_enemy_killed)
+		_enemy_kill_connected = false
+	if _level_up_connected:
+		if GameManager.player_leveled_up.is_connected(_on_level_up_from_signal):
+			GameManager.player_leveled_up.disconnect(_on_level_up_from_signal)
+		_level_up_connected = false
+
+	# Save completion
+	SaveManager.data["tutorial_completed"] = true
 	SaveManager.save_game()
+
 	set_process(false)
+	LogManager.info("Tutorial", "Tutorial completed")
+
+
+func _get_step_text(step: Dictionary) -> String:
+	var locale = LocaleManager.get_locale()
+	if locale == "en":
+		return step["key_en"]
+	return step["key_pt"]
+
+
+func _get_text(pt: String, en: String) -> String:
+	if LocaleManager.get_locale() == "en":
+		return en
+	return pt
+
+
+## External API: can be called to show evolution step (backward compat)
+func show_evolution_step() -> void:
+	pass  # No longer used in interactive tutorial
