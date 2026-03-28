@@ -20,6 +20,17 @@ var _animator: Node = null
 var _hit_count: int = 0
 var _flash_tween: Tween = null  # Reuse tween for flash to avoid creating new ones per hit
 
+## Stage behavior system — themed enemies get unique AI
+var _behavior: String = ""
+var _behavior_timer: float = 0.0
+var _behavior_cooldown: float = 0.0
+var _ambush_speed: float = 0.0
+var _ambush_triggered: bool = false
+var _stealth_range: float = 0.0
+var _original_speed: float = 0.0
+var _charge_dir: Vector3 = Vector3.ZERO
+var _is_charging: bool = false
+
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
 
@@ -38,6 +49,8 @@ func _ready() -> void:
 	hitbox.body_entered.connect(_on_body_entered)
 	# Substitui mesh simples por sprite billboard (fallback: modelo procedural)
 	_apply_sprite()
+	# Apply stage-themed behavior if this enemy has a themed skin
+	_apply_stage_behavior()
 
 func _get_base_enemy_type() -> String:
 	## Derive the base enemy type from the scene file path, not from `name`
@@ -101,6 +114,50 @@ func _apply_sprite() -> void:
 	add_child(sprite)
 	LogManager.debug("Enemy", "Sprite loaded: %s for %s" % [sprite_path, enemy_type])
 
+func _apply_stage_behavior() -> void:
+	var stage = GameManager.selected_stage
+	var enemy_type = _get_base_enemy_type()
+	if not STAGE_ENEMY_SPRITES.has(stage):
+		return
+	var stage_map = STAGE_ENEMY_SPRITES[stage]
+	if not stage_map.has(enemy_type):
+		return
+	var themed_name = stage_map[enemy_type]
+	_original_speed = speed
+	match themed_name:
+		"cemetery_wraith":
+			_behavior = "teleport"
+			_behavior_timer = 5.0
+			_behavior_cooldown = 5.0
+		"forest_treant":
+			_behavior = "ambush"
+			_ambush_speed = speed * 3.0
+			speed = 1.0
+		"farm_scarecrow":
+			_behavior = "spawn_on_death"
+		"tokyo_drone":
+			_behavior = "ranged"
+			_behavior_timer = 3.0
+			_behavior_cooldown = 3.0
+		"volcano_golem":
+			_behavior = "explode_on_death"
+		"ocean_jellyfish":
+			_behavior = "paralyze"
+		"arena_lion":
+			_behavior = "charge"
+			_behavior_timer = 4.0
+			_behavior_cooldown = 4.0
+		"space_xenomorph":
+			_behavior = "stealth"
+			_stealth_range = 6.0
+			damage *= 2
+		"castle_gargoyle":
+			_behavior = "flying"
+		"candy_gummy":
+			_behavior = "split"
+	if _behavior != "":
+		LogManager.debug("Enemy", "Stage behavior '%s' applied to %s" % [_behavior, themed_name])
+
 func _apply_procedural_model() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var model = ModelFactory.get_model_for_enemy(enemy_type)
@@ -146,7 +203,17 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_find_target()
+
+	# --- Stage behavior processing ---
+	if _behavior != "" and target and is_instance_valid(target):
+		_process_stage_behavior(delta)
+
 	if target and is_instance_valid(target):
+		# Charging override: move in straight line ignoring target
+		if _is_charging:
+			velocity = _charge_dir * speed * 3.0
+			move_and_slide()
+			return
 		var direction = (target.global_position - global_position).normalized()
 		direction.y = 0
 		var effective_speed = speed
@@ -159,12 +226,104 @@ func _physics_process(delta: float) -> void:
 		var separation = _get_separation_vector()
 		var final_dir = (direction * effective_speed + separation).normalized()
 		velocity = final_dir * effective_speed
+		# Flying behavior: erratic vertical movement
+		if _behavior == "flying":
+			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
 		if _animator:
 			_animator.set_walking(true)
 	else:
 		if _animator:
 			_animator.set_walking(false)
+
+func _process_stage_behavior(delta: float) -> void:
+	var dist_to_target = global_position.distance_to(target.global_position)
+	match _behavior:
+		"teleport":
+			_behavior_timer -= delta
+			if _behavior_timer <= 0.0:
+				_behavior_timer = _behavior_cooldown
+				var offset = Vector3(randf_range(-3.0, 3.0), 0, randf_range(-3.0, 3.0))
+				global_position = target.global_position + offset
+				ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(0.5, 0.2, 0.8), 8)
+				AudioManager.play_sfx("hit")
+		"ambush":
+			if not _ambush_triggered and dist_to_target < 8.0:
+				_ambush_triggered = true
+				speed = _ambush_speed
+				ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(0.2, 0.8, 0.2), 6)
+		"ranged":
+			_behavior_timer -= delta
+			if _behavior_timer <= 0.0:
+				_behavior_timer = _behavior_cooldown
+				_spawn_enemy_projectile()
+		"charge":
+			if _is_charging:
+				_behavior_timer -= delta
+				if _behavior_timer <= 0.0:
+					_is_charging = false
+					_behavior_timer = _behavior_cooldown
+			else:
+				_behavior_timer -= delta
+				if _behavior_timer <= 0.0 and dist_to_target < 12.0:
+					_is_charging = true
+					_charge_dir = (target.global_position - global_position).normalized()
+					_charge_dir.y = 0
+					_behavior_timer = 0.8  # Charge duration
+					ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2), 6)
+		"stealth":
+			var alpha = clampf(1.0 - (dist_to_target / _stealth_range), 0.05, 1.0)
+			var sprite = get_node_or_null("EnemySprite")
+			if sprite:
+				sprite.modulate.a = alpha
+			var proc = get_node_or_null("ProceduralModel")
+			if proc:
+				for child in proc.get_children():
+					if child is MeshInstance3D:
+						child.transparency = 1.0 - alpha
+		"paralyze":
+			pass  # Handled in _on_body_entered
+		"flying":
+			pass  # Handled in _physics_process movement
+
+func _spawn_enemy_projectile() -> void:
+	if not target or not is_instance_valid(target) or not is_inside_tree():
+		return
+	var dir = (target.global_position - global_position).normalized()
+	var projectile = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.15
+	sphere.height = 0.3
+	projectile.mesh = sphere
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.3, 0.3)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.2, 0.2)
+	mat.emission_energy_multiplier = 2.0
+	projectile.material_override = mat
+	projectile.global_position = global_position + Vector3(0, 0.8, 0)
+	var start_pos = global_position + Vector3(0, 0.8, 0)
+	var end_pos = start_pos + dir * 15.0
+	get_tree().current_scene.add_child(projectile)
+	var tween = projectile.create_tween()
+	tween.tween_property(projectile, "global_position", end_pos, 1.5)
+	tween.tween_callback(projectile.queue_free)
+	# Area3D for collision detection
+	var area = Area3D.new()
+	area.collision_layer = 16  # EnemyAttacks (layer 5)
+	area.collision_mask = 1  # Players (layer 1)
+	var col = CollisionShape3D.new()
+	var shape = SphereShape3D.new()
+	shape.radius = 0.3
+	col.shape = shape
+	area.add_child(col)
+	projectile.add_child(area)
+	var dmg = damage
+	area.body_entered.connect(func(body):
+		if body.is_in_group("players") and body.has_method("take_damage"):
+			body.take_damage(dmg, projectile.global_position)
+			projectile.queue_free()
+	)
 
 func _get_separation_vector() -> Vector3:
 	var sep := Vector3.ZERO
@@ -352,6 +511,8 @@ func _die() -> void:
 		# Mutation: explosive enemies
 		if MutationManager.is_active("explosive_enemies") and not is_in_group("boss"):
 			_mutation_explode(pos)
+		# Stage behavior: death effects
+		_apply_death_behavior(pos)
 		_spawn_xp_gem(pos)
 		_spawn_crystal(pos)
 		_spawn_health_pickup(pos)
@@ -377,6 +538,51 @@ func _die() -> void:
 		tween.tween_callback(queue_free).set_delay(0.5)
 	else:
 		queue_free()
+
+func _apply_death_behavior(pos: Vector3) -> void:
+	match _behavior:
+		"spawn_on_death":
+			# Scarecrow: spawns 3 mini crows on death
+			for i in 3:
+				var crow = preload("res://scenes/enemies/bat.tscn").instantiate()
+				crow.max_hp = maxi(1, max_hp / 4)
+				crow.hp = crow.max_hp
+				crow.damage = maxi(1, damage / 2)
+				crow.scale = Vector3(0.5, 0.5, 0.5)
+				crow.xp_drop = 1
+				var offset = Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5))
+				get_tree().current_scene.call_deferred("add_child", crow)
+				crow.global_position = pos + offset
+				GameManager.enemies_alive += 1
+		"explode_on_death":
+			# Golem: AoE fire damage in radius 2.5
+			var radius = 2.5
+			ParticleFactory.spawn_explosion_particles(pos + Vector3(0, 0.3, 0))
+			ScreenEffects.shake(0.12)
+			var nearby = GameManager.get_enemies_in_radius(pos, radius)
+			for e in nearby:
+				if e == self or not is_instance_valid(e) or e.is_dead:
+					continue
+				if e.has_method("take_damage"):
+					e.call_deferred("take_damage", max_hp, "fire")
+			# Also damage players in radius
+			for p in GameManager.get_players():
+				if is_instance_valid(p) and pos.distance_to(p.global_position) < radius:
+					if p.has_method("take_damage"):
+						p.take_damage(damage * 2, pos)
+		"split":
+			# Gummy: splits into 2 smaller copies
+			for i in 2:
+				var clone = preload("res://scenes/enemies/slime.tscn").instantiate()
+				clone.max_hp = maxi(1, max_hp / 2)
+				clone.hp = clone.max_hp
+				clone.damage = maxi(1, damage / 2)
+				clone.scale = self.scale * 0.6
+				clone.xp_drop = 1
+				var offset = Vector3(randf_range(-1.0, 1.0), 0, randf_range(-1.0, 1.0))
+				get_tree().current_scene.call_deferred("add_child", clone)
+				clone.global_position = pos + offset
+				GameManager.enemies_alive += 1
 
 func _spawn_xp_gem(pos: Vector3) -> void:
 	var gem_scene = preload("res://scenes/xp_gem.tscn")
@@ -490,6 +696,18 @@ func _mutation_explode(pos: Vector3) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players") and body.has_method("take_damage"):
 		body.take_damage(damage, global_position)
+		# Paralyze behavior: stun player for 1 second on contact
+		if _behavior == "paralyze" and body.has_method("apply_stun"):
+			body.apply_stun(1.0)
+		elif _behavior == "paralyze":
+			# Fallback: slow player temporarily if no stun method
+			if "speed" in body:
+				var original_spd = body.speed
+				body.speed = original_spd * 0.3
+				get_tree().create_timer(1.0).timeout.connect(func():
+					if is_instance_valid(body):
+						body.speed = original_spd
+				)
 		# Track cow damage for achievement
 		if GameManager.selected_stage == "farm":
 			var cow_names = ["Zombie Cow", "Cow Slime", "Bull", "Mud Blob"]
