@@ -470,4 +470,32 @@ func _on_menu() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 func _on_quit() -> void:
-	get_tree().quit()
+	AudioManager.play_sfx("menu_click")
+	_show_quit_confirmation()
+
+func _show_quit_confirmation() -> void:
+	if has_node("QuitDialog"):
+		return
+	var dialog := AcceptDialog.new()
+	dialog.name = "QuitDialog"
+	dialog.title = "Sair"
+	dialog.exclusive = true
+	dialog.unresizable = true
+	dialog.dialog_close_on_escape = true
+	dialog.dialog_hide_on_ok = true
+	# Esconde o botao X do titulo
+	var _img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	var _tex := ImageTexture.create_from_image(_img)
+	dialog.add_theme_icon_override("close", _tex)
+	dialog.add_theme_icon_override("close_pressed", _tex)
+	dialog.dialog_text = "Deseja sair do jogo?"
+	dialog.ok_button_text = "Sair"
+	dialog.add_cancel_button("Cancelar")
+	dialog.confirmed.connect(func():
+		get_tree().quit()
+	)
+	dialog.canceled.connect(func():
+		dialog.queue_free()
+	)
+	add_child(dialog)
+	dialog.popup_centered()
