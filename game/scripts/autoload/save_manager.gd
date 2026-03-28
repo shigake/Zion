@@ -7,7 +7,7 @@ const SAVE_PATH := "user://save_data.json"
 var data: Dictionary = {
 	"crystals": 0,
 	"upgrades": {},  # upgrade_id -> level
-	"unlocked_characters": ["ronin", "soldado", "mago"],
+	"unlocked_characters": ["amazona", "ronin", "soldado", "mago"],
 	"unlocked_stages": ["cemetery"],
 	"total_runs": 0,
 	"total_kills": 0,

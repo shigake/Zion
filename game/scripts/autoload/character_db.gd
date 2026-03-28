@@ -3,6 +3,14 @@ extends Node
 ## Database de personagens jogaveis.
 
 var characters: Dictionary = {
+	"amazona": {
+		"name": "Amazona",
+		"starting_weapon": "lance",
+		"passive": "+15% velocidade + 10% dano com lancas",
+		"color": Color(0.85, 0.55, 0.2),
+		"speed_bonus": 0.15,
+		"damage_bonus": 0.10,
+	},
 	"ronin": {
 		"name": "Ronin",
 		"starting_weapon": "katana",
