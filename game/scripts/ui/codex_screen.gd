@@ -200,7 +200,7 @@ func _populate_grid() -> void:
 
 	for weapon_id in all_weapons:
 		var data = all_weapons[weapon_id]
-		var is_unlocked = weapon_id in codex
+		var is_unlocked = true  # Todas desbloqueadas no codex
 
 		var weapon_type: String = data.get("type", "melee")
 		var type_color: Color = type_colors.get(weapon_type, Color.WHITE)
