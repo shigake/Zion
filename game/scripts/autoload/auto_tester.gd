@@ -9,6 +9,7 @@ extends Node
 ##   godot --path game --run -- --test=full
 ##   godot --path game --run -- --test=stress
 ##   godot --path game --run -- --test=all
+##   godot --path game --run -- --test=menu_smoke
 ##   godot --path game --run -- --test=smoke --test-headless
 
 var _active: bool = false
@@ -17,6 +18,7 @@ var _headless: bool = false
 
 var _test_runner: Node = null
 var _test_report: Node = null
+var _menu_smoke: Node = null
 
 var _error_count: int = 0
 var _warning_count: int = 0
@@ -57,6 +59,11 @@ func _ready() -> void:
 	call_deferred("_start_testing")
 
 func _start_testing() -> void:
+	# Menu smoke test has its own flow (no TestRunner/TestReport needed)
+	if _suite_name == "menu_smoke":
+		_start_menu_smoke()
+		return
+
 	# Create TestRunner
 	var runner_script = preload("res://scripts/tests/test_runner.gd")
 	_test_runner = Node.new()
@@ -79,6 +86,55 @@ func _start_testing() -> void:
 
 	# Start the test suite
 	_test_runner.start_suite(_suite_name)
+
+
+func _start_menu_smoke() -> void:
+	var smoke_script = preload("res://scripts/tests/menu_smoke_test.gd")
+	_menu_smoke = Node.new()
+	_menu_smoke.set_script(smoke_script)
+	_menu_smoke.name = "MenuSmokeTest"
+	add_child(_menu_smoke)
+
+	_menu_smoke.completed.connect(_on_menu_smoke_completed)
+
+	# Wait for scene to initialize
+	await get_tree().create_timer(1.0).timeout
+	_menu_smoke.start()
+
+
+func _on_menu_smoke_completed(results: Array) -> void:
+	var passed := 0
+	var failed := 0
+	for r in results:
+		if r["status"] == "PASS":
+			passed += 1
+		else:
+			failed += 1
+
+	# Save results
+	_save_results(results)
+
+	var status := "done" if failed == 0 else "warning"
+	var message := "Menu Smoke Test: %d/%d menus OK (suite: menu_smoke)" % [passed, results.size()]
+	if failed > 0:
+		message += ". %d falharam." % failed
+
+	# Notify Discord
+	var output: Array = []
+	OS.execute("curl", [
+		"-s", "-X", "POST",
+		"http://localhost:3123/notify",
+		"-H", "Content-Type: application/json",
+		"-d", JSON.stringify({
+			"channel": "zion",
+			"message": message,
+			"status": status,
+		})
+	], output, true)
+
+	print("\n[AutoTester] Menu smoke test complete. Exiting in 2 seconds...")
+	await get_tree().create_timer(2.0).timeout
+	get_tree().quit()
 
 func _on_suite_completed(results: Array) -> void:
 	print("\n[AutoTester] Suite completed with %d results" % results.size())
