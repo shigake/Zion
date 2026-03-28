@@ -73,7 +73,32 @@ func _fire(level: int) -> void:
 		get_tree().current_scene.call_deferred("add_child", bullet)
 
 func _apply_shuriken_mesh(bullet: Node) -> void:
-	## Replace bullet's default mesh with a spinning ninja-star shape.
+	## Replace bullet's default mesh with a billboard sprite or spinning ninja-star shape.
+	# Try billboard sprite first
+	var sprite_path = "res://assets/sprites/projectiles/shuriken_projectile.png"
+	if ResourceLoader.exists(sprite_path):
+		var existing_mesh = bullet.get_node_or_null("Mesh")
+		if not existing_mesh:
+			existing_mesh = bullet.get_node_or_null("MeshInstance3D")
+		if existing_mesh:
+			existing_mesh.visible = false
+		# Check if already has sprite (reused from pool)
+		var existing_sprite = bullet.get_node_or_null("ProjectileSprite")
+		if existing_sprite:
+			existing_sprite.visible = true
+			return
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.02
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "ProjectileSprite"
+		bullet.add_child(sprite)
+		return
+
+	# Fallback: procedural mesh
 	var mesh_node = bullet.get_node_or_null("Mesh")
 	if not mesh_node:
 		mesh_node = bullet.get_node_or_null("MeshInstance3D")

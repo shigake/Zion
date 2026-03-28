@@ -27,6 +27,25 @@ func _ready() -> void:
 	beam_area.body_entered.connect(_on_body_entered)
 	# 3D model
 	ModelFactory.attach_weapon_model(charge_mesh, "plasma_cannon")
+	_setup_billboard_sprite()
+
+func _setup_billboard_sprite() -> void:
+	var sprite_path = "res://assets/sprites/projectiles/plasma_bolt.png"
+	if ResourceLoader.exists(sprite_path):
+		var existing_mesh = charge_mesh.get_node_or_null("Mesh")
+		if not existing_mesh:
+			existing_mesh = charge_mesh.get_node_or_null("MeshInstance3D")
+		if existing_mesh:
+			existing_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.02
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "ProjectileSprite"
+		charge_mesh.add_child(sprite)
 
 	# -- Energy ring orbiting the charge sphere --
 	energy_ring = MeshInstance3D.new()

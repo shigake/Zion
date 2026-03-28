@@ -14,7 +14,26 @@ var _returning: bool = false
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_ensure_bullet_mesh()
+	_setup_billboard_sprite()
 	_spawn_muzzle_flash()
+
+func _setup_billboard_sprite() -> void:
+	var sprite_path = "res://assets/sprites/projectiles/bullet.png"
+	if ResourceLoader.exists(sprite_path):
+		var existing_mesh = get_node_or_null("Mesh")
+		if not existing_mesh:
+			existing_mesh = get_node_or_null("MeshInstance3D")
+		if existing_mesh:
+			existing_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.02
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "ProjectileSprite"
+		add_child(sprite)
 
 func _ensure_bullet_mesh() -> void:
 	var mesh_instance = get_node_or_null("Mesh")

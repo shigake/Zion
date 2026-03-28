@@ -58,8 +58,23 @@ func _throw_bottle(level: int) -> void:
 	pool.name = "PoisonPool"
 	pool.global_position = target_pos
 
-	# Visual — bubbling toxic slime pool
+	# Visual — billboard sprite or bubbling toxic slime pool fallback
 	var pool_radius = 2.0 + (level - 1) * 0.3
+
+	# Try billboard sprite for poison cloud
+	var sprite_path = "res://assets/sprites/projectiles/poison_cloud.png"
+	if ResourceLoader.exists(sprite_path):
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.02
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "ProjectileSprite"
+		sprite.position = Vector3(0, 0.5, 0)
+		pool.add_child(sprite)
+
 	var mesh_inst = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
 	disc.top_radius = pool_radius

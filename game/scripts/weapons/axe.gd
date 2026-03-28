@@ -25,6 +25,23 @@ func _ready() -> void:
 	axe_area.body_entered.connect(_on_body_entered)
 	# Build procedural axe model (blade + handle)
 	_build_axe_model()
+	_setup_billboard_sprite()
+
+var _axe_sprite: Sprite3D = null
+
+func _setup_billboard_sprite() -> void:
+	var sprite_path = "res://assets/sprites/projectiles/axe_thrown.png"
+	if ResourceLoader.exists(sprite_path):
+		_axe_sprite = Sprite3D.new()
+		_axe_sprite.texture = load(sprite_path)
+		_axe_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_axe_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		_axe_sprite.pixel_size = 0.02
+		_axe_sprite.shaded = false
+		_axe_sprite.transparent = true
+		_axe_sprite.name = "ProjectileSprite"
+		_axe_sprite.visible = false
+		add_child(_axe_sprite)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -96,6 +113,9 @@ func _throw(level: int) -> void:
 
 	axe_mesh.visible = true
 	axe_area.monitoring = true
+	if _axe_sprite:
+		_axe_sprite.visible = true
+		axe_mesh.visible = false
 
 func _update_flight(delta: float, level: int) -> void:
 	fly_timer += delta
@@ -131,11 +151,16 @@ func _update_flight(delta: float, level: int) -> void:
 
 	# Spin the axe mesh (tumbling throw on Z axis)
 	axe_mesh.rotation.z += delta * 15.0
+	# Keep sprite position in sync with axe mesh
+	if _axe_sprite:
+		_axe_sprite.global_position = axe_mesh.global_position
 
 func _end_flight() -> void:
 	is_flying = false
 	axe_mesh.visible = false
 	axe_area.monitoring = false
+	if _axe_sprite:
+		_axe_sprite.visible = false
 	hit_enemies_out.clear()
 	hit_enemies_back.clear()
 

@@ -21,6 +21,25 @@ func _ready() -> void:
 	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
 	trail.trail_color = Color(0.3, 0.5, 1.0, 0.6)
 	add_child(trail)
+	_setup_billboard_sprite()
+
+func _setup_billboard_sprite() -> void:
+	var sprite_path = "res://assets/sprites/projectiles/staff_projectile.png"
+	if ResourceLoader.exists(sprite_path):
+		var existing_mesh = get_node_or_null("Mesh")
+		if not existing_mesh:
+			existing_mesh = get_node_or_null("MeshInstance3D")
+		if existing_mesh:
+			existing_mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.02
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "ProjectileSprite"
+		add_child(sprite)
 
 func _physics_process(delta: float) -> void:
 	timer += delta
