@@ -5,7 +5,7 @@ import os
 import sys
 from mathutils import Matrix, Vector
 
-OUT = "C:/Users/shiga/projects/Zion/game/assets/models/weapons"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "game", "assets", "models", "weapons")
 
 def clear():
     bpy.ops.wm.read_factory_settings(use_empty=True)
