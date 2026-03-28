@@ -136,8 +136,10 @@ func _ready() -> void:
 	add_child(aura)
 
 	# Barrier walls — 4 paredes vermelhas translucidas nas bordas do mapa
-	# Deferred: global_position is not valid until the node enters the scene tree
-	call_deferred("_create_barrier_walls")
+	# Wait 2 frames so global_position and scene tree are fully set up
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_create_barrier_walls()
 
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over or GameManager.paused:

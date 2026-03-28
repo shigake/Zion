@@ -86,9 +86,9 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	_write_session_footer()
-	_flush()
 	if _log_file:
+		_write_session_footer()
+		_flush()
 		_log_file.close()
 		_log_file = null
 
@@ -367,6 +367,8 @@ func _write_session_header() -> void:
 
 
 func _write_session_footer() -> void:
+	if _log_file == null:
+		return
 	var stats = get_session_stats()
 	_log_file.store_line("")
 	_log_file.store_line("=" .repeat(70))
