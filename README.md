@@ -25,8 +25,9 @@ cd Zion
 # Opcao A: Se godot esta no PATH
 godot --editor --path game
 
-# Opcao B: Caminho completo (Windows, WinGet)
-"/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --editor --path game
+# Opcao B: Defina a variavel GODOT com o caminho do seu executavel
+GODOT="/caminho/para/godot"
+"$GODOT" --editor --path game
 
 # Opcao C: Abra o Godot Editor manualmente e importe game/project.godot
 ```
@@ -44,8 +45,8 @@ Na primeira vez o Godot importa todos os assets automaticamente.
 # Se godot esta no PATH
 godot --path game --run
 
-# Caminho completo (Windows, WinGet)
-"/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe" --path game --run
+# Se godot NAO esta no PATH, use o caminho completo do seu executavel
+# Exemplo: "/caminho/para/godot" --path game --run
 ```
 
 ### Verificar Erros (Headless)

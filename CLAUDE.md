@@ -8,20 +8,20 @@ Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadore
 ## Quick Start
 
 ```bash
-# Alias para o executavel do Godot (Windows, WinGet)
-GODOT="/c/Users/shiga/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.6.1-stable_win64_console.exe"
+# Certifique-se de que "godot" esta no PATH, ou defina a variavel GODOT:
+# GODOT="/caminho/para/godot"   (cada dev configura o seu)
 
 # Rodar o jogo
-"$GODOT" --path game --run
+godot --path game --run
 
 # Abrir no editor
-"$GODOT" --editor --path game
+godot --editor --path game
 
 # Verificar erros (headless)
-"$GODOT" --headless --import game/project.godot
+godot --headless --import game/project.godot
 
 # Export para Windows (precisa preset configurado no editor)
-"$GODOT" --headless --path game --export-release "Windows Desktop" ../build/zion.exe
+godot --headless --path game --export-release "Windows Desktop" ../build/zion.exe
 
 # Servidor de telemetria (dashboard em http://localhost:3456)
 cd server && npm install && npm start
@@ -177,3 +177,14 @@ Ver `docs/prd.md` para roadmap completo.
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
 - **Art Direction**: concept art de referencia para personagens e fases (ver docs/prd_art_direction.md)
 - **3D Models**: modelos Quaternius integrados, falta polish e customizacao por personagem
+
+## Regras Importantes
+
+### Proibido caminhos hardcoded
+**NUNCA** use caminhos absolutos de usuario no codigo ou na documentacao (ex: `/c/Users/shiga/...`, `C:\Users\fulano\...`).
+Mais de uma pessoa trabalha neste projeto — caminhos hardcoded quebram na maquina dos outros.
+
+Use sempre:
+- Caminhos relativos ao projeto (ex: `os.path.join(__file__, "..", "game", ...)`)
+- Variaveis de ambiente (ex: `$GODOT`, `$HOME`)
+- Instrucoes genericas na documentacao (ex: "configure o caminho do seu Godot")
