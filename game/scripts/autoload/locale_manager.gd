@@ -248,16 +248,16 @@ var translations: Dictionary = {
 	"stage_candy_lore": {"pt": "Isto é o que acontece quando uma dimensão sonha.", "en": "This is what happens when a dimension dreams."},
 
 	# ---- Lore das fases (descricao completa) ----
-	"stage_cemetery_desc": {"pt": "O fragmento corrompeu o ciclo da morte. Os mortos se levantam, a neblina nunca dissipa.", "en": "The fragment corrupted the cycle of death. The dead rise, the fog never lifts."},
-	"stage_forest_desc": {"pt": "Magia selvagem transformou a floresta numa armadilha viva. Fadas que guiavam viajantes agora os caçam.", "en": "Wild magic transformed the forest into a living trap. Fairies that once guided travelers now hunt them."},
-	"stage_farm_desc": {"pt": "Um estilhaço deu consciência distorcida aos animais. Vacas zumbis, galinhas explosivas, porcos mutantes.", "en": "A shard gave the animals a twisted consciousness. Zombie cows, explosive chickens, mutant pigs."},
-	"stage_tokyo_desc": {"pt": "A IA da cidade absorveu energia dimensional e decidiu eliminar todo orgânico.", "en": "The city's AI absorbed dimensional energy and decided to eliminate all organics."},
-	"stage_volcano_desc": {"pt": "Energia pura do cristal se manifestou como fogo e fúria. Demônios nasceram do calor dimensional.", "en": "Pure crystal energy manifested as fire and fury. Demons were born from dimensional heat."},
-	"stage_ocean_desc": {"pt": "Ruínas de uma civilização pré-dimensional. Criaturas marinhas mutaram e o mar ganhou vontade própria.", "en": "Ruins of a pre-dimensional civilization. Sea creatures mutated and the ocean gained a will of its own."},
-	"stage_arena_desc": {"pt": "Memória de Zion — onde os Sentinelas treinavam. O coliseu persiste como um loop temporal.", "en": "Zion's memory — where the Sentinels trained. The coliseum persists as a temporal loop."},
-	"stage_space_desc": {"pt": "Estação científica consumida pelas fendas. Gravidade falha, parasitas dimensionais se alimentam.", "en": "Science station consumed by rifts. Gravity fails, dimensional parasites feed."},
-	"stage_castle_desc": {"pt": "A fortaleza de Drácula. Ele absorveu o cristal voluntariamente — acredita que Zion não deve ser restaurado.", "en": "Dracula's fortress. He absorbed the crystal willingly — he believes Zion shouldn't be restored."},
-	"stage_candy_desc": {"pt": "Alucinação dimensional — o subconsciente de Zion tentando lembrar do paraíso. Mas a memória está corrompida.", "en": "Dimensional hallucination — Zion's subconscious trying to remember paradise. But the memory is corrupted."},
+	"stage_cemetery_lore_full": {"pt": "O fragmento corrompeu o ciclo da morte. Os mortos se levantam, a neblina nunca dissipa.", "en": "The fragment corrupted the cycle of death. The dead rise, the fog never lifts."},
+	"stage_forest_lore_full": {"pt": "Magia selvagem transformou a floresta numa armadilha viva. Fadas que guiavam viajantes agora os caçam.", "en": "Wild magic transformed the forest into a living trap. Fairies that once guided travelers now hunt them."},
+	"stage_farm_lore_full": {"pt": "Um estilhaço deu consciência distorcida aos animais. Vacas zumbis, galinhas explosivas, porcos mutantes.", "en": "A shard gave the animals a twisted consciousness. Zombie cows, explosive chickens, mutant pigs."},
+	"stage_tokyo_lore_full": {"pt": "A IA da cidade absorveu energia dimensional e decidiu eliminar todo orgânico.", "en": "The city's AI absorbed dimensional energy and decided to eliminate all organics."},
+	"stage_volcano_lore_full": {"pt": "Energia pura do cristal se manifestou como fogo e fúria. Demônios nasceram do calor dimensional.", "en": "Pure crystal energy manifested as fire and fury. Demons were born from dimensional heat."},
+	"stage_ocean_lore_full": {"pt": "Ruínas de uma civilização pré-dimensional. Criaturas marinhas mutaram e o mar ganhou vontade própria.", "en": "Ruins of a pre-dimensional civilization. Sea creatures mutated and the ocean gained a will of its own."},
+	"stage_arena_lore_full": {"pt": "Memória de Zion — onde os Sentinelas treinavam. O coliseu persiste como um loop temporal.", "en": "Zion's memory — where the Sentinels trained. The coliseum persists as a temporal loop."},
+	"stage_space_lore_full": {"pt": "Estação científica consumida pelas fendas. Gravidade falha, parasitas dimensionais se alimentam.", "en": "Science station consumed by rifts. Gravity fails, dimensional parasites feed."},
+	"stage_castle_lore_full": {"pt": "A fortaleza de Drácula. Ele absorveu o cristal voluntariamente — acredita que Zion não deve ser restaurado.", "en": "Dracula's fortress. He absorbed the crystal willingly — he believes Zion shouldn't be restored."},
+	"stage_candy_lore_full": {"pt": "Alucinação dimensional — o subconsciente de Zion tentando lembrar do paraíso. Mas a memória está corrompida.", "en": "Dimensional hallucination — Zion's subconscious trying to remember paradise. But the memory is corrupted."},
 
 	# ---- Nomes narrativos dos bosses ----
 	"boss_cemetery": {"pt": "Necromancer King — Sentinela da morte", "en": "Necromancer King — Sentinel of death"},

@@ -134,8 +134,8 @@ func _process(delta: float) -> void:
 func _get_stage_data(stage_id: String) -> Dictionary:
 	return {
 		"id": stage_id,
-		"name": LocaleManager.tr_key("stage_" + stage_id),
-		"description": LocaleManager.tr_key("stage_" + stage_id + "_desc"),
+		"name": LocaleManager.tr_key("stage_" + stage_id) if LocaleManager else stage_id,
+		"description": LocaleManager.tr_key("stage_" + stage_id + "_desc") if LocaleManager else "",
 	}
 
 func _build_adjacency() -> void:
@@ -221,7 +221,7 @@ func _draw_map() -> void:
 			map_area.draw_line(pos - Vector2(-half, half), pos + Vector2(-half, half), Color(0.35, 0.35, 0.4), 2.0, true)
 
 		# Name label below node
-		var label_text := LocaleManager.tr_key("stage_" + sid)
+		var label_text := LocaleManager.tr_key("stage_" + sid) if LocaleManager else sid
 		var font := ThemeDB.fallback_font
 		var font_size := 11
 		if font:
@@ -344,7 +344,7 @@ func _update_info_panel() -> void:
 
 	# Boss name with lore title
 	var boss_lore_key = "boss_" + selected_stage
-	var boss_lore_name = LocaleManager.tr_key(boss_lore_key)
+	var boss_lore_name = LocaleManager.tr_key(boss_lore_key) if LocaleManager else boss_lore_key
 	if boss_lore_name != boss_lore_key:
 		info_boss.text = "Boss: %s" % boss_lore_name
 	else:

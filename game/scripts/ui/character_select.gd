@@ -276,9 +276,11 @@ func _load_sprite(char_id: String) -> void:
 
 func _update_selection() -> void:
 	var char_id = all_character_ids[current_index]
-	var data = CharacterDB.get_character(char_id)
+	var data = CharacterDB.get_character(char_id) if CharacterDB else {}
+	if not data:
+		data = {}
 	var is_locked = not SaveManager.is_character_unlocked(char_id)
-	var char_color = data.get("color", Color(0.5, 0.5, 0.5))
+	var char_color: Color = data.get("color", Color(0.5, 0.5, 0.5))
 
 	# Load pixel art sprite
 	_load_sprite(char_id)
@@ -297,7 +299,7 @@ func _update_selection() -> void:
 
 	# Backstory
 	var backstory_key = "backstory_" + char_id
-	var backstory_text = LocaleManager.tr_key(backstory_key)
+	var backstory_text = LocaleManager.tr_key(backstory_key) if LocaleManager else backstory_key
 	if backstory_text != backstory_key:
 		_backstory_label.text = backstory_text
 		_backstory_label.visible = true
@@ -307,8 +309,8 @@ func _update_selection() -> void:
 
 	# Weapon
 	var weapon_id = data.get("starting_weapon", "katana")
-	var weapon_data = WeaponDB.get_weapon(weapon_id)
-	_weapon_label.text = weapon_data.get("name", "???")
+	var weapon_data = WeaponDB.get_weapon(weapon_id) if WeaponDB else {}
+	_weapon_label.text = weapon_data.get("name", "???") if weapon_data else "???"
 	var weapon_icon_path = "res://assets/icons/weapons/%s.svg" % weapon_id
 	if ResourceLoader.exists(weapon_icon_path):
 		_weapon_icon.texture = load(weapon_icon_path)
