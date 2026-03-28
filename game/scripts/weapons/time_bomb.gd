@@ -9,6 +9,8 @@ const FUSE_TIME: float = 3.0
 const EXPLOSION_RADIUS: float = 4.0
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -34,6 +36,8 @@ func _get_player_node() -> Node3D:
 	return null
 
 func _drop_bomb(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var player = _get_player_node()
 	if not player:
 		return

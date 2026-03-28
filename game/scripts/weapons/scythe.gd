@@ -42,6 +42,8 @@ func _ready() -> void:
 		scythe_mesh.get_parent().add_child(sprite)
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -101,6 +103,8 @@ func _on_body_entered(body: Node3D) -> void:
 		_spawn_soul_wisps(body.global_position)
 
 func _spawn_slash_trail(pos: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	if not _slash_tex:
 		return
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
@@ -126,6 +130,8 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 	tween.tween_callback(sprite.queue_free)
 
 func _spawn_soul_wisps(from_pos: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return

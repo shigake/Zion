@@ -6,6 +6,8 @@ var summon_timer: float = 0.0
 var skeleton_scene: PackedScene = preload("res://scenes/weapons/skeleton_summon.tscn")
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -31,6 +33,8 @@ func _get_player_node() -> Node3D:
 	return null
 
 func _summon(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var player = _get_player_node()
 	if not player:
 		return
@@ -46,6 +50,8 @@ func _summon(level: int) -> void:
 	_spawn_summon_circle(player_pos + offset)
 
 func _spawn_summon_circle(pos: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	# Container node for circle + particles
 	var container = Node3D.new()
 	container.global_position = pos

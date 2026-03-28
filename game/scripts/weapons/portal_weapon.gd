@@ -9,6 +9,8 @@ const TELEPORT_DISTANCE: float = 20.0
 const PORTAL_DAMAGE: int = 5
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -24,6 +26,8 @@ func _process(delta: float) -> void:
 		_try_open_portal(level)
 
 func _try_open_portal(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var enemies = GameManager.get_enemies()
 	if enemies.size() < CLUSTER_MIN_ENEMIES:
 		return

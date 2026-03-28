@@ -43,6 +43,8 @@ func _get_player_node() -> Node3D:
 	return null
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -68,6 +70,8 @@ func _process(delta: float) -> void:
 			attack_timer = cooldown
 
 func _start_combo(level: int) -> void:
+	if not is_inside_tree():
+		return
 	is_attacking = true
 	combo_step = 0
 
@@ -102,6 +106,8 @@ func _do_punch(level: int) -> void:
 	_spawn_slash_trail(punch_mesh.global_position)
 
 func _spawn_slash_trail(pos: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	if not _slash_tex:
 		return
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null

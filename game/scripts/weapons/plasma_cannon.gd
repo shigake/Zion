@@ -117,6 +117,8 @@ func _setup_billboard_sprite() -> void:
 	charge_mesh.add_child(charge_particles)
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 

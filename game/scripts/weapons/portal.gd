@@ -6,6 +6,8 @@ var attack_timer: float = 0.0
 var active_portal: Node3D = null
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -32,6 +34,8 @@ func _get_player_node() -> Node3D:
 	return null
 
 func _create_portal(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		return

@@ -43,6 +43,8 @@ func _ready() -> void:
 		slash_mesh.get_parent().add_child(sprite)
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -72,6 +74,8 @@ func _process(delta: float) -> void:
 			attack_timer = cooldown
 
 func _attack(level: int) -> void:
+	if not is_inside_tree():
+		return
 	is_attacking = true
 	attack_anim_timer = attack_duration
 	slash_mesh.visible = true
@@ -92,6 +96,8 @@ func _attack(level: int) -> void:
 	_spawn_slash_trail()
 
 func _spawn_slash_trail() -> void:
+	if not is_inside_tree():
+		return
 	if not _slash_tex:
 		return
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null

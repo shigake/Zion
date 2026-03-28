@@ -55,6 +55,8 @@ func _get_player_node() -> Node3D:
 	return null
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -73,6 +75,8 @@ func _process(delta: float) -> void:
 			_throw(level)
 
 func _throw(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
@@ -205,6 +209,8 @@ func _on_body_entered(body: Node3D) -> void:
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
 
 func _spawn_slash_trail(pos: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	if not _slash_tex:
 		return
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null

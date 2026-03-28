@@ -306,6 +306,8 @@ func get_weapon_nodes() -> Array:
 	return weapon_pivot.get_children()
 
 func _create_barrier_walls() -> void:
+	if not is_inside_tree():
+		return
 	var half = GameManager.map_half_size
 	var wall_length = half * 2.0 + 4.0  # um pouco maior que o mapa
 

@@ -50,6 +50,8 @@ func _setup_billboard_sprite() -> void:
 		book_mesh.add_child(sprite)
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -106,6 +108,8 @@ func _on_body_entered(body: Node3D) -> void:
 	hit_timers[eid] = hit_cooldown
 
 func _fire_page(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
