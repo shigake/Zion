@@ -17,6 +17,8 @@ var data: Dictionary = {
 	"leaderboard": [],  # Array of {time: float, kills: int, character: String, date: String}
 	"bestiary": {},  # enemy_name -> {kills: int, first_seen: String}
 	"codex": [],  # Array of weapon IDs the player has used
+	"player_name": "Anonymous",  # Player name for online leaderboard
+	"pending_leaderboard_scores": [],  # Offline fallback: scores to submit later
 }
 
 func _ready() -> void:

@@ -1,6 +1,6 @@
 extends Control
 
-## Tela de Ranking Global — tabs por modo de jogo, dados mockados para teste.
+## Tela de Ranking Global — tabs por modo de jogo, dados online com fallback local.
 ## Segue PRD: docs/prd_leaderboard_online.md
 
 # --- Colors (matching daily_challenge / main_menu theme) ---
@@ -22,6 +22,7 @@ const COLOR_TAB_INACTIVE := Color(0.08, 0.08, 0.10)
 
 # --- Tabs ---
 enum Mode { DAILY, ENDLESS, NORMAL, BOSS_RUSH }
+const MODE_STRINGS := ["daily", "endless", "normal", "boss_rush"]
 var _current_mode: int = Mode.DAILY
 var _tab_buttons: Array[Button] = []
 var _entries_container: VBoxContainer
@@ -29,174 +30,119 @@ var _player_rank_label: Label
 var _title_label: Label
 var _back_btn: Button
 var _refresh_btn: Button
+var _loading_label: Label
+var _status_label: Label
 
-# --- Player name (mockado por enquanto) ---
-const MOCK_PLAYER_NAME := "VoceAqui"
-
-# --- Mock data ---
-# Nomes ficticios para popular o leaderboard
-const MOCK_NAMES := [
-	"xXSlayerXx", "BrunoGamer", "Ana_BR", "KillMaster99", "ShadowNinja",
-	"DragonFire", "PixelHero", "GamerPro", "NightHunter", "StormBlade",
-	"CyberWolf", "DarkMage", "IronFist", "ThunderGod", "BlazeSword",
-	"FrostBite", "VenomStrike", "SteelHeart", "PhantomX", "SkullCrusher",
-	"MysticArcher", "BladeDancer", "SoulReaper", "WarMachine", "FlameKnight",
-	"IceQueen", "RogueOne", "DeathWish", "LightBringer", "ChaosLord",
-	"StarDust", "MoonWalker", "SunFire", "WindRunner", "EarthShaker",
-	"AquaMarine", "RubyRose", "EmeraldEye", "SapphireStorm", "DiamondDust",
-	"GoldenEagle", "SilverFang", "BronzeKnight", "PlatinumStar", "CopperHead",
-	"JadeWarrior", "OnyxShadow", "AmberGlow", "CoralReef", "PearlDiver",
-]
-
-const MOCK_CHARACTERS := ["ronin", "soldado", "mago", "berserker", "ninja", "necro",
-	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery"]
-
-const MOCK_STAGES := ["cemetery", "forest", "farm", "tokyo", "volcano",
-	"ocean", "arena", "space", "castle", "candy"]
-
-var _mock_data: Dictionary = {}
+# Cache: mode_string -> Array of entries, and timestamps
+var _cached_entries: Dictionary = {}
+var _cache_timestamps: Dictionary = {}
+const CACHE_DURATION := 60.0  # Don't refetch within 60s
+var _is_loading: bool = false
 
 
 func _ready() -> void:
 	get_tree().paused = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_generate_mock_data()
 	_build_ui()
+	# Connect to online leaderboard signal
+	Telemetry.leaderboard_received.connect(_on_leaderboard_received)
 	_show_mode(Mode.DAILY)
 	GamepadUI.notify_menu_opened()
 
 
+func _get_player_name() -> String:
+	return SaveManager.data.get("player_name", "Anonymous")
+
+
 # ---------------------------------------------------------------------------
-# Mock data generation
+# Online data fetching with local fallback
 # ---------------------------------------------------------------------------
 
-func _generate_mock_data() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 42  # Seed fixa para consistencia
+func _fetch_online(mode_str: String) -> void:
+	_is_loading = true
+	_show_loading()
+	var date_str := ""
+	if mode_str == "daily":
+		date_str = DailyChallenge.get_today_string()
+	Telemetry.get_top_scores(mode_str, 50, date_str)
 
-	# Daily - scores do dia
-	var daily_entries := []
-	for i in range(50):
-		var kills := rng.randi_range(200, 2500)
-		var time_s := rng.randi_range(300, 1500)
-		var crystals := rng.randi_range(50, 800)
-		var score := kills * 10 + time_s + crystals
-		daily_entries.append({
-			"rank": i + 1,
-			"player_name": MOCK_NAMES[i % MOCK_NAMES.size()],
-			"score": score,
-			"kills": kills,
-			"time": time_s,
-			"character": MOCK_CHARACTERS[rng.randi_range(0, MOCK_CHARACTERS.size() - 1)],
-			"is_player": false,
-		})
-	# Sort by score desc
-	daily_entries.sort_custom(func(a, b): return a["score"] > b["score"])
-	# Inject player at rank ~23
-	var player_daily := {
-		"rank": 0,
-		"player_name": MOCK_PLAYER_NAME,
-		"score": 12450,
-		"kills": 890,
-		"time": 1120,
-		"character": "ronin",
-		"is_player": true,
-	}
-	daily_entries.insert(22, player_daily)
-	# Re-rank
-	for i in range(daily_entries.size()):
-		daily_entries[i]["rank"] = i + 1
-	_mock_data[Mode.DAILY] = daily_entries
 
-	# Endless - by survived time
-	var endless_entries := []
-	for i in range(50):
-		var time_s := rng.randi_range(600, 3600)
-		var kills := rng.randi_range(500, 5000)
-		endless_entries.append({
-			"rank": i + 1,
-			"player_name": MOCK_NAMES[i % MOCK_NAMES.size()],
-			"score": time_s,  # Score = survived seconds in endless
-			"kills": kills,
-			"time": time_s,
-			"character": MOCK_CHARACTERS[rng.randi_range(0, MOCK_CHARACTERS.size() - 1)],
-			"is_player": false,
-		})
-	endless_entries.sort_custom(func(a, b): return a["time"] > b["time"])
-	var player_endless := {
-		"rank": 0,
-		"player_name": MOCK_PLAYER_NAME,
-		"score": 1820,
-		"kills": 1456,
-		"time": 1820,
-		"character": "mago",
-		"is_player": true,
-	}
-	endless_entries.insert(14, player_endless)
-	for i in range(endless_entries.size()):
-		endless_entries[i]["rank"] = i + 1
-	_mock_data[Mode.ENDLESS] = endless_entries
+func _on_leaderboard_received(entries: Array) -> void:
+	_is_loading = false
+	var mode_str: String = MODE_STRINGS[_current_mode]
 
-	# Normal - by score
-	var normal_entries := []
-	for i in range(50):
-		var kills := rng.randi_range(300, 3000)
-		var time_s := rng.randi_range(400, 1800)
-		var score := kills * 10 + time_s
-		normal_entries.append({
-			"rank": i + 1,
-			"player_name": MOCK_NAMES[i % MOCK_NAMES.size()],
-			"score": score,
-			"kills": kills,
-			"time": time_s,
-			"character": MOCK_CHARACTERS[rng.randi_range(0, MOCK_CHARACTERS.size() - 1)],
-			"stage": MOCK_STAGES[rng.randi_range(0, MOCK_STAGES.size() - 1)],
-			"is_player": false,
-		})
-	normal_entries.sort_custom(func(a, b): return a["score"] > b["score"])
-	var player_normal := {
-		"rank": 0,
-		"player_name": MOCK_PLAYER_NAME,
-		"score": 15200,
-		"kills": 1200,
-		"time": 1400,
-		"character": "ninja",
-		"stage": "cemetery",
-		"is_player": true,
-	}
-	normal_entries.insert(9, player_normal)
-	for i in range(normal_entries.size()):
-		normal_entries[i]["rank"] = i + 1
-	_mock_data[Mode.NORMAL] = normal_entries
+	if entries.is_empty():
+		# Try local fallback
+		var local := _get_local_fallback()
+		if not local.is_empty():
+			_cached_entries[mode_str] = local
+			_cache_timestamps[mode_str] = Time.get_ticks_msec() / 1000.0
+			_display_entries(local, true)
+			return
+		_cached_entries[mode_str] = []
+		_cache_timestamps[mode_str] = Time.get_ticks_msec() / 1000.0
+		_display_entries([], false)
+		return
 
-	# Boss Rush - by time (fastest)
-	var boss_entries := []
-	for i in range(50):
-		var time_s := rng.randi_range(120, 900)
-		var kills := rng.randi_range(10, 50)
-		boss_entries.append({
-			"rank": i + 1,
-			"player_name": MOCK_NAMES[i % MOCK_NAMES.size()],
-			"score": time_s,
-			"kills": kills,
-			"time": time_s,
-			"character": MOCK_CHARACTERS[rng.randi_range(0, MOCK_CHARACTERS.size() - 1)],
-			"is_player": false,
-		})
-	boss_entries.sort_custom(func(a, b): return a["time"] < b["time"])
-	var player_boss := {
-		"rank": 0,
-		"player_name": MOCK_PLAYER_NAME,
-		"score": 445,
-		"kills": 28,
-		"time": 445,
-		"character": "berserker",
-		"is_player": true,
-	}
-	boss_entries.insert(17, player_boss)
-	for i in range(boss_entries.size()):
-		boss_entries[i]["rank"] = i + 1
-	_mock_data[Mode.BOSS_RUSH] = boss_entries
+	# Mark player entries
+	var player_name := _get_player_name()
+	for entry in entries:
+		entry["is_player"] = (str(entry.get("player_name", "")) == player_name)
+		# Normalize time field
+		if not entry.has("time"):
+			entry["time"] = entry.get("survived_seconds", 0)
+
+	_cached_entries[mode_str] = entries
+	_cache_timestamps[mode_str] = Time.get_ticks_msec() / 1000.0
+	_display_entries(entries, false)
+
+
+func _get_local_fallback() -> Array:
+	## Build fallback entries from local SaveManager/DailyChallenge data.
+	var result: Array = []
+	var player_name := _get_player_name()
+	var mode_str: String = MODE_STRINGS[_current_mode]
+
+	if mode_str == "endless":
+		var local_lb = SaveManager.get_leaderboard()
+		for i in range(local_lb.size()):
+			var entry = local_lb[i]
+			result.append({
+				"rank": i + 1,
+				"player_name": player_name,
+				"score": int(entry.get("time", 0)) * 10 + entry.get("kills", 0),
+				"kills": entry.get("kills", 0),
+				"time": entry.get("time", 0),
+				"survived_seconds": entry.get("time", 0),
+				"character": entry.get("character", "???"),
+				"is_player": true,
+			})
+	elif mode_str == "daily":
+		var daily_lb = DailyChallenge.get_leaderboard()
+		for i in range(daily_lb.size()):
+			var entry = daily_lb[i]
+			result.append({
+				"rank": i + 1,
+				"player_name": player_name,
+				"score": entry.get("score", 0),
+				"kills": entry.get("kills", 0),
+				"time": entry.get("time", 0),
+				"survived_seconds": entry.get("time", 0),
+				"character": entry.get("character", "???"),
+				"is_player": true,
+			})
+	return result
+
+
+func _show_loading() -> void:
+	for child in _entries_container.get_children():
+		child.queue_free()
+	_loading_label = Label.new()
+	_loading_label.text = "Carregando..."
+	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_label.add_theme_font_size_override("font_size", 16)
+	_loading_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
+	_entries_container.add_child(_loading_label)
 
 
 # ---------------------------------------------------------------------------
@@ -236,13 +182,13 @@ func _build_ui() -> void:
 	_title_label.add_theme_color_override("font_color", COLOR_GOLD)
 	main_vbox.add_child(_title_label)
 
-	# Subtitle (mock notice)
-	var mock_notice := Label.new()
-	mock_notice.text = "Dados de teste (mockados)"
-	mock_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mock_notice.add_theme_font_size_override("font_size", 12)
-	mock_notice.add_theme_color_override("font_color", COLOR_SUBTITLE)
-	main_vbox.add_child(mock_notice)
+	# Status label (shows offline notice)
+	_status_label = Label.new()
+	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status_label.add_theme_font_size_override("font_size", 12)
+	_status_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
+	_status_label.visible = false
+	main_vbox.add_child(_status_label)
 
 	# --- Tab bar ---
 	var tab_panel := _create_panel()
@@ -318,11 +264,32 @@ func _show_mode(mode: int) -> void:
 	for i in range(_tab_buttons.size()):
 		_style_tab_button(_tab_buttons[i], i == mode)
 
+	var mode_str: String = MODE_STRINGS[mode]
+
+	# Check cache
+	var now := Time.get_ticks_msec() / 1000.0
+	if _cached_entries.has(mode_str):
+		var cached_time: float = _cache_timestamps.get(mode_str, 0.0)
+		if (now - cached_time) < CACHE_DURATION:
+			_display_entries(_cached_entries[mode_str], false)
+			return
+
+	# Fetch from server
+	_fetch_online(mode_str)
+
+
+func _display_entries(entries: Array, is_offline: bool) -> void:
 	# Clear entries
 	for child in _entries_container.get_children():
 		child.queue_free()
 
-	var entries: Array = _mock_data.get(mode, [])
+	# Show offline status
+	if is_offline:
+		_status_label.text = "Offline — mostrando dados locais"
+		_status_label.visible = true
+	else:
+		_status_label.visible = false
+
 	if entries.is_empty():
 		var empty_label := Label.new()
 		empty_label.text = LocaleManager.tr_key("leaderboard_empty")
@@ -334,6 +301,7 @@ func _show_mode(mode: int) -> void:
 
 	# Header
 	var header := Label.new()
+	var mode: int = _current_mode
 	if mode == Mode.NORMAL:
 		header.text = "  #    Nome              Score     Kills   Tempo    Char       Fase"
 	elif mode == Mode.BOSS_RUSH:
@@ -364,15 +332,16 @@ func _show_mode(mode: int) -> void:
 		var is_player: bool = entry.get("is_player", false)
 
 		if is_player:
-			player_rank = entry["rank"]
-			player_score = entry["score"]
+			player_rank = entry.get("rank", i + 1)
+			player_score = entry.get("score", 0)
 
-		var rank: int = entry["rank"]
-		var name_str: String = entry["player_name"]
+		var rank: int = entry.get("rank", i + 1)
+		var name_str: String = str(entry.get("player_name", "Anonymous"))
 		var kills: int = entry.get("kills", 0)
-		var t := int(entry.get("time", 0))
+		var t := int(entry.get("time", entry.get("survived_seconds", 0)))
 		var time_str := "%02d:%02d" % [t / 60, t % 60]
-		var character: String = entry.get("character", "???").capitalize()
+		var char_raw: String = str(entry.get("character", "???"))
+		var character: String = char_raw.capitalize()
 		var score: int = entry.get("score", 0)
 
 		# Rank medal
@@ -406,7 +375,7 @@ func _show_mode(mode: int) -> void:
 
 		var label := Label.new()
 		if mode == Mode.NORMAL:
-			var stage_str: String = entry.get("stage", "???").replace("_", " ").capitalize()
+			var stage_str: String = str(entry.get("stage", "???")).replace("_", " ").capitalize()
 			label.text = " %s  %-16s  %6d    %4d    %s    %-10s %s" % [
 				rank_prefix, name_str, score, kills, time_str, character, stage_str]
 		elif mode == Mode.BOSS_RUSH:
@@ -438,9 +407,9 @@ func _show_mode(mode: int) -> void:
 	if player_rank > 0:
 		var mode_names := ["diario", "endless", "normal", "boss rush"]
 		if mode == Mode.ENDLESS or mode == Mode.BOSS_RUSH:
-			var t := int(player_score)
+			var pt := int(player_score)
 			_player_rank_label.text = "Seu melhor (%s): #%d — %02d:%02d" % [
-				mode_names[mode], player_rank, t / 60, t % 60]
+				mode_names[mode], player_rank, pt / 60, pt % 60]
 		else:
 			_player_rank_label.text = "Seu melhor (%s): #%d — %d pts" % [
 				mode_names[mode], player_rank, player_score]
@@ -524,9 +493,10 @@ func _on_tab_pressed(mode: int) -> void:
 
 func _on_refresh() -> void:
 	AudioManager.play_sfx("menu_click")
-	# No futuro: request HTTP ao servidor
-	# Por enquanto: regenera mock data
-	_generate_mock_data()
+	# Force refresh by clearing cache for current mode
+	var mode_str: String = MODE_STRINGS[_current_mode]
+	_cache_timestamps.erase(mode_str)
+	_cached_entries.erase(mode_str)
 	_show_mode(_current_mode)
 
 

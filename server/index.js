@@ -81,6 +81,22 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_daily_scores_date ON daily_scores(date);
+
+  CREATE TABLE IF NOT EXISTS leaderboard (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_name TEXT NOT NULL DEFAULT 'Anonymous',
+    score INTEGER NOT NULL,
+    kills INTEGER DEFAULT 0,
+    survived_seconds REAL DEFAULT 0,
+    character_id TEXT,
+    stage_id TEXT,
+    game_mode TEXT DEFAULT 'normal',
+    daily_seed INTEGER DEFAULT 0,
+    version TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_leaderboard_mode ON leaderboard(game_mode, score DESC);
+  CREATE INDEX IF NOT EXISTS idx_leaderboard_daily ON leaderboard(daily_seed, score DESC);
 `);
 
 // Add new columns if missing (migration-safe)
@@ -634,6 +650,176 @@ app.get("/daily-stats", (_req, res) => {
       recent_days: recentDays,
     });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Leaderboard endpoints
+// ---------------------------------------------------------------------------
+
+const insertLeaderboard = db.prepare(`
+  INSERT INTO leaderboard (player_name, score, kills, survived_seconds, character_id, stage_id, game_mode, daily_seed, version)
+  VALUES (@player_name, @score, @kills, @survived_seconds, @character_id, @stage_id, @game_mode, @daily_seed, @version)
+`);
+
+// POST /leaderboard/submit — submit a leaderboard score (rate limited: 1 per 10s per IP)
+app.post("/leaderboard/submit", rateLimit(10000, 1), (req, res) => {
+  try {
+    const b = req.body;
+    const score = parseInt(b.score) || 0;
+    if (score < 0 || score > 100000) {
+      return res.status(400).json({ error: "Invalid score (must be 0-100000)" });
+    }
+    if (!b.player_name || typeof b.player_name !== "string" || b.player_name.trim().length === 0) {
+      return res.status(400).json({ error: "player_name is required" });
+    }
+    const playerName = b.player_name.trim().slice(0, 32);
+    const mode = b.game_mode || b.mode || "normal";
+
+    insertLeaderboard.run({
+      player_name: playerName,
+      score: score,
+      kills: parseInt(b.kills) || 0,
+      survived_seconds: parseFloat(b.survived_seconds) || 0,
+      character_id: b.character_id || b.character || null,
+      stage_id: b.stage_id || b.stage || null,
+      game_mode: mode,
+      daily_seed: parseInt(b.daily_seed) || 0,
+      version: b.version || null,
+    });
+
+    // Calculate rank
+    let rankParams = { score: score };
+    let rankQuery;
+    if (mode === "daily" && b.daily_seed) {
+      rankQuery = "SELECT COUNT(*) AS rank FROM leaderboard WHERE game_mode = 'daily' AND daily_seed = @daily_seed AND score > @score";
+      rankParams.daily_seed = parseInt(b.daily_seed) || 0;
+    } else {
+      rankQuery = "SELECT COUNT(*) AS rank FROM leaderboard WHERE game_mode = @game_mode AND score > @score";
+      rankParams.game_mode = mode;
+    }
+    const rankResult = db.prepare(rankQuery).get(rankParams);
+    const rank = (rankResult?.rank || 0) + 1;
+
+    const totalQuery = mode === "daily" && b.daily_seed
+      ? "SELECT COUNT(*) AS count FROM leaderboard WHERE game_mode = 'daily' AND daily_seed = @daily_seed"
+      : "SELECT COUNT(*) AS count FROM leaderboard WHERE game_mode = @game_mode";
+    const totalParams = mode === "daily" && b.daily_seed
+      ? { daily_seed: parseInt(b.daily_seed) || 0 }
+      : { game_mode: mode };
+    const totalEntries = db.prepare(totalQuery).get(totalParams);
+
+    res.json({ ok: true, rank, total_entries: totalEntries?.count || 0 });
+  } catch (err) {
+    console.error("Error inserting leaderboard score:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /leaderboard/top — get top scores
+// Query params: mode (default: normal), date (for daily, YYYY-MM-DD), stage, limit (default: 50)
+app.get("/leaderboard/top", (req, res) => {
+  try {
+    const { mode, date, stage, limit: lim } = req.query;
+    const gameMode = mode || "normal";
+    const limit = Math.min(parseInt(lim) || 50, 200);
+
+    let where = ["game_mode = @game_mode"];
+    let params = { game_mode: gameMode };
+
+    if (stage) {
+      where.push("stage_id = @stage_id");
+      params.stage_id = stage;
+    }
+
+    if (gameMode === "daily" && date) {
+      const parts = date.split("-");
+      if (parts.length === 3) {
+        const dailySeed = parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
+        where.push("daily_seed = @daily_seed");
+        params.daily_seed = dailySeed;
+      }
+    }
+
+    const whereClause = "WHERE " + where.join(" AND ");
+    const rows = db.prepare(`
+      SELECT player_name, score, kills, survived_seconds, character_id, stage_id, game_mode, created_at
+      FROM leaderboard ${whereClause}
+      ORDER BY score DESC
+      LIMIT ${limit}
+    `).all(params);
+
+    const entries = rows.map((r, i) => ({
+      rank: i + 1,
+      player_name: r.player_name,
+      score: r.score,
+      kills: r.kills,
+      survived_seconds: r.survived_seconds,
+      character: r.character_id,
+      stage: r.stage_id,
+      mode: r.game_mode,
+      created_at: r.created_at,
+    }));
+
+    res.json({ mode: gameMode, total: entries.length, entries });
+  } catch (err) {
+    console.error("Error fetching leaderboard:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /leaderboard/rank — get a specific player's rank
+// Query params: player_name (required), mode (default: normal), date (for daily)
+app.get("/leaderboard/rank", (req, res) => {
+  try {
+    const { player_name, mode, date } = req.query;
+    if (!player_name) return res.status(400).json({ error: "player_name is required" });
+    const gameMode = mode || "normal";
+
+    let where = ["game_mode = @game_mode"];
+    let params = { game_mode: gameMode };
+
+    if (gameMode === "daily" && date) {
+      const parts = date.split("-");
+      if (parts.length === 3) {
+        const dailySeed = parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
+        where.push("daily_seed = @daily_seed");
+        params.daily_seed = dailySeed;
+      }
+    }
+
+    const whereClause = "WHERE " + where.join(" AND ");
+
+    // Get the player's best score
+    const bestScore = db.prepare(`
+      SELECT score, kills, survived_seconds, character_id FROM leaderboard
+      ${whereClause} AND player_name = @player_name
+      ORDER BY score DESC LIMIT 1
+    `).get({ ...params, player_name });
+
+    if (!bestScore) {
+      const totalResult = db.prepare(`SELECT COUNT(*) AS count FROM leaderboard ${whereClause}`).get(params);
+      return res.json({ rank: -1, score: 0, total_entries: totalResult?.count || 0 });
+    }
+
+    // Count how many scores are higher
+    const rankResult = db.prepare(`
+      SELECT COUNT(*) AS rank FROM leaderboard ${whereClause} AND score > @best_score
+    `).get({ ...params, best_score: bestScore.score });
+
+    const totalResult = db.prepare(`SELECT COUNT(*) AS count FROM leaderboard ${whereClause}`).get(params);
+
+    res.json({
+      rank: (rankResult?.rank || 0) + 1,
+      score: bestScore.score,
+      kills: bestScore.kills,
+      survived_seconds: bestScore.survived_seconds,
+      character: bestScore.character_id,
+      total_entries: totalResult?.count || 0,
+    });
+  } catch (err) {
+    console.error("Error fetching player rank:", err.message);
     res.status(500).json({ error: err.message });
   }
 });

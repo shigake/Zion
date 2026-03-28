@@ -42,6 +42,8 @@ func _show() -> void:
 			GameManager.selected_character
 		)
 		_submit_daily_score_online()
+	# Auto-submit score to online leaderboard (all modes)
+	_submit_leaderboard_online()
 	# Auto crash report if player died very fast (possible bug)
 	if not GameManager.is_victory and GameManager.game_time < 30.0:
 		LogManager.report_crash("GameOver", "Player died very fast (%.1fs)" % GameManager.game_time)
@@ -268,3 +270,38 @@ func _submit_daily_score_online() -> void:
 	var json_body := JSON.stringify(body)
 	var headers := ["Content-Type: application/json"]
 	http.request(url, headers, HTTPClient.METHOD_POST, json_body)
+
+
+# ---------------------------------------------------------------------------
+# Online Leaderboard score submission (all modes)
+# ---------------------------------------------------------------------------
+
+func _submit_leaderboard_online() -> void:
+	var kills: int = GameManager.total_kills
+	var survived: float = GameManager.game_time
+	var crystals: int = GameManager.crystals_this_run
+	# Score formula: kills * 10 + survived_seconds + crystals_earned
+	var score: int = kills * 10 + int(survived) + crystals
+
+	var player_name: String = SaveManager.data.get("player_name", "Anonymous")
+	var version_str := ""
+	var file := FileAccess.open("res://VERSION", FileAccess.READ)
+	if file:
+		version_str = file.get_as_text().strip_edges()
+
+	var daily_seed: int = 0
+	if GameManager.game_mode == "daily":
+		daily_seed = DailyChallenge.get_daily_seed()
+
+	var score_data := {
+		"player_name": player_name,
+		"score": score,
+		"kills": kills,
+		"survived_seconds": survived,
+		"character": GameManager.selected_character,
+		"stage": GameManager.selected_stage,
+		"game_mode": GameManager.game_mode,
+		"daily_seed": daily_seed,
+		"version": version_str,
+	}
+	Telemetry.submit_leaderboard(score_data)

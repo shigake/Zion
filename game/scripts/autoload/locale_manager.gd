@@ -130,7 +130,8 @@ var translations: Dictionary = {
 	"leaderboard_tab_boss_rush": {"pt": "Boss rush", "en": "Boss rush"},
 	"leaderboard_your_best": {"pt": "Seu melhor: #%d — %s", "en": "Your best: #%d — %s"},
 	"leaderboard_refresh": {"pt": "Atualizar", "en": "Refresh"},
-	"leaderboard_mock_notice": {"pt": "Dados de teste (mockados)", "en": "Test data (mocked)"},
+	"leaderboard_offline": {"pt": "Offline — mostrando dados locais", "en": "Offline — showing local data"},
+	"leaderboard_loading": {"pt": "Carregando...", "en": "Loading..."},
 
 	# ---- Lobby ----
 	"lobby_server_created": {"pt": "Servidor criado! Aguardando jogadores...", "en": "Server created! Waiting for players..."},

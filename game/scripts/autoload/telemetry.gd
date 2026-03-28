@@ -19,6 +19,8 @@ func _ready() -> void:
 	AchievementManager.achievement_unlocked.connect(_on_achievement)
 	# Enviar crash reports pendentes de sessoes anteriores (com delay pra nao bloquear startup)
 	get_tree().create_timer(5.0).timeout.connect(_send_pending_crashes)
+	# Enviar leaderboard scores pendentes (offline fallback)
+	get_tree().create_timer(8.0).timeout.connect(_send_pending_leaderboard_scores)
 
 func _on_game_over() -> void:
 	if not enabled:
@@ -172,4 +174,91 @@ func _get_items_list() -> Array:
 func set_enabled(value: bool) -> void:
 	enabled = value
 	SaveManager.data["telemetry_enabled"] = value
+	SaveManager.save_game()
+
+# ---------------------------------------------------------------------------
+# Online Leaderboard
+# ---------------------------------------------------------------------------
+
+signal leaderboard_received(entries: Array)
+signal score_submitted(rank: int)
+
+var _pending_leaderboard_scores: Array[Dictionary] = []
+
+func submit_leaderboard(score_data: Dictionary) -> void:
+	## Submit a score to the online leaderboard. Emits score_submitted(rank).
+	## Falls back to saving locally if server is offline.
+	if not enabled:
+		_save_pending_score(score_data)
+		return
+	var json_str = JSON.stringify(score_data)
+	var headers = ["Content-Type: application/json"]
+	var url = server_url + "/leaderboard/submit"
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.timeout = 5.0
+	http.request_completed.connect(_on_leaderboard_submit_completed.bind(http, score_data))
+	var err = http.request(url, headers, HTTPClient.METHOD_POST, json_str)
+	if err != OK:
+		http.queue_free()
+		_save_pending_score(score_data)
+		score_submitted.emit(-1)
+
+func _on_leaderboard_submit_completed(result: int, code: int, _hdrs: PackedStringArray, body: PackedByteArray, http: HTTPRequest, score_data: Dictionary) -> void:
+	http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+		_save_pending_score(score_data)
+		score_submitted.emit(-1)
+		return
+	var json = JSON.new()
+	if json.parse(body.get_string_from_utf8()) == OK and json.data is Dictionary:
+		var rank: int = json.data.get("rank", -1)
+		score_submitted.emit(rank)
+	else:
+		score_submitted.emit(-1)
+
+func get_top_scores(mode: String, limit: int = 50, date: String = "", stage: String = "") -> void:
+	## Fetch top scores from the server. Emits leaderboard_received(entries).
+	var url = server_url + "/leaderboard/top?mode=%s&limit=%d" % [mode, limit]
+	if date != "":
+		url += "&date=" + date
+	if stage != "":
+		url += "&stage=" + stage
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.timeout = 5.0
+	http.request_completed.connect(_on_top_scores_received.bind(http))
+	var err = http.request(url, [], HTTPClient.METHOD_GET)
+	if err != OK:
+		http.queue_free()
+		leaderboard_received.emit([])
+
+func _on_top_scores_received(result: int, code: int, _hdrs: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
+	http.queue_free()
+	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
+		leaderboard_received.emit([])
+		return
+	var json = JSON.new()
+	if json.parse(body.get_string_from_utf8()) == OK and json.data is Dictionary:
+		var entries: Array = json.data.get("entries", [])
+		leaderboard_received.emit(entries)
+	else:
+		leaderboard_received.emit([])
+
+func _save_pending_score(score_data: Dictionary) -> void:
+	## Save a score locally when server is offline, for later submission.
+	_pending_leaderboard_scores.append(score_data)
+	var pending: Array = SaveManager.data.get("pending_leaderboard_scores", [])
+	pending.append(score_data)
+	SaveManager.data["pending_leaderboard_scores"] = pending
+	SaveManager.save_game()
+
+func _send_pending_leaderboard_scores() -> void:
+	## Try to submit any locally saved scores.
+	var pending: Array = SaveManager.data.get("pending_leaderboard_scores", [])
+	if pending.is_empty():
+		return
+	for score_data in pending:
+		submit_leaderboard(score_data)
+	SaveManager.data["pending_leaderboard_scores"] = []
 	SaveManager.save_game()
