@@ -77,6 +77,14 @@ func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
+	# Time limit: end the run as defeat when time expires (not in endless mode)
+	if GameManager.game_mode != "endless" and GameManager.game_time >= GameManager.run_time_limit:
+		GameManager.is_victory = false
+		GameManager.is_game_over = true
+		LogManager.info("Game", "Time limit reached (%.0fs). Run ended as defeat." % GameManager.run_time_limit)
+		GameManager.game_over.emit()
+		return
+
 	# Checa evolucoes a cada 2 segundos
 	evolution_check_timer += delta
 	if evolution_check_timer >= 2.0:
