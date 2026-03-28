@@ -294,7 +294,7 @@ func _draw_blade_bar(rect: Rect2, fill: float, ghost: float) -> void:
 		draw_colored_polygon(fill_points, fill_color)
 
 	# Border
-	draw_polyline(bg_points + [bg_points[0]], _theme.border_color, 1.5, true)
+	draw_polyline(bg_points + PackedVector2Array([bg_points[0]]), _theme.border_color, 1.5, true)
 
 	# Gleam line along top
 	var gleam_y = rect.position.y + 3
@@ -363,7 +363,7 @@ func _draw_crystal_bar(rect: Rect2, fill: float, ghost: float) -> void:
 	if fill > 0:
 		draw_colored_polygon(_make_crystal_points(rect, fill), _get_fill_color(fill))
 
-	draw_polyline(bg_pts + [bg_pts[0]], _theme.border_color, 1.5, true)
+	draw_polyline(bg_pts + PackedVector2Array([bg_pts[0]]), _theme.border_color, 1.5, true)
 
 	# Sparkle facet lines
 	if fill > 0.1:
@@ -409,7 +409,7 @@ func _draw_jagged_bar(rect: Rect2, fill: float, ghost: float) -> void:
 	if fill > 0:
 		draw_colored_polygon(_make_jagged_points(rect, fill), _get_fill_color(fill))
 
-	draw_polyline(bg_pts + [bg_pts[0]], _theme.border_color, 1.5, true)
+	draw_polyline(bg_pts + PackedVector2Array([bg_pts[0]]), _theme.border_color, 1.5, true)
 
 	# Rage glow when low HP
 	if fill < 0.3 and fill > 0:
@@ -453,7 +453,7 @@ func _draw_sleek_bar(rect: Rect2, fill: float, ghost: float) -> void:
 	if fill > 0:
 		draw_colored_polygon(_make_sleek_points(slim_rect, fill), _get_fill_color(fill))
 
-	draw_polyline(bg_pts + [bg_pts[0]], _theme.border_color, 1.0, true)
+	draw_polyline(bg_pts + PackedVector2Array([bg_pts[0]]), _theme.border_color, 1.0, true)
 
 	# Shadow trail effect
 	if fill > 0.05:
@@ -514,7 +514,7 @@ func _draw_bottle_bar(rect: Rect2, fill: float, ghost: float) -> void:
 	if fill > 0:
 		draw_colored_polygon(_make_bottle_points(rect, fill), _get_fill_color(fill))
 
-	draw_polyline(bg_pts + [bg_pts[0]], _theme.border_color, 1.5, true)
+	draw_polyline(bg_pts + PackedVector2Array([bg_pts[0]]), _theme.border_color, 1.5, true)
 
 	# Liquid slosh animation
 	if fill > 0.05:
@@ -586,7 +586,7 @@ func _draw_goblet_bar(rect: Rect2, fill: float, ghost: float) -> void:
 	if fill > 0:
 		draw_colored_polygon(_make_goblet_points(rect, fill), _get_fill_color(fill))
 
-	draw_polyline(bg_pts + [bg_pts[0]], _theme.border_color, 1.5, true)
+	draw_polyline(bg_pts + PackedVector2Array([bg_pts[0]]), _theme.border_color, 1.5, true)
 
 	# Blood surface animation (meniscus)
 	if fill > 0.05:
@@ -637,7 +637,7 @@ func _draw_shield_bar(rect: Rect2, fill: float, ghost: float) -> void:
 	if fill > 0:
 		draw_colored_polygon(_make_shield_points(rect, fill), _get_fill_color(fill))
 
-	draw_polyline(bg_pts + [bg_pts[0]], _theme.border_color, 2.0, true)
+	draw_polyline(bg_pts + PackedVector2Array([bg_pts[0]]), _theme.border_color, 2.0, true)
 
 	# Golden laurel accent lines on sides
 	var accent_alpha = 0.25 + sin(_anim_time * 1.5) * 0.1
@@ -764,7 +764,7 @@ func _draw_icon(pos: Vector2) -> void:
 				Vector2(cx, cy + 10), Vector2(cx - 7, cy)
 			])
 			draw_colored_polygon(pts, Color(c.r, c.g, c.b, 0.6))
-			draw_polyline(pts + [pts[0]], c, 1.5, true)
+			draw_polyline(pts + PackedVector2Array([pts[0]]), c, 1.5, true)
 		"flame":
 			# Flame icon
 			var flame_pts = PackedVector2Array([
@@ -826,7 +826,7 @@ func _draw_icon(pos: Vector2) -> void:
 				Vector2(cx - 7, cy + 2),
 			])
 			draw_colored_polygon(shield_pts, Color(c.r, c.g, c.b, 0.6))
-			draw_polyline(shield_pts + [shield_pts[0]], c, 1.5, true)
+			draw_polyline(shield_pts + PackedVector2Array([shield_pts[0]]), c, 1.5, true)
 			# Cross emblem
 			draw_line(Vector2(cx, cy - 5), Vector2(cx, cy + 4), Color(1,1,1,0.4), 2.0)
 			draw_line(Vector2(cx - 4, cy - 1), Vector2(cx + 4, cy - 1), Color(1,1,1,0.4), 2.0)
