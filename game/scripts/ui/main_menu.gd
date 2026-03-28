@@ -106,6 +106,14 @@ func _ready() -> void:
 	)
 	buttons_container.add_child(codex_btn)
 
+	# Achievements
+	var achievements_btn := _create_menu_button("🏆  Conquistas")
+	achievements_btn.pressed.connect(func():
+		AudioManager.play_sfx("menu_click")
+		get_tree().change_scene_to_file("res://scenes/ui/achievements_screen.tscn")
+	)
+	buttons_container.add_child(achievements_btn)
+
 	# Options
 	var options_btn := _create_menu_button("⚙  " + LocaleManager.tr_key("menu_options"))
 	options_btn.pressed.connect(func():
@@ -124,6 +132,7 @@ func _ready() -> void:
 	_style_button(leaderboard_btn)
 	_style_button(bestiary_btn)
 	_style_button(codex_btn)
+	_style_button(achievements_btn)
 	_style_button(options_btn)
 
 	_update_crystals()
