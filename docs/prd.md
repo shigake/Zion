@@ -39,9 +39,10 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 - [x] Boss entrance (shake + slowmo + flash)
 
 ### Audio
-- [x] 12 musicas (Suno AI chiptune)
-- [x] 10 SFX sintetizados (hit, kill, collect, level_up, dash, boss, menu, hurt, evolve, game_over)
+- [x] 15 musicas (12 Suno AI chiptune + 3 extras)
+- [x] 50 SFX (10 base + 33 gerados via sfx_generator_v3 + 7 extras)
 - [x] AudioManager com crossfade, pool, cooldown
+- [ ] Musica dinamica por fase (ver docs/prd_cemetery_music.md)
 
 ### Multiplayer
 - [x] Co-op 2-4 jogadores via ENet
@@ -150,7 +151,7 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 
 ## FASE B — Gameplay Depth (Prioridade Alta)
 
-### B1. Mecanicas Unicas por Stage
+### B1. Mecanicas Unicas por Stage ✅ IMPLEMENTADO
 **Objetivo**: Cada stage tem uma mecanica ambiental unica.
 
 | Stage | Mecanica | Efeito |
@@ -166,10 +167,7 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 | Castle | Zonas escuras | Inimigos +30% dano, tochas criam zonas seguras |
 | Candy | Caramelo | Zonas pegajosas -50% speed |
 
-**Implementacao**:
-- Cada stage_props.gd cria Area3D com CollisionShape3D
-- body_entered/body_exited aplicam efeitos
-- Visual: sprite de zona no chao (32x32, semi-transparente)
+**Implementacao**: Area3D zones em cada stage_props.gd com body_entered/body_exited.
 
 ### B2. Enemy Behaviors por Stage
 **Objetivo**: Inimigos tematicos com ataques unicos.
@@ -255,15 +253,13 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
   - Demon Lord: "Bem-vindos ao inferno. Não há saída."
   - Sugar King: "Quem quer doces? HAHAHAHA!"
 
-### C3. Achievement Popup Bonito
+### C3. Achievement Popup Bonito ✅ IMPLEMENTADO
 **Objetivo**: Conquistas devem sentir-se recompensadoras.
 
-- Slide-in do lado direito da tela
-- Icone do achievement (sprite 16x16) + nome + descricao
-- Fundo dourado com brilho
-- Som especial de achievement (novo SFX)
-- Permanece 3s, depois slide-out
-- Queue: se varias conquistas ao mesmo tempo, mostra uma por vez
+- Slide-in do lado direito da tela com queue
+- Icone do achievement + nome + descricao
+- Fundo dourado com brilho, SFX dedicado
+- Tela de achievements dedicada com status de cada conquista
 
 ### C4. Tela de Estatisticas Pos-Run
 **Objetivo**: Expandir a tela de game over.
@@ -347,7 +343,7 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 | boss_phase.wav | Transicao de fase | Boss HP threshold |
 | boss_death.wav | Morte do boss | Boss defeated |
 
-**Total SFX necessarios: 33 novos (temos 10, faltam 33)**
+**Total SFX necessarios: 33 novos — ✅ IMPLEMENTADO (gerados via sfx_generator_v3, 50 SFX no total)**
 
 ### D2. Musica Adicional
 - victory.mp3 — musica de vitoria (boss derrotado)

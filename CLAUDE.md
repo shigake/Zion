@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-12 personagens, 28 armas, 10 fases, 10 bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+14 personagens, 28 armas, 10 fases, 10 bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
 
 ## Quick Start
 
@@ -35,25 +35,21 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/                        # Game design documents (18 arquivos)
+├── docs/                        # Game design documents
 │   ├── gdd.md                   # Game Design Document
-│   ├── prd.md                   # Product Requirements (roadmap fases 0-6)
+│   ├── prd.md                   # Product Requirements (roadmap fases A-E)
 │   ├── spec.md                  # Especificacao tecnica
 │   ├── fases.md                 # 10 fases detalhadas
 │   ├── itens.md                 # Itens, evolucoes, reliquias
 │   ├── mecanicas.md             # Mecanicas de gameplay
-│   ├── personagens.md           # 12 personagens
+│   ├── personagens.md           # 14 personagens
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
 │   ├── art_prompts.md           # Prompts de arte para assets
-│   ├── prd_3d_models.md         # PRD de modelos 3D
-│   ├── prd_auto_tester.md       # PRD de testes automatizados
-│   ├── prd_art_direction.md     # PRD de direcao artistica
-│   ├── prd_docs_update.md       # PRD de atualizacao de docs
-│   ├── prd_icon_projectile_polish.md  # PRD de polish de icones/projeteis
-│   ├── prd_icons.md             # PRD de icones
-│   ├── prd_projectiles_effects.md     # PRD de efeitos de projeteis
-│   └── prd_future.md            # Roadmap futuro
+│   ├── prd_auto_tester.md       # PRD de testes automatizados (8 suites)
+│   ├── prd_achievements_popup.md # PRD de popup de conquistas
+│   ├── prd_leaderboard_online.md # PRD de leaderboard global
+│   └── prd_cemetery_music.md    # PRD de musica dinamica do cemiterio
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
 │   ├── package.json             # Dependencias (express, better-sqlite3)
@@ -62,14 +58,14 @@ Zion/
 └── game/                        # Projeto Godot 4
     ├── project.godot            # Config (autoloads, layers, display)
     ├── VERSION                  # Versao atual (sem "v")
-    ├── scenes/ (96 .tscn)       # Cenas
+    ├── scenes/ (98 .tscn)        # Cenas
     │   ├── enemies/             # 16 genericos + 10 bosses (26 total)
     │   ├── stages/              # 10 stages com props procedurais
     │   ├── weapons/             # 35 cenas (28 armas + projeteis)
     │   ├── ui/                  # HUD, menus, shop, leaderboard, debug overlay
     │   └── player/              # Cena do jogador
-    ├── scripts/ (153 .gd)       # GDScript
-    │   ├── autoload/            # 27 singletons (ver lista abaixo)
+    ├── scripts/ (186 .gd)        # GDScript
+    │   ├── autoload/            # Singletons (ver lista abaixo)
     │   ├── player/              # Player controller
     │   ├── enemies/             # Base + spawner + 10 bosses + especiais
     │   ├── weapons/             # 28 armas + projectiles + behaviors
@@ -125,11 +121,11 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 
 ## Content Summary
 
-- **Characters**: 12 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery)
+- **Characters**: 14 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
 - **Weapons**: 28 (10 melee, 10 ranged, 8 summon/special)
 - **Stages**: 10 (cemetery, forest, farm, tokyo, volcano, ocean, arena, space, castle, candy)
 - **Bosses**: 10 (one per stage, each with 3 phases)
-- **Enemies**: 11 genericos + 6 especiais (skeleton_archer, mimic, bomber, swarm, tank, tooth_fairy)
+- **Enemies**: 11 genericos + 6 especiais + 40 tematicos (4 por stage)
 - **Items**: 19 passive items
 - **Evolutions**: 12 weapon evolutions
 - **Relics**: 7 pre-run relics
@@ -167,16 +163,16 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Fases 0-3 do PRD substancialmente implementadas. Sistema de mutacoes (Modo Ascensao), cross-combo multiplayer, e revive com sacrificio implementados. Fases 4-6 parcialmente (conteudo das 10 fases existe, multiplayer avancado existe, falta polish e audio).
+Core game completo. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano. FASE B (gameplay) parcial — 10 mecanicas de stage, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global. FASE D (audio) quase completa — 50 SFX, 15 musicas chiptune, falta musica dinamica por fase. FASE E (infra) pendente.
 
 Ver `docs/prd.md` para roadmap completo.
 
 ## Remaining Work
 
-- **Audio**: sistema (AudioManager) existe e carrega automaticamente, mas faltam arquivos .ogg/.wav em game/assets/audio/
+- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fase (ver docs/prd_cemetery_music.md)
+- **Visual Polish**: walk animations, slash trails melee, props animados, tela de loading (ver FASE A do prd.md)
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
-- **Art Direction**: concept art de referencia para personagens e fases (ver docs/prd_art_direction.md)
-- **3D Models**: modelos Quaternius integrados, falta polish e customizacao por personagem
+- **Tutorial**: tutorial interativo para novos jogadores (ver FASE C do prd.md)
 
 ## Regras Importantes
 

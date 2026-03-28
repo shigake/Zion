@@ -84,7 +84,7 @@ Zion/
 │   ├── mecanicas.md        # Mecanicas de gameplay
 │   ├── personagens.md      # 12 personagens e armas
 │   ├── progressao.md       # Loja, cristais, meta-progressao
-│   ├── prd_*.md            # 8 PRDs (3d_models, art_direction, auto_tester, icons, etc.)
+│   ├── prd_*.md            # PRDs (auto_tester, achievements_popup, leaderboard_online, cemetery_music, etc.)
 │   └── balance_analysis.md # Analise de balanceamento verificada
 ├── server/                 # Servidor de telemetria (Node.js)
 │   ├── index.js            # Express + SQLite (API + dashboard)
@@ -94,13 +94,13 @@ Zion/
 └── game/                   # Projeto Godot 4
     ├── project.godot       # Configuracao do projeto (autoloads, layers, display)
     ├── VERSION             # Versao atual do jogo (sem "v")
-    ├── scenes/             # Cenas (.tscn) — 96 arquivos
+    ├── scenes/             # Cenas (.tscn) — 98 arquivos
     │   ├── enemies/        # 16 inimigos genericos + 10 bosses (26 total)
     │   ├── stages/         # 10 fases com ambientes procedurais
     │   ├── weapons/        # 35 cenas (28 armas + projeteis)
     │   ├── ui/             # HUD, menus, level up, shop, leaderboard, debug overlay
     │   └── player/         # Cena do jogador
-    ├── scripts/            # GDScript (.gd) — 153 arquivos
+    ├── scripts/            # GDScript (.gd) — 186 arquivos
     │   ├── autoload/       # 27 singletons globais (ver tabela abaixo)
     │   ├── player/         # Controlador do jogador
     │   ├── enemies/        # Base + spawner + 10 bosses + 6 especiais
@@ -200,7 +200,7 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 - **10 eventos** especiais (Horda Dourada, Eclipse, Chuva de Meteoros, etc)
 - **13 achievements**
 - **12 upgrades** permanentes na loja
-- **Leaderboard** local (modo Endless)
+- **Leaderboard** global com tabs (modo Endless)
 - **Multiplayer** co-op ate 4 jogadores (ENet)
 - **18 sinergias** elementais (6 base + 4 agua + 8 cross-combos)
 - **11 inimigos** genericos + 6 especiais (Skeleton Archer, Mimic, Bomber, Swarm, Tank, Tooth Fairy)
@@ -290,14 +290,10 @@ cd server && npm install && npm start
 ### PRDs ativos
 | Documento | Descricao |
 |-----------|-----------|
-| [3D Models](docs/prd_3d_models.md) | PRD de modelos 3D |
-| [Auto Tester](docs/prd_auto_tester.md) | PRD de testes automatizados |
-| [Art Direction](docs/prd_art_direction.md) | PRD de direcao artistica |
-| [Docs Update](docs/prd_docs_update.md) | PRD de atualizacao de docs |
-| [Icon/Projectile Polish](docs/prd_icon_projectile_polish.md) | PRD de polish de icones e projeteis |
-| [Icons](docs/prd_icons.md) | PRD de icones |
-| [Projectile Effects](docs/prd_projectiles_effects.md) | PRD de efeitos de projeteis |
-| [Future](docs/prd_future.md) | Roadmap futuro |
+| [Auto Tester](docs/prd_auto_tester.md) | PRD de testes automatizados (8 suites) |
+| [Achievements Popup](docs/prd_achievements_popup.md) | PRD de popup de conquistas |
+| [Leaderboard Online](docs/prd_leaderboard_online.md) | PRD de leaderboard global |
+| [Cemetery Music](docs/prd_cemetery_music.md) | PRD de musica dinamica do cemiterio (5 faixas) |
 
 ## Configuracoes do Projeto
 
@@ -312,12 +308,12 @@ cd server && npm install && npm start
 
 ## Status
 
-Em desenvolvimento ativo. Versao atual: **2.29.2**
+Em desenvolvimento ativo. Versao atual: **2.64.9**
 
-Todas as 10 fases, 12 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web. Modo ascensao (mutacoes), cross-combos multiplayer, revive com sacrificio, desafio diario, sistema de performance (LOD/culling), drops de vida/ima, barras de HP tematicas por personagem, HUD multiplayer com ping e setas de aliados, modelos 3D Quaternius integrados, e selecao de personagem estilo Genshin.
+Todas as 10 fases, 14 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web. Modo ascensao (mutacoes), cross-combos multiplayer, revive com sacrificio, desafio diario, sistema de performance (LOD/culling), drops de vida/ima, barras de HP tematicas por personagem, HUD multiplayer com ping e setas de aliados, sprites pixel art billboard, selecao de personagem estilo Genshin, 13 achievements com popup, leaderboard global, 10 mecanicas unicas de stage, 33 SFX + 12 musicas chiptune, e auto-tester com 8 suites.
 
 ### Trabalho Restante
-- **Audio**: sistema implementado, faltam arquivos .ogg/.wav
+- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fase (ver docs/prd_cemetery_music.md)
+- **Visual Polish**: walk animations, slash trails melee, props animados, tela de loading
 - **Steam**: stub existe, falta plugin GodotSteam
-- **3D Models**: modelos Quaternius integrados, falta polish e customizacao
 - **Art Direction**: concept art de referencia (ver docs/prd_art_direction.md)
