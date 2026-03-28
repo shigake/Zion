@@ -41,11 +41,14 @@ func _summon(level: int) -> void:
 	var player_pos = player.global_position
 	var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
 	var skeleton = ObjectPool.get_instance(skeleton_scene)
-	skeleton.global_position = player_pos + offset
+	skeleton.position = player_pos + offset
 	skeleton.damage = int(WeaponDB.get_damage("necro", level))
 	skeleton.lifetime = 8.0 + level * 2.0
-	get_tree().current_scene.call_deferred("add_child", skeleton)
+	scene_root.add_child(skeleton)
 	AudioManager.play_sfx("summon_pop")
 	# Green summon circle
 	_spawn_summon_circle(player_pos + offset)

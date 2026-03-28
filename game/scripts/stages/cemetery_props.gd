@@ -36,9 +36,7 @@ var _animated_props: Array = []  # Cached list of props that need animation
 func _process(delta: float) -> void:
 	_anim_time += delta
 	_anim_frame += 1
-	# Ambient wind SFX every ~8 seconds
-	if fmod(_anim_time, 8.0) < delta:
-		AudioManager.play_sfx("wind")
+	# Ambient wind disabled — SFX too repetitive
 	if _anim_frame % 4 != 0:
 		return  # Only animate every 4th frame
 	# Cache animated props on first pass

@@ -85,17 +85,16 @@ func _physics_process(delta: float) -> void:
 		global_position += direction * speed * delta
 
 func _on_body_entered(body: Node3D) -> void:
-	if _returning:
+	if _returning or not is_inside_tree():
 		return
-	if not is_inside_tree():
-		return
+	_returning = true  # Prevent double-trigger
+	set_deferred("monitoring", false)
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = weapon_id
 		body.call_deferred("take_damage", damage, damage_type)
-		_return_to_pool()
 	elif body.has_method("take_damage") and body.is_in_group("players"):
 		body.call_deferred("take_damage", damage)
-		_return_to_pool()
+	_return_to_pool()
 
 func _return_to_pool() -> void:
 	if _returning:

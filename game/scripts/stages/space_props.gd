@@ -37,7 +37,7 @@ func _process(delta: float) -> void:
 	_anim_frame += 1
 	# Ambient wind SFX every ~10 seconds
 	if fmod(_anim_time, 10.0) < delta:
-		AudioManager.play_sfx("wind")
+		pass  # ambient disabled
 	if _anim_frame % 4 != 0:
 		return
 	if _animated_props.is_empty():
