@@ -187,6 +187,10 @@ func _build_ui() -> void:
 	_back_btn.pressed.connect(_on_back)
 	btn_row.add_child(_back_btn)
 
+	var random_btn = _make_btn("Aleatorio", Color(0.4, 0.2, 0.1))
+	random_btn.pressed.connect(_on_random_start)
+	btn_row.add_child(random_btn)
+
 	_start_btn = _make_btn("Jogar", Color(0.15, 0.25, 0.4))
 	_start_btn.pressed.connect(_on_start)
 	btn_row.add_child(_start_btn)
@@ -381,6 +385,43 @@ func _on_start() -> void:
 	if SaveManager.is_character_unlocked(char_id):
 		GameManager.selected_character = char_id
 		get_tree().change_scene_to_file("res://scenes/ui/mutations_panel.tscn")
+
+func _on_random_start() -> void:
+	# Pick random unlocked character
+	var unlocked: Array[String] = []
+	for cid in all_character_ids:
+		if SaveManager.is_character_unlocked(cid):
+			unlocked.append(cid)
+	if unlocked.is_empty():
+		return
+	var char_id = unlocked[randi() % unlocked.size()]
+	GameManager.selected_character = char_id
+
+	# Pick random stage
+	var stages = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+	GameManager.selected_stage = stages[randi() % stages.size()]
+
+	# No mutations, no relic, normal mode
+	MutationManager.reset()
+	GameManager.selected_relic = ""
+	GameManager.game_mode = "normal"
+	GameManager.run_time_limit = 1800.0
+
+	# Go straight to game
+	var stage_scenes = {
+		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
+		"forest": "res://scenes/stages/stage_forest.tscn",
+		"farm": "res://scenes/stages/stage_farm.tscn",
+		"tokyo": "res://scenes/stages/stage_tokyo.tscn",
+		"volcano": "res://scenes/stages/stage_volcano.tscn",
+		"ocean": "res://scenes/stages/stage_ocean.tscn",
+		"arena": "res://scenes/stages/stage_arena.tscn",
+		"space": "res://scenes/stages/stage_space.tscn",
+		"castle": "res://scenes/stages/stage_castle.tscn",
+		"candy": "res://scenes/stages/stage_candy.tscn",
+	}
+	var scene_path = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
+	get_tree().change_scene_to_file(scene_path)
 
 func _on_back() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
