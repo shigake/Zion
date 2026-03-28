@@ -30,6 +30,7 @@ func _process(_delta: float) -> void:
 		_evolve()
 
 func _evolve() -> void:
+	AudioManager.play_sfx("chest_open")
 	AudioManager.play_sfx("evolve")
 	# Show evolution tutorial on first evolution
 	var tutorial = get_tree().current_scene.get_node_or_null("TutorialOverlay")

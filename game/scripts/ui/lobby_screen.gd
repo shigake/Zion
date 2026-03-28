@@ -17,6 +17,7 @@ var _is_local_ready: bool = false
 func _ready() -> void:
 	get_tree().paused = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	AudioManager.play_music("lobby")
 	host_btn.pressed.connect(_on_host)
 	join_btn.pressed.connect(_on_join)
 	start_btn.pressed.connect(_on_start)

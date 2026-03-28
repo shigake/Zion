@@ -42,6 +42,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Determina fase
+	var old_phase = phase
 	var hp_pct = float(hp) / float(max_hp)
 	if hp_pct > 0.75:
 		phase = 1
@@ -49,6 +50,8 @@ func _physics_process(delta: float) -> void:
 		phase = 2
 	else:
 		phase = 3
+	if phase != old_phase:
+		AudioManager.play_sfx("boss_phase")
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:
@@ -143,6 +146,7 @@ func _physics_process(delta: float) -> void:
 func _fire_flame_ring(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	for i in range(count):
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
@@ -160,6 +164,7 @@ func _fire_flame_ring(count: int) -> void:
 func _fire_flame_spiral(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	var base_angle = fmod(Time.get_ticks_msec() / 500.0, TAU)
 	for i in range(count):
 		var angle = base_angle + (TAU / count) * i
@@ -209,6 +214,7 @@ func _charge_at_player() -> void:
 	ParticleFactory.spawn_death_particles(global_position, Color(1.0, 0.3, 0.0), 6)
 
 func _ground_slam(radius: float) -> void:
+	AudioManager.play_sfx("boss_attack")
 	ParticleFactory.spawn_explosion_particles(global_position, radius)
 	# Dano em area ao redor do boss
 	var players = GameManager.get_players()

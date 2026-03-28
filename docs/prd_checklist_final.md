@@ -33,27 +33,27 @@
 - [x] reroll.wav — conectar em level_up_screen.gd (_on_reroll)
 - [x] banish.wav — conectar em level_up_screen.gd (_on_banish)
 - [x] select.wav — conectar em level_up_screen.gd (_choose)
-- [ ] equip.wav — conectar em level_up_screen.gd (apos escolha aplicada)
-- [ ] error.wav — conectar quando tenta comprar sem cristais, personagem locked
+- [x] equip.wav — conectar em level_up_screen.gd (apos escolha aplicada)
+- [x] error.wav — conectar quando tenta comprar sem cristais, personagem locked
 
 ### Ambiente
 - [x] footstep.wav — conectar em player.gd (cada 0.3s de walk)
-- [ ] enemy_growl.wav — conectar em enemy_spawner.gd (spawn de elite/special)
-- [ ] chest_open.wav — conectar em evolution_chest.gd
-- [ ] portal_hum.wav — conectar em portal_weapon.gd, event_manager.gd (portal dimensional)
+- [x] enemy_growl.wav — conectar em enemy_spawner.gd (spawn de elite/special)
+- [x] chest_open.wav — conectar em evolution_chest.gd
+- [x] portal_hum.wav — conectar em portal_weapon.gd, event_manager.gd (portal dimensional)
 - [ ] lava_bubble.wav — conectar em volcano_props.gd (ambient loop)
 - [ ] wind.wav — conectar em space_props.gd, cemetery_props.gd (ambient loop)
 
 ### Boss
 - [x] boss_roar.wav — conectar em boss_dialogue.gd (intro)
-- [ ] boss_attack.wav — conectar em todos boss_*.gd (ataques especiais)
-- [ ] boss_phase.wav — conectar em enemy_base.gd (threshold de fase do boss)
+- [x] boss_attack.wav — conectar em todos boss_*.gd (ataques especiais)
+- [x] boss_phase.wav — conectar em todos boss_*.gd (threshold de fase do boss)
 - [x] boss_death.wav — conectar em enemy_base.gd (_die para boss)
 
 ## MUSICA NAO CONECTADA
 - [x] victory.wav — tocar quando boss morre (game_manager.gd ou game_over_screen.gd)
 - [x] shop.wav — tocar quando abrir loja (shop.gd _ready)
-- [ ] lobby.wav — tocar quando abrir lobby (lobby_screen.gd _ready)
+- [x] lobby.wav — tocar quando abrir lobby (lobby_screen.gd _ready)
 - [x] game_over_music.wav — tocar na tela de game over (game_over_screen.gd)
 
 ## ARMAS NOVAS SEM SCRIPTS (4)

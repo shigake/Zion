@@ -41,6 +41,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Determina fase
+	var old_phase = phase
 	var hp_pct = float(hp) / float(max_hp)
 	if hp_pct > 0.75:
 		phase = 1
@@ -48,6 +49,8 @@ func _physics_process(delta: float) -> void:
 		phase = 2
 	else:
 		phase = 3
+	if phase != old_phase:
+		AudioManager.play_sfx("boss_phase")
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:
@@ -165,6 +168,7 @@ func _summon_shield_bearers(count: int) -> void:
 func _fire_pillar() -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	# Projetil unico de alto dano direcionado ao player
 	var dir = (target.global_position - global_position).normalized()
 	dir.y = 0
@@ -189,6 +193,7 @@ func _charge_at_player() -> void:
 	ParticleFactory.spawn_death_particles(global_position, Color(0.9, 0.6, 0.1), 6)
 
 func _sword_sweep() -> void:
+	AudioManager.play_sfx("boss_attack")
 	# Dano em arco frontal (180 graus na frente do boss)
 	ParticleFactory.spawn_death_particles(global_position, Color(0.8, 0.6, 0.1), 8)
 	var players = GameManager.get_players()
@@ -208,6 +213,7 @@ func _sword_sweep() -> void:
 func _fire_rain(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	# Pilares de fogo caindo do ceu (como thorn_rain mas cor de fogo)
 	var center = target.global_position
 	for i in range(count):

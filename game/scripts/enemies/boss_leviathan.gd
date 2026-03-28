@@ -39,6 +39,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Determina fase
+	var old_phase = phase
 	var hp_pct = float(hp) / float(max_hp)
 	if hp_pct > 0.75:
 		phase = 1
@@ -46,6 +47,8 @@ func _physics_process(delta: float) -> void:
 		phase = 2
 	else:
 		phase = 3
+	if phase != old_phase:
+		AudioManager.play_sfx("boss_phase")
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:
@@ -143,6 +146,7 @@ func _update_visibility() -> void:
 func _tentacle_attack(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	# Projeteis disparados de posicoes ao redor do player em direcao a ele
 	var center = target.global_position
 	for i in range(count):
@@ -185,6 +189,7 @@ func _ink_cloud() -> void:
 			ParticleFactory.spawn_death_particles(target.global_position + offset, Color(0.05, 0.05, 0.1), 5)
 
 func _tentacle_slam(radius: float) -> void:
+	AudioManager.play_sfx("boss_attack")
 	ParticleFactory.spawn_explosion_particles(global_position, radius)
 	# Dano em area ao redor do boss
 	var players = GameManager.get_players()

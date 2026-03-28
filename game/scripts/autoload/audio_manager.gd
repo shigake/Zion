@@ -26,7 +26,9 @@ var _valid_sfx: Array[String] = [
 	"hammer_slam", "lance_thrust", "punch_hit", "gun_shot",
 	"bow_release", "magic_cast", "explosion", "electric_zap",
 	"poison_splash", "summon_pop", "heal", "achievement",
-	"reroll", "banish", "select", "boss_roar", "boss_death"
+	"reroll", "banish", "select", "boss_roar", "boss_death",
+	"enemy_growl", "chest_open", "portal_hum", "boss_attack",
+	"boss_phase", "equip", "error", "footstep"
 ]
 
 # Known music names

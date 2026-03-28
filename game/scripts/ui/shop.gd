@@ -60,7 +60,9 @@ func _build_shop() -> void:
 		upgrade_container.add_child(hbox)
 
 func _buy(uid: String) -> void:
-	SaveManager.buy_upgrade(uid)
+	var success = SaveManager.buy_upgrade(uid)
+	if not success:
+		AudioManager.play_sfx("error")
 	_build_shop()
 
 func _update_crystals() -> void:

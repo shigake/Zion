@@ -36,6 +36,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Determina fase
+	var old_phase = phase
 	var hp_pct = float(hp) / float(max_hp)
 	if hp_pct > 0.75:
 		phase = 1
@@ -43,6 +44,8 @@ func _physics_process(delta: float) -> void:
 		phase = 2
 	else:
 		phase = 3
+	if phase != old_phase:
+		AudioManager.play_sfx("boss_phase")
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:
@@ -98,6 +101,7 @@ func _physics_process(delta: float) -> void:
 				_fire_projectiles(8)
 
 func _summon_skeletons(count: int) -> void:
+	AudioManager.play_sfx("boss_attack")
 	for i in range(count):
 		var sk = ObjectPool.get_instance(skeleton_scene)
 		var angle = (TAU / count) * i
@@ -111,6 +115,7 @@ func _summon_skeletons(count: int) -> void:
 func _fire_projectiles(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	for i in range(count):
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))

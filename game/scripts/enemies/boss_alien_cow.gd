@@ -35,6 +35,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Determina fase
+	var old_phase = phase
 	var hp_pct = float(hp) / float(max_hp)
 	if hp_pct > 0.75:
 		phase = 1
@@ -42,6 +43,8 @@ func _physics_process(delta: float) -> void:
 		phase = 2
 	else:
 		phase = 3
+	if phase != old_phase:
+		AudioManager.play_sfx("boss_phase")
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:
@@ -107,6 +110,7 @@ func _physics_process(delta: float) -> void:
 func _fire_projectile_ring(count: int, proj_speed: float) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	for i in range(count):
 		var angle = (TAU / count) * i
 		var dir = Vector3(cos(angle), 0, sin(angle))
@@ -122,6 +126,7 @@ func _fire_projectile_ring(count: int, proj_speed: float) -> void:
 		get_tree().current_scene.call_deferred("add_child", proj)
 
 func _abduction_beam() -> void:
+	AudioManager.play_sfx("boss_attack")
 	# Encontra inimigo mais proximo que nao seja boss
 	var enemies = GameManager.get_enemies()
 	var nearest: Node3D = null

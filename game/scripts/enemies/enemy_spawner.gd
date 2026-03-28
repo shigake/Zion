@@ -396,6 +396,7 @@ func _make_elite(enemy: Node3D) -> void:
 		enemy.speed *= 1.2
 		enemy.enemy_color = Color(1.0, 0.85, 0.2)  # Dourado
 		enemy.scale = Vector3(1.3, 1.3, 1.3)
+		AudioManager.play_sfx("enemy_growl")
 
 func _spawn_miniboss() -> void:
 	var players = GameManager.get_players()

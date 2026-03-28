@@ -73,7 +73,7 @@ func _try_open_portal(level: int) -> void:
 
 	# Efeitos visuais no local do portal
 	_spawn_portal_effect(best_center)
-	AudioManager.play_sfx("hit")
+	AudioManager.play_sfx("portal_hum")
 
 func _spawn_portal_effect(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos, Color(0.4, 0.0, 0.8))

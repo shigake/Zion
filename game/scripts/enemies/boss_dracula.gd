@@ -39,6 +39,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Determina fase
+	var old_phase = phase
 	var hp_pct = float(hp) / float(max_hp)
 	if hp_pct > 0.75:
 		phase = 1
@@ -46,6 +47,8 @@ func _physics_process(delta: float) -> void:
 		phase = 2
 	else:
 		phase = 3
+	if phase != old_phase:
+		AudioManager.play_sfx("boss_phase")
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:
@@ -174,6 +177,7 @@ func _summon_vampires(count: int) -> void:
 func _blood_fan(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	var base_dir = (target.global_position - global_position).normalized()
 	base_dir.y = 0
 	var base_angle = atan2(base_dir.z, base_dir.x)
@@ -195,6 +199,7 @@ func _blood_fan(count: int) -> void:
 func _blood_rain(count: int) -> void:
 	if not target or not is_instance_valid(target):
 		return
+	AudioManager.play_sfx("boss_attack")
 	var center = target.global_position
 	for i in range(count):
 		var proj = ObjectPool.get_instance(bullet_scene)

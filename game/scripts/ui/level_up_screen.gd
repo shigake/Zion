@@ -620,6 +620,7 @@ func _choose(index: int) -> void:
 
 	# Apply the upgrade locally
 	_apply_choice(opt)
+	AudioManager.play_sfx("equip")
 
 	# Small delay to show the flash before hiding
 	await get_tree().create_timer(0.15).timeout
