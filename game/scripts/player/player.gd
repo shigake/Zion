@@ -24,6 +24,12 @@ var original_color: Color = Color(0.2, 0.85, 0.3)
 var is_local: bool = true  # Se este jogador e controlado localmente
 var _animator: Node = null
 
+# Barrier walls (4 edges)
+var _barrier_walls: Array[MeshInstance3D] = []
+const BARRIER_SHOW_DIST: float = 12.0  # distancia para comecar a mostrar
+const BARRIER_WALL_HEIGHT: float = 6.0
+const BARRIER_WALL_THICKNESS: float = 0.3
+
 func _ready() -> void:
 	# Desativa colisao fisica com inimigos para evitar ser empurrado
 	# Dano por contato e detectado via Area3D (Hitbox do inimigo)
@@ -83,6 +89,9 @@ func _ready() -> void:
 	aura.base_color = Color(original_color.r, original_color.g, original_color.b, 0.15)
 	add_child(aura)
 
+	# Barrier walls — 4 paredes vermelhas translucidas nas bordas do mapa
+	_create_barrier_walls()
+
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over or GameManager.paused:
 		return
@@ -138,6 +147,9 @@ func _physics_process(delta: float) -> void:
 	var half = GameManager.map_half_size
 	global_position.x = clampf(global_position.x, -half, half)
 	global_position.z = clampf(global_position.z, -half, half)
+
+	# Update barrier walls visibility
+	_update_barrier_walls()
 
 	# Right stick aiming (controller)
 	var aim_input = Vector2(
@@ -262,3 +274,102 @@ func add_weapon_node(weapon_id: String) -> void:
 
 func get_weapon_nodes() -> Array:
 	return weapon_pivot.get_children()
+
+func _create_barrier_walls() -> void:
+	var half = GameManager.map_half_size
+	var wall_length = half * 2.0 + 4.0  # um pouco maior que o mapa
+
+	# Shader para efeito de barreira com gradiente e pulso
+	var shader = Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never;
+
+uniform float alpha : hint_range(0.0, 1.0) = 0.0;
+uniform float time_offset = 0.0;
+
+void fragment() {
+	// Gradiente vertical: mais forte na base, some no topo
+	float grad = 1.0 - UV.y;
+	grad = grad * grad;
+
+	// Linhas horizontais animadas (tipo campo de forca)
+	float lines = sin((UV.y * 40.0) + TIME * 3.0 + time_offset) * 0.5 + 0.5;
+	lines = lines * 0.3 + 0.7;
+
+	// Pulso suave
+	float pulse = sin(TIME * 2.0 + time_offset) * 0.15 + 0.85;
+
+	ALBEDO = vec3(1.0, 0.1, 0.05);
+	ALPHA = grad * lines * pulse * alpha * 0.6;
+}
+"""
+
+	# 4 paredes: +X, -X, +Z, -Z
+	var configs = [
+		{"pos": Vector3(half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": 0.0, "len": wall_length},       # +X (leste)
+		{"pos": Vector3(-half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": 0.0, "len": wall_length},      # -X (oeste)
+		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, half), "rot": PI * 0.5, "len": wall_length},   # +Z (sul)
+		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, -half), "rot": PI * 0.5, "len": wall_length},  # -Z (norte)
+	]
+
+	for i in range(configs.size()):
+		var cfg = configs[i]
+		var wall = MeshInstance3D.new()
+		var quad = QuadMesh.new()
+		quad.size = Vector2(cfg["len"], BARRIER_WALL_HEIGHT)
+		wall.mesh = quad
+
+		var mat = ShaderMaterial.new()
+		mat.shader = shader
+		mat.set_shader_parameter("alpha", 0.0)
+		mat.set_shader_parameter("time_offset", float(i) * 1.5)
+		wall.material_override = mat
+
+		wall.global_position = cfg["pos"]
+		if cfg["rot"] != 0.0:
+			wall.rotation.y = cfg["rot"]
+
+		wall.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		wall.name = "BarrierWall_%d" % i
+		wall.visible = false
+		get_tree().current_scene.call_deferred("add_child", wall)
+		_barrier_walls.append(wall)
+
+func _update_barrier_walls() -> void:
+	if _barrier_walls.is_empty():
+		return
+
+	var half = GameManager.map_half_size
+	var px = global_position.x
+	var pz = global_position.z
+
+	# Distancias ate cada borda
+	var dists = [
+		half - px,     # +X (leste)
+		half + px,     # -X (oeste)
+		half - pz,     # +Z (sul)
+		half + pz,     # -Z (norte)
+	]
+
+	for i in range(4):
+		if i >= _barrier_walls.size():
+			break
+		var wall = _barrier_walls[i]
+		if not is_instance_valid(wall):
+			continue
+		var dist = dists[i]
+		if dist < BARRIER_SHOW_DIST:
+			var alpha = 1.0 - (dist / BARRIER_SHOW_DIST)
+			alpha = alpha * alpha  # easing quadratico — mais forte perto da borda
+			wall.visible = true
+			var mat = wall.material_override as ShaderMaterial
+			if mat:
+				mat.set_shader_parameter("alpha", alpha)
+			# Reposiciona a parede para acompanhar o jogador no eixo perpendicular
+			if i <= 1:  # paredes X — seguem no Z
+				wall.global_position.z = pz
+			else:  # paredes Z — seguem no X
+				wall.global_position.x = px
+		else:
+			wall.visible = false

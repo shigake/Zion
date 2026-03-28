@@ -7,13 +7,13 @@ extends Node3D
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"tombstone1": 25,
-	"tombstone2": 20,
-	"tombstone3": 10,
+	"tombstone1": 45,
+	"tombstone2": 35,
+	"tombstone3": 25,
 	"dead_tree1": 12,
 	"dead_tree2": 15,
 	"iron_fence": 20,
-	"cross": 10,
+	"cross": 15,
 	"skull_pile": 8,
 	"lantern": 6,
 	"pumpkin": 5,
