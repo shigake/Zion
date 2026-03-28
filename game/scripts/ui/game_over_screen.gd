@@ -9,12 +9,17 @@ extends CanvasLayer
 @onready var crystals_label: Label = $Panel/ScrollContainer/VBox/CrystalsLabel
 @onready var dps_label: Label = $Panel/ScrollContainer/VBox/DPSLabel
 @onready var peak_enemies_label: Label = $Panel/ScrollContainer/VBox/PeakEnemiesLabel
-@onready var weapons_label: Label = $Panel/ScrollContainer/VBox/WeaponsLabel
-@onready var items_label: Label = $Panel/ScrollContainer/VBox/ItemsLabel
-@onready var evolutions_label: Label = $Panel/ScrollContainer/VBox/EvolutionsLabel
+@onready var weapons_title: Label = $Panel/ScrollContainer/VBox/WeaponsTitle
+@onready var weapons_container: VBoxContainer = $Panel/ScrollContainer/VBox/WeaponsContainer
+@onready var items_title: Label = $Panel/ScrollContainer/VBox/ItemsTitle
+@onready var items_container: VBoxContainer = $Panel/ScrollContainer/VBox/ItemsContainer
+@onready var evolutions_title: Label = $Panel/ScrollContainer/VBox/EvolutionsTitle
+@onready var evolutions_container: VBoxContainer = $Panel/ScrollContainer/VBox/EvolutionsContainer
 @onready var events_label: Label = $Panel/ScrollContainer/VBox/EventsLabel
 @onready var retry_btn: Button = $Panel/ScrollContainer/VBox/RetryButton
 @onready var menu_btn: Button = $Panel/ScrollContainer/VBox/MenuButton
+@onready var char_icon: TextureRect = $Panel/ScrollContainer/VBox/CharacterRow/CharIcon
+@onready var char_name_label: Label = $Panel/ScrollContainer/VBox/CharacterRow/CharNameLabel
 
 @onready var overlay: ColorRect = $Overlay
 
@@ -63,39 +68,65 @@ func _show() -> void:
 	# Peak enemies
 	peak_enemies_label.text = "Peak Enemies: %d" % GameManager.peak_enemies
 
-	# Weapons obtained with levels
-	var weapon_strs: Array[String] = []
-	for w in GameManager.player_weapons:
-		var data = WeaponDB.weapons.get(w["id"], {})
-		var wname = data.get("name", w["id"])
-		weapon_strs.append("%s Lv.%d" % [wname, w["level"]])
-	if weapon_strs.is_empty():
-		weapons_label.text = "Armas: -"
+	# Character sprite at top of summary
+	var char_path = "res://assets/sprites/characters/%s.png" % GameManager.selected_character
+	if ResourceLoader.exists(char_path):
+		char_icon.texture = load(char_path)
 	else:
-		weapons_label.text = "Armas: " + ", ".join(weapon_strs)
+		char_icon.texture = null
+	var char_data = CharacterDB.get_character(GameManager.selected_character)
+	char_name_label.text = char_data.get("name", GameManager.selected_character)
 
-	# Items obtained with levels
-	var item_strs: Array[String] = []
-	for it in GameManager.player_items:
-		var data = ItemDB.get_item(it["id"])
-		var iname = data.get("name", it["id"])
-		item_strs.append("%s Lv.%d" % [iname, it["level"]])
-	if item_strs.is_empty():
-		items_label.text = "Itens: -"
+	# Clear previous dynamic rows
+	_clear_container(weapons_container)
+	_clear_container(items_container)
+	_clear_container(evolutions_container)
+
+	# Weapons obtained with levels + icons
+	if GameManager.player_weapons.is_empty():
+		weapons_title.text = "Armas: -"
 	else:
-		items_label.text = "Itens: " + ", ".join(item_strs)
+		weapons_title.text = "Armas:"
+		for w in GameManager.player_weapons:
+			var data = WeaponDB.weapons.get(w["id"], {})
+			var wname = data.get("name", w["id"])
+			var row = _create_icon_row(
+				"res://assets/sprites/weapons/%s.png" % w["id"],
+				"%s Lv.%d" % [wname, w["level"]]
+			)
+			weapons_container.add_child(row)
 
-	# Evolutions triggered
+	# Items obtained with levels + icons
+	if GameManager.player_items.is_empty():
+		items_title.text = "Itens: -"
+	else:
+		items_title.text = "Itens:"
+		for it in GameManager.player_items:
+			var data = ItemDB.get_item(it["id"])
+			var iname = data.get("name", it["id"])
+			var row = _create_icon_row(
+				"res://assets/sprites/items/%s.png" % it["id"],
+				"%s Lv.%d" % [iname, it["level"]]
+			)
+			items_container.add_child(row)
+
+	# Evolutions triggered + icons
 	if EvolutionDB.evolved_weapons.is_empty():
-		evolutions_label.text = ""
-		evolutions_label.visible = false
+		evolutions_title.text = ""
+		evolutions_title.visible = false
+		evolutions_container.visible = false
 	else:
-		var evo_names: Array[String] = []
+		evolutions_title.text = "Evolucoes:"
+		evolutions_title.visible = true
+		evolutions_container.visible = true
 		for evo_id in EvolutionDB.evolved_weapons:
 			var evo = EvolutionDB.get_evolution(evo_id)
-			evo_names.append(evo.get("name", evo_id))
-		evolutions_label.text = "Evolucoes: " + ", ".join(evo_names)
-		evolutions_label.visible = true
+			var evo_name = evo.get("name", evo_id)
+			var row = _create_icon_row(
+				"res://assets/sprites/weapons/%s.png" % evo_id,
+				evo_name
+			)
+			evolutions_container.add_child(row)
 
 	# Events that happened
 	if GameManager.events_triggered.is_empty():
@@ -173,6 +204,38 @@ func _on_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
+
+# ---------------------------------------------------------------------------
+# Icon row helpers
+# ---------------------------------------------------------------------------
+
+## Create an HBoxContainer with [icon + label] for a weapon/item entry.
+func _create_icon_row(icon_path: String, display_text: String) -> HBoxContainer:
+	var row = HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 6)
+
+	var tex_rect = TextureRect.new()
+	tex_rect.custom_minimum_size = Vector2(24, 24)
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if ResourceLoader.exists(icon_path):
+		tex_rect.texture = load(icon_path)
+	else:
+		tex_rect.texture = null
+	row.add_child(tex_rect)
+
+	var lbl = Label.new()
+	lbl.text = display_text
+	lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(lbl)
+
+	return row
+
+## Remove all children from a container (used to reset between shows).
+func _clear_container(container: Container) -> void:
+	for child in container.get_children():
+		child.queue_free()
 
 # ---------------------------------------------------------------------------
 # Daily Challenge online score submission
