@@ -64,7 +64,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		position.y = 0.4 + bob
 		if mesh:
-			mesh.rotation.y += delta * 3.0
+			mesh.rotation.y += delta * 5.0
 
 	# Attraction check — only every 5 physics frames for performance
 	_frame_counter += 1

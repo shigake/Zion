@@ -25,7 +25,7 @@ func _ready() -> void:
 	_frame_counter = randi() % 5
 	# Apply glow shader to XP gem mesh
 	if mesh:
-		mesh.material_override = VisualSetup.create_glow_material(Color(0.2, 0.6, 1.0), 2.0)
+		mesh.material_override = VisualSetup.create_glow_material(Color(0.2, 0.6, 1.0), 3.5)
 	# Billboard sprite (hides mesh if sprite texture exists)
 	var sprite_path = "res://assets/sprites/pickups/xp_gem.png"
 	if ResourceLoader.exists(sprite_path):
@@ -38,6 +38,7 @@ func _ready() -> void:
 		sprite.pixel_size = 0.025
 		sprite.shaded = false
 		sprite.transparent = true
+		sprite.modulate = Color(1.2, 1.2, 1.5)  # Slight blue-white boost
 		sprite.name = "PickupSprite"
 		add_child(sprite)
 		_pickup_sprite = sprite

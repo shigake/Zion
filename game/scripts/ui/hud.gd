@@ -520,6 +520,14 @@ func _update_boss_hp() -> void:
 	else:
 		boss_hp_bar.value = boss_hp_bar.max_value
 
+	# Pulse boss HP bar red when below 25%
+	var boss_ratio = boss_hp_bar.value / boss_hp_bar.max_value if boss_hp_bar.max_value > 0 else 1.0
+	if boss_ratio < 0.25 and boss_ratio > 0:
+		var pulse = sin(Time.get_ticks_msec() * 0.008) * 0.3 + 0.7
+		boss_hp_bar.modulate = Color(1.0, pulse, pulse)
+	else:
+		boss_hp_bar.modulate = Color.WHITE
+
 func _update_dash() -> void:
 	var players = GameManager.get_players()
 	if players.is_empty():

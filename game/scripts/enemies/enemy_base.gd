@@ -740,7 +740,7 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	if fps > 30 or randf() < 0.3:
 		ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color.WHITE, 3 if fps < 40 else 6)
 	if fps > 20:
-		ScreenEffects.shake(0.04)
+		ScreenEffects.shake(0.03)  # Subtle shake on enemy hit
 
 	# Knockback
 	if target and is_instance_valid(target):
@@ -772,7 +772,7 @@ func _get_damage_color(damage_type: String) -> Color:
 func _flash_white() -> void:
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:
-		sprite.modulate = Color(8, 8, 8)  # Bright flash
+		sprite.modulate = Color(5, 2, 2)  # Red-tinted flash
 		# Squash-stretch on hit
 		var orig_scale = sprite.scale
 		sprite.scale = Vector3(orig_scale.x * 1.3, orig_scale.y * 0.7, orig_scale.z)
@@ -839,7 +839,7 @@ func _die() -> void:
 			if enemy_color == Color(1.0, 0.85, 0.2) or scale.x > 1.2:
 				ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 8)
 		if _fps > 20:
-			ScreenEffects.shake(0.06)
+			ScreenEffects.shake(0.03)  # Subtle shake on enemy kill
 		SynergySystem.apply_on_kill_synergies(pos)
 		# Mutation: explosive enemies
 		if MutationManager.is_active("explosive_enemies") and not is_in_group("boss"):
