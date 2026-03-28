@@ -175,19 +175,24 @@ void fragment() {
 
 func _style_title() -> void:
 	var scale := PlatformHelper.get_ui_scale()
-	# Title — large and dramatic
-	title_label.add_theme_font_size_override("font_size", int(56 * scale))
+	# Title — large and dramatic with heavy outline and glow shadow
+	title_label.text = "ZION"
+	title_label.add_theme_font_size_override("font_size", int(72 * scale))
 	title_label.add_theme_color_override("font_color", COLOR_GOLD)
 	title_label.add_theme_constant_override("shadow_offset_x", 0)
-	title_label.add_theme_constant_override("shadow_offset_y", 4)
-	title_label.add_theme_color_override("font_shadow_color", Color(0.4, 0.32, 0.0, 0.6))
-	title_label.add_theme_constant_override("outline_size", int(3 * scale))
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.9, 0.4, 0.35))
+	title_label.add_theme_constant_override("shadow_offset_y", 6)
+	title_label.add_theme_color_override("font_shadow_color", Color(0.5, 0.38, 0.0, 0.8))
+	title_label.add_theme_constant_override("outline_size", int(5 * scale))
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.85, 0.3, 0.5))
 	# Store base position for floating animation
 	_title_base_y = title_label.position.y
-	# Subtitle
-	subtitle_label.add_theme_font_size_override("font_size", int(15 * scale))
+	# Subtitle — tagline
+	subtitle_label.text = "Survive the horde. Ascend beyond."
+	subtitle_label.add_theme_font_size_override("font_size", int(16 * scale))
 	subtitle_label.add_theme_color_override("font_color", COLOR_SUBTITLE)
+	subtitle_label.add_theme_constant_override("shadow_offset_x", 0)
+	subtitle_label.add_theme_constant_override("shadow_offset_y", 2)
+	subtitle_label.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.5))
 
 
 func _style_crystals() -> void:

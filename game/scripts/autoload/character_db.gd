@@ -148,6 +148,17 @@ var characters: Dictionary = {
 		"unlock_value": "",
 		"unlock_description": "Desbloqueie todos os outros personagens",
 	},
+	"fragmentado": {
+		"name": "Fragmentado",
+		"starting_weapon": "blood_orb",
+		"passive": "+10% todos os stats, comeca com 50% HP",
+		"color": Color(0.0, 1.0, 0.6),
+		"speed_bonus": 0.10,
+		"damage_bonus": 0.10,
+		"area_bonus": 0.10,
+		"unlock_condition": "all_stages",
+		"unlock_description": "Complete todas as 10 fases",
+	},
 }
 
 func get_character(id: String) -> Dictionary:

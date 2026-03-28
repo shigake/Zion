@@ -174,6 +174,14 @@ func check_unlocks() -> Array[String]:
 						break
 				if all_others:
 					unlocked = true
+			"all_stages":
+				var all_complete = true
+				for stage in ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]:
+					if stage not in data.get("completed_stages", []):
+						all_complete = false
+						break
+				if all_complete:
+					unlocked = true
 		if unlocked:
 			unlock_character(char_id)
 			newly_unlocked.append(char_id)

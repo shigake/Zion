@@ -705,6 +705,13 @@ func _apply_character_bonuses() -> void:
 	# Mystery: starts with 3 random weapons (not all)
 	if selected_character == "mystery":
 		MAX_WEAPONS = 8  # Higher cap but not unlimited
+	# Fragmentado: +10% all stats, starts at 50% HP
+	if selected_character == "fragmentado":
+		speed_mult += 0.10
+		attack_speed_mult += 0.10
+		area_mult += 0.10
+		player_max_hp = int(player_max_hp * 0.5)
+		player_hp = player_max_hp
 
 func _apply_relic() -> void:
 	if selected_relic.is_empty():

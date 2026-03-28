@@ -416,12 +416,14 @@ func _build_tab_audio() -> void:
 
 	_add_slider(vbox, "Volume efeitos", "audio_sfx", 0, 100, 5, 100,
 		func(val: float) -> void:
-			_apply_audio_bus("SFX", val / 100.0),
+			_apply_audio_bus("SFX", val / 100.0)
+			AudioManager.play_sfx("menu_click"),
 		t)
 
 	_add_slider(vbox, "Volume interface", "audio_ui", 0, 100, 5, 100,
 		func(val: float) -> void:
-			_apply_audio_bus("UI", val / 100.0),
+			_apply_audio_bus("UI", val / 100.0)
+			AudioManager.play_sfx("menu_click"),
 		t)
 
 func _apply_audio_bus(bus_name: String, linear: float) -> void:
