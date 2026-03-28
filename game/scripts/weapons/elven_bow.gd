@@ -6,6 +6,8 @@ var attack_timer: float = 0.0
 var arrow_scene: PackedScene = preload("res://scenes/weapons/elven_bow_arrow.tscn")
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -21,6 +23,8 @@ func _process(delta: float) -> void:
 		_fire(level)
 
 func _fire(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return

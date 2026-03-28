@@ -39,6 +39,8 @@ func _ready() -> void:
 		_pickup_sprite = sprite
 
 func _physics_process(delta: float) -> void:
+	if _collected or not is_inside_tree():
+		return
 	if GameManager.paused:
 		return
 
@@ -85,6 +87,8 @@ func _collect() -> void:
 	queue_free()
 
 func _on_body_entered(body: Node3D) -> void:
+	if _collected or not is_inside_tree():
+		return
 	if body.is_in_group("players"):
 		_collect()
 

@@ -6,6 +6,8 @@ var attack_timer: float = 0.0
 var chain_visuals: Array = []
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -23,6 +25,8 @@ func _process(delta: float) -> void:
 		_cast(level)
 
 func _cast(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		return

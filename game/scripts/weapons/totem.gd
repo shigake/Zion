@@ -6,6 +6,8 @@ var place_timer: float = 0.0
 var active_totems: Array = []
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -27,6 +29,8 @@ func _process(delta: float) -> void:
 		_place_totem(level)
 
 func _place_totem(level: int) -> void:
+	if not is_inside_tree():
+		return
 	var player_pos = get_parent().get_parent().global_position
 
 	var totem = Node3D.new()
