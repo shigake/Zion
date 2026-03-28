@@ -63,7 +63,7 @@ var info_label: Label
 var back_btn: Button
 var scroll: ScrollContainer
 var detail_panel: PanelContainer
-var detail_portrait: ColorRect
+var detail_portrait: SubViewportContainer
 var detail_name: Label
 var detail_type: Label
 var detail_kills: Label
@@ -73,6 +73,8 @@ var detail_model_root: Node3D
 var current_model: Node3D = null
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_populate_grid()
 	GamepadUI.notify_menu_opened()
