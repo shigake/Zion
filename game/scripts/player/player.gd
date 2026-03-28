@@ -30,18 +30,35 @@ func _ready() -> void:
 	collision_mask = 0
 	is_local = not MultiplayerManager.is_online or (player_id == MultiplayerManager.local_player_id)
 
-	# Modelo procedural do personagem
+	# Character data
 	var char_data = CharacterDB.get_character(GameManager.selected_character)
 	if not char_data.is_empty():
 		original_color = char_data.get("color", original_color)
-	var model = ModelFactory.get_model_for_character(GameManager.selected_character)
-	if model.get_child_count() > 0:
+
+	# Sprite billboard do personagem (prioridade sobre modelo procedural)
+	var char_sprite_path = "res://assets/sprites/characters/%s.png" % GameManager.selected_character
+	if ResourceLoader.exists(char_sprite_path):
 		mesh.visible = false
-		model.name = "ProceduralModel"
-		add_child(model)
-		ModelFactory.apply_model_materials(model, original_color)
+		var sprite = Sprite3D.new()
+		sprite.texture = load(char_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.04
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "PlayerSprite"
+		sprite.position.y = 0.65
+		add_child(sprite)
 	else:
-		VisualSetup.apply_cel_shader_to_mesh(mesh, original_color)
+		# Fallback: modelo procedural
+		var model = ModelFactory.get_model_for_character(GameManager.selected_character)
+		if model.get_child_count() > 0:
+			mesh.visible = false
+			model.name = "ProceduralModel"
+			add_child(model)
+			ModelFactory.apply_model_materials(model, original_color)
+		else:
+			VisualSetup.apply_cel_shader_to_mesh(mesh, original_color)
 
 	# Arma inicial e configurada pelo base_stage via CharacterDB.
 	# Fallback: usa a arma inicial do personagem selecionado (ou katana se nao encontrar).
@@ -52,7 +69,7 @@ func _ready() -> void:
 		GameManager.add_weapon(start_weapon)
 		_spawn_weapon(start_weapon)
 
-	# Procedural animation
+	# Procedural animation (only when using procedural model fallback)
 	var proc_model = get_node_or_null("ProceduralModel")
 	if proc_model:
 		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
@@ -166,6 +183,13 @@ func take_damage(amount: int, source_pos: Vector3 = Vector3.ZERO) -> void:
 	ScreenEffects.damage_feedback(amount, source_pos)
 
 func _set_color(color: Color) -> void:
+	var sprite = get_node_or_null("PlayerSprite")
+	if sprite:
+		if color == original_color:
+			sprite.modulate = Color.WHITE
+		else:
+			sprite.modulate = Color(10, 10, 10)  # Bright flash for damage
+		return
 	var mat = mesh.material_override
 	if mat is ShaderMaterial:
 		mat.set_shader_parameter("albedo_color", color)

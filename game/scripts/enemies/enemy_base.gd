@@ -35,8 +35,8 @@ func _ready() -> void:
 	# Dano por contato e detectado via Area3D (Hitbox)
 	collision_mask = 0
 	hitbox.body_entered.connect(_on_body_entered)
-	# Substitui mesh simples por modelo procedural
-	_apply_procedural_model()
+	# Substitui mesh simples por sprite billboard (fallback: modelo procedural)
+	_apply_sprite()
 
 func _get_base_enemy_type() -> String:
 	## Derive the base enemy type from the scene file path, not from `name`
@@ -53,6 +53,28 @@ func _get_base_enemy_type() -> String:
 				result += p[0].to_upper() + p.substr(1)
 		return result
 	return name
+
+func _apply_sprite() -> void:
+	var enemy_type = _get_base_enemy_type()
+	var sprite_path = "res://assets/sprites/enemies/%s.png" % enemy_type.to_snake_case()
+	if not ResourceLoader.exists(sprite_path):
+		sprite_path = "res://assets/sprites/enemies/slime.png"
+	var tex = load(sprite_path) as Texture2D
+	if tex == null:
+		# Fallback to procedural model if no sprite found
+		_apply_procedural_model()
+		return
+	mesh.visible = false  # Hide the old mesh
+	var sprite = Sprite3D.new()
+	sprite.texture = tex
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.04
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.name = "EnemySprite"
+	sprite.position.y = 0.65
+	add_child(sprite)
 
 func _apply_procedural_model() -> void:
 	var enemy_type = _get_base_enemy_type()
@@ -215,6 +237,12 @@ func _get_damage_color(damage_type: String) -> Color:
 			return Color(1, 1, 0.8)
 
 func _flash_white() -> void:
+	var sprite = get_node_or_null("EnemySprite")
+	if sprite:
+		sprite.modulate = Color(10, 10, 10)  # Bright flash
+		var tween = create_tween()
+		tween.tween_property(sprite, "modulate", Color.WHITE, 0.12)
+		return
 	var proc_model = get_node_or_null("ProceduralModel")
 	if proc_model:
 		for child in proc_model.get_children():
