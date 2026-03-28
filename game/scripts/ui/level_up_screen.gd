@@ -193,18 +193,19 @@ func _build_card(opt: Dictionary, index: int) -> void:
 	badge.add_theme_color_override("font_color", type_color.lightened(0.3))
 	vbox.add_child(badge)
 
-	# Icon area with SVG icon or fallback
+	# Icon area with sprite or fallback
 	var icon_container = CenterContainer.new()
 	icon_container.custom_minimum_size = Vector2(0, 70)
 	vbox.add_child(icon_container)
 	var _icon_category = "weapons" if opt_type == "weapon" else "items"
-	var _icon_path = "res://assets/icons/%s/%s.svg" % [_icon_category, opt["id"]]
+	var _icon_path = "res://assets/sprites/%s/%s.png" % [_icon_category, opt["id"]]
 	var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
 	if _icon_tex:
 		var tex_rect = TextureRect.new()
 		tex_rect.texture = _icon_tex
 		tex_rect.custom_minimum_size = Vector2(64, 64)
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon_container.add_child(tex_rect)
 	else:
 		var icon_rect = ColorRect.new()

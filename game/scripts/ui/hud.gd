@@ -408,7 +408,7 @@ func _update_weapon_icons() -> void:
 		style.set_corner_radius_all(4)
 		panel.add_theme_stylebox_override("panel", style)
 
-		var _icon_path := "res://assets/icons/weapons/%s.svg" % w.id
+		var _icon_path := "res://assets/sprites/weapons/%s.png" % w.id
 		var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
 		var icon_node: Control
 		if _icon_tex:
@@ -416,6 +416,7 @@ func _update_weapon_icons() -> void:
 			tex_rect.texture = _icon_tex
 			tex_rect.custom_minimum_size = Vector2(28, 28)
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			icon_node = tex_rect
 		else:
 			var rect := ColorRect.new()
@@ -465,7 +466,7 @@ func _update_item_icons() -> void:
 		style.set_corner_radius_all(4)
 		panel.add_theme_stylebox_override("panel", style)
 
-		var _icon_path := "res://assets/icons/items/%s.svg" % it.id
+		var _icon_path := "res://assets/sprites/items/%s.png" % it.id
 		var _icon_tex = load(_icon_path) if ResourceLoader.exists(_icon_path) else null
 		var icon_node: Control
 		if _icon_tex:
@@ -473,6 +474,7 @@ func _update_item_icons() -> void:
 			tex_rect.texture = _icon_tex
 			tex_rect.custom_minimum_size = Vector2(28, 28)
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			icon_node = tex_rect
 		else:
 			var rect := ColorRect.new()

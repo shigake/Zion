@@ -178,13 +178,14 @@ func _show_stats() -> void:
 		var data = WeaponDB.weapons.get(w.id, {})
 		var wname = data.get("name", w.id.capitalize())
 		var whbox = HBoxContainer.new()
-		var wicon_path = "res://assets/icons/weapons/%s.svg" % w.id
+		var wicon_path = "res://assets/sprites/weapons/%s.png" % w.id
 		var wicon_tex = load(wicon_path) if ResourceLoader.exists(wicon_path) else null
 		if wicon_tex:
 			var wicon = TextureRect.new()
 			wicon.texture = wicon_tex
 			wicon.custom_minimum_size = Vector2(20, 20)
 			wicon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			wicon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			whbox.add_child(wicon)
 		var wlbl = Label.new()
 		wlbl.text = wname

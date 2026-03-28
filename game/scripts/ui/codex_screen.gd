@@ -236,8 +236,8 @@ func _populate_grid() -> void:
 		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(swatch)
 
-		# SVG icon da arma
-		var icon_path := "res://assets/icons/weapons/%s.svg" % weapon_id
+		# Pixel art sprite da arma
+		var icon_path := "res://assets/sprites/weapons/%s.png" % weapon_id
 		if ResourceLoader.exists(icon_path):
 			var icon_tex = load(icon_path)
 			if icon_tex:
@@ -245,6 +245,7 @@ func _populate_grid() -> void:
 				icon_rect.texture = icon_tex
 				icon_rect.custom_minimum_size = Vector2(32, 32)
 				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				icon_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
