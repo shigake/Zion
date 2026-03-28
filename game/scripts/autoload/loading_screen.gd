@@ -58,24 +58,32 @@ const STAGE_COLORS: Dictionary = {
 }
 
 const TIPS: Array = [
+	# Dicas de gameplay
 	"Combine armas do mesmo elemento para ativar sinergias poderosas.",
 	"Gemas de XP desaparecem depois de um tempo. Fique atento!",
 	"Cada personagem tem um passivo unico que muda o estilo de jogo.",
 	"Evolua uma arma ao nivel 8 com o item correto no nivel 5.",
 	"Reliquias dao bonus permanentes para a run inteira.",
 	"O modo Ascensao aumenta a dificuldade, mas tambem os cristais.",
-	"Sinergias de agua criam combinacoes devastadoras com gelo e eletrico.",
 	"Inimigos especiais como o Mimic soltam recompensas melhores.",
 	"O dash tem invencibilidade nos primeiros frames. Use com sabedoria!",
 	"Bosses tem 3 fases. Cada fase muda seus ataques e comportamento.",
 	"No co-op, sinergias cruzadas entre jogadores sao ainda mais fortes.",
-	"Cada fase tem um evento especial que aparece em momentos aleatorios.",
-	"O Chef cura o dobro. Combine com itens de lifesteal para ficar imortal.",
-	"Eletricidade causa dano em cadeia. Perfeito contra hordas densas.",
 	"Cristais compram upgrades permanentes na loja entre as runs.",
-	"O Ronin tem 20%% de chance de critico. Foque em dano por hit.",
-	"Armas de invocacao escalam com o bonus do Necromancer e da Bruxa.",
 	"Fique perto dos aliados caidos para revive-los no co-op.",
+	# Lore / narrativa
+	"Os cristais chamam uns pelos outros. Voce e apenas o veiculo.",
+	"Os Sentinelas nao sao seus inimigos. Sao prisioneiros, como voce.",
+	"Cada morte te rebobina. Cada retorno te fortalece. Zion trabalha atraves de voce.",
+	"O Conde nao foi corrompido. Ele escolheu. E talvez esteja certo.",
+	"Entre as fendas, algo observa. Algo espera.",
+	"Zion nao e onde voce chega. E o que voce constroi no caminho.",
+	"A loja entre runs e Zion tentando se reconstruir atraves de voce.",
+	"Voce nao morre. O estilhaco te rebobina ao ponto de convergencia.",
+	"Os Fragmentados foram arrancados de seus mundos. Ninguem escolheu lutar.",
+	"Quando estilhacos ressoam juntos, sinergias elementais despertam.",
+	"Cada cristal coletado e um pedaco de Zion tentando se reunir.",
+	"Os bosses eram protetores. A corrupcao os transformou em prisoes vivas.",
 ]
 
 # — Scenes to pre-warm in ObjectPool —
@@ -519,6 +527,21 @@ func _build_ui() -> void:
 	sep.custom_minimum_size = Vector2(0, 20)
 	center_vbox.add_child(sep)
 
+	# Frase de lore da fase (curta, italica, acima da dica)
+	var _lore_label = Label.new()
+	_lore_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lore_label.add_theme_font_size_override("font_size", 14)
+	_lore_label.add_theme_color_override("font_color", Color(0.65, 0.6, 0.8, 0.9))
+	_lore_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var stage_id = _get_stage_id()
+	var lore_key = "stage_" + stage_id + "_lore"
+	var lore_text = LocaleManager.tr_key(lore_key)
+	if lore_text != lore_key:
+		_lore_label.text = "\"%s\"" % lore_text
+	else:
+		_lore_label.text = ""
+	center_vbox.add_child(_lore_label)
+
 	# Dica de gameplay
 	_tip_label = Label.new()
 	_tip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -628,6 +651,10 @@ const TRANSITION_TIPS: Array = [
 	"O milharal na fazenda te esconde dos inimigos",
 	"Zonas escuras no castelo fortalecem inimigos",
 	"Caramelo no mundo doce reduz sua velocidade",
+	"Os Sentinelas eram protetores de Zion antes da corrupcao.",
+	"Voce e um Fragmentado — um estilhaco de Zion vive dentro de voce.",
+	"A loja e Zion tentando se reconstruir atraves de voce.",
+	"Cada boss derrotado e um guardiao libertado.",
 ]
 
 func transition_to(scene_path: String) -> void:

@@ -14,6 +14,7 @@ var _bg_gradient: ColorRect
 var _char_strip: VBoxContainer
 var _char_buttons: Array[Button] = []
 var _name_label: Label
+var _backstory_label: Label
 var _passive_label: Label
 var _weapon_label: Label
 var _weapon_icon: TextureRect
@@ -104,6 +105,14 @@ func _build_ui() -> void:
 	_element_badge.add_theme_font_size_override("font_size", 12)
 	_element_badge.add_theme_color_override("font_color", Color(0.6, 0.65, 0.8))
 	right_vbox.add_child(_element_badge)
+
+	# Backstory (lore)
+	_backstory_label = Label.new()
+	_backstory_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_backstory_label.add_theme_font_size_override("font_size", 11)
+	_backstory_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.65))
+	_backstory_label.custom_minimum_size = Vector2(0, 40)
+	right_vbox.add_child(_backstory_label)
 
 	# Separator
 	var sep1 = HSeparator.new()
@@ -285,6 +294,16 @@ func _update_selection() -> void:
 	_name_label.text = data.get("name", char_id).to_upper()
 	_name_label.add_theme_color_override("font_color", char_color.lightened(0.3))
 	_passive_label.text = data.get("passive", "")
+
+	# Backstory
+	var backstory_key = "backstory_" + char_id
+	var backstory_text = LocaleManager.tr_key(backstory_key)
+	if backstory_text != backstory_key:
+		_backstory_label.text = backstory_text
+		_backstory_label.visible = true
+	else:
+		_backstory_label.text = ""
+		_backstory_label.visible = false
 
 	# Weapon
 	var weapon_id = data.get("starting_weapon", "katana")

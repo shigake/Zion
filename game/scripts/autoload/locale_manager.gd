@@ -212,6 +212,64 @@ var translations: Dictionary = {
 	"damage_dealt": {"pt": "Dano causado: %d", "en": "Damage dealt: %d"},
 	"menu": {"pt": "Menu", "en": "Menu"},
 	"crystals_label": {"pt": "Cristais", "en": "Crystals"},
+
+	# ---- Narrativa / Lore ----
+	"lore_death": {"pt": "O estilhaço te puxa de volta. Zion ainda precisa de você.", "en": "The shard pulls you back. Zion still needs you."},
+	"lore_victory": {"pt": "O Sentinela está livre. A fenda se fecha.", "en": "The Sentinel is free. The rift closes."},
+	"lore_victory_final": {"pt": "O último fragmento se encaixa. Zion respira de novo.\nMas não é o mesmo Zion — é melhor. É seu.", "en": "The last fragment falls into place. Zion breathes again.\nBut it's not the same Zion — it's better. It's yours."},
+	"lore_mystery_unlock": {"pt": "Todos os estilhaços ressoam juntos... Zion acorda.\n\"Vocês não me reconstruíram. Vocês me reinventaram.\"", "en": "All the shards resonate together... Zion awakens.\n\"You didn't rebuild me. You reinvented me.\""},
+
+	# ---- Backstories dos personagens ----
+	"backstory_ronin": {"pt": "Samurai sem mestre do Japão feudal. Vagava entre vilas quando o céu se abriu e o arrancou de seu mundo.", "en": "A masterless samurai from feudal Japan. He wandered between villages when the sky tore open and ripped him away."},
+	"backstory_soldado": {"pt": "Operativo militar em missão quando a realidade glitchou ao seu redor. Acordou entre fendas, com a arma na mão.", "en": "A military operative on a mission when reality glitched around him. He woke up between rifts, weapon in hand."},
+	"backstory_mago": {"pt": "Estudava anomalias arcanas num reino de alta fantasia. A maior de todas as anomalias o engoliu.", "en": "He studied arcane anomalies in a high fantasy kingdom. The greatest anomaly of all swallowed him."},
+	"backstory_berserker": {"pt": "Guerreiro nórdico que morreu em batalha e acordou no Vulcão. Achou que tinha chegado ao Valhalla.", "en": "A Norse warrior who died in battle and woke up in the Volcano. He thought he'd reached Valhalla."},
+	"backstory_ninja": {"pt": "Operativo clandestino de uma Tóquio futurista. Sobreviveu ao blackout da IA quando todos os outros caíram.", "en": "A covert operative from a futuristic Tokyo. He survived the AI blackout when everyone else fell."},
+	"backstory_necro": {"pt": "Aprendiz do Necromancer King antes da corrupção. Entrou na fenda para salvar o mestre.", "en": "Apprentice of the Necromancer King before the corruption. She entered the rift to save her master."},
+	"backstory_pirata": {"pt": "Navegava mares desconhecidos na Era da Pirataria. Caiu por uma fenda no Triângulo das Bermudas.", "en": "He sailed unknown seas in the Age of Piracy. He fell through a rift in the Bermuda Triangle."},
+	"backstory_engenheiro": {"pt": "Última sobrevivente da Estação Zenith, ano 2187. Construiu drones com sucata para não enlouquecer.", "en": "Last survivor of Zenith Station, year 2187. She built drones from scrap to keep from going insane."},
+	"backstory_vampiro": {"pt": "Mordido por Drácula na Transilvânia do séc. XVIII, mas o estilhaço impediu a transformação completa.", "en": "Bitten by Dracula in 18th century Transylvania, but the shard prevented his full transformation."},
+	"backstory_gladiador": {"pt": "Espírito da Arena de Roma Antiga que ganhou corpo quando a anomalia foi perturbada.", "en": "A spirit of the Ancient Roman Arena who gained a body when the anomaly was disturbed."},
+	"backstory_chef": {"pt": "Confeiteiro da Paris Belle Époque que caiu no Mundo Doce e tentou civilizar os doces com culinária.", "en": "A pastry chef from Belle Époque Paris who fell into Candy World and tried to civilize the sweets with cooking."},
+	"backstory_amazona": {"pt": "Guerreira tribal da Amazônia primordial que defendia sua terra quando as vacas mutantes invadiram.", "en": "A tribal warrior from the primordial Amazon who defended her land when mutant cows invaded."},
+	"backstory_bruxa": {"pt": "Fugiu da fogueira em Salem, 1692, e caiu direto na Floresta Encantada. Adaptou-se rápido.", "en": "She escaped the pyre in Salem, 1692, and fell right into the Enchanted Forest. She adapted quickly."},
+	"backstory_mystery": {"pt": "Quando todos os estilhaços ressoam juntos, o próprio Zion ganha consciência.", "en": "When all the shards resonate together, Zion itself gains consciousness."},
+
+	# ---- Lore das fases ----
+	"stage_cemetery_lore": {"pt": "A primeira fenda. Onde a morte parou de funcionar.", "en": "The first rift. Where death stopped working."},
+	"stage_forest_lore": {"pt": "A natureza não morreu. Ela ficou furiosa.", "en": "Nature didn't die. It got furious."},
+	"stage_farm_lore": {"pt": "Uma fenda menor que caiu no lugar mais improvável.", "en": "A minor rift that fell in the most unlikely place."},
+	"stage_tokyo_lore": {"pt": "A IA não se rebelou. Ela acordou... e viu o cristal.", "en": "The AI didn't rebel. It woke up... and saw the crystal."},
+	"stage_volcano_lore": {"pt": "Não é lava. É a raiva cristalizada de Zion.", "en": "It's not lava. It's Zion's crystallized rage."},
+	"stage_ocean_lore": {"pt": "Nas profundezas, as memórias de Zion ainda ecoam.", "en": "In the depths, Zion's memories still echo."},
+	"stage_arena_lore": {"pt": "Não é uma fenda. É um eco do passado.", "en": "It's not a rift. It's an echo of the past."},
+	"stage_space_lore": {"pt": "Entre as estrelas, o vazio entre dimensões é mais fino.", "en": "Among the stars, the void between dimensions is thinner."},
+	"stage_castle_lore": {"pt": "O último guardião não foi corrompido. Ele escolheu o cristal.", "en": "The last guardian wasn't corrupted. He chose the crystal."},
+	"stage_candy_lore": {"pt": "Isto é o que acontece quando uma dimensão sonha.", "en": "This is what happens when a dimension dreams."},
+
+	# ---- Lore das fases (descricao completa) ----
+	"stage_cemetery_desc": {"pt": "O fragmento corrompeu o ciclo da morte. Os mortos se levantam, a neblina nunca dissipa.", "en": "The fragment corrupted the cycle of death. The dead rise, the fog never lifts."},
+	"stage_forest_desc": {"pt": "Magia selvagem transformou a floresta numa armadilha viva. Fadas que guiavam viajantes agora os caçam.", "en": "Wild magic transformed the forest into a living trap. Fairies that once guided travelers now hunt them."},
+	"stage_farm_desc": {"pt": "Um estilhaço deu consciência distorcida aos animais. Vacas zumbis, galinhas explosivas, porcos mutantes.", "en": "A shard gave the animals a twisted consciousness. Zombie cows, explosive chickens, mutant pigs."},
+	"stage_tokyo_desc": {"pt": "A IA da cidade absorveu energia dimensional e decidiu eliminar todo orgânico.", "en": "The city's AI absorbed dimensional energy and decided to eliminate all organics."},
+	"stage_volcano_desc": {"pt": "Energia pura do cristal se manifestou como fogo e fúria. Demônios nasceram do calor dimensional.", "en": "Pure crystal energy manifested as fire and fury. Demons were born from dimensional heat."},
+	"stage_ocean_desc": {"pt": "Ruínas de uma civilização pré-dimensional. Criaturas marinhas mutaram e o mar ganhou vontade própria.", "en": "Ruins of a pre-dimensional civilization. Sea creatures mutated and the ocean gained a will of its own."},
+	"stage_arena_desc": {"pt": "Memória de Zion — onde os Sentinelas treinavam. O coliseu persiste como um loop temporal.", "en": "Zion's memory — where the Sentinels trained. The coliseum persists as a temporal loop."},
+	"stage_space_desc": {"pt": "Estação científica consumida pelas fendas. Gravidade falha, parasitas dimensionais se alimentam.", "en": "Science station consumed by rifts. Gravity fails, dimensional parasites feed."},
+	"stage_castle_desc": {"pt": "A fortaleza de Drácula. Ele absorveu o cristal voluntariamente — acredita que Zion não deve ser restaurado.", "en": "Dracula's fortress. He absorbed the crystal willingly — he believes Zion shouldn't be restored."},
+	"stage_candy_desc": {"pt": "Alucinação dimensional — o subconsciente de Zion tentando lembrar do paraíso. Mas a memória está corrompida.", "en": "Dimensional hallucination — Zion's subconscious trying to remember paradise. But the memory is corrupted."},
+
+	# ---- Nomes narrativos dos bosses ----
+	"boss_cemetery": {"pt": "Necromancer King — Sentinela da morte", "en": "Necromancer King — Sentinel of death"},
+	"boss_forest": {"pt": "Rainha das Fadas — Sentinela da natureza", "en": "Fairy Queen — Sentinel of nature"},
+	"boss_farm": {"pt": "Mega Vaca Alienígena", "en": "Alien Mega Cow"},
+	"boss_tokyo": {"pt": "AI Overlord — Sentinela da lógica", "en": "AI Overlord — Sentinel of logic"},
+	"boss_volcano": {"pt": "Demon Lord — nascido da destruição", "en": "Demon Lord — born of destruction"},
+	"boss_ocean": {"pt": "Leviathan — o Sentinela mais antigo", "en": "Leviathan — the oldest Sentinel"},
+	"boss_arena": {"pt": "Imperador Corrompido — eco do passado", "en": "Corrupted Emperor — echo of the past"},
+	"boss_space": {"pt": "Singularidade — guardião do espaço-tempo", "en": "Singularity — guardian of spacetime"},
+	"boss_castle": {"pt": "Conde Drácula — o guardião que escolheu", "en": "Count Dracula — the guardian who chose"},
+	"boss_candy": {"pt": "Rei Açúcar — último fragmento do Coração", "en": "Sugar King — last fragment of the Heart"},
 }
 
 func _ready() -> void:

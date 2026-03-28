@@ -4,16 +4,46 @@ extends CanvasLayer
 ## Auto-dismisses after 3 seconds or on any input.
 
 const BOSS_LINES := {
-	"BossNecromancer": {"intro": "Vocês ousam invadir meu domínio?\nMeus mortos vão festejar!", "death": "Impossível... eu sou eterno..."},
-	"BossFairyQueen": {"intro": "A floresta me pertence.\nNenhum mortal sairá vivo!", "death": "As flores... choram por mim..."},
-	"BossAlienCow": {"intro": "MUUUU! Preparem-se para\na abducao final!", "death": "Muu... *static*"},
-	"BossAiOverlord": {"intro": "SISTEMA ONLINE.\nELIMINANDO INTRUSOS.", "death": "ERRO FATAL... DESLIGANDO..."},
-	"BossDemonLord": {"intro": "Bem-vindos ao inferno.\nNão há saída.", "death": "O fogo... nunca morre..."},
-	"BossLeviathan": {"intro": "As profundezas vão\nengolir vocês!", "death": "O oceano... reclama..."},
-	"BossEmperor": {"intro": "Ajoelhem-se perante\no Imperador!", "death": "Roma... caiu..."},
-	"BossSingularity": {"intro": "EU SOU O VAZIO.\nTUDO SERÁ CONSUMIDO.", "death": "A singularidade... colapsa..."},
-	"BossDracula": {"intro": "A noite é minha.\nSeu sangue será meu jantar.", "death": "Amaldiçoados... para sempre..."},
-	"BossSugarKing": {"intro": "Quem quer doces?\nHAHAHAHA!", "death": "Estou... derretendo..."},
+	"BossNecromancer": {
+		"intro": "Eu guardava a fronteira entre vida e morte.\nAgora SOU a fronteira!",
+		"death": "Livre... finalmente livre.\nObrigado, Fragmentado...",
+	},
+	"BossFairyQueen": {
+		"intro": "A floresta era minha para proteger.\nAgora é minha para devorar!",
+		"death": "A harmonia... eu lembro agora.\nEu era... a guardiã...",
+	},
+	"BossAlienCow": {
+		"intro": "MUUUU! O cristal me deu\nconsciência! E FOME!",
+		"death": "Muu... o brilho... está sumindo...\n*static*",
+	},
+	"BossAiOverlord": {
+		"intro": "SENTINELA DA LÓGICA ONLINE.\nVARIÁVEIS ORGÂNICAS: ELIMINAR.",
+		"death": "ERRO... eu era protetor?\nDados corrompidos... restaurando...",
+	},
+	"BossDemonLord": {
+		"intro": "Não fui corrompido. EU NASCI\nda destruição de Zion!",
+		"death": "A raiva se dissolve...\nO que resta... é vazio...",
+	},
+	"BossLeviathan": {
+		"intro": "Eu existo desde antes de Zion ter nome.\nVocês são efêmeros!",
+		"death": "As profundezas... se aquietam.\nO mais antigo... descansa...",
+	},
+	"BossEmperor": {
+		"intro": "Ajoelhem-se! Nesta arena,\nEU SOU ETERNO!",
+		"death": "O loop... se quebra.\nRoma... pode descansar...",
+	},
+	"BossSingularity": {
+		"intro": "EU GUARDO AS FRONTEIRAS DO ESPAÇO-TEMPO.\nNADA PASSA.",
+		"death": "O horizonte... colapsa.\nAs fronteiras... se abrem...",
+	},
+	"BossDracula": {
+		"intro": "Eu não fui corrompido. Eu ESCOLHI.\nZion não deve ser restaurado!",
+		"death": "Talvez... eu estivesse errado.\nTalvez vocês mereçam... um novo Zion...",
+	},
+	"BossSugarKing": {
+		"intro": "Eu sou tudo que resta do Coração!\nE NÃO VOU SER CONSERTADO!",
+		"death": "O último fragmento...\nO coração... bate de novo...",
+	},
 }
 
 var _panel: PanelContainer

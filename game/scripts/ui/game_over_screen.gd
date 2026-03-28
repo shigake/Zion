@@ -60,9 +60,14 @@ func _show() -> void:
 	var t = int(GameManager.game_time)
 	var time_str = "%02d:%02d" % [t / 60, t % 60]
 	if GameManager.is_victory:
-		time_label.text = LocaleManager.tr_key("victory_time") % time_str
+		# Narrative flavor: victory message with lore
+		if GameManager.selected_stage == "candy" and GameManager.game_mode == "normal":
+			time_label.text = LocaleManager.tr_key("lore_victory_final") + "\n" + LocaleManager.tr_key("victory_time") % time_str
+		else:
+			time_label.text = LocaleManager.tr_key("lore_victory") + "\n" + LocaleManager.tr_key("victory_time") % time_str
 	else:
-		time_label.text = LocaleManager.tr_key("time") % time_str
+		# Narrative flavor: death message with lore
+		time_label.text = LocaleManager.tr_key("lore_death") + "\n" + LocaleManager.tr_key("time") % time_str
 	kills_label.text = LocaleManager.tr_key("kills_stat") % GameManager.total_kills
 	level_label.text = LocaleManager.tr_key("level_stat") % GameManager.player_level
 	var crystal_mult = MutationManager.get_crystal_multiplier()
@@ -191,6 +196,9 @@ func _show() -> void:
 		for char_id in unlocked:
 			var unlocked_data = CharacterDB.get_character(char_id)
 			crystals_label.text += "\n" + LocaleManager.tr_key("unlocked") % unlocked_data["name"]
+			# Special narrative for mystery character unlock
+			if char_id == "mystery":
+				crystals_label.text += "\n\n" + LocaleManager.tr_key("lore_mystery_unlock")
 	overlay.visible = true
 	panel.visible = true
 	GameManager.paused = true

@@ -342,7 +342,13 @@ func _update_info_panel() -> void:
 	info_name.text = stage["name"]
 	info_name.add_theme_color_override("font_color", theme_color.lerp(Color.WHITE, 0.4))
 
-	info_boss.text = "Boss: %s" % BOSS_NAMES.get(selected_stage, "???")
+	# Boss name with lore title
+	var boss_lore_key = "boss_" + selected_stage
+	var boss_lore_name = LocaleManager.tr_key(boss_lore_key)
+	if boss_lore_name != boss_lore_key:
+		info_boss.text = "Boss: %s" % boss_lore_name
+	else:
+		info_boss.text = "Boss: %s" % BOSS_NAMES.get(selected_stage, "???")
 	info_desc.text = stage["description"]
 
 	# Best time
