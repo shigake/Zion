@@ -1,43 +1,43 @@
 # Zion — Checklist Final Completo (v2.83)
 
 ## BUGS CRITICOS
-- [ ] Chef starting_weapon = "flamethrower" (desabilitado) — trocar pra outra arma
-- [ ] 50 monstros gen3 sprites existem mas nomes nao batem no STAGE_ENEMY_SPRITES mapping
-- [ ] Circulos coloridos placeholder nas areas de armas melee (katana=azul, scythe=roxo, hammer=amarelo, whip=marrom)
+- [x] Chef starting_weapon = "flamethrower" (desabilitado) — trocar pra outra arma
+- [x] 50 monstros gen3 sprites existem mas nomes nao batem no STAGE_ENEMY_SPRITES mapping
+- [x] Circulos coloridos placeholder nas areas de armas melee (katana=azul, scythe=roxo, hammer=amarelo, whip=marrom)
 - [ ] Barrier walls no player.gd gera 24 erros is_inside_tree na criacao (inofensivo mas poluente)
 - [ ] health_pickup.gd ainda gera 7 erros por run
 - [ ] Totem area visual eh um circulo generico
 
 ## SFX NAO CONECTADOS (33 gerados, ~20 nao conectados)
 ### Combate
-- [ ] sword_slash.wav — conectar em katana.gd, dual_katana.gd, cloud_sword.gd (_attack)
-- [ ] axe_chop.wav — conectar em axe.gd (_throw)
-- [ ] scythe_swoosh.wav — conectar em scythe.gd (_on_body_entered)
-- [ ] whip_crack.wav — conectar em whip.gd (_attack)
-- [ ] hammer_slam.wav — conectar em hammer.gd (_attack)
-- [ ] lance_thrust.wav — conectar em lance.gd (_attack)
-- [ ] punch_hit.wav — conectar em boxing_gloves.gd (_do_punch), nunchaku.gd
-- [ ] gun_shot.wav — conectar em machinegun.gd, dual_pistol.gd (_fire) substituindo "hit"
-- [ ] bow_release.wav — conectar em elven_bow.gd, crossbow.gd (_fire)
-- [ ] magic_cast.wav — conectar em staff.gd, ice_staff.gd, magic_book.gd (_fire)
-- [ ] explosion.wav — conectar em rocket.gd (explosao), time_bomb.gd
-- [ ] electric_zap.wav — conectar em lightning_chain.gd (_cast), totem.gd
-- [ ] poison_splash.wav — conectar em poison_bottle.gd (_throw_bottle)
-- [ ] fire_whoosh.wav — reservado (flamethrower desabilitado)
-- [ ] summon_pop.wav — conectar em necro.gd (_summon), skeleton_summon.gd
+- [x] sword_slash.wav — conectar em katana.gd, dual_katana.gd, cloud_sword.gd (_attack)
+- [x] axe_chop.wav — conectar em axe.gd (_throw)
+- [x] scythe_swoosh.wav — conectar em scythe.gd (_on_body_entered)
+- [x] whip_crack.wav — conectar em whip.gd (_attack)
+- [x] hammer_slam.wav — conectar em hammer.gd (_attack)
+- [x] lance_thrust.wav — conectar em lance.gd (_attack)
+- [x] punch_hit.wav — conectar em boxing_gloves.gd (_do_punch), nunchaku.gd
+- [x] gun_shot.wav — conectar em machinegun.gd, dual_pistol.gd (_fire) substituindo "hit"
+- [x] bow_release.wav — conectar em elven_bow.gd, crossbow.gd (_fire)
+- [x] magic_cast.wav — conectar em staff.gd, ice_staff.gd, magic_book.gd (_fire)
+- [x] explosion.wav — conectar em rocket.gd (explosao), time_bomb.gd
+- [x] electric_zap.wav — conectar em lightning_chain.gd (_cast), totem.gd
+- [x] poison_splash.wav — conectar em poison_bottle.gd (_throw_bottle)
+- [x] fire_whoosh.wav — reservado (flamethrower desabilitado)
+- [x] summon_pop.wav — conectar em necro.gd (_summon), skeleton_summon.gd
 
 ### UI
-- [ ] collect_crystal.wav — conectar em crystal_pickup.gd (_collect)
-- [ ] heal.wav — conectar em health_pickup.gd (_collect)
-- [ ] achievement.wav — conectar em achievement_popup.gd
-- [ ] reroll.wav — conectar em level_up_screen.gd (_on_reroll)
-- [ ] banish.wav — conectar em level_up_screen.gd (_on_banish)
-- [ ] select.wav — conectar em level_up_screen.gd (_choose)
+- [x] collect_crystal.wav — conectar em crystal_pickup.gd (_collect)
+- [x] heal.wav — conectar em health_pickup.gd (_collect)
+- [x] achievement.wav — conectar em achievement_popup.gd
+- [x] reroll.wav — conectar em level_up_screen.gd (_on_reroll)
+- [x] banish.wav — conectar em level_up_screen.gd (_on_banish)
+- [x] select.wav — conectar em level_up_screen.gd (_choose)
 - [ ] equip.wav — conectar em level_up_screen.gd (apos escolha aplicada)
 - [ ] error.wav — conectar quando tenta comprar sem cristais, personagem locked
 
 ### Ambiente
-- [ ] footstep.wav — conectar em player.gd (cada 4 frames de walk)
+- [x] footstep.wav — conectar em player.gd (cada 0.3s de walk)
 - [ ] enemy_growl.wav — conectar em enemy_spawner.gd (spawn de elite/special)
 - [ ] chest_open.wav — conectar em evolution_chest.gd
 - [ ] portal_hum.wav — conectar em portal_weapon.gd, event_manager.gd (portal dimensional)
@@ -45,22 +45,22 @@
 - [ ] wind.wav — conectar em space_props.gd, cemetery_props.gd (ambient loop)
 
 ### Boss
-- [ ] boss_roar.wav — conectar em boss_dialogue.gd (intro)
+- [x] boss_roar.wav — conectar em boss_dialogue.gd (intro)
 - [ ] boss_attack.wav — conectar em todos boss_*.gd (ataques especiais)
 - [ ] boss_phase.wav — conectar em enemy_base.gd (threshold de fase do boss)
-- [ ] boss_death.wav — conectar em enemy_base.gd (_die para boss)
+- [x] boss_death.wav — conectar em enemy_base.gd (_die para boss)
 
 ## MUSICA NAO CONECTADA
-- [ ] victory.wav — tocar quando boss morre (game_manager.gd ou game_over_screen.gd)
-- [ ] shop.wav — tocar quando abrir loja (shop.gd _ready)
+- [x] victory.wav — tocar quando boss morre (game_manager.gd ou game_over_screen.gd)
+- [x] shop.wav — tocar quando abrir loja (shop.gd _ready)
 - [ ] lobby.wav — tocar quando abrir lobby (lobby_screen.gd _ready)
-- [ ] game_over_music.wav — tocar na tela de game over (game_over_screen.gd)
+- [x] game_over_music.wav — tocar na tela de game over (game_over_screen.gd)
 
 ## ARMAS NOVAS SEM SCRIPTS (4)
-- [ ] boomerang.gd + boomerang.tscn — projetil que vai e volta, perfura na ida
-- [ ] tornado.gd + tornado.tscn — summon, vortex giratorio que puxa inimigos
-- [ ] chain_whip.gd + chain_whip.tscn — melee, chain entre inimigos proximos
-- [ ] blood_orb.gd + blood_orb.tscn — summon, orbe que drena vida em area
+- [x] boomerang.gd + boomerang.tscn — projetil que vai e volta, perfura na ida
+- [x] tornado.gd + tornado.tscn — summon, vortex giratorio que puxa inimigos
+- [x] chain_whip.gd + chain_whip.tscn — melee, chain entre inimigos proximos
+- [x] blood_orb.gd + blood_orb.tscn — summon, orbe que drena vida em area
 
 ## EFEITOS VISUAIS PLACEHOLDER
 - [ ] Katana swing area — substituir circulo azul por sprite de arco de corte
@@ -144,8 +144,8 @@
 - [ ] candy_sour_worm → mapear
 
 ## PERFORMANCE
-- [ ] Reduzir props por stage: cemetery 105→65, outros similar
-- [ ] Expandir ObjectPool pra staff_projectile, ice_crystal, magic_book page, shuriken
+- [x] Reduzir props por stage: cemetery 105→65, outros similar
+- [x] Expandir ObjectPool pra staff_projectile, ice_crystal, magic_book page, shuriken
 - [ ] Cachear texturas de sprites (evitar load() repetido)
 - [ ] Bullet trail — adicionar rastro visual (so quando FPS > 45)
 - [ ] MultiMesh pra pickups quando > 100 no chao

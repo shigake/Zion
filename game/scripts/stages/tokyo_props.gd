@@ -7,15 +7,15 @@ extends Node3D
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"neon_sign1": 12,
-	"neon_sign2": 10,
-	"vending_machine": 8,
-	"lamppost": 15,
-	"car": 6,
-	"trash_can": 12,
-	"manhole": 8,
-	"billboard": 5,
-	"barrier": 15,
+	"neon_sign1": 5,
+	"neon_sign2": 4,
+	"vending_machine": 3,
+	"lamppost": 6,
+	"car": 2,
+	"trash_can": 4,
+	"manhole": 3,
+	"billboard": 2,
+	"barrier": 5,
 }
 
 

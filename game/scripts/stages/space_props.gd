@@ -6,15 +6,15 @@ extends Node3D
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"console": 15,
-	"crate": 20,
-	"pipe": 18,
-	"antenna": 8,
-	"pod": 10,
-	"barrel_toxic": 15,
-	"light_panel": 12,
-	"debris": 14,
-	"portal": 5,
+	"console": 5,
+	"crate": 6,
+	"pipe": 5,
+	"antenna": 3,
+	"pod": 3,
+	"barrel_toxic": 5,
+	"light_panel": 4,
+	"debris": 4,
+	"portal": 2,
 }
 
 

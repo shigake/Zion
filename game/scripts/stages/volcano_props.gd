@@ -7,15 +7,15 @@ extends Node3D
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"lava_rock": 25,
-	"obsidian": 15,
-	"fire_geyser": 8,
-	"skull_rock": 6,
-	"magma_pool": 10,
-	"dead_bush": 15,
-	"bone_pile": 10,
-	"crystal_red": 12,
-	"volcanic_vent": 8,
+	"lava_rock": 8,
+	"obsidian": 5,
+	"fire_geyser": 3,
+	"skull_rock": 2,
+	"magma_pool": 3,
+	"dead_bush": 5,
+	"bone_pile": 3,
+	"crystal_red": 4,
+	"volcanic_vent": 3,
 }
 
 

@@ -7,15 +7,15 @@ extends Node3D
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"coral_pink": 20,
-	"coral_blue": 18,
-	"seaweed": 25,
-	"shell": 15,
-	"anchor": 4,
-	"treasure_chest": 3,
-	"jellyfish": 10,
-	"starfish": 12,
-	"bubble_column": 15,
+	"coral_pink": 6,
+	"coral_blue": 5,
+	"seaweed": 8,
+	"shell": 4,
+	"anchor": 2,
+	"treasure_chest": 1,
+	"jellyfish": 3,
+	"starfish": 4,
+	"bubble_column": 4,
 }
 
 

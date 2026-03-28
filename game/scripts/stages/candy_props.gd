@@ -6,15 +6,15 @@ extends Node3D
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
-	"candy_cane": 20,
-	"lollipop": 18,
-	"gummy_bear": 15,
-	"cupcake": 12,
-	"ice_cream": 10,
-	"chocolate": 12,
-	"cotton_candy": 10,
-	"donut": 12,
-	"cookie": 15,
+	"candy_cane": 6,
+	"lollipop": 5,
+	"gummy_bear": 4,
+	"cupcake": 4,
+	"ice_cream": 3,
+	"chocolate": 4,
+	"cotton_candy": 3,
+	"donut": 4,
+	"cookie": 4,
 }
 
 
