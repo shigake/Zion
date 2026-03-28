@@ -87,7 +87,7 @@ func _physics_process(delta: float) -> void:
 		_perform_dash(move_dir)
 
 func _analyze_threats(pos: Vector3) -> Dictionary:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	var result = {
 		"flee_dir": Vector3.ZERO,
 		"threat_count": 0,

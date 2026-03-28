@@ -94,7 +94,7 @@ func _on_body_entered(body: Node3D) -> void:
 	hit_timers[eid] = hit_cooldown
 
 func _fire_page(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 

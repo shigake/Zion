@@ -89,7 +89,7 @@ func _deactivate() -> void:
 	_hidden_meshes.clear()
 
 func _restore_individual_meshes() -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
@@ -104,7 +104,7 @@ func _update_transforms() -> void:
 	if not _multimesh or not _multimesh_instance or not is_instance_valid(_multimesh_instance):
 		return
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	var count = enemies.size()
 	if count == 0:
 		if _multimesh.instance_count != 0:

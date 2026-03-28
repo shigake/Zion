@@ -60,7 +60,7 @@ func _refresh_dots() -> void:
 	_boss_dots.clear()
 
 	# Inimigos
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if not is_instance_valid(e):
 			continue
@@ -97,7 +97,7 @@ func _refresh_dots() -> void:
 
 	# Aliados (multiplayer)
 	if MultiplayerManager.is_online:
-		var players = get_tree().get_nodes_in_group("players")
+		var players = GameManager.get_players()
 		for p in players:
 			if not is_instance_valid(p) or p == player:
 				continue
@@ -213,7 +213,7 @@ func _draw_circle_outline(center_pos: Vector2, radius: float, color: Color, widt
 		draw_line(a, b, color, width)
 
 func _get_local_player() -> Node3D:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for p in players:
 		if is_instance_valid(p) and "is_local" in p and p.is_local:
 			return p

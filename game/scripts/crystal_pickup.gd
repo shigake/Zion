@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 	# Attraction check — only every 5 physics frames for performance
 	_frame_counter += 1
 	if not being_attracted and _frame_counter % 5 == 0:
-		var players = get_tree().get_nodes_in_group("players")
+		var players = GameManager.get_players()
 		var range_sq = (base_attract_range * GameManager.magnet_mult) ** 2
 		for p in players:
 			if is_instance_valid(p) and global_position.distance_squared_to(p.global_position) < range_sq:

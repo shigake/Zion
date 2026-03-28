@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
 		_fire(level)
 
 func _fire(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
@@ -88,7 +88,7 @@ func _freeze_area(pos: Vector3, level: int) -> void:
 	_spawn_frost_mist(pos, freeze_duration)
 
 	# Find all enemies in radius and slow them
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if not is_instance_valid(e):
 			continue

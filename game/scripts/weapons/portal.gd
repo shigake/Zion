@@ -26,7 +26,7 @@ func _process(delta: float) -> void:
 			_create_portal(level)
 
 func _create_portal(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		return
 

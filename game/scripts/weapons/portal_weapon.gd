@@ -24,7 +24,7 @@ func _process(delta: float) -> void:
 		_try_open_portal(level)
 
 func _try_open_portal(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.size() < CLUSTER_MIN_ENEMIES:
 		return
 

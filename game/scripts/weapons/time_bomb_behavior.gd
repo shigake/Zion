@@ -116,7 +116,7 @@ func _explode() -> void:
 	ParticleFactory.spawn_death_particles(pos, Color(0.3, 0.15, 0.05))
 
 	# Damage all enemies in radius
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue

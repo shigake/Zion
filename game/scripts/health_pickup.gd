@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 
 	# Atracao ao jogador
 	if not being_attracted:
-		var players = get_tree().get_nodes_in_group("players")
+		var players = GameManager.get_players()
 		for p in players:
 			var range_val = base_attract_range * GameManager.magnet_mult
 			if is_instance_valid(p) and global_position.distance_to(p.global_position) < range_val:

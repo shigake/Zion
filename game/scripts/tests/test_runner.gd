@@ -205,11 +205,11 @@ func _run_next_test() -> void:
 	_attach_auto_player()
 
 func _attach_auto_player() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		# Retry after a short delay
 		await get_tree().create_timer(0.5).timeout
-		players = get_tree().get_nodes_in_group("players")
+		players = GameManager.get_players()
 		if players.is_empty():
 			_errors.append("ERROR: No player found in scene")
 			print("  [ERROR] No player found in scene!")

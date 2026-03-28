@@ -142,7 +142,7 @@ func _water_vortex() -> void:
 	if not target or not is_instance_valid(target):
 		return
 	# Puxa player em direcao ao boss
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player):
 			var dist = global_position.distance_to(player.global_position)
@@ -164,7 +164,7 @@ func _ink_cloud() -> void:
 func _tentacle_slam(radius: float) -> void:
 	ParticleFactory.spawn_explosion_particles(global_position, radius)
 	# Dano em area ao redor do boss
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player):
 			var dist = global_position.distance_to(player.global_position)

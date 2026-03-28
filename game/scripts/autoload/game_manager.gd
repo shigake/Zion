@@ -192,7 +192,7 @@ func add_xp(amount: int) -> void:
 		player_leveled_up.emit(player_level)
 		AudioManager.play_sfx("level_up")
 		# Level up particles
-		var players = get_tree().get_nodes_in_group("players")
+		var players = get_players()
 		if not players.is_empty():
 			ParticleFactory.spawn_level_up_particles(players[0].global_position)
 			ScreenEffects.shake(0.1)
@@ -230,8 +230,8 @@ func take_damage(amount: int) -> void:
 	if thorns_mult > 0.0:
 		var reflected = int(reduced * thorns_mult)
 		if reflected > 0:
-			var enemies = get_tree().get_nodes_in_group("enemies")
-			var players = get_tree().get_nodes_in_group("players")
+			var enemies = get_enemies()
+			var players = get_players()
 			if not players.is_empty() and not enemies.is_empty():
 				var player_pos = players[0].global_position
 				var nearest: Node3D = null
@@ -271,7 +271,7 @@ func take_damage(amount: int) -> void:
 		game_over.emit()
 
 func _spawn_tombstone() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = get_players()
 	var death_pos = Vector3.ZERO
 	if not players.is_empty():
 		death_pos = players[0].global_position

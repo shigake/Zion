@@ -157,7 +157,7 @@ func _process(delta: float) -> void:
 			_start_charge(level)
 
 func _start_charge(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 

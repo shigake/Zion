@@ -879,7 +879,7 @@ func _generate_arena_lighting() -> void:
 ## ---- MECANICA: MULTIDAO JOGA ITEM ----
 func _crowd_throw_item() -> void:
 	# Find player position
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var player = players[0]

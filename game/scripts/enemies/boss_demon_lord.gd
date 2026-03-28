@@ -191,7 +191,7 @@ func _charge_at_player() -> void:
 func _ground_slam(radius: float) -> void:
 	ParticleFactory.spawn_explosion_particles(global_position, radius)
 	# Dano em area ao redor do boss
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player):
 			var dist = global_position.distance_to(player.global_position)
@@ -201,7 +201,7 @@ func _ground_slam(radius: float) -> void:
 
 func _lava_floor_damage() -> void:
 	# Dano periodico em todos os players (simulando lava floor)
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player) and player.has_method("take_damage"):
 			player.take_damage(int(damage * 0.1), global_position)

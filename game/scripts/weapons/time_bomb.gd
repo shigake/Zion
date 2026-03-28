@@ -172,7 +172,7 @@ func _explode() -> void:
 	var pos = global_position
 	var radius_sq = explosion_radius * explosion_radius
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if not is_instance_valid(e):
 			continue

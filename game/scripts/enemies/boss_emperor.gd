@@ -169,7 +169,7 @@ func _charge_at_player() -> void:
 func _sword_sweep() -> void:
 	# Dano em arco frontal (180 graus na frente do boss)
 	ParticleFactory.spawn_death_particles(global_position, Color(0.8, 0.6, 0.1), 8)
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player):
 			var dist = global_position.distance_to(player.global_position)

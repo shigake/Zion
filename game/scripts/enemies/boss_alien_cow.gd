@@ -106,7 +106,7 @@ func _fire_projectile_ring(count: int, proj_speed: float) -> void:
 
 func _abduction_beam() -> void:
 	# Encontra inimigo mais proximo que nao seja boss
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	var nearest: Node3D = null
 	var nearest_dist: float = 999.0
 	for e in enemies:

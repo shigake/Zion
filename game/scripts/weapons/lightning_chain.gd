@@ -23,7 +23,7 @@ func _process(delta: float) -> void:
 		_cast(level)
 
 func _cast(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		return
 

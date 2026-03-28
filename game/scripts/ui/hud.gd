@@ -211,18 +211,28 @@ func _ready() -> void:
 		MultiplayerManager.reconnection_succeeded.connect(_on_reconnection_succeeded)
 		MultiplayerManager.reconnection_failed.connect(_on_reconnection_failed)
 
+var _slow_update_timer: float = 0.0
+const SLOW_UPDATE_INTERVAL: float = 0.2  # 5x per second for non-critical UI
+
 func _process(delta: float) -> void:
+	# Critical: update every frame (smooth bars)
 	_update_hp()
 	_update_xp()
-	_update_time()
-	_update_kills()
-	_update_weapon_icons()
-	_update_item_icons()
-	_update_boss_hp()
 	_update_dash()
-	_update_ally_hp()
-	_update_ping()
-	_update_ally_arrows()
+
+	# Slow updates: 5x/sec is enough for text/icons
+	_slow_update_timer += delta
+	if _slow_update_timer >= SLOW_UPDATE_INTERVAL:
+		_slow_update_timer = 0.0
+		_update_time()
+		_update_kills()
+		_update_weapon_icons()
+		_update_item_icons()
+		_update_boss_hp()
+		_update_ally_hp()
+		_update_ping()
+		_update_ally_arrows()
+
 	_update_synergies(delta)
 	# Check achievements every 10s
 	achievement_check_timer += delta
@@ -521,7 +531,7 @@ func _update_boss_hp() -> void:
 		boss_hp_bar.value = boss_hp_bar.max_value
 
 func _update_dash() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var p = players[0]
@@ -545,7 +555,7 @@ func _update_ally_hp() -> void:
 		if ally_hp_panel:
 			ally_hp_panel.visible = false
 		return
-	var players_list = get_tree().get_nodes_in_group("players")
+	var players_list = GameManager.get_players()
 	if players_list.size() <= 1:
 		if ally_hp_panel:
 			ally_hp_panel.visible = false
@@ -686,7 +696,7 @@ func _update_ally_arrows() -> void:
 	var local_player = get_tree().get_first_node_in_group("players")
 	if not local_player or not is_instance_valid(local_player):
 		return
-	var players_in_group = get_tree().get_nodes_in_group("players")
+	var players_in_group = GameManager.get_players()
 	var colors = MultiplayerManager.get_player_colors()
 	for p in players_in_group:
 		if not is_instance_valid(p) or p == local_player:

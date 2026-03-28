@@ -193,7 +193,7 @@ func _end_event() -> void:
 	event_ended.emit(ended)
 
 func _spawn_golden_horde() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position
@@ -215,7 +215,7 @@ func _spawn_golden_horde() -> void:
 # ---- Elite Horde (min 5) ----
 # Spawna 20 inimigos elite (dourados, 3x HP, 1.5x dmg) de todos os lados
 func _spawn_elite_horde() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position
@@ -247,7 +247,7 @@ func _spawn_elite_horde() -> void:
 # ---- Massive Horde (min 15) ----
 # Horda massiva: 50 inimigos normais + 10 elites de todos os tipos
 func _spawn_massive_horde() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position
@@ -304,7 +304,7 @@ func _spawn_massive_horde() -> void:
 # Spawna mini-boss via evento (ao inves de via spawner)
 # strong=false: mini-boss normal (min 10), strong=true: mini-boss forte (min 20)
 func _spawn_event_miniboss(strong: bool) -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
@@ -384,7 +384,7 @@ func _spawn_event_miniboss(strong: bool) -> void:
 			GameManager.enemies_alive += 1
 
 func _spawn_treasure_goblin() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position
@@ -403,7 +403,7 @@ func _spawn_treasure_goblin() -> void:
 	GameManager.enemies_alive += 1
 
 func _spawn_merchant() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position
@@ -567,7 +567,7 @@ func _start_eclipse() -> void:
 
 	# Hide enemy meshes
 	_eclipse_hidden_enemies.clear()
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		var mesh = enemy.find_child("MeshInstance3D", true, false)
 		if mesh and mesh is MeshInstance3D:
@@ -615,7 +615,7 @@ func _start_meteor_shower() -> void:
 	_meteor_spawn_timer = 0.0  # Spawn first immediately
 
 func _spawn_single_meteor() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position
@@ -667,14 +667,14 @@ func _meteor_impact(meteor: Node3D, impact_pos: Vector3) -> void:
 	var radius := 2.0
 
 	# Damage enemies in radius
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if is_instance_valid(enemy) and enemy.global_position.distance_to(impact_pos) <= radius:
 			if enemy.has_method("take_damage"):
 				enemy.take_damage(damage)
 
 	# Damage player in radius
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player) and player.global_position.distance_to(impact_pos) <= radius:
 			GameManager.take_damage(damage)
@@ -751,7 +751,7 @@ func _end_fever_mode() -> void:
 # Sobreviver garante recompensa rara (itens ou XP massivo).
 
 func _start_portal_dimensional() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 
@@ -810,7 +810,7 @@ func _end_portal_dimensional() -> void:
 		return
 	_portal_active = false
 
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if not players.is_empty():
 		players[0].global_position = _portal_original_pos
 
@@ -829,7 +829,7 @@ func _end_portal_dimensional() -> void:
 # Spawna um bau falso que, ao se aproximar, vira um mini-boss Mimic.
 
 func _spawn_chest_mimic() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var center = players[0].global_position

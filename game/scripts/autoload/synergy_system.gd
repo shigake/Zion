@@ -117,7 +117,7 @@ func apply_passive_synergies(player_pos: Vector3, _delta: float) -> void:
 func _fire_explosion(pos: Vector3) -> void:
 	ParticleFactory.spawn_explosion_particles(pos, 2.0)
 	ScreenEffects.shake(0.08)
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 2.5:
 			if e.has_method("take_damage"):
@@ -128,7 +128,7 @@ func _fire_explosion(pos: Vector3) -> void:
 func _ice_shatter(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(0.4, 0.85, 1.0), 10)
 	ScreenEffects.shake(0.06)
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.0:
 			if e.has_method("take_damage"):
@@ -146,7 +146,7 @@ func _ice_shatter(pos: Vector3) -> void:
 # ---- Electric + Electric: Chain Lightning ----
 
 func _chain_lightning(start_pos: Vector3) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	var hit_enemies: Array = []
 	var current_pos = start_pos
 	var chain_range = 5.0
@@ -183,7 +183,7 @@ func _dark_aura_tick(pos: Vector3) -> void:
 		return
 	_dark_aura_timer = 0.0
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
 			if e.has_method("take_damage"):
@@ -200,7 +200,7 @@ func _steam_cloud_tick(pos: Vector3) -> void:
 	# Spawn steam particles
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.8, 0.8, 0.8, 0.6), 8)
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
 			if e.has_method("take_damage"):
@@ -225,7 +225,7 @@ func _conductor_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_explosion_particles(pos, 5.0)
 	ScreenEffects.shake(0.12)
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 6.0:
 			if e.has_method("take_damage"):
@@ -242,7 +242,7 @@ func _tidal_wave_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.2, 0.5, 1.0, 0.8), 12)
 	ScreenEffects.shake(0.06)
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 5.0:
 			# Push enemy away from player
@@ -267,7 +267,7 @@ func _steam_explosion_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_explosion_particles(pos, 2.0)
 	ScreenEffects.shake(0.08)
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
 			if e.has_method("take_damage"):
@@ -304,7 +304,7 @@ func _absolute_zero_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_explosion_particles(pos, 3.0)
 	ScreenEffects.shake(0.1)
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
 			if e.has_method("take_damage"):
@@ -328,7 +328,7 @@ func _abyssal_depths_tick(pos: Vector3) -> void:
 		return
 	_abyssal_depths_timer = 0.0
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if not is_instance_valid(e):
 			continue
@@ -450,7 +450,7 @@ func _execute_cross_combo(pos: Vector3, combo: Dictionary, base_damage: int) -> 
 	var combo_color: Color = combo.get("color", Color.WHITE)
 
 	# AoE damage to enemies
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
 			if e.has_method("take_damage"):

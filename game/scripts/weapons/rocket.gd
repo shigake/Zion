@@ -46,7 +46,7 @@ func _physics_process(delta: float) -> void:
 
 func _explode() -> void:
 	# Dano em area
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if not is_instance_valid(e):
 			continue

@@ -38,7 +38,7 @@ func _explode() -> void:
 	has_exploded = true
 
 	# Deal damage to all players in explosion radius
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	for player in players:
 		if not is_instance_valid(player):
 			continue

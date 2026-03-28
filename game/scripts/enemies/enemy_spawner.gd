@@ -75,8 +75,14 @@ func _process(delta: float) -> void:
 func _spawn_wave(mult: float) -> void:
 	if GameManager.enemies_alive >= GameManager.max_enemies:
 		return
+	# Dynamic cap: reduce spawns when FPS is low
+	var fps = Engine.get_frames_per_second()
+	if fps < 30.0 and GameManager.enemies_alive > 150:
+		return  # Skip wave to let FPS recover
+	if fps < 20.0 and GameManager.enemies_alive > 80:
+		return
 
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 
@@ -329,7 +335,7 @@ func _process_boss_rush(delta: float) -> void:
 		return
 
 	# Spawn next boss
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
@@ -375,7 +381,7 @@ func _make_elite(enemy: Node3D) -> void:
 		enemy.scale = Vector3(1.3, 1.3, 1.3)
 
 func _spawn_miniboss() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
@@ -428,7 +434,7 @@ func _spawn_boss() -> void:
 	if GameManager.game_mode == "endless":
 		return
 
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var pos = players[0].global_position

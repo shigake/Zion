@@ -27,7 +27,7 @@ func _process(delta: float) -> void:
 		_fire(level)
 
 func _fire(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
@@ -62,7 +62,7 @@ func _fire(level: int) -> void:
 			get_tree().current_scene.call_deferred("add_child", proj)
 
 func _get_nearest_enemies(from: Vector3, count: int) -> Array:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	var sorted: Array = []
 	for e in enemies:
 		if is_instance_valid(e):

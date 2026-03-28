@@ -11,7 +11,7 @@ var target: Node3D = null
 func _ready() -> void:
 	# Encontra jogador
 	await get_tree().process_frame
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if not players.is_empty():
 		target = players[0]
 

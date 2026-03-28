@@ -85,8 +85,8 @@ func _process_cull_batch() -> void:
 	if not tree:
 		return
 
-	var enemies := tree.get_nodes_in_group("enemies")
-	var players := tree.get_nodes_in_group("players")
+	var enemies := GameManager.get_enemies()
+	var players := GameManager.get_players()
 
 	if players.is_empty() or enemies.is_empty():
 		return

@@ -184,7 +184,7 @@ func damage_flash(duration: float = 0.15) -> void:
 func _spawn_damage_indicator(source_pos: Vector3) -> void:
 	if not _damage_indicator_container:
 		return
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		return
 	var player_pos = players[0].global_position

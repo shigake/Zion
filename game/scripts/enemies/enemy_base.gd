@@ -145,7 +145,7 @@ func _physics_process(delta: float) -> void:
 
 func _get_separation_vector() -> Vector3:
 	var sep := Vector3.ZERO
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	var checked := 0
 	for enemy in enemies:
 		if enemy == self or not is_instance_valid(enemy) or enemy.is_dead:
@@ -162,7 +162,7 @@ func _get_separation_vector() -> Vector3:
 	return sep
 
 func _find_target() -> void:
-	var players = get_tree().get_nodes_in_group("players")
+	var players = GameManager.get_players()
 	if players.is_empty():
 		target = null
 		return
@@ -502,7 +502,7 @@ func _mutation_explode(pos: Vector3) -> void:
 	var explosion_damage = maxi(1, max_hp / 2)
 	var explosion_radius = 1.5
 	ParticleFactory.spawn_explosion_particles(pos + Vector3(0, 0.3, 0))
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for e in enemies:
 		if e == self or not is_instance_valid(e) or e.is_dead:
 			continue

@@ -142,7 +142,7 @@ func _process(delta: float) -> void:
 			_start_fire(level)
 
 func _start_fire(level: int) -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
@@ -169,7 +169,7 @@ func _update_aim() -> void:
 			flame_mesh.rotation.y = -angle
 		return
 
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		return
 

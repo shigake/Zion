@@ -141,7 +141,7 @@ func _fire_homing_projectiles(count: int) -> void:
 
 func _black_hole_pull(_delta: float) -> void:
 	# Pull all enemies toward self
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if enemy == self or not is_instance_valid(enemy):
 			continue

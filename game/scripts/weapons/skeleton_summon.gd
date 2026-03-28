@@ -64,7 +64,7 @@ func _physics_process(delta: float) -> void:
 			_animator.set_walking(false)
 
 func _find_target() -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	if enemies.is_empty():
 		target = null
 		return

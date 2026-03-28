@@ -156,7 +156,7 @@ func _process(delta: float) -> void:
 		teleported_enemies.erase(key)
 
 	# Check enemies near entry portal
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
