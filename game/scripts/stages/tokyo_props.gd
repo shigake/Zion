@@ -20,7 +20,6 @@ var _prop_defs: Dictionary = {
 
 
 func _ready() -> void:
-	_create_ground()
 	_scatter_props()
 
 
