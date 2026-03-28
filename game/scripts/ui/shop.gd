@@ -7,6 +7,8 @@ extends Control
 @onready var back_btn: Button = $VBox/BackButton
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.pressed.connect(_on_back)
 	_build_shop()
 	GamepadUI.notify_menu_opened()
@@ -68,8 +70,9 @@ func _clear_upgrades() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_back()
 		get_viewport().set_input_as_handled()
+		_on_back()
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

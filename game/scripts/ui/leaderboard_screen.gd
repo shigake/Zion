@@ -7,6 +7,8 @@ extends Control
 @onready var title_label: Label = $VBox/TitleLabel
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	back_btn.pressed.connect(_on_back)
 	back_btn.focus_mode = Control.FOCUS_ALL
 	title_label.text = LocaleManager.tr_key("leaderboard_title")
@@ -56,8 +58,9 @@ func _build_leaderboard() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_back()
 		get_viewport().set_input_as_handled()
+		_on_back()
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

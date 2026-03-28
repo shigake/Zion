@@ -40,6 +40,8 @@ var _http_request: HTTPRequest
 
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_populate_daily_info()
 	_fetch_online_leaderboard()
@@ -523,5 +525,5 @@ func _on_back() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_back()
 		get_viewport().set_input_as_handled()
+		_on_back()

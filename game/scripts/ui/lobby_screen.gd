@@ -11,6 +11,8 @@ extends Control
 @onready var back_btn: Button = $VBox/BackButton
 
 func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	host_btn.pressed.connect(_on_host)
 	join_btn.pressed.connect(_on_join)
 	start_btn.pressed.connect(_on_start)
@@ -90,9 +92,10 @@ func _load_game_scene(scene_path: String) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_back()
 		get_viewport().set_input_as_handled()
+		_on_back()
 
 func _on_back() -> void:
+	AudioManager.play_sfx("menu_click")
 	MultiplayerManager.disconnect_from_game()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

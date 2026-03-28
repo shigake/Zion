@@ -372,8 +372,8 @@ func _get_evolution_info(weapon_id: String) -> String:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_back()
 		get_viewport().set_input_as_handled()
+		_on_back()
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
