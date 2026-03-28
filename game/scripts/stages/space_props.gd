@@ -68,8 +68,8 @@ func _create_ground() -> void:
 		mat.albedo_color = Color(0.05, 0.03, 0.08)
 
 	ground.material_override = mat
-	ground.position.y = 0.01
-	ground.name = "Ground"
+	ground.position.y = 0.02
+	ground.name = "TexturedGround"
 	add_child(ground)
 
 
