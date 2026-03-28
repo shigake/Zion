@@ -936,4 +936,10 @@ func _on_reconnection_succeeded() -> void:
 	_flash_migration_message("Reconectado!", Color(0.3, 0.95, 0.4), 2.5)
 
 func _on_reconnection_failed() -> void:
-	_flash_migration_message("Falha na reconexao", Color(0.95, 0.3, 0.3), 4.0)
+	_flash_migration_message("Desconectado", Color(0.95, 0.3, 0.3), 3.0)
+	# Desconecta e volta ao menu principal após exibir a mensagem
+	MultiplayerManager.disconnect_from_game()
+	var timer = get_tree().create_timer(3.0)
+	await timer.timeout
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

@@ -51,6 +51,9 @@ var _last_port: int = DEFAULT_PORT
 
 # --- Host Migration ---
 var _migration_in_progress: bool = false
+var _migration_game_state: Dictionary = {}  # Estado preservado durante migração
+var _migration_players_backup: Dictionary = {}  # Backup dos players durante migração
+var _new_host_address: String = ""  # Endereço do novo host para reconexão
 
 # --- Interpolação de posição (Task 4) ---
 # peer_id -> Array de {pos: Vector3, time: float} (últimas 3 posições)
@@ -66,6 +69,7 @@ func _ready() -> void:
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
+	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 func _process(delta: float) -> void:
 	if not is_online:
@@ -215,9 +219,11 @@ func _on_peer_connected(id: int) -> void:
 	player_connected.emit(id)
 	# Send our info to the new peer
 	register_player_info.rpc_id(id, local_player_id, GameManager.selected_character)
-	# Se somos o server, enviar HP do host
+	# Se somos o server, enviar HP do host e estado completo (para reconexão pós-migração)
 	if multiplayer.is_server():
 		sync_player_hp.rpc_id(id, local_player_id, GameManager.player_hp, GameManager.get_effective_max_hp())
+		# Envia estado completo do jogo para o peer (útil em reconexão pós-migração)
+		_send_full_state_to_peer(id)
 
 func _on_peer_disconnected(id: int) -> void:
 	LogManager.info("MP", "Peer disconnected: %d" % id)
@@ -226,9 +232,9 @@ func _on_peer_disconnected(id: int) -> void:
 	clear_remote_position(id)
 	player_disconnected.emit(id)
 
-	# Host migration: se o host desconectou, promover próximo peer
-	if id == current_host_id:
-		_trigger_host_migration()
+	# Host migration é tratado via _on_server_disconnected() para clients.
+	# Aqui só tratamos o caso de o host detectar que um client saiu
+	# (o host não recebe server_disconnected).
 
 func _on_connected_to_server() -> void:
 	local_player_id = multiplayer.get_unique_id()
@@ -239,12 +245,16 @@ func _on_connected_to_server() -> void:
 	# Sync HP inicial
 	sync_player_hp.rpc(local_player_id, GameManager.player_hp, GameManager.get_effective_max_hp())
 
-	# Se estava reconectando, sinaliza sucesso
+	# Se estava reconectando (pós-migração ou perda de conexão)
 	if _reconnecting:
 		_reconnecting = false
 		_reconnect_attempts = 0
+		_migration_in_progress = false
 		reconnection_succeeded.emit()
-		LogManager.info("MP", "Reconexão bem-sucedida como %d" % local_player_id)
+		# Se a migração estava em andamento, marca como concluída
+		current_host_id = 1  # O novo server sempre é peer_id 1
+		host_migration_completed.emit(1)
+		LogManager.info("MP", "Reconexão bem-sucedida como %d (novo host: 1)" % local_player_id)
 	else:
 		connection_succeeded.emit()
 		LogManager.info("MP", "Connected as %d" % local_player_id)
@@ -272,49 +282,23 @@ func _register_player(id: int, character_id: String) -> void:
 		"max_hp": 100,
 	}
 
-# ---- Host Migration (melhorado com sync de estado) ----
+# ---- Host Migration (com criação de servidor e reconexão de clients) ----
 
-func _trigger_host_migration() -> void:
-	if not is_online:
-		return
+## Chamado quando o sinal server_disconnected é emitido (apenas em clients).
+## Isso acontece quando o host desconecta — diferente de peer_disconnected.
+func _on_server_disconnected() -> void:
+	LogManager.info("MP", "Server disconnected signal received")
+	# Salva estado antes de perder a conexão
+	_snapshot_game_state()
+	_migration_players_backup = players.duplicate(true)
+	# Remove o host antigo (peer_id 1) do backup
+	_migration_players_backup.erase(1)
+	# Dispara migração
+	_trigger_host_migration()
 
-	# Se somos o server, não fazer nada
-	if multiplayer.is_server():
-		LogManager.info("MP", "Host still alive, no migration needed")
-		return
-
-	_migration_in_progress = true
-	host_migration_started.emit()
-	LogManager.info("MP", "Host migration em andamento...")
-
-	# Client: procura o próximo peer para promover
-	var remaining_peers = players.keys()
-	if remaining_peers.is_empty():
-		LogManager.error("MP", "Nenhum peer restante, jogo desconectado")
-		_migration_in_progress = false
-		return
-
-	# Primeiro peer restante (menor ID) se torna o novo host
-	remaining_peers.sort()
-	var new_host = remaining_peers[0]
-
-	LogManager.info("MP", "Host migration: %d é o novo host" % new_host)
-
-	# Se nós somos o novo host, criamos o servidor
-	if new_host == local_player_id:
-		_become_new_host()
-	else:
-		# Aguarda o novo host anunciar
-		_announce_new_host.rpc(new_host)
-
-func _become_new_host() -> void:
-	## Quando este peer se torna o novo host, coleta o estado do jogo
-	## e distribui para os demais clients.
-	LogManager.info("MP", "Assumindo papel de host")
-	current_host_id = local_player_id
-
-	# Coleta estado do jogo para sincronizar
-	var game_state := {
+## Captura o estado atual do jogo para preservar durante migração.
+func _snapshot_game_state() -> void:
+	_migration_game_state = {
 		"game_time": GameManager.game_time,
 		"enemies_alive": GameManager.enemies_alive,
 		"total_kills": GameManager.total_kills,
@@ -324,33 +308,12 @@ func _become_new_host() -> void:
 		"player_xp_to_next": GameManager.player_xp_to_next,
 		"max_enemies": GameManager.max_enemies,
 		"events_triggered": GameManager.events_triggered,
+		"player_hp": GameManager.player_hp,
+		"player_weapons": GameManager.player_weapons.duplicate(true),
 	}
 
-	# Anuncia para todos os peers restantes
-	for pid in players:
-		if pid != local_player_id:
-			_receive_host_migration.rpc_id(pid, local_player_id, game_state)
-
-	_migration_in_progress = false
-	host_migrated.emit(local_player_id)
-	host_migration_completed.emit(local_player_id)
-
-@rpc("any_peer", "reliable")
-func _announce_new_host(new_host_id: int) -> void:
-	current_host_id = new_host_id
-	if new_host_id == local_player_id:
-		_become_new_host()
-	else:
-		host_migrated.emit(new_host_id)
-	LogManager.info("MP", "Novo host anunciado: %d" % new_host_id)
-
-@rpc("any_peer", "reliable")
-func _receive_host_migration(new_host_id: int, game_state: Dictionary) -> void:
-	## Recebe estado do jogo do novo host durante migração.
-	current_host_id = new_host_id
-	_migration_in_progress = false
-
-	# Aplica estado sincronizado
+## Aplica o estado do jogo salvo durante migração.
+func _apply_game_state(game_state: Dictionary) -> void:
 	if "game_time" in game_state:
 		GameManager.game_time = game_state["game_time"]
 	if "enemies_alive" in game_state:
@@ -369,6 +332,129 @@ func _receive_host_migration(new_host_id: int, game_state: Dictionary) -> void:
 		GameManager.max_enemies = game_state["max_enemies"]
 	if "events_triggered" in game_state:
 		GameManager.events_triggered = game_state["events_triggered"]
+	if "player_hp" in game_state:
+		GameManager.player_hp = game_state["player_hp"]
+
+func _trigger_host_migration() -> void:
+	if not is_online:
+		return
+
+	# Se somos o server, não fazer nada (o server não migra de si mesmo)
+	if multiplayer.is_server():
+		LogManager.info("MP", "Host still alive, no migration needed")
+		return
+
+	_migration_in_progress = true
+	host_migration_started.emit()
+	LogManager.info("MP", "Host migration em andamento...")
+
+	# Salva estado se ainda não foi salvo (caso venha de _on_peer_disconnected)
+	if _migration_game_state.is_empty():
+		_snapshot_game_state()
+		_migration_players_backup = players.duplicate(true)
+		_migration_players_backup.erase(current_host_id)
+
+	# Determina quem deve ser o novo host (menor peer_id entre os restantes)
+	var remaining_peers: Array = []
+	# Inclui nós mesmos e os peers do backup
+	remaining_peers.append(local_player_id)
+	for pid in _migration_players_backup:
+		if pid != local_player_id and pid != current_host_id:
+			remaining_peers.append(pid)
+	remaining_peers.sort()
+
+	if remaining_peers.is_empty():
+		LogManager.error("MP", "Nenhum peer restante, jogo desconectado")
+		_migration_in_progress = false
+		_migration_game_state.clear()
+		_migration_players_backup.clear()
+		disconnect_from_game()
+		reconnection_failed.emit()
+		return
+
+	var new_host_id = remaining_peers[0]
+	LogManager.info("MP", "Host migration: peer %d será o novo host (local=%d)" % [new_host_id, local_player_id])
+
+	# Fecha peer antigo (o server já caiu, mas cleanup é necessário)
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer.close()
+		multiplayer.multiplayer_peer = null
+
+	if new_host_id == local_player_id:
+		# Nós somos o novo host — cria servidor
+		_become_new_host()
+	else:
+		# Outro peer será o host — aguarda e tenta reconectar
+		# Usa _last_address pois o novo host está no mesmo endereço de rede
+		# Em LAN, o novo host estará acessível pelo mesmo mecanismo
+		_wait_and_reconnect_to_new_host()
+
+func _become_new_host() -> void:
+	## Cria um novo servidor ENet e assume o papel de host.
+	## Preserva o estado do jogo e aguarda reconexão dos outros clients.
+	LogManager.info("MP", "Criando novo servidor como host após migração")
+
+	var error = create_server(_last_port)
+	if error != OK:
+		LogManager.error("MP", "Falha ao criar servidor durante migração: %s" % error)
+		_migration_in_progress = false
+		_migration_game_state.clear()
+		_migration_players_backup.clear()
+		reconnection_failed.emit()
+		return
+
+	current_host_id = local_player_id  # Agora é 1 (server sempre é 1)
+
+	# Aplica estado preservado
+	_apply_game_state(_migration_game_state)
+
+	# Restaura informações dos outros players (eles vão reconectar em breve)
+	# Não registra — eles se registram quando conectarem
+
+	_migration_in_progress = false
+	_migration_game_state.clear()
+	_migration_players_backup.clear()
+	host_migrated.emit(local_player_id)
+	host_migration_completed.emit(local_player_id)
+	LogManager.info("MP", "Novo host ativo na porta %d, aguardando reconexão dos clients" % _last_port)
+
+func _wait_and_reconnect_to_new_host() -> void:
+	## Client que NÃO é o novo host aguarda brevemente e tenta reconectar.
+	## O novo host precisa de tempo para criar o servidor.
+	LogManager.info("MP", "Aguardando novo host criar servidor antes de reconectar...")
+
+	# Preserva o estado local
+	_apply_game_state(_migration_game_state)
+
+	# Usa um timer para dar tempo ao novo host de iniciar o servidor
+	var timer = get_tree().create_timer(1.5)  # 1.5s de espera
+	await timer.timeout
+
+	# Tenta reconectar ao novo host (mesmo endereço, mesma porta)
+	# Em jogos LAN, _last_address já aponta para a máquina correta
+	# Para reconexão local (mesmo PC), usa localhost
+	var reconnect_addr = _last_address if _last_address != "" else "127.0.0.1"
+	LogManager.info("MP", "Tentando reconectar a %s:%d" % [reconnect_addr, _last_port])
+	_migration_game_state.clear()
+	_migration_players_backup.clear()
+	reconnect_to_game(reconnect_addr, _last_port)
+
+@rpc("any_peer", "reliable")
+func _announce_new_host(new_host_id: int) -> void:
+	current_host_id = new_host_id
+	if new_host_id == local_player_id:
+		_become_new_host()
+	else:
+		host_migrated.emit(new_host_id)
+	LogManager.info("MP", "Novo host anunciado: %d" % new_host_id)
+
+@rpc("any_peer", "reliable")
+func _receive_host_migration(new_host_id: int, game_state: Dictionary) -> void:
+	## Recebe estado do jogo do novo host durante migração.
+	current_host_id = new_host_id
+	_migration_in_progress = false
+
+	_apply_game_state(game_state)
 
 	LogManager.info("MP", "Estado do jogo sincronizado do novo host %d" % new_host_id)
 	host_migrated.emit(new_host_id)
@@ -377,6 +463,31 @@ func _receive_host_migration(new_host_id: int, game_state: Dictionary) -> void:
 ## Verifica se há migração de host em andamento
 func is_migrating() -> bool:
 	return _migration_in_progress
+
+# ---- State Sync para clients que reconectam ----
+
+## Quando um client reconecta após migração, o novo host envia o estado completo.
+func _send_full_state_to_peer(peer_id: int) -> void:
+	if not multiplayer.is_server():
+		return
+	var game_state := {
+		"game_time": GameManager.game_time,
+		"enemies_alive": GameManager.enemies_alive,
+		"total_kills": GameManager.total_kills,
+		"crystals_this_run": GameManager.crystals_this_run,
+		"player_level": GameManager.player_level,
+		"player_xp": GameManager.player_xp,
+		"player_xp_to_next": GameManager.player_xp_to_next,
+		"max_enemies": GameManager.max_enemies,
+		"events_triggered": GameManager.events_triggered,
+	}
+	_receive_full_state_sync.rpc_id(peer_id, game_state)
+
+@rpc("authority", "reliable")
+func _receive_full_state_sync(game_state: Dictionary) -> void:
+	## Client recebe estado completo do host ao reconectar.
+	_apply_game_state(game_state)
+	LogManager.info("MP", "Estado completo recebido do host após reconexão")
 
 # ---- Lobby State Sync (Tasks 1 & 2) ----
 
