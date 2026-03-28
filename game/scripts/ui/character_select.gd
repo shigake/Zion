@@ -1,17 +1,15 @@
 extends Control
 
-## Tela de selecao de personagem — estilo Genshin Impact.
-## Modelo 3D grande no centro, strip de personagens na direita, info overlay.
+## Tela de selecao de personagem com pixel art sprites.
+## Sprite grande no centro-esquerda, strip de personagens na direita, info overlay.
 
 var all_character_ids: Array[String] = []
 var current_index: int = 0
-var _preview_model: Node3D = null
-var _animator = null
+var _bob_tween: Tween = null
 
 # UI refs
-var _viewport_container: SubViewportContainer
-var _viewport: SubViewport
-var _model_root: Node3D
+var _sprite_container: CenterContainer
+var _sprite_display: TextureRect
 var _bg_gradient: ColorRect
 var _char_strip: VBoxContainer
 var _char_buttons: Array[Button] = []
@@ -23,7 +21,6 @@ var _element_badge: Label
 var _lock_label: Label
 var _start_btn: Button
 var _back_btn: Button
-var _char_icon_large: TextureRect
 
 func _ready() -> void:
 	_load_character_list()
@@ -57,67 +54,19 @@ func _build_ui() -> void:
 	overlay.color = Color(0, 0, 0, 0.3)
 	add_child(overlay)
 
-	# 3D model viewport (center-left, takes 60% of screen)
-	_viewport_container = SubViewportContainer.new()
-	_viewport_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_viewport_container.anchor_right = 0.65
-	_viewport_container.stretch = true
-	_viewport_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_viewport_container)
+	# Sprite preview area (center-left, takes 65% of screen)
+	_sprite_container = CenterContainer.new()
+	_sprite_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_sprite_container.anchor_right = 0.65
+	_sprite_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_sprite_container)
 
-	_viewport = SubViewport.new()
-	_viewport.transparent_bg = true
-	_viewport.size = Vector2i(832, 720)
-	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_viewport_container.add_child(_viewport)
-
-	# Camera
-	var camera = Camera3D.new()
-	camera.transform = Transform3D(Basis(), Vector3(0, 0.5, 2.5))
-	camera.fov = 30
-	_viewport.add_child(camera)
-
-	# Lights
-	var key_light = DirectionalLight3D.new()
-	key_light.transform = Transform3D(Basis(Vector3(1,0,0), deg_to_rad(-30)) * Basis(Vector3(0,1,0), deg_to_rad(30)), Vector3(0, 3, 2))
-	key_light.light_energy = 2.5
-	key_light.shadow_enabled = true
-	_viewport.add_child(key_light)
-
-	var fill_light = DirectionalLight3D.new()
-	fill_light.transform = Transform3D(Basis(Vector3(1,0,0), deg_to_rad(-15)) * Basis(Vector3(0,1,0), deg_to_rad(-45)), Vector3(-2, 2, 1))
-	fill_light.light_energy = 1.0
-	fill_light.light_color = Color(0.7, 0.8, 1.0)
-	_viewport.add_child(fill_light)
-
-	var rim_light = DirectionalLight3D.new()
-	rim_light.transform = Transform3D(Basis(Vector3(1,0,0), deg_to_rad(-10)) * Basis(Vector3(0,1,0), deg_to_rad(180)), Vector3(0, 2, -2))
-	rim_light.light_energy = 1.5
-	rim_light.light_color = Color(0.6, 0.7, 1.0)
-	_viewport.add_child(rim_light)
-
-	# Model root (ground level, centered)
-	_model_root = Node3D.new()
-	_model_root.name = "ModelRoot"
-	_viewport.add_child(_model_root)
-
-	# Ground circle (subtle disc under character)
-	var ground = MeshInstance3D.new()
-	var disc = CylinderMesh.new()
-	disc.top_radius = 0.8
-	disc.bottom_radius = 0.8
-	disc.height = 0.02
-	disc.radial_segments = 32
-	ground.mesh = disc
-	ground.position.y = -0.01
-	var ground_mat = StandardMaterial3D.new()
-	ground_mat.albedo_color = Color(0.15, 0.15, 0.2, 0.5)
-	ground_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ground_mat.emission_enabled = true
-	ground_mat.emission = Color(0.2, 0.3, 0.5)
-	ground_mat.emission_energy_multiplier = 0.5
-	ground.material_override = ground_mat
-	_model_root.add_child(ground)
+	_sprite_display = TextureRect.new()
+	_sprite_display.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_sprite_display.custom_minimum_size = Vector2(160, 160)
+	_sprite_display.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_sprite_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_sprite_container.add_child(_sprite_display)
 
 	# --- Right side panel (character info + strip) ---
 	var right_panel = PanelContainer.new()
@@ -267,18 +216,19 @@ func _build_character_strip(grid: GridContainer) -> void:
 		btn.add_theme_stylebox_override("focus", hover.duplicate())
 		btn.add_theme_stylebox_override("pressed", style.duplicate())
 
-		# Icon
-		var icon_path = "res://assets/icons/characters/%s.svg" % char_id
-		if ResourceLoader.exists(icon_path):
+		# Sprite thumbnail (pixel art at 2x scale)
+		var sprite_path = "res://assets/sprites/characters/%s.png" % char_id
+		if ResourceLoader.exists(sprite_path):
 			var tex = TextureRect.new()
-			tex.texture = load(icon_path)
-			tex.custom_minimum_size = Vector2(44, 44)
+			tex.texture = load(sprite_path)
+			tex.custom_minimum_size = Vector2(64, 64)
 			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			tex.set_anchors_preset(Control.PRESET_CENTER)
-			tex.offset_left = -22
-			tex.offset_top = -22
-			tex.offset_right = 22
-			tex.offset_bottom = 22
+			tex.offset_left = -32
+			tex.offset_top = -32
+			tex.offset_right = 32
+			tex.offset_bottom = 32
 			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			if is_locked:
 				tex.modulate = Color(0.25, 0.25, 0.25)
@@ -299,31 +249,15 @@ func _build_character_strip(grid: GridContainer) -> void:
 		grid.add_child(btn)
 		_char_buttons.append(btn)
 
-func _load_3d_model(char_id: String) -> void:
-	# Clear previous model
-	if _preview_model:
-		_preview_model.queue_free()
-		_preview_model = null
-	if _animator:
-		_animator.queue_free()
-		_animator = null
+func _load_sprite(char_id: String) -> void:
+	var sprite_path = "res://assets/sprites/characters/%s.png" % char_id
+	if ResourceLoader.exists(sprite_path):
+		_sprite_display.texture = load(sprite_path)
+	else:
+		_sprite_display.texture = null
 
-	var model = ModelFactory.get_model_for_character(char_id)
-	if model:
-		model.position = Vector3(0, 0, 0)
-		model.scale = Vector3(0.8, 0.8, 0.8)
-		_model_root.add_child(model)
-		_preview_model = model
-
-		# Apply character color materials
-		var data = CharacterDB.get_character(char_id)
-		var char_color = data.get("color", Color(0.5, 0.5, 0.5))
-		ModelFactory.apply_model_materials(model, char_color)
-
-		# Add idle animation (arms down + gentle breathing)
-		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
-		_animator.setup(model)
-		_model_root.add_child(_animator)
+	# Start bob animation
+	_start_bob_animation()
 
 func _update_selection() -> void:
 	var char_id = all_character_ids[current_index]
@@ -331,8 +265,8 @@ func _update_selection() -> void:
 	var is_locked = not SaveManager.is_character_unlocked(char_id)
 	var char_color = data.get("color", Color(0.5, 0.5, 0.5))
 
-	# Load 3D model
-	_load_3d_model(char_id)
+	# Load pixel art sprite
+	_load_sprite(char_id)
 
 	# Update background tint
 	_bg_gradient.color = Color(
@@ -340,14 +274,6 @@ func _update_selection() -> void:
 		char_color.g * 0.08,
 		char_color.b * 0.08
 	)
-
-	# Update ground disc color
-	var ground = _model_root.get_node_or_null("CylinderMesh")
-	for child in _model_root.get_children():
-		if child is MeshInstance3D and child.mesh is CylinderMesh:
-			var mat = child.material_override as StandardMaterial3D
-			if mat:
-				mat.emission = char_color.darkened(0.5)
 
 	# Update info
 	_name_label.text = data.get("name", char_id).to_upper()
@@ -394,8 +320,16 @@ func _update_selection() -> void:
 				s.border_color = Color(0.12, 0.12, 0.18) if clocked else cc.darkened(0.4)
 				s.bg_color = Color(0.06, 0.06, 0.1, 0.9)
 
-func _process(_delta: float) -> void:
-	pass
+func _start_bob_animation() -> void:
+	if _bob_tween:
+		_bob_tween.kill()
+	# Reset position
+	_sprite_display.position = Vector2.ZERO
+	_bob_tween = create_tween().set_loops()
+	_bob_tween.tween_property(_sprite_display, "position:y", -6.0, 0.8) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_bob_tween.tween_property(_sprite_display, "position:y", 0.0, 0.8) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _select_character(idx: int) -> void:
 	current_index = idx
