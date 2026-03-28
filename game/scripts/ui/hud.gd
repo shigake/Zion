@@ -160,10 +160,10 @@ func _ready() -> void:
 	minimap.anchor_top = 1.0
 	minimap.anchor_right = 1.0
 	minimap.anchor_bottom = 1.0
-	minimap.offset_left = -165.0
-	minimap.offset_top = -165.0
+	minimap.offset_left = -155.0
+	minimap.offset_top = -230.0
 	minimap.offset_right = -10.0
-	minimap.offset_bottom = -10.0
+	minimap.offset_bottom = -85.0
 	add_child(minimap)
 
 	# Touch controls (mobile only — joystick + dash button)

@@ -728,6 +728,14 @@ func _die() -> void:
 		# Gasoline item: fire ground on enemy death
 		if GameManager.fire_ground_active:
 			_spawn_fire_ground(pos)
+	# Disable all processing/collision during death animation to prevent errors
+	set_physics_process(false)
+	set_process(false)
+	if hitbox:
+		hitbox.set_deferred("monitoring", false)
+		hitbox.set_deferred("monitorable", false)
+	collision_layer = 0
+	collision_mask = 0
 	# Death animation on sprite: flash white, scale up then shrink, fade out
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:

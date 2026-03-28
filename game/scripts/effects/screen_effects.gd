@@ -85,7 +85,8 @@ func _ready() -> void:
 
 	# Connect signals for juice effects
 	GameManager.player_leveled_up.connect(_on_player_leveled_up)
-	GameManager.enemy_killed.connect(_on_enemy_killed_streak)
+	# Kill streak disabled — too noisy
+	#GameManager.enemy_killed.connect(_on_enemy_killed_streak)
 	GameManager.miniboss_spawned.connect(_on_boss_entrance)
 
 func _process(delta: float) -> void:

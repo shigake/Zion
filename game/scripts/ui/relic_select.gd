@@ -221,9 +221,9 @@ func _on_start() -> void:
 		"boss_rush":
 			GameManager.run_time_limit = 999999.0
 		"hyper":
-			GameManager.run_time_limit = 1800.0
+			GameManager.run_time_limit = 900.0
 		_:
-			GameManager.run_time_limit = 1800.0
+			GameManager.run_time_limit = 900.0
 	var stage_scenes = {
 		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
 		"forest": "res://scenes/stages/stage_forest.tscn",

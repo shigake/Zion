@@ -73,8 +73,8 @@ func _process(delta: float) -> void:
 
 	# Mini-boss agora é gerenciado pelo EventManager (min 10 e min 20)
 
-	# Boss no minuto 25
-	if not boss_spawned and GameManager.game_time >= 1500.0:
+	# Boss no minuto 12
+	if not boss_spawned and GameManager.game_time >= 720.0:
 		boss_spawned = true
 		_spawn_boss()
 

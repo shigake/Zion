@@ -69,7 +69,7 @@ var veteran_relic_active: bool = false
 
 # Modo de jogo
 var game_mode: String = "normal"  # "normal", "endless", "boss_rush", "hyper", "daily", "new_game_plus"
-var run_time_limit: float = 1800.0  # 30 min default
+var run_time_limit: float = 900.0  # 15 min default
 
 # New Game+
 var new_game_plus: bool = false

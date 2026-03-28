@@ -430,7 +430,7 @@ func _on_random_start() -> void:
 	MutationManager.reset()
 	GameManager.selected_relic = ""
 	GameManager.game_mode = "normal"
-	GameManager.run_time_limit = 1800.0
+	GameManager.run_time_limit = 900.0
 	GameManager.auto_play = true
 
 	# Go straight to game

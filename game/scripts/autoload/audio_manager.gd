@@ -106,6 +106,14 @@ func play_music(stream_name: String) -> void:
 		_music_player.volume_db = linear_to_db(music_volume * master_volume)
 
 	_current_music = stream_name
+	# Enable looping for music
+	if stream is AudioStreamMP3:
+		stream.loop = true
+	elif stream is AudioStreamOggVorbis:
+		stream.loop = true
+	elif stream is AudioStreamWAV:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_end = stream.mix_rate * int(stream.get_length())
 	_music_player.stream = stream
 	_music_player.play()
 	LogManager.info("Audio", "Music: " + stream_name)
