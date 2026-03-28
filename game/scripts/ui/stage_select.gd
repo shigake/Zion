@@ -1,12 +1,33 @@
 extends Control
 
-## Stage selection screen — polished 5x2 grid with themed cards.
+## Stage selection screen — Super Mario World style map with connected nodes.
 
-const COLUMNS := 5
-const ROWS := 2
-const PER_PAGE := COLUMNS * ROWS
-const CARD_SIZE := Vector2(140, 70)
-const THEME_BAR_HEIGHT := 3.0
+# ── Map layout ────────────────────────────────────────────────────────
+
+const MAP_POSITIONS := {
+	"cemetery": Vector2(100, 100),
+	"forest": Vector2(300, 100),
+	"farm": Vector2(500, 100),
+	"tokyo": Vector2(100, 250),
+	"volcano": Vector2(300, 250),
+	"ocean": Vector2(500, 250),
+	"arena": Vector2(100, 400),
+	"space": Vector2(300, 400),
+	"castle": Vector2(500, 400),
+	"candy": Vector2(700, 350),
+}
+
+const MAP_CONNECTIONS := [
+	["cemetery", "forest"], ["forest", "farm"],
+	["cemetery", "tokyo"], ["farm", "ocean"],
+	["tokyo", "volcano"], ["volcano", "ocean"],
+	["tokyo", "arena"], ["ocean", "castle"],
+	["arena", "space"], ["space", "castle"],
+	["castle", "candy"],
+]
+
+# Adjacency built from MAP_CONNECTIONS for navigation
+var _adjacency: Dictionary = {}
 
 # Theme colors per stage
 const STAGE_COLORS := {
@@ -22,26 +43,93 @@ const STAGE_COLORS := {
 	"candy": Color(0.9, 0.5, 0.6),
 }
 
-@onready var grid: GridContainer = $VBox/GridRow/GridContainer
-@onready var left_arrow: Button = $VBox/GridRow/LeftArrow
-@onready var right_arrow: Button = $VBox/GridRow/RightArrow
-@onready var page_label: Label = $VBox/PageLabel
-@onready var info_name: Label = $VBox/InfoPanel/InfoVBox/InfoName
-@onready var info_desc: Label = $VBox/InfoPanel/InfoVBox/InfoDesc
-@onready var info_panel: PanelContainer = $VBox/InfoPanel
-@onready var next_btn: Button = $VBox/ButtonRow/NextButton
-@onready var back_btn: Button = $VBox/ButtonRow/BackButton
+const BOSS_NAMES := {
+	"cemetery": "Necromancer",
+	"forest": "Fairy queen",
+	"farm": "Alien cow",
+	"tokyo": "AI overlord",
+	"volcano": "Demon lord",
+	"ocean": "Leviathan",
+	"arena": "Emperor",
+	"space": "Singularity",
+	"castle": "Dracula",
+	"candy": "Sugar king",
+}
 
-var selected_stage: String = "cemetery"
-var current_page: int = 0
-var total_pages: int = 1
-var _selected_btn: Button = null
-var _card_buttons: Array[Button] = []
+const ICON_SIZE := 32.0
+const NODE_RADIUS := 22.0
+const PATH_WIDTH := 3.0
+const GLOW_RADIUS := 28.0
+const MARKER_BOB_SPEED := 3.0
+const MARKER_BOB_AMOUNT := 4.0
+const HOVER_SCALE_TARGET := 1.2
+const HOVER_SCALE_SPEED := 8.0
 
 var stage_ids: Array[String] = [
 	"cemetery", "forest", "farm", "tokyo", "volcano",
 	"ocean", "arena", "space", "castle", "candy",
 ]
+
+var selected_stage: String = "cemetery"
+var _hovered_stage: String = "cemetery"
+var _stage_scales: Dictionary = {}
+var _marker_time: float = 0.0
+var _stage_textures: Dictionary = {}
+
+# Scene tree references
+@onready var map_area: Control = $MapArea
+@onready var info_panel: PanelContainer = $InfoPanel
+@onready var info_name: Label = $InfoPanel/InfoVBox/InfoName
+@onready var info_boss: Label = $InfoPanel/InfoVBox/InfoBoss
+@onready var info_best_time: Label = $InfoPanel/InfoVBox/InfoBestTime
+@onready var info_desc: Label = $InfoPanel/InfoVBox/InfoDesc
+@onready var info_icon: TextureRect = $InfoPanel/InfoVBox/InfoIcon
+@onready var play_btn: Button = $InfoPanel/InfoVBox/PlayButton
+@onready var back_btn: Button = $ButtonRow/BackButton
+
+# ── Lifecycle ─────────────────────────────────────────────────────────
+
+func _ready() -> void:
+	get_tree().paused = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+	_build_adjacency()
+	_load_textures()
+	_init_scales()
+	_style_info_panel()
+	_style_play_button()
+	_style_back_button()
+
+	play_btn.pressed.connect(_on_play)
+	back_btn.pressed.connect(_on_back)
+
+	# Connect map_area draw
+	map_area.draw.connect(_draw_map)
+	map_area.mouse_filter = Control.MOUSE_FILTER_STOP
+	map_area.gui_input.connect(_on_map_input)
+
+	# Select first unlocked stage
+	for sid in stage_ids:
+		if SaveManager.is_stage_unlocked(sid):
+			_hovered_stage = sid
+			selected_stage = sid
+			break
+
+	_update_info_panel()
+	play_btn.grab_focus()
+	GamepadUI.notify_menu_opened()
+
+func _process(delta: float) -> void:
+	_marker_time += delta
+
+	# Animate scales toward target
+	for sid in stage_ids:
+		var target := HOVER_SCALE_TARGET if sid == _hovered_stage else 1.0
+		_stage_scales[sid] = lerpf(_stage_scales[sid], target, HOVER_SCALE_SPEED * delta)
+
+	map_area.queue_redraw()
+
+# ── Data helpers ──────────────────────────────────────────────────────
 
 func _get_stage_data(stage_id: String) -> Dictionary:
 	return {
@@ -50,278 +138,230 @@ func _get_stage_data(stage_id: String) -> Dictionary:
 		"description": LocaleManager.tr_key("stage_" + stage_id + "_desc"),
 	}
 
-func _ready() -> void:
-	get_tree().paused = false
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	next_btn.pressed.connect(_on_next)
-	back_btn.pressed.connect(_on_back)
-	left_arrow.pressed.connect(_prev_page)
-	right_arrow.pressed.connect(_next_page)
+func _build_adjacency() -> void:
+	for sid in stage_ids:
+		_adjacency[sid] = []
+	for conn in MAP_CONNECTIONS:
+		var a: String = conn[0]
+		var b: String = conn[1]
+		if b not in _adjacency[a]:
+			_adjacency[a].append(b)
+		if a not in _adjacency[b]:
+			_adjacency[b].append(a)
 
-	_style_info_panel()
-	_style_buttons()
-	_style_arrows()
+func _load_textures() -> void:
+	for sid in stage_ids:
+		var path := "res://assets/sprites/stages/%s.png" % sid
+		if ResourceLoader.exists(path):
+			_stage_textures[sid] = load(path)
 
-	total_pages = maxi(1, ceili(float(stage_ids.size()) / PER_PAGE))
-	_show_page(0)
-	_select_stage(_get_stage_data(stage_ids[0]))
-	GamepadUI.notify_menu_opened()
+func _init_scales() -> void:
+	for sid in stage_ids:
+		_stage_scales[sid] = 1.0
 
-# ── Styling ──────────────────────────────────────────────────────────
+# ── Map drawing ───────────────────────────────────────────────────────
 
-func _style_info_panel() -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.07, 0.07, 0.1, 1.0)
-	sb.set_corner_radius_all(6)
-	sb.content_margin_left = 16.0
-	sb.content_margin_right = 16.0
-	sb.content_margin_top = 10.0
-	sb.content_margin_bottom = 10.0
-	info_panel.add_theme_stylebox_override("panel", sb)
+func _draw_map() -> void:
+	var area_size := map_area.size
+	# Scale map coordinates to fit the area
+	var scale_x := area_size.x / 800.0
+	var scale_y := area_size.y / 500.0
 
-func _style_buttons() -> void:
-	for btn in [next_btn, back_btn]:
-		var normal := StyleBoxFlat.new()
-		normal.bg_color = Color(0.12, 0.12, 0.16, 1.0)
-		normal.set_corner_radius_all(6)
-		normal.set_border_width_all(1)
-		normal.border_color = Color(0.25, 0.25, 0.3, 1.0)
-		btn.add_theme_stylebox_override("normal", normal)
+	# Draw connections (paths)
+	for conn in MAP_CONNECTIONS:
+		var a: String = conn[0]
+		var b: String = conn[1]
+		var pos_a := MAP_POSITIONS[a] * Vector2(scale_x, scale_y)
+		var pos_b := MAP_POSITIONS[b] * Vector2(scale_x, scale_y)
+		var a_unlocked := SaveManager.is_stage_unlocked(a)
+		var b_unlocked := SaveManager.is_stage_unlocked(b)
 
-		var hover := StyleBoxFlat.new()
-		hover.bg_color = Color(0.16, 0.16, 0.22, 1.0)
-		hover.set_corner_radius_all(6)
-		hover.set_border_width_all(1)
-		hover.border_color = Color(0.4, 0.4, 0.5, 1.0)
-		btn.add_theme_stylebox_override("hover", hover)
+		var line_color: Color
+		if a_unlocked and b_unlocked:
+			line_color = Color(0.85, 0.7, 0.2, 0.9)  # Gold
+		else:
+			line_color = Color(0.25, 0.25, 0.3, 0.5)  # Gray
 
-		var pressed := StyleBoxFlat.new()
-		pressed.bg_color = Color(0.1, 0.1, 0.14, 1.0)
-		pressed.set_corner_radius_all(6)
-		pressed.set_border_width_all(1)
-		pressed.border_color = Color(0.3, 0.5, 0.8, 1.0)
-		btn.add_theme_stylebox_override("pressed", pressed)
+		map_area.draw_line(pos_a, pos_b, line_color, PATH_WIDTH, true)
 
-		var focus := StyleBoxFlat.new()
-		focus.bg_color = Color(0.14, 0.14, 0.2, 1.0)
-		focus.set_corner_radius_all(6)
-		focus.set_border_width_all(2)
-		focus.border_color = Color(0.3, 0.5, 0.9, 1.0)
-		btn.add_theme_stylebox_override("focus", focus)
+	# Draw stage nodes
+	for sid in stage_ids:
+		var pos := MAP_POSITIONS[sid] * Vector2(scale_x, scale_y)
+		var unlocked := SaveManager.is_stage_unlocked(sid)
+		var theme_color: Color = STAGE_COLORS.get(sid, Color(0.4, 0.4, 0.5))
+		var sc: float = _stage_scales.get(sid, 1.0)
 
-		btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
-		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
-		btn.add_theme_font_size_override("font_size", 14)
+		if unlocked:
+			# Glow circle behind
+			var glow_color := theme_color
+			glow_color.a = 0.25
+			map_area.draw_circle(pos, GLOW_RADIUS * sc, glow_color)
 
-func _style_arrows() -> void:
-	for btn in [left_arrow, right_arrow]:
-		var normal := StyleBoxFlat.new()
-		normal.bg_color = Color(0.08, 0.08, 0.12, 1.0)
-		normal.set_corner_radius_all(4)
-		btn.add_theme_stylebox_override("normal", normal)
+			# Node circle
+			map_area.draw_circle(pos, NODE_RADIUS * sc, theme_color.lerp(Color(0.08, 0.08, 0.12), 0.3))
 
-		var hover := StyleBoxFlat.new()
-		hover.bg_color = Color(0.14, 0.14, 0.2, 1.0)
-		hover.set_corner_radius_all(4)
-		btn.add_theme_stylebox_override("hover", hover)
+			# Border
+			map_area.draw_arc(pos, NODE_RADIUS * sc, 0, TAU, 32, theme_color.lerp(Color.WHITE, 0.3), 2.0, true)
 
-		var disabled := StyleBoxFlat.new()
-		disabled.bg_color = Color(0.06, 0.06, 0.08, 1.0)
-		disabled.set_corner_radius_all(4)
-		btn.add_theme_stylebox_override("disabled", disabled)
+			# Stage icon
+			if sid in _stage_textures:
+				var tex: Texture2D = _stage_textures[sid]
+				var icon_sc := (ICON_SIZE * sc) / max(tex.get_width(), 1)
+				var icon_size := tex.get_size() * icon_sc
+				var icon_pos := pos - icon_size * 0.5
+				map_area.draw_texture_rect(tex, Rect2(icon_pos, icon_size), false)
+		else:
+			# Locked — gray circle
+			map_area.draw_circle(pos, NODE_RADIUS * sc, Color(0.12, 0.12, 0.15))
+			map_area.draw_arc(pos, NODE_RADIUS * sc, 0, TAU, 32, Color(0.2, 0.2, 0.25), 1.5, true)
 
-		btn.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
-		btn.add_theme_color_override("font_disabled_color", Color(0.25, 0.25, 0.3))
-		btn.add_theme_font_size_override("font_size", 16)
+			# Lock icon (simple "X")
+			var half := 6.0 * sc
+			map_area.draw_line(pos - Vector2(half, half), pos + Vector2(half, half), Color(0.35, 0.35, 0.4), 2.0, true)
+			map_area.draw_line(pos - Vector2(-half, half), pos + Vector2(-half, half), Color(0.35, 0.35, 0.4), 2.0, true)
 
-# ── Card creation ────────────────────────────────────────────────────
+		# Name label below node
+		var label_text := LocaleManager.tr_key("stage_" + sid)
+		var font := ThemeDB.fallback_font
+		var font_size := 11
+		if font:
+			var text_size := font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
+			var text_pos := Vector2(pos.x - text_size.x * 0.5, pos.y + NODE_RADIUS * sc + 14)
+			var text_color := Color(0.75, 0.75, 0.8) if unlocked else Color(0.3, 0.3, 0.35)
+			map_area.draw_string(font, text_pos, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, text_color)
 
-func _create_card_style(stage_id: String, is_locked: bool) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	var theme_color: Color = STAGE_COLORS.get(stage_id, Color(0.4, 0.4, 0.5))
+	# Draw player marker on hovered stage
+	if _hovered_stage != "":
+		var marker_pos := MAP_POSITIONS[_hovered_stage] * Vector2(scale_x, scale_y)
+		var bob_offset := sin(_marker_time * MARKER_BOB_SPEED) * MARKER_BOB_AMOUNT
+		var marker_y := marker_pos.y - NODE_RADIUS - 10 + bob_offset
 
-	if is_locked:
-		sb.bg_color = Color(0.06, 0.06, 0.08, 1.0)
-		sb.border_color = Color(0.15, 0.15, 0.18, 1.0)
-		sb.border_width_top = int(THEME_BAR_HEIGHT)
-		sb.set_border_width_all(1)
-		sb.border_width_top = int(THEME_BAR_HEIGHT)
-		# Desaturate the top bar for locked stages
-		var gray_color := Color(0.2, 0.2, 0.22, 1.0)
-		sb.border_color = gray_color
-	else:
-		sb.bg_color = Color(0.09, 0.09, 0.13, 1.0)
-		sb.set_border_width_all(1)
-		sb.border_width_top = int(THEME_BAR_HEIGHT)
-		sb.border_color = Color(0.18, 0.18, 0.22, 1.0)
-		# Override top border with theme color
-		# We achieve the colored top bar via a custom draw on the button
+		# Small triangle pointing down
+		var tri_size := 7.0
+		var p1 := Vector2(marker_pos.x, marker_y + tri_size)
+		var p2 := Vector2(marker_pos.x - tri_size, marker_y - tri_size * 0.5)
+		var p3 := Vector2(marker_pos.x + tri_size, marker_y - tri_size * 0.5)
+		map_area.draw_colored_polygon(PackedVector2Array([p1, p2, p3]), Color(1.0, 0.85, 0.2))
 
-	sb.set_corner_radius_all(5)
-	sb.corner_radius_top_left = 4
-	sb.corner_radius_top_right = 4
-	sb.content_margin_left = 6.0
-	sb.content_margin_right = 6.0
-	sb.content_margin_top = 8.0
-	sb.content_margin_bottom = 6.0
-	return sb
+# ── Map input (mouse) ────────────────────────────────────────────────
 
-func _create_card_hover_style(stage_id: String) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.12, 0.12, 0.17, 1.0)
-	sb.set_border_width_all(1)
-	sb.border_width_top = int(THEME_BAR_HEIGHT)
-	sb.border_color = Color(0.25, 0.25, 0.32, 1.0)
-	sb.set_corner_radius_all(5)
-	sb.corner_radius_top_left = 4
-	sb.corner_radius_top_right = 4
-	sb.content_margin_left = 6.0
-	sb.content_margin_right = 6.0
-	sb.content_margin_top = 8.0
-	sb.content_margin_bottom = 6.0
-	return sb
+func _on_map_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion or event is InputEventMouseButton:
+		var area_size := map_area.size
+		var scale_x := area_size.x / 800.0
+		var scale_y := area_size.y / 500.0
+		var mouse_pos: Vector2 = event.position
 
-func _create_card_selected_style(stage_id: String) -> StyleBoxFlat:
-	var theme_color: Color = STAGE_COLORS.get(stage_id, Color(0.4, 0.4, 0.5))
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.1, 0.1, 0.16, 1.0)
-	sb.set_border_width_all(2)
-	sb.border_width_top = int(THEME_BAR_HEIGHT)
-	sb.border_color = theme_color.lerp(Color.WHITE, 0.2)
-	sb.set_corner_radius_all(5)
-	sb.corner_radius_top_left = 4
-	sb.corner_radius_top_right = 4
-	sb.content_margin_left = 6.0
-	sb.content_margin_right = 6.0
-	sb.content_margin_top = 8.0
-	sb.content_margin_bottom = 6.0
-	return sb
+		# Find closest stage node
+		var closest_id := ""
+		var closest_dist := 999999.0
+		for sid in stage_ids:
+			var pos := MAP_POSITIONS[sid] * Vector2(scale_x, scale_y)
+			var dist := mouse_pos.distance_to(pos)
+			if dist < NODE_RADIUS * 1.8 and dist < closest_dist:
+				closest_dist = dist
+				closest_id = sid
 
-func _create_stage_card(stage_id: String) -> Button:
-	var stage := _get_stage_data(stage_id)
-	var unlocked := SaveManager.is_stage_unlocked(stage_id)
-	var theme_color: Color = STAGE_COLORS.get(stage_id, Color(0.4, 0.4, 0.5))
+		if closest_id != "" and SaveManager.is_stage_unlocked(closest_id):
+			_hovered_stage = closest_id
 
-	var btn := Button.new()
-	btn.custom_minimum_size = CARD_SIZE
-	btn.clip_text = true
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if closest_id != "" and SaveManager.is_stage_unlocked(closest_id):
+				selected_stage = closest_id
+				_hovered_stage = closest_id
+				_update_info_panel()
 
-	# Style the card
-	var normal_style := _create_card_style(stage_id, not unlocked)
-	btn.add_theme_stylebox_override("normal", normal_style)
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if closest_id != "" and closest_id == selected_stage:
+				# Double-click or click on already selected -> play
+				pass  # Single click selects; use Play button to start
 
-	if unlocked:
-		btn.text = stage["name"]
-		btn.add_theme_color_override("font_color", Color(0.8, 0.8, 0.85))
-		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+# ── Keyboard / gamepad navigation ────────────────────────────────────
 
-		var hover_style := _create_card_hover_style(stage_id)
-		btn.add_theme_stylebox_override("hover", hover_style)
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_back()
+		if get_viewport():
+			get_viewport().set_input_as_handled()
+		return
 
-		var pressed_style := _create_card_style(stage_id, false)
-		pressed_style.bg_color = Color(0.08, 0.08, 0.11, 1.0)
-		btn.add_theme_stylebox_override("pressed", pressed_style)
+	if event.is_action_pressed("ui_accept"):
+		if _hovered_stage != "" and SaveManager.is_stage_unlocked(_hovered_stage):
+			selected_stage = _hovered_stage
+			_update_info_panel()
+			_on_play()
+			if get_viewport():
+				get_viewport().set_input_as_handled()
+		return
 
-		var focus_style := _create_card_hover_style(stage_id)
-		focus_style.border_color = theme_color.lerp(Color.WHITE, 0.3)
-		focus_style.set_border_width_all(2)
-		focus_style.border_width_top = int(THEME_BAR_HEIGHT)
-		btn.add_theme_stylebox_override("focus", focus_style)
-	else:
-		btn.text = stage["name"] + "\n" + LocaleManager.tr_key("locked")
-		btn.disabled = true
-		btn.add_theme_color_override("font_color", Color(0.3, 0.3, 0.35))
-		btn.add_theme_color_override("font_disabled_color", Color(0.3, 0.3, 0.35))
+	var dir := Vector2.ZERO
+	if event.is_action_pressed("ui_left"):
+		dir = Vector2.LEFT
+	elif event.is_action_pressed("ui_right"):
+		dir = Vector2.RIGHT
+	elif event.is_action_pressed("ui_up"):
+		dir = Vector2.UP
+	elif event.is_action_pressed("ui_down"):
+		dir = Vector2.DOWN
 
-		var disabled_style := _create_card_style(stage_id, true)
-		btn.add_theme_stylebox_override("disabled", disabled_style)
+	if dir != Vector2.ZERO and _hovered_stage != "":
+		_navigate_map(dir)
+		if get_viewport():
+			get_viewport().set_input_as_handled()
 
-	btn.add_theme_font_size_override("font_size", 12)
+func _navigate_map(direction: Vector2) -> void:
+	var current_pos: Vector2 = MAP_POSITIONS[_hovered_stage]
+	var neighbors: Array = _adjacency.get(_hovered_stage, [])
 
-	# Stage icon
-	var stage_icon_path := "res://assets/sprites/stages/%s.png" % stage_id
-	var stage_icon_tex = load(stage_icon_path) if ResourceLoader.exists(stage_icon_path) else null
-	if stage_icon_tex:
-		btn.icon = stage_icon_tex
-		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-		btn.expand_icon = true
-		btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# Find the neighbor that best matches the direction
+	var best_id := ""
+	var best_score := -999.0
 
-	# Draw the colored top bar via the draw signal
-	if unlocked:
-		var color_ref := theme_color
-		btn.draw.connect(func():
-			var bar_rect := Rect2(0, 0, btn.size.x, THEME_BAR_HEIGHT)
-			btn.draw_rect(bar_rect, color_ref)
-		)
-	else:
-		btn.draw.connect(func():
-			var bar_rect := Rect2(0, 0, btn.size.x, THEME_BAR_HEIGHT)
-			btn.draw_rect(bar_rect, Color(0.2, 0.2, 0.22, 1.0))
-		)
+	for nid in neighbors:
+		if not SaveManager.is_stage_unlocked(nid):
+			continue
+		var npos: Vector2 = MAP_POSITIONS[nid]
+		var delta := (npos - current_pos).normalized()
+		var score := delta.dot(direction)
+		if score > 0.3 and score > best_score:
+			best_score = score
+			best_id = nid
 
-	if unlocked:
-		var captured_btn := btn
-		btn.pressed.connect(func(): _select_stage(stage, captured_btn))
+	if best_id != "":
+		_hovered_stage = best_id
+		selected_stage = best_id
+		_update_info_panel()
+		AudioManager.play_sfx("menu_hover")
 
-	btn.set_meta("stage_id", stage_id)
-	return btn
+# ── Info panel ────────────────────────────────────────────────────────
 
-# ── Page management ──────────────────────────────────────────────────
+func _update_info_panel() -> void:
+	var stage := _get_stage_data(selected_stage)
+	var theme_color: Color = STAGE_COLORS.get(selected_stage, Color(0.4, 0.4, 0.5))
 
-func _show_page(page: int) -> void:
-	current_page = clampi(page, 0, total_pages - 1)
-	_card_buttons.clear()
-
-	for child in grid.get_children():
-		child.queue_free()
-
-	var start_idx := current_page * PER_PAGE
-	var end_idx := mini(start_idx + PER_PAGE, stage_ids.size())
-
-	for i in range(start_idx, end_idx):
-		var btn := _create_stage_card(stage_ids[i])
-		grid.add_child(btn)
-		if not btn.disabled:
-			_card_buttons.append(btn)
-
-	# Fill empty slots to keep grid layout
-	var filled := end_idx - start_idx
-	for i in range(filled, PER_PAGE):
-		var spacer := Control.new()
-		spacer.custom_minimum_size = CARD_SIZE
-		grid.add_child(spacer)
-
-	_update_arrows()
-	_setup_grid_focus()
-
-func _update_arrows() -> void:
-	left_arrow.visible = total_pages > 1
-	right_arrow.visible = total_pages > 1
-	left_arrow.disabled = current_page <= 0
-	right_arrow.disabled = current_page >= total_pages - 1
-	if total_pages > 1:
-		page_label.text = "%d / %d" % [current_page + 1, total_pages]
-		page_label.visible = true
-	else:
-		page_label.visible = false
-
-func _prev_page() -> void:
-	_show_page(current_page - 1)
-
-func _next_page() -> void:
-	_show_page(current_page + 1)
-
-# ── Selection ────────────────────────────────────────────────────────
-
-func _select_stage(stage: Dictionary, btn: Button = null) -> void:
-	selected_stage = stage["id"]
 	info_name.text = stage["name"]
+	info_name.add_theme_color_override("font_color", theme_color.lerp(Color.WHITE, 0.4))
+
+	info_boss.text = "Boss: %s" % BOSS_NAMES.get(selected_stage, "???")
 	info_desc.text = stage["description"]
 
-	# Update info panel border to match stage color
-	var theme_color: Color = STAGE_COLORS.get(stage["id"], Color(0.4, 0.4, 0.5))
+	# Best time
+	var best := SaveManager.data.get("best_time", 0.0) as float
+	if best > 0.0:
+		var mins := int(best) / 60
+		var secs := int(best) % 60
+		info_best_time.text = "Melhor tempo: %d:%02d" % [mins, secs]
+	else:
+		info_best_time.text = ""
+
+	# Large icon
+	if selected_stage in _stage_textures:
+		info_icon.texture = _stage_textures[selected_stage]
+		info_icon.visible = true
+	else:
+		info_icon.visible = false
+
+	# Update panel border color
 	var panel_sb := StyleBoxFlat.new()
 	panel_sb.bg_color = Color(0.07, 0.07, 0.1, 1.0)
 	panel_sb.set_corner_radius_all(6)
@@ -329,67 +369,101 @@ func _select_stage(stage: Dictionary, btn: Button = null) -> void:
 	panel_sb.border_color = theme_color.lerp(Color(0.07, 0.07, 0.1), 0.5)
 	panel_sb.content_margin_left = 16.0
 	panel_sb.content_margin_right = 16.0
-	panel_sb.content_margin_top = 10.0
-	panel_sb.content_margin_bottom = 10.0
+	panel_sb.content_margin_top = 14.0
+	panel_sb.content_margin_bottom = 14.0
 	info_panel.add_theme_stylebox_override("panel", panel_sb)
 
-	# Update name color to match stage
-	info_name.add_theme_color_override("font_color", theme_color.lerp(Color.WHITE, 0.4))
+	# Enable/disable play button
+	play_btn.disabled = not SaveManager.is_stage_unlocked(selected_stage)
 
-	# Deselect previous card
-	if _selected_btn and is_instance_valid(_selected_btn):
-		var prev_id: String = _selected_btn.get_meta("stage_id", "")
-		var normal_style := _create_card_style(prev_id, false)
-		_selected_btn.add_theme_stylebox_override("normal", normal_style)
+# ── Styling ───────────────────────────────────────────────────────────
 
-	# Highlight new selected card
-	if btn:
-		_selected_btn = btn
-		var selected_style := _create_card_selected_style(stage["id"])
-		_selected_btn.add_theme_stylebox_override("normal", selected_style)
+func _style_info_panel() -> void:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.07, 0.07, 0.1, 1.0)
+	sb.set_corner_radius_all(6)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 14.0
+	sb.content_margin_bottom = 14.0
+	info_panel.add_theme_stylebox_override("panel", sb)
 
-# ── Focus / Gamepad ──────────────────────────────────────────────────
+func _style_play_button() -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.15, 0.4, 0.15, 1.0)
+	normal.set_corner_radius_all(6)
+	normal.set_border_width_all(1)
+	normal.border_color = Color(0.3, 0.6, 0.3, 1.0)
+	play_btn.add_theme_stylebox_override("normal", normal)
 
-func _setup_grid_focus() -> void:
-	var buttons: Array[Button] = []
-	for child in grid.get_children():
-		if child is Button and not child.disabled:
-			child.focus_mode = Control.FOCUS_ALL
-			buttons.append(child)
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = Color(0.2, 0.5, 0.2, 1.0)
+	hover.set_corner_radius_all(6)
+	hover.set_border_width_all(1)
+	hover.border_color = Color(0.4, 0.7, 0.4, 1.0)
+	play_btn.add_theme_stylebox_override("hover", hover)
 
-	for i in range(buttons.size()):
-		var btn := buttons[i]
-		if i % COLUMNS > 0 and i > 0:
-			btn.focus_neighbor_left = buttons[i - 1].get_path()
-		if i % COLUMNS < COLUMNS - 1 and i < buttons.size() - 1:
-			btn.focus_neighbor_right = buttons[i + 1].get_path()
-		if i >= COLUMNS:
-			btn.focus_neighbor_top = buttons[i - COLUMNS].get_path()
-		if i + COLUMNS < buttons.size():
-			btn.focus_neighbor_bottom = buttons[i + COLUMNS].get_path()
-		else:
-			btn.focus_neighbor_bottom = next_btn.get_path()
+	var pressed := StyleBoxFlat.new()
+	pressed.bg_color = Color(0.1, 0.3, 0.1, 1.0)
+	pressed.set_corner_radius_all(6)
+	pressed.set_border_width_all(1)
+	pressed.border_color = Color(0.25, 0.5, 0.25, 1.0)
+	play_btn.add_theme_stylebox_override("pressed", pressed)
 
-	next_btn.focus_mode = Control.FOCUS_ALL
-	back_btn.focus_mode = Control.FOCUS_ALL
-	next_btn.focus_neighbor_left = back_btn.get_path()
-	back_btn.focus_neighbor_right = next_btn.get_path()
-	next_btn.focus_neighbor_bottom = back_btn.get_path()
-	back_btn.focus_neighbor_top = next_btn.get_path()
+	var focus := StyleBoxFlat.new()
+	focus.bg_color = Color(0.18, 0.45, 0.18, 1.0)
+	focus.set_corner_radius_all(6)
+	focus.set_border_width_all(2)
+	focus.border_color = Color(0.4, 0.8, 0.4, 1.0)
+	play_btn.add_theme_stylebox_override("focus", focus)
 
-	if not buttons.is_empty():
-		next_btn.focus_neighbor_top = buttons[buttons.size() - 1].get_path()
-		back_btn.focus_neighbor_bottom = buttons[0].get_path()
-		buttons[0].call_deferred("grab_focus")
+	var disabled := StyleBoxFlat.new()
+	disabled.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	disabled.set_corner_radius_all(6)
+	play_btn.add_theme_stylebox_override("disabled", disabled)
 
-# ── Input ────────────────────────────────────────────────────────────
+	play_btn.add_theme_color_override("font_color", Color(0.9, 0.95, 0.9))
+	play_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	play_btn.add_theme_font_size_override("font_size", 16)
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		_on_back()
-		if get_viewport(): get_viewport().set_input_as_handled()
+func _style_back_button() -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.12, 0.12, 0.16, 1.0)
+	normal.set_corner_radius_all(6)
+	normal.set_border_width_all(1)
+	normal.border_color = Color(0.25, 0.25, 0.3, 1.0)
+	back_btn.add_theme_stylebox_override("normal", normal)
 
-func _on_next() -> void:
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = Color(0.16, 0.16, 0.22, 1.0)
+	hover.set_corner_radius_all(6)
+	hover.set_border_width_all(1)
+	hover.border_color = Color(0.4, 0.4, 0.5, 1.0)
+	back_btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := StyleBoxFlat.new()
+	pressed.bg_color = Color(0.1, 0.1, 0.14, 1.0)
+	pressed.set_corner_radius_all(6)
+	pressed.set_border_width_all(1)
+	pressed.border_color = Color(0.3, 0.5, 0.8, 1.0)
+	back_btn.add_theme_stylebox_override("pressed", pressed)
+
+	var focus := StyleBoxFlat.new()
+	focus.bg_color = Color(0.14, 0.14, 0.2, 1.0)
+	focus.set_corner_radius_all(6)
+	focus.set_border_width_all(2)
+	focus.border_color = Color(0.3, 0.5, 0.9, 1.0)
+	back_btn.add_theme_stylebox_override("focus", focus)
+
+	back_btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
+	back_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	back_btn.add_theme_font_size_override("font_size", 14)
+
+# ── Actions ───────────────────────────────────────────────────────────
+
+func _on_play() -> void:
+	if not SaveManager.is_stage_unlocked(selected_stage):
+		return
 	AudioManager.play_sfx("menu_click")
 	GameManager.selected_stage = selected_stage
 	LoadingScreen.transition_to("res://scenes/ui/relic_select.tscn")

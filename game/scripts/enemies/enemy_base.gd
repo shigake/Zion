@@ -100,7 +100,51 @@ func _apply_sprite() -> void:
 	for child in get_children():
 		if child is MeshInstance3D and child != mesh:
 			child.visible = false
-	# Create billboard sprite
+	# Check for walk spritesheet (AnimatedSprite3D)
+	var walk_path = sprite_path.replace(".png", "_walk.png")
+	if ResourceLoader.exists(walk_path):
+		var walk_tex = load(walk_path) as Texture2D
+		if walk_tex:
+			var anim_sprite = AnimatedSprite3D.new()
+			var frames = SpriteFrames.new()
+
+			# "walk" animation: 4 frames
+			frames.add_animation("walk")
+			frames.set_animation_speed("walk", 8)
+			frames.set_animation_loop("walk", true)
+			for i in range(4):
+				var atlas = AtlasTexture.new()
+				atlas.atlas = walk_tex
+				atlas.region = Rect2(i * 32, 0, 32, 32)
+				frames.add_frame("walk", atlas)
+
+			# "idle" animation: frames 0 and 2
+			frames.add_animation("idle")
+			frames.set_animation_speed("idle", 2)
+			frames.set_animation_loop("idle", true)
+			for i in [0, 2]:
+				var atlas = AtlasTexture.new()
+				atlas.atlas = walk_tex
+				atlas.region = Rect2(i * 32, 0, 32, 32)
+				frames.add_frame("idle", atlas)
+
+			# Remove the auto-created "default" animation
+			if frames.has_animation("default"):
+				frames.remove_animation("default")
+
+			anim_sprite.sprite_frames = frames
+			anim_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			anim_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			anim_sprite.pixel_size = 0.06 if enemy_type.begins_with("Boss") else 0.05
+			anim_sprite.shaded = false
+			anim_sprite.transparent = true
+			anim_sprite.name = "EnemySprite"
+			anim_sprite.position.y = 0.65
+			anim_sprite.play("idle")
+			add_child(anim_sprite)
+			LogManager.debug("Enemy", "Walk spritesheet loaded: %s for %s" % [walk_path, enemy_type])
+			return
+	# Fallback: static Sprite3D
 	var sprite = Sprite3D.new()
 	sprite.texture = tex
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -255,9 +299,18 @@ func _physics_process(delta: float) -> void:
 		if _behavior == "flying":
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
+		# Update walk animation (AnimatedSprite3D) or procedural animator
+		var _enemy_anim = get_node_or_null("EnemySprite")
+		if _enemy_anim and _enemy_anim is AnimatedSprite3D:
+			if _enemy_anim.animation != "walk":
+				_enemy_anim.play("walk")
 		if _animator:
 			_animator.set_walking(true)
 	else:
+		var _enemy_anim_idle = get_node_or_null("EnemySprite")
+		if _enemy_anim_idle and _enemy_anim_idle is AnimatedSprite3D:
+			if _enemy_anim_idle.animation != "idle":
+				_enemy_anim_idle.play("idle")
 		if _animator:
 			_animator.set_walking(false)
 
@@ -399,6 +452,7 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult * crit_mult))
 	hp -= final_damage
 	GameManager.total_damage_dealt += final_damage
+	GameManager.record_weapon_damage(GameManager._last_attacking_weapon, final_damage)
 	AchievementManager.on_attack()
 	# Cross-combo check (multiplayer)
 	if MultiplayerManager.is_online and damage_type != "physical":
