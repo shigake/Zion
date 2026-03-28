@@ -75,52 +75,7 @@ func _init() -> void:
 	_fill(img, 11, 19, 3, 2, Color(0.2, 0.1, 0.15))
 	_fill(img, 16, 19, 3, 2, Color(0.2, 0.1, 0.15))
 
-	# === WHITE DOG (left side, small) ===
-	# Dog body
-	_fill(img, 2, 21, 5, 3, dog_white)
-	# Dog head
-	_fill(img, 2, 19, 3, 2, dog_white)
-	# Dog ear
-	img.set_pixel(2, 18, dog_dark)
-	img.set_pixel(4, 18, dog_dark)
-	# Dog eye
-	img.set_pixel(3, 19, outline)
-	# Dog nose
-	img.set_pixel(2, 20, Color(0.2, 0.15, 0.15))
-	# Dog tail
-	img.set_pixel(7, 20, dog_white)
-	img.set_pixel(7, 19, dog_white)
-	# Dog legs
-	img.set_pixel(3, 24, dog_dark)
-	img.set_pixel(5, 24, dog_dark)
-	# Dog collar (red)
-	_fill(img, 2, 20, 3, 1, Color(0.8, 0.15, 0.1))
-	# Chain from dog to familiar
-	var chain_color = Color(0.5, 0.5, 0.55)
-	for cx in range(7, 24):
-		if cx % 2 == 0:
-			img.set_pixel(cx, 23, chain_color)
-
-	# === SMALL FAMILIAR (right side, collared) ===
-	# Head
-	_fill(img, 24, 19, 3, 3, familiar)
-	# Conical hat (straw hat)
-	_fill(img, 23, 17, 5, 2, Color(0.7, 0.6, 0.3))
-	img.set_pixel(25, 16, Color(0.7, 0.6, 0.3))
-	# Eyes (sad/submissive)
-	img.set_pixel(24, 20, outline)
-	img.set_pixel(26, 20, outline)
-	# Collar (red leather with ring)
-	_fill(img, 24, 22, 3, 1, Color(0.7, 0.1, 0.1))
-	img.set_pixel(25, 22, Color(0.6, 0.6, 0.65))  # Metal ring
-	# Body (tattered red outfit)
-	_fill(img, 24, 23, 3, 3, familiar_outfit)
-	# Legs
-	img.set_pixel(24, 26, familiar_dark)
-	img.set_pixel(26, 26, familiar_dark)
-	# Small broom (sweeping)
-	_fill(img, 27, 22, 1, 4, Color(0.5, 0.35, 0.2))
-	_fill(img, 27, 26, 2, 1, Color(0.6, 0.5, 0.2))
+	# (companions removed)
 
 	# Magic sparkles around witch
 	img.set_pixel(8, 8, glow)
