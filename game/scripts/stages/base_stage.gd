@@ -87,16 +87,19 @@ func _process(delta: float) -> void:
 	SynergySystem.apply_passive_synergies(player.global_position, delta)
 
 func _check_evolutions() -> void:
+	if not is_instance_valid(player) or not player.is_inside_tree():
+		return
 	var evo_id = EvolutionDB.check_evolution_available()
 	if evo_id.is_empty():
 		return
 
 	# Spawna bau perto do jogador
+	var pos = player.global_position
 	var chest = chest_scene.instantiate()
 	chest.evolution_id = evo_id
 	var offset = Vector3(randf_range(-5, 5), 0, randf_range(-5, 5))
-	chest.global_position = player.global_position + offset
 	add_child(chest)
+	chest.global_position = pos + offset
 
 func _on_enemy_killed_synergy(pos: Vector3, _xp: int) -> void:
 	SynergySystem.apply_on_kill_synergies(pos)
