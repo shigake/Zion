@@ -109,7 +109,7 @@ func _ready() -> void:
 	_xp_text_label = Label.new()
 	_xp_text_label.name = "XPTextLabel"
 	_xp_text_label.add_theme_font_size_override("font_size", 9)
-	_xp_text_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.55))
+	_xp_text_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0, 0.7))
 	_xp_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_xp_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_xp_text_label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -118,9 +118,9 @@ func _ready() -> void:
 
 	# Level label styling — prominent gold with outline
 	level_label.add_theme_font_size_override("font_size", 20)
-	level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	level_label.add_theme_constant_override("outline_size", 3)
-	level_label.add_theme_color_override("font_outline_color", Color(0.4, 0.25, 0.0, 0.7))
+	level_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
 
 	# Boss HP bar styling (red)
 	var boss_fill = StyleBoxFlat.new()
@@ -255,7 +255,7 @@ func _update_time() -> void:
 	# Red pulse when less than 3 minutes remaining
 	if "run_time_limit" in GameManager:
 		var remaining = GameManager.run_time_limit - GameManager.game_time
-		if remaining < 180.0 and remaining > 0:
+		if remaining < 180.0 and remaining > 0 and GameManager.game_mode != "endless":
 			time_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.2))
 			time_label.modulate.a = 0.7 + sin(GameManager.game_time * 4.0) * 0.3
 		else:
@@ -529,14 +529,14 @@ func _update_dash() -> void:
 		return
 	if p.dash_cooldown_timer > 0:
 		var remaining_cd = snappedf(p.dash_cooldown_timer, 0.1)
-		dash_label.text = "DASH: %.1fs" % remaining_cd
-		dash_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
+		dash_label.text = "%.1f" % remaining_cd
+		dash_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 		# Barra carrega de 0 ate 1 conforme o cooldown passa
 		var progress = 1.0 - (p.dash_cooldown_timer / p.dash_cooldown)
 		dash_cooldown_bar.value = clampf(progress, 0.0, 1.0)
 		dash_cooldown_bar.visible = true
 	else:
-		dash_label.text = "DASH: READY"
+		dash_label.text = "DASH"
 		dash_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.3))
 		dash_cooldown_bar.value = 1.0
 		dash_cooldown_bar.visible = false
