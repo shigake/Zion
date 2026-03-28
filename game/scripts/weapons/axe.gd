@@ -24,6 +24,8 @@ func _ready() -> void:
 	axe_mesh.visible = false
 	axe_area.monitoring = false
 	axe_area.body_entered.connect(_on_body_entered)
+	# Note: axe_mesh.mesh is set to null in _build_axe_model() then rebuilt procedurally;
+	# the procedural model is hidden when _axe_sprite exists (line 138)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/axe_slash.png"
 	if ResourceLoader.exists(_slash_path2):

@@ -16,6 +16,7 @@ var _trail: Node3D = null
 var _slash_tex: Texture2D = null
 
 func _ready() -> void:
+	scythe_mesh.mesh = null  # Hide debug geometry; trail + slash sprites provide visual feedback
 	scythe_area.body_entered.connect(_on_body_entered)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/scythe_slash.png"

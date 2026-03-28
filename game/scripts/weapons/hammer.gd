@@ -15,6 +15,7 @@ var _slash_tex: Texture2D = null
 
 func _ready() -> void:
 	slam_mesh.visible = false
+	slam_mesh.mesh = null  # Hide debug geometry; shockwave ring + slash sprites provide visual feedback
 	slam_area.body_entered.connect(_on_body_entered)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/hammer_slam.png"

@@ -17,6 +17,7 @@ var _slash_tex: Texture2D = null
 
 func _ready() -> void:
 	punch_mesh.visible = false
+	punch_mesh.mesh = null  # Hide debug geometry; slash sprites provide visual feedback
 	punch_area.body_entered.connect(_on_body_entered)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/boxing_punch.png"

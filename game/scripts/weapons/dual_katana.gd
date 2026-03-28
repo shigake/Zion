@@ -20,6 +20,8 @@ var _slash_tex: Texture2D = null
 func _ready() -> void:
 	slash_mesh_l.visible = false
 	slash_mesh_r.visible = false
+	slash_mesh_l.mesh = null  # Hide debug geometry; trail + slash sprites provide visual feedback
+	slash_mesh_r.mesh = null
 	slash_area_l.body_entered.connect(_on_body_entered)
 	slash_area_r.body_entered.connect(_on_body_entered)
 	# Load slash trail sprite
