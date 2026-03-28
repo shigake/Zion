@@ -54,6 +54,9 @@ var migration_label: Label = null
 # Minimap
 var minimap: Control = null
 
+# XP progress text label (overlaid on XP bar)
+var _xp_text_label: Label = null
+
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
 	GameManager.game_over.connect(_on_game_over)
@@ -102,9 +105,22 @@ func _ready() -> void:
 	xp_bg.border_color = Color(0.15, 0.2, 0.4, 0.5)
 	xp_bar.add_theme_stylebox_override("background", xp_bg)
 
-	# Level label styling — integrate above XP bar
-	level_label.add_theme_font_size_override("font_size", 13)
-	level_label.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0, 0.9))
+	# XP progress text label — overlaid on center of XP bar
+	_xp_text_label = Label.new()
+	_xp_text_label.name = "XPTextLabel"
+	_xp_text_label.add_theme_font_size_override("font_size", 9)
+	_xp_text_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.55))
+	_xp_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_xp_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_xp_text_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_xp_text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	xp_bar.add_child(_xp_text_label)
+
+	# Level label styling — prominent gold with outline
+	level_label.add_theme_font_size_override("font_size", 20)
+	level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	level_label.add_theme_constant_override("outline_size", 3)
+	level_label.add_theme_color_override("font_outline_color", Color(0.4, 0.25, 0.0, 0.7))
 
 	# Boss HP bar styling (red)
 	var boss_fill = StyleBoxFlat.new()
@@ -119,8 +135,12 @@ func _ready() -> void:
 	boss_bg.border_color = Color(0.4, 0.1, 0.1)
 	boss_hp_bar.add_theme_stylebox_override("background", boss_bg)
 
-	# Dash cooldown bar styling (cyan, pequena)
+	# Dash label — bigger font for visibility
+	dash_label.add_theme_font_size_override("font_size", 14)
+
+	# Dash cooldown bar styling (cyan, wider)
 	dash_cooldown_bar.visible = false
+	dash_cooldown_bar.custom_minimum_size = Vector2(120, 8)
 	var dash_fill = StyleBoxFlat.new()
 	dash_fill.bg_color = Color(0.2, 0.85, 1.0)
 	dash_fill.set_corner_radius_all(3)
@@ -131,6 +151,9 @@ func _ready() -> void:
 	dash_bg.set_border_width_all(1)
 	dash_bg.border_color = Color(0.2, 0.3, 0.4)
 	dash_cooldown_bar.add_theme_stylebox_override("background", dash_bg)
+
+	# Timer label — bigger font for readability
+	time_label.add_theme_font_size_override("font_size", 18)
 
 	# Event notification styling
 	event_label.add_theme_font_size_override("font_size", 28)
@@ -223,22 +246,35 @@ func _update_hp() -> void:
 func _update_xp() -> void:
 	xp_bar.max_value = GameManager.player_xp_to_next
 	xp_bar.value = GameManager.player_xp
+	if _xp_text_label:
+		_xp_text_label.text = "%d/%d" % [GameManager.player_xp, GameManager.player_xp_to_next]
 
 func _update_time() -> void:
 	var t = int(GameManager.game_time)
 	time_label.text = "%02d:%02d" % [t / 60, t % 60]
+	# Red pulse when less than 3 minutes remaining
+	if "run_time_limit" in GameManager:
+		var remaining = GameManager.run_time_limit - GameManager.game_time
+		if remaining < 180.0 and remaining > 0:
+			time_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.2))
+			time_label.modulate.a = 0.7 + sin(GameManager.game_time * 4.0) * 0.3
+		else:
+			time_label.add_theme_color_override("font_color", Color.WHITE)
+			time_label.modulate.a = 1.0
 
 func _update_kills() -> void:
 	kill_label.text = LocaleManager.tr_key("kills") % [GameManager.total_kills, GameManager.crystals_this_run]
 
 func _on_level_up(_new_level: int) -> void:
 	level_label.text = "Lv. %d" % _new_level
-	# Scale bounce animation
+	# Scale bounce animation with gold flash
 	var tween = create_tween()
 	level_label.scale = Vector2(1.6, 1.6)
-	level_label.modulate = Color(1.0, 1.0, 0.3)
+	level_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.5))
 	tween.tween_property(level_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
-	tween.parallel().tween_property(level_label, "modulate", Color.WHITE, 0.5)
+	tween.parallel().tween_callback(func():
+		level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	).set_delay(0.5)
 
 func _on_game_over() -> void:
 	pass
@@ -492,15 +528,16 @@ func _update_dash() -> void:
 	if not "dash_cooldown_timer" in p or not "dash_cooldown" in p:
 		return
 	if p.dash_cooldown_timer > 0:
-		dash_label.text = "[SPACE] Dash"
-		dash_label.modulate = Color(0.5, 0.5, 0.5)
+		var remaining_cd = snappedf(p.dash_cooldown_timer, 0.1)
+		dash_label.text = "DASH: %.1fs" % remaining_cd
+		dash_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
 		# Barra carrega de 0 ate 1 conforme o cooldown passa
 		var progress = 1.0 - (p.dash_cooldown_timer / p.dash_cooldown)
 		dash_cooldown_bar.value = clampf(progress, 0.0, 1.0)
 		dash_cooldown_bar.visible = true
 	else:
-		dash_label.text = "[SPACE] Dash"
-		dash_label.modulate = Color.WHITE
+		dash_label.text = "DASH: READY"
+		dash_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.3))
 		dash_cooldown_bar.value = 1.0
 		dash_cooldown_bar.visible = false
 
