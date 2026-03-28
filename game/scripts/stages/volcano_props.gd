@@ -26,6 +26,7 @@ const LAVA_DPS: int = 10
 const LAVA_TICK_INTERVAL: float = 1.0
 var _lava_zones: Array[Area3D] = []
 var _lava_tick_timer: float = 0.0
+var _anim_time: float = 0.0
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -150,6 +151,18 @@ func _create_stage_mechanics() -> void:
 
 
 func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("fire_geyser"):
+			var pulse = 1.0 + sin(_anim_time * 5.0 + child.position.x * 2.0) * 0.15
+			child.scale = Vector3(pulse, pulse, pulse)
+		elif n.begins_with("magma_pool"):
+			var t = sin(_anim_time * 2.0 + child.position.z) * 0.5 + 0.5
+			child.modulate = Color(1.0, 0.3 + t * 0.4, 0.0 + t * 0.1, 0.8 + t * 0.2)
+
 	_lava_tick_timer += delta
 	if _lava_tick_timer < LAVA_TICK_INTERVAL:
 		return

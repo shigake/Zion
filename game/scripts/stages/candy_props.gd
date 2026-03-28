@@ -23,16 +23,39 @@ const CARAMEL_ZONE_COUNT: int = 8
 const CARAMEL_ZONE_SIZE: float = 4.0
 const CARAMEL_SLOW_FACTOR: float = 0.5  # 50% speed reduction
 var _caramel_zones: Array[Area3D] = []
+var _anim_time: float = 0.0
+var _gummy_base_y: Dictionary = {}
 var _player_caramel_count: int = 0
 var _prev_speed_mult: float = 1.0
 var _slowed_enemies: Dictionary = {}  # enemy -> original_speed
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("lollipop"):
+			child.rotation.y = _anim_time * 1.5 + child.position.x
+		elif n.begins_with("gummy_bear"):
+			var base_y: float = _gummy_base_y.get(child, child.position.y)
+			child.position.y = base_y + abs(sin(_anim_time * 3.0 + child.position.z)) * 0.25
+
+
 func _ready() -> void:
 	_mech_rng.randomize()
 	_create_ground()
 	_scatter_props()
+	_cache_gummy_positions()
 	_create_stage_mechanics()
+
+
+func _cache_gummy_positions() -> void:
+	for child in get_children():
+		if child is Sprite3D and child.name.begins_with("gummy_bear"):
+			_gummy_base_y[child] = child.position.y
 
 
 func _create_ground() -> void:

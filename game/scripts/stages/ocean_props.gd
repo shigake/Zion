@@ -25,12 +25,35 @@ const CURRENT_ZONE_SIZE: float = 12.0
 const CURRENT_PUSH_FORCE: float = 4.0
 var _current_zones: Array[Dictionary] = []  # {zone: Area3D, direction: Vector3}
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _anim_time: float = 0.0
+var _jellyfish_base_y: Dictionary = {}
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("seaweed"):
+			child.rotation.z = sin(_anim_time * 1.8 + child.position.x * 0.4) * 0.15
+		elif n.begins_with("jellyfish"):
+			var base_y: float = _jellyfish_base_y.get(child, child.position.y)
+			child.position.y = base_y + sin(_anim_time * 1.2 + child.position.x) * 0.3
+
 
 func _ready() -> void:
 	_mech_rng.randomize()
 	_create_ground()
 	_scatter_props()
+	_cache_jellyfish_positions()
 	_create_stage_mechanics()
+
+
+func _cache_jellyfish_positions() -> void:
+	for child in get_children():
+		if child is Sprite3D and child.name.begins_with("jellyfish"):
+			_jellyfish_base_y[child] = child.position.y
 
 
 func _create_ground() -> void:

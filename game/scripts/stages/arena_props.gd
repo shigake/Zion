@@ -25,6 +25,7 @@ const CROWD_ZONE_SIZE: float = 6.0
 const CROWD_THROW_INTERVAL: float = 30.0
 var _crowd_zones: Array[Area3D] = []
 var _crowd_timer: float = 0.0
+var _anim_time: float = 0.0
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -144,6 +145,16 @@ func _create_stage_mechanics() -> void:
 
 
 func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("torch"):
+			child.modulate.a = 0.7 + sin(_anim_time * 7.0 + child.position.x * 2.0) * 0.3
+		elif n.begins_with("banner"):
+			child.rotation.z = sin(_anim_time * 2.0 + child.position.z * 0.5) * 0.1
+
 	_crowd_timer += delta
 	if _crowd_timer < CROWD_THROW_INTERVAL:
 		return

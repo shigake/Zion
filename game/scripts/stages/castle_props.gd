@@ -23,9 +23,23 @@ const DARK_ZONE_COUNT: int = 5
 const DARK_ZONE_SIZE: float = 7.0
 const DARK_DAMAGE_BONUS: float = 1.3
 var _dark_zones: Array[Area3D] = []
+var _anim_time: float = 0.0
 var _player_in_dark: bool = false
 var _dark_zone_count: int = 0
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("candelabra"):
+			child.modulate.a = 0.65 + sin(_anim_time * 7.0 + child.position.x * 3.0) * 0.35
+		elif n.begins_with("cobweb"):
+			child.rotation.z = sin(_anim_time * 1.0 + child.position.z * 0.3) * 0.06
+
 
 func _ready() -> void:
 	_mech_rng.randomize()

@@ -29,6 +29,21 @@ const TOMBSTONE_ZONE_COUNT: int = 5
 const TOMBSTONE_ZONE_SIZE: float = 4.0
 const TOMBSTONE_BUFF_DURATION: float = 10.0
 var _tombstone_zones_used: Dictionary = {}  # zone -> bool (already triggered)
+var _anim_time: float = 0.0
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("lantern"):
+			child.modulate.a = 0.7 + sin(_anim_time * 6.0 + child.position.x) * 0.3
+		elif n.begins_with("pumpkin"):
+			var glow = 0.8 + sin(_anim_time * 3.0 + child.position.z) * 0.2
+			child.modulate = Color(1.0, 0.6 * glow, 0.1, glow)
+
 
 func _ready() -> void:
 	rng.randomize()

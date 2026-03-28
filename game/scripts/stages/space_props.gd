@@ -23,10 +23,24 @@ const ZEROG_ZONE_COUNT: int = 6
 const ZEROG_ZONE_SIZE: float = 6.0
 const ZEROG_SPEED_BOOST: float = 1.5
 var _zerog_zones: Array[Area3D] = []
+var _anim_time: float = 0.0
 var _player_in_zerog: bool = false
 var _zerog_count: int = 0  # Track overlapping zones
 var _prev_speed_mult: float = 1.0
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("console"):
+			child.modulate.a = 0.6 + sin(_anim_time * 4.0 + child.position.z * 2.0) * 0.4
+		elif n.begins_with("portal"):
+			child.rotation.y = _anim_time * 1.0 + child.position.x
+
 
 func _ready() -> void:
 	_mech_rng.randomize()

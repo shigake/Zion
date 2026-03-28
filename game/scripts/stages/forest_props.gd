@@ -25,6 +25,21 @@ const MUSHROOM_ZONE_SIZE: float = 3.0
 const MUSHROOM_BUFF_DURATION: float = 10.0
 var _mushroom_zones_used: Dictionary = {}  # zone -> bool
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _anim_time: float = 0.0
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("mushroom"):
+			var pulse = 1.0 + sin(_anim_time * 2.0 + child.position.z) * 0.08
+			child.scale = Vector3(pulse, pulse, pulse)
+		elif n.begins_with("fairy_circle"):
+			child.rotation.y = _anim_time * 0.5 + child.position.x
+
 
 func _ready() -> void:
 	_mech_rng.randomize()

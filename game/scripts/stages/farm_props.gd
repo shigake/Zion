@@ -24,6 +24,20 @@ const CORNFIELD_ZONE_COUNT: int = 10
 const CORNFIELD_ZONE_SIZE: float = 5.0
 var _players_in_cornfield: int = 0  # Track how many players are in cornfield zones
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _anim_time: float = 0.0
+
+
+func _process(delta: float) -> void:
+	_anim_time += delta
+	for child in get_children():
+		if not child is Sprite3D:
+			continue
+		var n: String = child.name
+		if n.begins_with("scarecrow"):
+			child.rotation.z = sin(_anim_time * 1.5 + child.position.x) * 0.08
+		elif n.begins_with("wheat"):
+			child.rotation.z = sin(_anim_time * 2.5 + child.position.x * 0.5 + child.position.z * 0.3) * 0.12
+
 
 func _ready() -> void:
 	_mech_rng.randomize()
