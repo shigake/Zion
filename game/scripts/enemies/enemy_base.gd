@@ -58,6 +58,14 @@ func _get_base_enemy_type() -> String:
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var sprite_path = "res://assets/sprites/enemies/%s.png" % enemy_type.to_snake_case()
+	# Try stage-themed sprite first
+	var stage = GameManager.selected_stage
+	if STAGE_ENEMY_SPRITES.has(stage):
+		var stage_map = STAGE_ENEMY_SPRITES[stage]
+		if stage_map.has(enemy_type):
+			var themed_path = "res://assets/sprites/enemies/%s/%s.png" % [stage, stage_map[enemy_type]]
+			if ResourceLoader.exists(themed_path):
+				sprite_path = themed_path
 	if not ResourceLoader.exists(sprite_path):
 		# Also try bosses/ folder (e.g. BossNecromancer -> boss_necromancer.png)
 		var boss_sprite = "res://assets/sprites/bosses/%s.png" % enemy_type.to_snake_case()
@@ -106,6 +114,20 @@ func _apply_procedural_model() -> void:
 		add_child(_animator)
 	else:
 		VisualSetup.apply_cel_shader_to_mesh(mesh, enemy_color)
+
+## Stage-themed enemy sprite mapping
+const STAGE_ENEMY_SPRITES := {
+	"cemetery": {"Slime": "cemetery_zombie", "Bat": "cemetery_wraith", "Skeleton": "cemetery_reaper", "Ghost": "cemetery_hand"},
+	"forest": {"Slime": "forest_mushroom", "Bat": "forest_spider", "Skeleton": "forest_treant", "ZombieRunner": "forest_wolf"},
+	"farm": {"Slime": "farm_chicken", "Bat": "farm_crow", "Skeleton": "farm_scarecrow", "ZombieRunner": "farm_pig"},
+	"tokyo": {"Slime": "tokyo_robot", "Bat": "tokyo_drone", "Skeleton": "tokyo_hacker", "ZombieRunner": "tokyo_mecha"},
+	"volcano": {"Slime": "volcano_magma_slime", "Bat": "volcano_imp", "Skeleton": "volcano_golem", "ZombieRunner": "volcano_hellhound"},
+	"ocean": {"Slime": "ocean_crab", "Bat": "ocean_squid", "Skeleton": "ocean_fish", "ZombieRunner": "ocean_urchin"},
+	"arena": {"Slime": "arena_gladiator", "Bat": "arena_lion", "Skeleton": "arena_centurion", "ZombieRunner": "arena_chariot"},
+	"space": {"Slime": "space_alien", "Bat": "space_drone_enemy", "Skeleton": "space_xenomorph", "ZombieRunner": "space_parasite"},
+	"castle": {"Slime": "castle_vampire", "Bat": "castle_gargoyle", "Skeleton": "castle_knight", "ZombieRunner": "castle_werewolf"},
+	"candy": {"Slime": "candy_gummy", "Bat": "candy_cupcake", "Skeleton": "candy_jawbreaker", "ZombieRunner": "candy_licorice"},
+}
 
 ## Separacao entre inimigos — raio e forca de repulsao
 const SEPARATION_RADIUS := 1.5
