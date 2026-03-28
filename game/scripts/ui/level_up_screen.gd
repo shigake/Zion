@@ -17,6 +17,7 @@ var options: Array = []
 var pending_levels: int = 0
 var banish_mode: bool = false
 var _card_buttons: Array[Button] = []
+var _auto_check: CheckBox = null
 
 const TYPE_COLORS = {
 	"melee": Color(0.85, 0.25, 0.2),
@@ -50,6 +51,18 @@ func _ready() -> void:
 	reroll_btn.pressed.connect(_on_reroll)
 	banish_btn.pressed.connect(_on_banish)
 
+	# Auto-pick checkbox (toggle random auto-selection)
+	_auto_check = CheckBox.new()
+	_auto_check.text = "Auto"
+	_auto_check.button_pressed = GameManager.auto_play
+	_auto_check.add_theme_font_size_override("font_size", 12)
+	_auto_check.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+	_auto_check.toggled.connect(_on_auto_toggled)
+	# Add next to reroll/banish buttons
+	var btn_parent = reroll_btn.get_parent()
+	if btn_parent:
+		btn_parent.add_child(_auto_check)
+
 func _on_level_up(_new_level: int) -> void:
 	pending_levels += 1
 	if not panel.visible:
@@ -68,7 +81,7 @@ func _show_choices() -> void:
 	# Auto-pick random if auto_play is enabled
 	if GameManager.auto_play:
 		var rand_idx = randi() % options.size()
-		_choose(rand_idx)
+		call_deferred("_choose", rand_idx)
 		return
 
 	title_label.text = LocaleManager.tr_key("level_up_title") % GameManager.player_level
@@ -414,6 +427,13 @@ func _generate_options() -> Array:
 				pool.remove_at(j)
 				break
 	return selected
+
+func _on_auto_toggled(enabled: bool) -> void:
+	GameManager.auto_play = enabled
+	# If just enabled and panel is visible, auto-pick immediately
+	if enabled and panel.visible and not options.is_empty():
+		var rand_idx = randi() % options.size()
+		_choose(rand_idx)
 
 func _on_reroll() -> void:
 	if GameManager.rerolls <= 0:
