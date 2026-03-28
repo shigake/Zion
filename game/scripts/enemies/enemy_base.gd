@@ -33,6 +33,8 @@ var _is_charging: bool = false
 var _frame_counter: int = 0  # Performance: stagger per-enemy work across frames
 var _cached_separation: Vector3 = Vector3.ZERO  # Cached separation vector (updated every 3rd frame)
 
+static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
+
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
 
@@ -93,7 +95,13 @@ func _apply_sprite() -> void:
 		LogManager.debug("Enemy", "No sprites found at all, using procedural model")
 		_apply_procedural_model()
 		return
-	var tex = load(sprite_path) as Texture2D
+	var tex: Texture2D
+	if _sprite_cache.has(sprite_path):
+		tex = _sprite_cache[sprite_path]
+	else:
+		tex = load(sprite_path) as Texture2D
+		if tex:
+			_sprite_cache[sprite_path] = tex
 	if tex == null:
 		_apply_procedural_model()
 		return
@@ -105,7 +113,13 @@ func _apply_sprite() -> void:
 	# Check for walk spritesheet (AnimatedSprite3D)
 	var walk_path = sprite_path.replace(".png", "_walk.png")
 	if ResourceLoader.exists(walk_path):
-		var walk_tex = load(walk_path) as Texture2D
+		var walk_tex: Texture2D
+		if _sprite_cache.has(walk_path):
+			walk_tex = _sprite_cache[walk_path]
+		else:
+			walk_tex = load(walk_path) as Texture2D
+			if walk_tex:
+				_sprite_cache[walk_path] = walk_tex
 		if walk_tex:
 			var anim_sprite = AnimatedSprite3D.new()
 			var frames = SpriteFrames.new()

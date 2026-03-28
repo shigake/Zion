@@ -23,6 +23,7 @@ var move_direction: Vector3 = Vector3.ZERO
 var original_color: Color = Color(0.2, 0.85, 0.3)
 var is_local: bool = true  # Se este jogador e controlado localmente
 var _animator: Node = null
+var _footstep_timer: float = 0.0
 
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
@@ -134,7 +135,8 @@ func _ready() -> void:
 	add_child(aura)
 
 	# Barrier walls — 4 paredes vermelhas translucidas nas bordas do mapa
-	_create_barrier_walls()
+	# Deferred: global_position is not valid until the node enters the scene tree
+	call_deferred("_create_barrier_walls")
 
 func _physics_process(delta: float) -> void:
 	if GameManager.is_game_over or GameManager.paused:
@@ -186,6 +188,15 @@ func _physics_process(delta: float) -> void:
 			AudioManager.play_sfx("dash")
 
 	move_and_slide()
+
+	# Footstep SFX
+	if velocity.length() > 0.5:
+		_footstep_timer += delta
+		if _footstep_timer > 0.3:
+			_footstep_timer = 0.0
+			AudioManager.play_sfx("footstep")
+	else:
+		_footstep_timer = 0.0
 
 	# Clamp position to map boundaries
 	var half = GameManager.map_half_size
