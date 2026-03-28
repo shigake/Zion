@@ -23,6 +23,8 @@ func _ready() -> void:
 		mesh.get_parent().add_child(sprite)
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -38,11 +40,18 @@ func _process(delta: float) -> void:
 		_fire(level)
 
 func _fire(level: int) -> void:
+	if not is_inside_tree():
+		return
+
+	var player_node = get_parent().get_parent() if get_parent() != null else null
+	if not is_instance_valid(player_node):
+		return
+
 	var enemies = GameManager.get_enemies()
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
-	var player_pos = get_parent().get_parent().global_position  # WeaponPivot -> Player
+	var player_pos = player_node.global_position  # WeaponPivot -> Player
 
 	# Numero de projeteis: +1 nos levels 3 e 6
 	var num_projectiles = 1
@@ -50,6 +59,10 @@ func _fire(level: int) -> void:
 		num_projectiles = 2
 	if level >= 6:
 		num_projectiles = 3
+
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
 
 	if GameManager.manual_aim:
 		# Manual aim: fire straight projectiles (no homing)
@@ -61,16 +74,18 @@ func _fire(level: int) -> void:
 			var spread = (randf() - 0.5) * 0.2 * i
 			proj.direction = proj.direction.rotated(Vector3.UP, spread).normalized()
 			proj.damage = int(WeaponDB.get_damage("staff", level))
-			get_tree().current_scene.call_deferred("add_child", proj)
+			scene_root.call_deferred("add_child", proj)
 	else:
 		# Auto-aim: homing projectiles
 		var targets = _get_nearest_enemies(player_pos, num_projectiles)
 		for t in targets:
+			if not is_instance_valid(t):
+				continue
 			var proj = ObjectPool.get_instance(projectile_scene)
 			proj.global_position = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = int(WeaponDB.get_damage("staff", level))
-			get_tree().current_scene.call_deferred("add_child", proj)
+			scene_root.call_deferred("add_child", proj)
 
 func _get_nearest_enemies(from: Vector3, count: int) -> Array:
 	var enemies = GameManager.get_enemies()
