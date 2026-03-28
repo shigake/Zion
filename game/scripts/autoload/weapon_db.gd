@@ -245,6 +245,7 @@ var weapons: Dictionary = {
 		"damage_per_level": 3,
 		"cooldown_per_level": -0.15,
 		"area_per_level": 0.3,
+		"disabled": true,
 	},
 	"ice_staff": {
 		"name": "Cajado de Gelo",

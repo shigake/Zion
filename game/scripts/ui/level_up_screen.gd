@@ -671,11 +671,13 @@ func _generate_options() -> Array:
 				"weight": 10,
 			})
 
-	# Armas novas (se tem slot)
+	# Armas novas (se tem slot, excluindo disabled)
 	if GameManager.player_weapons.size() < GameManager.MAX_WEAPONS:
 		for wid in WeaponDB.get_all_weapon_ids():
 			if not GameManager.has_weapon(wid):
 				var data = WeaponDB.get_weapon(wid)
+				if data.get("disabled", false):
+					continue
 				pool.append({
 					"type": "weapon",
 					"id": wid,
@@ -699,6 +701,8 @@ func _generate_options() -> Array:
 		for iid in ItemDB.get_all_item_ids():
 			if not GameManager.has_item(iid):
 				var data = ItemDB.get_item(iid)
+				if data.get("disabled", false):
+					continue
 				pool.append({
 					"type": "item",
 					"id": iid,

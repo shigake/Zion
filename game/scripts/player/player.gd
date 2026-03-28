@@ -195,43 +195,9 @@ func _physics_process(delta: float) -> void:
 	# Update barrier walls visibility
 	_update_barrier_walls()
 
-	# Right stick aiming (controller)
-	var aim_input = Vector2(
-		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
-		Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
-	)
-	if aim_input.length() > 0.3:  # Dead zone
-		GameManager.manual_aim = true
-		GameManager.aim_direction = Vector3(aim_input.x, 0, aim_input.y).normalized()
-	else:
-		# Mouse aiming — project mouse onto ground plane
-		var camera = get_viewport().get_camera_3d()
-		if camera:
-			var mouse_pos = get_viewport().get_mouse_position()
-			var from = camera.project_ray_origin(mouse_pos)
-			var dir = camera.project_ray_normal(mouse_pos)
-			# Intersect with Y=0 plane
-			if abs(dir.y) > 0.001:
-				var t = -from.y / dir.y
-				if t > 0:
-					var ground_point = from + dir * t
-					var aim_vec = ground_point - global_position
-					aim_vec.y = 0
-					if aim_vec.length() > 0.5:
-						GameManager.manual_aim = true
-						GameManager.aim_direction = aim_vec.normalized()
-					else:
-						GameManager.manual_aim = false
-						GameManager.aim_direction = Vector3.ZERO
-				else:
-					GameManager.manual_aim = false
-					GameManager.aim_direction = Vector3.ZERO
-			else:
-				GameManager.manual_aim = false
-				GameManager.aim_direction = Vector3.ZERO
-		else:
-			GameManager.manual_aim = false
-			GameManager.aim_direction = Vector3.ZERO
+	# All weapons auto-aim at nearest enemy (no mouse/stick aiming)
+	GameManager.manual_aim = false
+	GameManager.aim_direction = Vector3.ZERO
 
 	# Update walk animation (AnimatedSprite3D)
 	var _anim_sprite = get_node_or_null("PlayerSprite")
