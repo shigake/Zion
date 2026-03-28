@@ -148,7 +148,7 @@
 - [x] Expandir ObjectPool pra staff_projectile, ice_crystal, magic_book page, shuriken
 - [x] Cachear texturas de sprites (evitar load() repetido) — static _sprite_cache dict em enemy_base.gd:36
 - [x] Bullet trail — adicionar rastro visual (so quando FPS > 45)
-- [ ] MultiMesh pra pickups quando > 100 no chao
+- [x] MultiMesh pra pickups quando > 100 no chao — multimesh_manager.gd (PICKUP_THRESHOLD=100, blue XP/gold crystal)
 
 ## UI/UX
 - [x] Barra de XP — mostrar quanto falta pro proximo nivel — texto "X/Y" sobreposto na barra (hud.gd:128-136,269)
@@ -203,5 +203,5 @@
 ### Por prioridade:
 - **Critico (5/5 DONE)**: Chef weapon, barrier errors, health pickup, circle placeholders, gen3 mapping
 - **Alto (35/35 DONE)**: SFX conexoes, musica conexoes, 4 armas novas
-- **Medio (~1 pendente)**: performance (1: MultiMesh pickups)
+- **Medio (DONE)**: performance (MultiMesh pickups implementado)
 - **Baixo (~9 pendentes)**: build/deploy restantes (4: testar export, itch.io, trailer, Steam page)

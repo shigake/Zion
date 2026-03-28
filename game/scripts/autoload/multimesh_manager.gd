@@ -1,11 +1,12 @@
 extends Node
 
-## Manages MultiMeshInstance3D for rendering large enemy hordes efficiently.
-## When enemy count exceeds THRESHOLD, switches from individual Sprite3D nodes
+## Manages MultiMeshInstance3D for rendering large enemy hordes and pickups efficiently.
+## When count exceeds THRESHOLD, switches from individual Sprite3D nodes
 ## to a single MultiMesh draw call using a billboard QuadMesh with per-instance colors.
-## Below THRESHOLD: individual Sprite3D per enemy (looks good, shows unique textures).
+## Below THRESHOLD: individual Sprite3D per node (looks good, shows unique textures).
 ## Above THRESHOLD: MultiMesh with shared sprite texture (performance mode).
 
+# --- Enemy MultiMesh ---
 const THRESHOLD := 100  # Switch to multimesh above this count
 const HYSTERESIS := 20  # Prevent flickering near threshold
 
@@ -14,6 +15,14 @@ var _multimesh: MultiMesh = null
 var _active: bool = false
 var _billboard_material: StandardMaterial3D = null
 var _fallback_texture: Texture2D = null
+
+# --- Pickup MultiMesh ---
+const PICKUP_THRESHOLD := 100
+const PICKUP_HYSTERESIS := 20
+
+var _pickup_mm_instance: MultiMeshInstance3D = null
+var _pickup_mm: MultiMesh = null
+var _pickup_active: bool = false
 
 func _ready() -> void:
 	_create_billboard_material()
@@ -47,6 +56,8 @@ func _process(_delta: float) -> void:
 		_update_transforms()
 	elif _active and enemy_count < (THRESHOLD - HYSTERESIS):
 		_deactivate()
+
+	_process_pickups()
 
 func _activate() -> void:
 	_active = true
@@ -159,5 +170,105 @@ func _update_transforms() -> void:
 	for j in range(valid_idx, _multimesh.instance_count):
 		_multimesh.set_instance_transform(j, Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), Vector3(0, -1000, 0)))
 
+# =============================================================================
+# Pickup MultiMesh — renders XP gems + crystals as a single draw call
+# =============================================================================
+
+func _process_pickups() -> void:
+	var pickups = get_tree().get_nodes_in_group("pickups")
+	var count = pickups.size()
+
+	if count >= PICKUP_THRESHOLD:
+		if not _pickup_active:
+			_activate_pickup_mm()
+		_update_pickup_transforms(pickups)
+	elif _pickup_active and count < (PICKUP_THRESHOLD - PICKUP_HYSTERESIS):
+		_deactivate_pickup_mm()
+
+func _activate_pickup_mm() -> void:
+	_pickup_active = true
+	if _pickup_mm_instance and is_instance_valid(_pickup_mm_instance):
+		return
+
+	_pickup_mm_instance = MultiMeshInstance3D.new()
+	_pickup_mm = MultiMesh.new()
+	_pickup_mm.transform_format = MultiMesh.TRANSFORM_3D
+	_pickup_mm.use_colors = true
+
+	# Use a small quad for billboard rendering
+	var quad = QuadMesh.new()
+	quad.size = Vector2(0.5, 0.5)
+	_pickup_mm.mesh = quad
+	_pickup_mm.instance_count = 0
+
+	_pickup_mm_instance.multimesh = _pickup_mm
+	_pickup_mm_instance.name = "PickupMultiMesh"
+	_pickup_mm_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+	# Billboard unshaded material with vertex colors
+	var mat = StandardMaterial3D.new()
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	mat.alpha_scissor_threshold = 0.5
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_pickup_mm_instance.material_override = mat
+
+	var scene = get_tree().current_scene
+	if scene:
+		scene.add_child(_pickup_mm_instance)
+
+func _update_pickup_transforms(pickups: Array) -> void:
+	if not _pickup_mm or not _pickup_mm_instance or not is_instance_valid(_pickup_mm_instance):
+		return
+
+	var count = pickups.size()
+	if count == 0:
+		if _pickup_mm.instance_count != 0:
+			_pickup_mm.instance_count = 0
+		return
+
+	# Resize with headroom to reduce reallocations
+	if _pickup_mm.instance_count < count or _pickup_mm.instance_count > count * 2:
+		_pickup_mm.instance_count = int(count * 1.25)
+
+	var idx := 0
+	for pickup in pickups:
+		if not is_instance_valid(pickup):
+			continue
+		# Position the quad slightly above ground
+		_pickup_mm.set_instance_transform(idx, Transform3D(Basis(), pickup.global_position + Vector3(0, 0.3, 0)))
+		# Color: blue for XP gems, gold for crystals
+		if pickup.is_in_group("xp_gems"):
+			_pickup_mm.set_instance_color(idx, Color(0.2, 0.6, 1.0))
+		else:
+			_pickup_mm.set_instance_color(idx, Color(1.0, 0.85, 0.2))
+		# Hide individual sprite to avoid double rendering
+		var sprite = pickup.get_node_or_null("PickupSprite")
+		if sprite and sprite.visible:
+			sprite.visible = false
+		idx += 1
+
+	# Hide unused instances by moving them far away with zero scale
+	for j in range(idx, _pickup_mm.instance_count):
+		_pickup_mm.set_instance_transform(j, Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), Vector3(0, -1000, 0)))
+
+func _deactivate_pickup_mm() -> void:
+	_pickup_active = false
+	# Restore individual sprites
+	var pickups = get_tree().get_nodes_in_group("pickups")
+	for pickup in pickups:
+		if not is_instance_valid(pickup):
+			continue
+		var sprite = pickup.get_node_or_null("PickupSprite")
+		if sprite:
+			sprite.visible = true
+	if _pickup_mm_instance and is_instance_valid(_pickup_mm_instance):
+		_pickup_mm_instance.queue_free()
+		_pickup_mm_instance = null
+		_pickup_mm = null
+
 func on_scene_changed() -> void:
 	_deactivate()
+	_deactivate_pickup_mm()
