@@ -63,13 +63,14 @@ func _show_page(page: int) -> void:
 
 		# Relic icon
 		if relic_id != "":
-			var icon_path = "res://assets/icons/relics/%s.svg" % relic_id
+			var icon_path = "res://assets/sprites/relics/%s.png" % relic_id
 			var icon_tex = load(icon_path) if ResourceLoader.exists(icon_path) else null
 			if icon_tex:
 				var tex_rect = TextureRect.new()
 				tex_rect.texture = icon_tex
 				tex_rect.custom_minimum_size = Vector2(48, 48)
 				tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				card.add_child(tex_rect)
 
 		var btn = Button.new()
