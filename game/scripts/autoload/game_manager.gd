@@ -9,6 +9,8 @@ signal game_over()
 signal weapon_added(weapon_id: String)
 signal weapon_upgraded(weapon_id: String, new_level: int)
 signal miniboss_spawned(boss_name: String)
+signal boss_spawned(boss_name: String)
+signal boss_died(boss_name: String)
 
 # Tempo e dificuldade
 var game_time: float = 0.0
@@ -187,6 +189,7 @@ func _register_input_actions() -> void:
 	_add_key_action("move_right", KEY_D)
 	_add_key_action("dash", KEY_SPACE)
 	_add_key_action("interact", KEY_E)
+	_add_key_action("inventory", KEY_TAB)
 	# Gamepad
 	_add_joypad_actions()
 

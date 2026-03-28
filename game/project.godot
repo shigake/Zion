@@ -53,6 +53,7 @@ MutationManager="*res://scripts/autoload/mutation_manager.gd"
 DailyChallenge="*res://scripts/autoload/daily_challenge.gd"
 LoadingScreen="*res://scripts/autoload/loading_screen.gd"
 AchievementPopup="*res://scripts/ui/achievement_popup.gd"
+BossDialogue="*res://scripts/ui/boss_dialogue.gd"
 
 [display]
 

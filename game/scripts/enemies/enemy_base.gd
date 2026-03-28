@@ -112,6 +112,26 @@ func _apply_sprite() -> void:
 	sprite.name = "EnemySprite"
 	sprite.position.y = 0.65
 	add_child(sprite)
+	# Boss aura glow + floating name label
+	if enemy_type.begins_with("Boss"):
+		var aura = Sprite3D.new()
+		aura.texture = tex
+		aura.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		aura.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		aura.pixel_size = sprite.pixel_size * 1.3
+		aura.shaded = false
+		aura.transparent = true
+		aura.modulate = Color(enemy_color.r, enemy_color.g, enemy_color.b, 0.3)
+		aura.name = "BossAura"
+		aura.position = sprite.position
+		add_child(aura)
+		var label = Label3D.new()
+		label.text = name.replace("Boss", "").to_upper()
+		label.font_size = 24
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.position = sprite.position + Vector3(0, 1.2, 0)
+		label.name = "BossLabel"
+		add_child(label)
 	LogManager.debug("Enemy", "Sprite loaded: %s for %s" % [sprite_path, enemy_type])
 
 func _apply_stage_behavior() -> void:
@@ -194,6 +214,11 @@ const MAX_NEIGHBORS_CHECK := 8
 func _physics_process(delta: float) -> void:
 	if is_dead or GameManager.paused or not is_inside_tree():
 		return
+
+	# Boss aura pulse
+	var aura = get_node_or_null("BossAura")
+	if aura:
+		aura.modulate.a = 0.2 + sin(Time.get_ticks_msec() * 0.004) * 0.15
 
 	# Knockback decay
 	if knockback_velocity.length() > 0.1:
@@ -486,8 +511,9 @@ func _die() -> void:
 	# One Punch achievement: boss killed in 1 hit
 	if is_in_group("boss") and _hit_count <= 1:
 		AchievementManager.on_boss_killed_one_hit()
-	# Telemetry: boss killed event
+	# Telemetry: boss killed event + boss death dialogue
 	if is_in_group("boss"):
+		GameManager.boss_died.emit(name)
 		Telemetry.send_event("boss_killed", {
 			"boss_name": name,
 			"stage": GameManager.selected_stage,

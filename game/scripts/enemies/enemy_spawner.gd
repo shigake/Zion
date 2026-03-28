@@ -376,6 +376,7 @@ func _process_boss_rush(delta: float) -> void:
 	add_child(boss)
 	boss.global_position = spawn_pos
 	GameManager.enemies_alive += 1
+	GameManager.boss_spawned.emit(boss.name)
 	_boss_rush_active_boss = true
 
 	# Restore original stage
@@ -473,3 +474,4 @@ func _spawn_boss() -> void:
 	add_child(boss)
 	boss.global_position = spawn_pos
 	GameManager.enemies_alive += 1
+	GameManager.boss_spawned.emit(boss.name)
