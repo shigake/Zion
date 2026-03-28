@@ -24,6 +24,12 @@ func _process(delta: float) -> void:
 		attack_timer = cooldown
 		_cast(level)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _cast(level: int) -> void:
 	if not is_inside_tree():
 		return
@@ -31,7 +37,10 @@ func _cast(level: int) -> void:
 	if enemies.is_empty():
 		return
 
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 
 	var nearest: Node3D = null
 	if GameManager.manual_aim:

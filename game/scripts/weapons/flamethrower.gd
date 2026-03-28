@@ -39,6 +39,12 @@ func _ready() -> void:
 	# Heat shimmer overlay
 	_create_heat_shimmer()
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _create_ember_particles() -> void:
 	ember_particles = GPUParticles3D.new()
 	ember_particles.emitting = false
@@ -180,7 +186,10 @@ func _update_aim() -> void:
 			flame_mesh.rotation.y = -angle
 		return
 
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 
 	# Use spatial grid for nearby search instead of iterating all enemies
 	var nearby = GameManager.get_nearby_enemies(player_pos, 15.0)
@@ -219,7 +228,10 @@ func _deal_damage(level: int) -> void:
 
 	# Fire particles
 	if not bodies.is_empty():
-		var player_pos = get_parent().get_parent().global_position
+		var player = _get_player_node()
+		if not player:
+			return
+		var player_pos = player.global_position
 		var fx_pos = player_pos + fire_direction * 2.0 + Vector3(0, 0.5, 0)
 		ParticleFactory.spawn_hit_particles(fx_pos, Color(1.0, 0.4, 0.1))
 

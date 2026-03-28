@@ -43,6 +43,12 @@ func _setup_billboard_sprite() -> void:
 		_axe_sprite.visible = false
 		add_child(_axe_sprite)
 
+func _get_player_node() -> Node3D:
+	var candidate = get_parent().get_parent() if get_parent() else null
+	if candidate is CharacterBody3D:
+		return candidate
+	return null
+
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return
@@ -66,7 +72,10 @@ func _throw(level: int) -> void:
 	if enemies.is_empty() and not GameManager.manual_aim:
 		return
 
-	var player_pos = get_parent().get_parent().global_position
+	var player = _get_player_node()
+	if not player:
+		return
+	var player_pos = player.global_position
 
 	if GameManager.manual_aim:
 		fly_direction = GameManager.aim_direction
@@ -119,7 +128,11 @@ func _throw(level: int) -> void:
 
 func _update_flight(delta: float, level: int) -> void:
 	fly_timer += delta
-	var player_pos = get_parent().get_parent().global_position + Vector3(0, 0.5, 0)
+	var player = _get_player_node()
+	if not player:
+		_end_flight()
+		return
+	var player_pos = player.global_position + Vector3(0, 0.5, 0)
 
 	if not returning:
 		# Flying outward
