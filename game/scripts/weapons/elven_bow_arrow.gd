@@ -81,5 +81,6 @@ func _spawn_ricochet_flash() -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = "elven_bow"
 		body.call_deferred("take_damage", damage, damage_type)
 		# Nao faz queue_free — perfura todos os inimigos

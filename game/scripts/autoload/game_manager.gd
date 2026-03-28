@@ -34,6 +34,14 @@ var total_kills: int = 0
 var total_damage_dealt: int = 0
 var peak_enemies: int = 0
 var events_triggered: Array[String] = []
+
+# Per-weapon damage tracking (weapon_id -> total damage dealt)
+var weapon_damage_dealt: Dictionary = {}
+# Context: set by weapon scripts before dealing damage so enemy_base can attribute it
+var _last_attacking_weapon: String = ""
+
+# Run timeline: key events during the run
+var run_timeline: Array = []  # [{time: float, event: String}]
 var paused: bool = false
 var is_game_over: bool = false
 var is_victory: bool = false  # true se boss morreu, false se jogador morreu
@@ -113,6 +121,13 @@ var aim_direction: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	_register_input_actions()
+	# Connect signals for run timeline tracking
+	player_leveled_up.connect(_on_timeline_level_up)
+	weapon_added.connect(_on_timeline_weapon_added)
+	weapon_upgraded.connect(_on_timeline_weapon_upgraded)
+	boss_spawned.connect(_on_timeline_boss_spawned)
+	miniboss_spawned.connect(_on_timeline_miniboss_spawned)
+	boss_died.connect(_on_timeline_boss_died)
 	LogManager.info("Game", "GameManager ready")
 
 func _process(delta: float) -> void:
@@ -120,6 +135,58 @@ func _process(delta: float) -> void:
 		game_time += delta
 		if enemies_alive > peak_enemies:
 			peak_enemies = enemies_alive
+
+# ---------------------------------------------------------------------------
+# Weapon damage tracking
+# ---------------------------------------------------------------------------
+
+## Record damage dealt by a specific weapon. Called from enemy_base.take_damage.
+func record_weapon_damage(weapon_id: String, amount: int) -> void:
+	if weapon_id.is_empty():
+		return
+	weapon_damage_dealt[weapon_id] = weapon_damage_dealt.get(weapon_id, 0) + amount
+
+# ---------------------------------------------------------------------------
+# Run timeline
+# ---------------------------------------------------------------------------
+
+## Add an event to the run timeline.
+func add_timeline_event(event_text: String) -> void:
+	run_timeline.append({"time": game_time, "event": event_text})
+
+func _on_timeline_level_up(new_level: int) -> void:
+	# Track milestone levels
+	if new_level in [5, 10, 15, 20, 25, 30]:
+		add_timeline_event("Level %d" % new_level)
+
+func _on_timeline_weapon_added(weapon_id: String) -> void:
+	var data = WeaponDB.weapons.get(weapon_id, {})
+	var wname = data.get("name", weapon_id)
+	if player_weapons.size() == 1:
+		add_timeline_event("Primeira arma: %s" % wname)
+	else:
+		add_timeline_event("Nova arma: %s" % wname)
+
+func _on_timeline_weapon_upgraded(weapon_id: String, new_level: int) -> void:
+	if new_level == 8:
+		var data = WeaponDB.weapons.get(weapon_id, {})
+		var wname = data.get("name", weapon_id)
+		add_timeline_event("Max level: %s" % wname)
+	# Check if this triggered an evolution
+	for evo_id in EvolutionDB.evolved_weapons:
+		if evo_id == weapon_id:
+			var evo = EvolutionDB.get_evolution(evo_id)
+			var evo_name = evo.get("name", evo_id)
+			add_timeline_event("Evolucao: %s" % evo_name)
+
+func _on_timeline_boss_spawned(boss_name: String) -> void:
+	add_timeline_event("Boss: %s" % boss_name)
+
+func _on_timeline_miniboss_spawned(boss_name: String) -> void:
+	add_timeline_event("Mini-boss: %s" % boss_name)
+
+func _on_timeline_boss_died(boss_name: String) -> void:
+	add_timeline_event("Boss derrotado: %s" % boss_name)
 
 ## Returns cached enemy list (refreshed once per frame). Use this instead of get_tree().get_nodes_in_group("enemies").
 func get_enemies() -> Array:
@@ -499,6 +566,9 @@ func reset() -> void:
 	total_damage_dealt = 0
 	peak_enemies = 0
 	events_triggered.clear()
+	weapon_damage_dealt.clear()
+	_last_attacking_weapon = ""
+	run_timeline.clear()
 	paused = false
 	is_game_over = false
 	is_victory = false
@@ -696,3 +766,15 @@ func end_run() -> void:
 		for w in player_weapons:
 			ng_plus_weapons.append({"id": w["id"], "level": w["level"]})
 	SaveManager.end_run(crystals_this_run, game_time, total_kills)
+	# Save best run for comparison on game over screen
+	var run_dps: float = 0.0
+	if game_time > 0:
+		run_dps = total_damage_dealt / game_time
+	SaveManager.save_best_run({
+		"time": game_time,
+		"kills": total_kills,
+		"dps": run_dps,
+		"level": player_level,
+		"crystals": crystals_this_run,
+		"damage": total_damage_dealt,
+	})

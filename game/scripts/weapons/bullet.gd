@@ -9,6 +9,7 @@ extends Area3D
 var direction: Vector3 = Vector3.FORWARD
 var timer: float = 0.0
 var damage_type: String = "physical"
+var weapon_id: String = ""  # Set by weapon spawner for damage tracking
 var _returning: bool = false
 
 func _ready() -> void:
@@ -86,6 +87,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if _returning:
 		return
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = weapon_id
 		body.call_deferred("take_damage", damage, damage_type)
 		_return_to_pool()
 	elif body.has_method("take_damage") and body.is_in_group("players"):

@@ -19,10 +19,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -250.0
-offset_right = 250.0
-offset_bottom = 250.0
+offset_left = -270.0
+offset_top = -320.0
+offset_right = 270.0
+offset_bottom = 320.0
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel"]
 layout_mode = 2
@@ -113,6 +113,44 @@ layout_mode = 2
 text = ""
 horizontal_alignment = 1
 autowrap_mode = 2
+
+[node name="DPSRankingTitle" type="Label" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+
+[node name="DPSRankingContainer" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BestRunTitle" type="Label" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+
+[node name="BestRunContainer" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TimelineTitle" type="Label" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+
+[node name="TimelineScroll" type="ScrollContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="TimelineContainer" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/TimelineScroll"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ScreenshotButton" type="Button" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+text = "Salvar screenshot"
 
 [node name="RetryButton" type="Button" parent="Panel/ScrollContainer/VBox"]
 layout_mode = 2

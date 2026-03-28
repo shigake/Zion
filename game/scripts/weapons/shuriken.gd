@@ -88,6 +88,7 @@ func _fire(level: int) -> void:
 		bullet.speed = speed
 		bullet.lifetime = 2.5
 		bullet.damage_type = "ice"
+		bullet.weapon_id = "shuriken"
 		_apply_shuriken_mesh(bullet)
 		get_tree().current_scene.call_deferred("add_child", bullet)
 

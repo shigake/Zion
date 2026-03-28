@@ -57,5 +57,6 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = "staff"
 		body.call_deferred("take_damage", damage, damage_type)
 		queue_free()

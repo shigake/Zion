@@ -187,6 +187,7 @@ func _explode() -> void:
 		if not is_instance_valid(e):
 			continue
 		if e.has_method("take_damage"):
+			GameManager._last_attacking_weapon = "time_bomb"
 			e.call_deferred("take_damage", dmg, "fire")
 
 	ScreenEffects.shake(0.5)

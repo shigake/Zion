@@ -198,6 +198,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 	var level = GameManager.get_weapon_level("axe")
 	var dmg = int(WeaponDB.get_damage("axe", level))
+	GameManager._last_attacking_weapon = "axe"
 	body.call_deferred("take_damage", dmg, "fire")
 
 	# Slash trail visual at hit position

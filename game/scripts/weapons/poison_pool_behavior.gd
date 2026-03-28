@@ -36,4 +36,5 @@ func _deal_damage() -> void:
 	var bodies = area.get_overlapping_bodies()
 	for body in bodies:
 		if body.is_in_group("enemies") and body.has_method("take_damage"):
+			GameManager._last_attacking_weapon = "poison_bottle"
 			body.call_deferred("take_damage", dmg, "poison")

@@ -52,6 +52,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if _returning:
 		return
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = "ice_staff"
 		body.call_deferred("take_damage", damage, damage_type)
 		# Don't free here — ice_staff.gd handles freeze_area via signal
 

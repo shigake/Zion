@@ -85,6 +85,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 	var level = GameManager.get_weapon_level("scythe")
 	var dmg = int(WeaponDB.get_damage("scythe", level))
+	GameManager._last_attacking_weapon = "scythe"
 	body.call_deferred("take_damage", dmg, "dark")
 	hit_timers[eid] = hit_cooldown
 

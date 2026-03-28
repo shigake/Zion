@@ -240,6 +240,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		var level = GameManager.get_weapon_level("plasma_cannon")
 		var dmg = int(WeaponDB.get_damage("plasma_cannon", level))
+		GameManager._last_attacking_weapon = "plasma_cannon"
 		body.call_deferred("take_damage", dmg, "electric")
 		hit_enemies.append(body)
 		ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.8, 1.0))

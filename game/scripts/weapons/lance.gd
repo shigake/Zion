@@ -120,4 +120,5 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		var level = GameManager.get_weapon_level("lance")
 		var dmg = int(WeaponDB.get_damage("lance", level))
+		GameManager._last_attacking_weapon = "lance"
 		body.call_deferred("take_damage", dmg, "physical")

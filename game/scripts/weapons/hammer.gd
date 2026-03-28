@@ -119,6 +119,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		var level = GameManager.get_weapon_level("hammer")
 		var dmg = int(WeaponDB.get_damage("hammer", level))
+		GameManager._last_attacking_weapon = "hammer"
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
 

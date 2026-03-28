@@ -19,6 +19,7 @@ var data: Dictionary = {
 	"codex": [],  # Array of weapon IDs the player has used
 	"player_name": "Anonymous",  # Player name for online leaderboard
 	"pending_leaderboard_scores": [],  # Offline fallback: scores to submit later
+	"best_run": {},  # Best run stats for comparison {time, kills, dps, level, crystals, damage}
 }
 
 func _ready() -> void:
@@ -246,3 +247,16 @@ func track_codex(weapon_id: String) -> void:
 
 func get_codex() -> Array:
 	return data.get("codex", [])
+
+# ---- Best Run ----
+func save_best_run(run_stats: Dictionary) -> void:
+	## Save current run stats if it beats the best run (by score = kills*10 + time + crystals).
+	var current_best = data.get("best_run", {})
+	var current_score = current_best.get("kills", 0) * 10 + int(current_best.get("time", 0.0)) + current_best.get("crystals", 0)
+	var new_score = run_stats.get("kills", 0) * 10 + int(run_stats.get("time", 0.0)) + run_stats.get("crystals", 0)
+	if new_score > current_score:
+		data["best_run"] = run_stats
+		save_game()
+
+func get_best_run() -> Dictionary:
+	return data.get("best_run", {})

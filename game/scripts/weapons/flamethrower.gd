@@ -220,6 +220,7 @@ func _deal_damage(level: int) -> void:
 		if not is_instance_valid(body):
 			continue
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
+			GameManager._last_attacking_weapon = "flamethrower"
 			body.call_deferred("take_damage", dmg, "fire")
 			# Apply burn effect (track by id to prevent stacking)
 			burning_enemies[body.get_instance_id()] = 2.0

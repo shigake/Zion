@@ -124,6 +124,7 @@ func _explode() -> void:
 		if enemy.has_method("take_damage"):
 			var falloff = 1.0 - (dist / explosion_radius) * 0.5
 			var final_damage = int(damage * falloff)
+			GameManager._last_attacking_weapon = "time_bomb"
 			enemy.call_deferred("take_damage", final_damage, "fire")
 
 	queue_free()

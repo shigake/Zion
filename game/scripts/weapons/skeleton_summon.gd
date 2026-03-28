@@ -71,4 +71,5 @@ func _find_target() -> void:
 
 func _attack() -> void:
 	if target and is_instance_valid(target) and target.has_method("take_damage"):
+		GameManager._last_attacking_weapon = "necro"
 		target.call_deferred("take_damage", damage, "dark")

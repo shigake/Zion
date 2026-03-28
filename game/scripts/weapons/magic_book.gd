@@ -101,6 +101,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 	var level = GameManager.get_weapon_level("magic_book")
 	var dmg = int(WeaponDB.get_damage("magic_book", level))
+	GameManager._last_attacking_weapon = "magic_book"
 	body.call_deferred("take_damage", dmg, "physical")
 	hit_timers[eid] = hit_cooldown
 

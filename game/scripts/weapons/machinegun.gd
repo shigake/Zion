@@ -104,6 +104,7 @@ func _fire(level: int) -> void:
 		bullet.speed = 22.0
 		bullet.lifetime = 2.0
 		bullet.damage_type = "electric"
+		bullet.weapon_id = "machinegun"
 		get_tree().current_scene.call_deferred("add_child", bullet)
 
 ## Client-only: spawns visual projectile without collision (no damage).

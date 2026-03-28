@@ -106,6 +106,7 @@ func _fire(level: int) -> void:
 		bullet.speed = 20.0
 		bullet.lifetime = 2.5
 		bullet.damage_type = "electric"
+		bullet.weapon_id = "drone"
 		get_tree().current_scene.call_deferred("add_child", bullet)
 
 	AudioManager.play_sfx("hit")

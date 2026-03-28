@@ -89,6 +89,7 @@ func _fire(level: int) -> void:
 		if body in hit_enemies:
 			return
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
+			GameManager._last_attacking_weapon = "crossbow"
 			body.call_deferred("take_damage", dmg, "physical")
 			hit_enemies.append(body)
 			ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))

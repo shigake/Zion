@@ -125,6 +125,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		var level = GameManager.get_weapon_level("whip")
 		var dmg = int(WeaponDB.get_damage("whip", level))
+		GameManager._last_attacking_weapon = "whip"
 		body.call_deferred("take_damage", dmg, "physical")
 		# Small spark on each enemy hit
 		ParticleFactory.spawn_whip_spark(body.global_position + Vector3(0, 0.5, 0))

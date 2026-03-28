@@ -61,6 +61,7 @@ func _try_open_portal(level: int) -> void:
 		if not is_instance_valid(enemy):
 			continue
 		if enemy.has_method("take_damage"):
+			GameManager._last_attacking_weapon = "portal_weapon"
 			enemy.call_deferred("take_damage", dmg, "dark")
 		# Teleporta
 		var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))

@@ -67,5 +67,6 @@ func _deal_damage() -> void:
 	var bodies = area.get_overlapping_bodies()
 	for body in bodies:
 		if body.is_in_group("enemies") and body.has_method("take_damage"):
+			GameManager._last_attacking_weapon = "totem"
 			body.call_deferred("take_damage", dmg, "electric")
 	ParticleFactory.spawn_hit_particles(get_parent().global_position + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))

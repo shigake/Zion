@@ -81,10 +81,12 @@ func _fire(level: int) -> void:
 	bullet.speed = 10.0  # Slow projectile
 	bullet.lifetime = 4.0
 	bullet.damage_type = "ice"
+	bullet.weapon_id = "ice_staff"
 
 	# Override behavior: on hit, freeze area
 	bullet.body_entered.connect(func(body: Node3D) -> void:
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
+			GameManager._last_attacking_weapon = "ice_staff"
 			body.call_deferred("take_damage", dmg, "ice")
 			_freeze_area(bullet.global_position, level)
 			bullet.queue_free()
@@ -157,6 +159,7 @@ func _freeze_area(pos: Vector3, level: int) -> void:
 		if not is_instance_valid(e):
 			continue
 		if e.has_method("take_damage"):
+			GameManager._last_attacking_weapon = "ice_staff"
 			e.call_deferred("take_damage", dmg, "ice")
 		# Apply slow effect if enemy supports it
 		if e.has_method("apply_slow"):

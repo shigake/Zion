@@ -83,6 +83,7 @@ func _cast(level: int) -> void:
 		if not current_target.has_method("take_damage"):
 			break
 
+		GameManager._last_attacking_weapon = "lightning_chain"
 		current_target.call_deferred("take_damage", current_damage, "electric")
 		hit_targets.append(current_target)
 		ParticleFactory.spawn_hit_particles(current_target.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.9, 1.0))
