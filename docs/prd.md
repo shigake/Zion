@@ -1,520 +1,406 @@
-# Zion - PRD (Product Requirements Document)
+# Zion — PRD Master (v2.60)
+
+## Visao Geral
+
+Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogadores.
+14 personagens, 28 armas, 10 fases, 10 bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
 
 ---
 
-## Fase 0 — POC (Proof of Concept)
+## Estado Atual (Implementado)
 
-**Objetivo:** Validar que o jogo e divertido. So mecanica, sem arte, sem polish.
+### Core Game
+- [x] 14 personagens jogaveis (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
+- [x] 28 armas (10 melee, 10 ranged, 8 summon/special)
+- [x] 19 itens passivos com 5 niveis cada
+- [x] 12 evolucoes de arma (arma lv8 + item lv5)
+- [x] 7 reliquias pre-run
+- [x] 10 fases com props pixel art tematicos
+- [x] 10 bosses com 3 fases cada
+- [x] 40 monstros tematicos (4 por stage)
+- [x] 12 upgrades permanentes na loja
+- [x] 6 sinergias elementais
+- [x] 10 eventos especiais
+- [x] 13 achievements
+- [x] Sistema de mutacoes/ascensao (6 modifiers)
+- [x] Modo Endless, Boss Rush, Hyper, New Game+
+- [x] Desafio Diario com leaderboard local
 
-**Duracao estimada:** 2 semanas
+### Visual
+- [x] 279+ sprites pixel art (personagens, inimigos, bosses, armas, pickups, props, UI)
+- [x] Billboard Sprite3D com NEAREST filter
+- [x] Themed HP bar por personagem
+- [x] HUD com armas separadas de itens
+- [x] Kill streak text (COMBO, MASSACRE, GODLIKE)
+- [x] Death animation (flash + scale + fade)
+- [x] Hit squash-stretch elastico
+- [x] Screen flash no level up
+- [x] Vignette vermelha no low HP
+- [x] Boss entrance (shake + slowmo + flash)
 
-**Criterio de sucesso:** Jogar 5 min e pensar "quero continuar jogando"
+### Audio
+- [x] 12 musicas (Suno AI chiptune)
+- [x] 10 SFX sintetizados (hit, kill, collect, level_up, dash, boss, menu, hurt, evolve, game_over)
+- [x] AudioManager com crossfade, pool, cooldown
 
-### O que entra
+### Multiplayer
+- [x] Co-op 2-4 jogadores via ENet
+- [x] Host-client architecture
+- [x] Scaling de dificuldade por numero de jogadores
+- [x] Level up com pausa global + "Aguardando..."
+- [x] Projeteis falsos nos clients
+- [x] Host migration + reconnect
+- [x] Lobby state sync com sprites
+- [x] Revive com sacrificio (tombstone)
 
-**Jogador**
-- [x] Movimento WASD (top-down 3D com camera fixa)
-- [x] Dash com cooldown (Space)
-- [x] Barra de HP
-- [x] Morte e tela de game over
-
-**Armas (2 apenas)**
-- [x] Espada Samurai — ataque automatico melee, corta em arco na frente
-- [x] Staff — projetil magico homing que persegue o inimigo mais proximo
-
-**Inimigos (2 tipos)**
-- [x] Slime — lento, pouca vida, anda em direcao ao jogador
-- [x] Bat — rapido, pouca vida, anda em direcao ao jogador
-
-**Spawner**
-- [x] Inimigos spawnam fora da tela
-- [x] Quantidade aumenta com o tempo (scaling linear simples)
-
-**XP e Level Up**
-- [x] Inimigos dropam gema de XP ao morrer
-- [x] Gemas sao atraidas ao jogador (magnetismo)
-- [x] Barra de XP no HUD
-- [x] Ao encher: jogo pausa, 3 opcoes aparecem
-- [x] Opcoes possiveis: nova arma, upgrade de arma existente, item passivo
-
-**Itens Passivos (3 apenas)**
-- [x] Botas de Hermes — +15% velocidade
-- [x] Luva de Velocidade — +20% attack speed
-- [x] Coracao de Dragao — +20% HP maximo
-
-**HUD**
-- [x] Barra de HP
-- [x] Barra de XP + nivel
-- [x] Timer
-- [x] Kill count
-
-**Fase**
-- [x] 1 arena unica (chao plano, sem decoracao, so ground + cor de fundo)
-- [x] Sem boss
-- [x] Sem eventos
-- [x] Sem limite de tempo (endless ate morrer)
-
-**Visual**
-- [x] Primitivas 3D (capsulas, esferas, cubos) com cores solidas
-- [x] Nada de arte. Jogador = capsula verde. Inimigo = cubo vermelho. Projetil = esfera azul.
-- [x] Cel-shader basico so pra validar a estetica
-
-### O que NAO entra
-- Multiplayer
-- Loja / meta-progressao
-- Boss
-- Evolucao de armas
-- Reliquias
-- Eventos
-- Audio
-- Menu principal
-- Save system
-- Steam integration
+### Sistemas
+- [x] Save system local (JSON)
+- [x] Balanceamento matematico verificado (6 regras)
+- [x] Object pooling (inimigos + projeteis)
+- [x] MultiMesh para hordas 100+
+- [x] Pickup cap (200) com auto-collect
+- [x] Spatial grid O(1) neighbor queries
+- [x] Auto-play mode (aleatorio + auto level up)
 
 ---
 
-## Fase 1 — Vertical Slice (Single Player Completo)
+## FASE A — Visual Polish (Prioridade Alta)
 
-**Objetivo:** Uma run completa de 30 min que representa o jogo final. Uma fase, do inicio ao fim com boss.
+### A1. Sprite Walk Animation
+**Objetivo**: Todos os personagens e inimigos devem ter animacao de andar.
 
-**Duracao estimada:** 4 semanas
+**Personagens (14 spritesheets)**:
+- Formato: spritesheet horizontal 128x32 (4 frames de 32x32)
+- Frame 0: idle (pe juntos)
+- Frame 1: passo esquerdo
+- Frame 2: idle (pe juntos)
+- Frame 3: passo direito
+- AnimatedSprite3D no player com 8 FPS
 
-**Pre-requisito:** Fase 0 concluida e gameplay validado
+**Inimigos (16 + 40 tematicos = 56 spritesheets)**:
+- Mesmo formato 128x32 (4 frames)
+- Idle: 2 frames alternando (bob sutil)
+- Walk: 4 frames completos
+- Prioridade: inimigos genericos primeiro, tematicos depois
 
-### O que entra (alem de tudo da Fase 0)
+**Implementacao**:
+- Criar sprite generator que gera spritesheets (4 frames lado a lado)
+- Substituir Sprite3D por AnimatedSprite3D no enemy_base.gd e player.gd
+- Detectar movimento via velocity.length() > 0.5 pra trocar idle/walk
 
-**Jogador**
-- [x] Selecao de personagem (3 personagens: Ronin, Soldado, Mago)
-- [x] Cada um com arma inicial e passiva diferentes
-- [x] Animacoes basicas (idle, walk, hit, death) — procedural animator
+### A2. Efeitos de Arma Melee
+**Objetivo**: Armas melee devem mostrar visual de ataque.
 
-**Armas (6 totais)**
-- [x] Espada Samurai (melee, corte em arco)
-- [x] Metralhadora (ranged, spray de projeteis)
-- [x] Staff (ranged, homing)
-- [x] Foice (melee, gira ao redor do jogador)
-- [x] Bazuca (ranged, explosao em area)
-- [x] Necromante (summon, invoca esqueletos)
+**Slash trail sprite** (16x32, 3 frames):
+- katana_slash.png — arco branco/azul
+- scythe_slash.png — arco roxo circular
+- axe_slash.png — arco vermelho pesado
+- hammer_slam.png — impacto no chao
+- whip_crack.png — linha ondulada
+- lance_thrust.png — linha reta com ponta
+- nunchaku_swing.png — arco duplo
+- dual_katana_slash.png — X cruzado
+- cloud_sword_wave.png — onda de energia azul
+- boxing_punch.png — impacto de soco
 
-**Armas — Level Up (1 a 8)**
-- [x] Cada level melhora stats (dano, area, projeteis, velocidade)
-- [x] Valores balanceados para 30 min de run
+**Implementacao**:
+- Sprite3D temporario no ponto de ataque
+- Dura 0.15-0.3s com fade out
+- Segue a direcao do ataque
 
-**Itens Passivos (6 totais)**
-- [x] Botas de Hermes (+velocidade)
-- [x] Luva de Velocidade (+attack speed)
-- [x] Coracao de Dragao (+HP)
-- [x] Cristal Arcano (+area de efeito)
-- [x] Ima (+range de coleta)
-- [x] Relogio Quebrado (-cooldown)
+### A3. Props Animados
+**Objetivo**: Cenarios mais vivos com props que se movem.
 
-**Itens — Level Up (1 a 5)**
-- [x] Cada level aumenta o efeito
+**Por stage**:
+- Cemetery: lanternas piscam (modulate pulse), mao de esqueleto treme
+- Forest: cogumelos pulsam (scale pulse), fairy circle roda
+- Farm: espantalho balanca, milho ondula
+- Tokyo: neon signs piscam cores, vending machines tem luz
+- Volcano: geysers pulsam, lava borbulha
+- Ocean: algas ondulam, bolhas sobem
+- Arena: tochas piscam, bandeiras ondulam
+- Space: consoles piscam LEDs, portal gira
+- Castle: velas piscam, teias tremem
+- Candy: pirulitos giram, cupcakes pulam
 
-**Evolucao de Arma (2 evolucoes para validar o sistema)**
-- [x] Espada Samurai + Luva de Velocidade = Zangetsu
-- [x] Staff + Cristal Arcano = Cajado do Apocalipse
-- [x] Bau de evolucao aparece no mapa quando requisitos sao atendidos
+**Implementacao**:
+- _process() nos stage props com sin() animations
+- Modulate pulse pra luzes
+- Scale pulse pra organicos
+- Rotation pra objetos giratorios
 
-**Fase: Cemiterio Assombrado**
-- [x] Ambiente 3D: chao de terra, lapides, neblina, lua
-- [x] Lapides destrutiveis que dropam power-ups
-- [x] 30 minutos de duracao
+### A4. Tela de Loading
+**Objetivo**: Transicao suave entre telas.
 
-**Inimigos (5 tipos)**
-- [x] Slime (basico, lento)
-- [x] Bat (rapido, voador)
-- [x] Skeleton (medio, joga ossos)
-- [x] Zombie Corredor (rapido, medio HP)
-- [x] Ghost (atravessa obstaculos)
+- ColorRect preto com fade in/out (0.5s)
+- Texto "Carregando..." com animacao de pontos
+- Sprite do personagem selecionado no centro
+- Tip de gameplay aleatorio embaixo
+- Barra de progresso (fake, preenche em 1-2s)
 
-**Spawn por tempo**
-- [x] Min 0-5: Slimes
-- [x] Min 5-10: Slimes + Bats
-- [x] Min 10-15: Skeletons + Zombies + Mini-boss
-- [x] Min 15-25: Mix de tudo, crescente
-- [x] Min 25-30: Boss + horda
+### A5. Sprite de Boss no Stage
+**Objetivo**: Bosses devem ter presenca visual maior.
 
-**Mini-boss**
-- [x] Zombie Gigante (HP alto, agarra)
-- [x] Barra de vida visivel
-- [x] Dropa bau raro
-
-**Boss Final**
-- [x] Necromancer King
-- [x] Barra de vida no topo da tela
-- [x] 3 fases de comportamento (100-75%, 75-25%, 25-0%)
-- [x] Invoca hordas + lanca magias
-- [x] Derrotar = vitoria
-
-**Tela de Level Up**
-- [x] 3 opcoes (arma/item)
-- [x] Reroll (1 gratis por run)
-- [x] Visual limpo
-
-**HUD Completo**
-- [x] HP, XP, nivel, timer, kill count
-- [x] Icones das armas equipadas
-- [x] Icones dos itens equipados
-- [x] Boss HP bar
-
-**Tela de Resultado**
-- [x] Stats da run (tempo, kills, dano, nivel)
-- [x] Botao de replay
-
-**Visual**
-- [x] Modelos low-poly com cel-shader polido
-- [x] Ambiente do Cemiterio com assets (procedurais)
-- [x] Efeitos de particula basicos (hit, morte, coleta)
-
-**Audio basico**
-- [x] Sistema de audio com crossfade e SFX pool (AudioManager)
-- [ ] Arquivos de audio reais (.ogg/.wav) — sistema pronto, faltam assets
-
-### O que NAO entra
-- ~~Multiplayer~~ (implementado na Fase 3)
-- ~~Loja / meta-progressao~~ (implementado na Fase 2)
-- ~~Reliquias~~ (implementado)
-- ~~Eventos especiais~~ (implementado)
-- ~~Outras fases~~ (10 fases implementadas)
-- ~~Menu principal elaborado~~ (implementado)
-- ~~Save system~~ (implementado)
-- ~~Steam integration~~ (stub implementado)
+- Boss sprites 64x64 ja existem
+- Adicionar aura/glow pulsante ao redor do boss
+- Boss name label flutuante acima do sprite
+- Entrada dramatica: boss aparece com zoom + shake
 
 ---
 
-## Fase 2 — Meta-progressao + Menu
+## FASE B — Gameplay Depth (Prioridade Alta)
 
-**Objetivo:** Loop completo entre runs. Jogar, morrer, gastar moeda, jogar de novo mais forte.
+### B1. Mecanicas Unicas por Stage
+**Objetivo**: Cada stage tem uma mecanica ambiental unica.
 
-**Duracao estimada:** 3 semanas
+| Stage | Mecanica | Efeito |
+|-------|----------|--------|
+| Cemetery | Tumulos destrutiveis | Dropam power-ups aleatorios |
+| Forest | Cogumelos de buff | Tocou = buff aleatorio 10s (speed/damage/area) |
+| Farm | Milharal | Jogador fica invisivel pra inimigos dentro do milho |
+| Tokyo | Paineis eletricos | Zonas no chao causam 5 dano/s eletrico |
+| Volcano | Lava pools | Zonas causam 10 dano/s fogo, inimigos de fogo imunes |
+| Ocean | Correntes | Empurram jogador e inimigos numa direcao |
+| Arena | Plateia | Joga itens aleatorios (cura ou bomba) a cada 30s |
+| Space | Zero-G zones | +50% speed, -30% controle dentro das zonas |
+| Castle | Zonas escuras | Inimigos +30% dano, tochas criam zonas seguras |
+| Candy | Caramelo | Zonas pegajosas -50% speed |
 
-**Pre-requisito:** Fase 1 concluida
+**Implementacao**:
+- Cada stage_props.gd cria Area3D com CollisionShape3D
+- body_entered/body_exited aplicam efeitos
+- Visual: sprite de zona no chao (32x32, semi-transparente)
 
-### O que entra
+### B2. Enemy Behaviors por Stage
+**Objetivo**: Inimigos tematicos com ataques unicos.
 
-**Menu Principal**
-- [x] Tela titulo
-- [x] Jogar (selecao de personagem)
-- [x] Loja
-- [x] Opcoes (volume, resolucao, fullscreen)
+| Stage | Inimigo | Comportamento Especial |
+|-------|---------|----------------------|
+| Cemetery | Wraith | Teleporta a cada 5s, aparece perto do player |
+| Forest | Treant | Parado ate player chegar perto, depois corre rapido |
+| Farm | Scarecrow | Spawna corvos ao morrer (3 mini-enemies) |
+| Tokyo | Drone | Atira laser a cada 3s (projetil lento) |
+| Volcano | Golem | Imune a fogo, explode ao morrer (AoE) |
+| Ocean | Jellyfish | Paralisa player por 1s ao tocar |
+| Arena | Lion | Carga rapida em linha reta a cada 4s |
+| Space | Xenomorph | Invisivel ate atacar, dano 2x |
+| Castle | Gargoyle | Voa, ataca de cima, esquiva projeteis |
+| Candy | Gummy | Divide em 2 menores ao morrer |
 
-**Moeda: Cristais**
-- [x] Dropam dos inimigos durante a run
-- [x] Quantidade varia por tipo de inimigo
-- [x] Creditados ao final da run (mesmo se morrer)
+**Implementacao**:
+- Scripts especificos por inimigo (ex: wraith_behavior.gd)
+- Herda de enemy_base.gd, override _physics_process
+- Ativado quando stage-themed sprite e carregado
 
-**Loja — Upgrades Permanentes (6 iniciais)**
-- [x] HP Maximo (+10 HP por level, max 10)
-- [x] Velocidade (+5% por level, max 8)
-- [x] Dano Base (+5% por level, max 10)
-- [x] Armadura (reduz dano, max 8)
-- [x] XP Bonus (+10% por level, max 8)
-- [x] Magnetismo (+range coleta, max 5)
+### B3. Sinergias Avancadas
+**Objetivo**: Mais combinacoes entre armas/itens.
 
-**Save System**
-- [x] Save local: perfil, cristais, upgrades comprados, personagens desbloqueados
-- [x] Auto-save ao voltar pro lobby
+**Novas sinergias**:
+- Fogo + Veneno = Toxic Fire (DoT 2x, area verde-laranja)
+- Gelo + Dark = Shadow Freeze (congela + drena vida)
+- Eletrico + Veneno = Toxic Shock (paralisa + DoT)
+- Fisico + Fisico = Berserker Rage (velocidade de ataque +50% por 5s apos 10 hits)
+- Summon + Summon = Horde Master (summons +1, dano +20%)
+- Qualquer 3 elementos = Prism Burst (explosao prismatica AoE)
 
-**Selecao de Personagem**
-- [x] Tela de selecao com os 3 personagens (+ 9 desblocaveis)
-- [x] Mostra arma inicial e passiva
-- [x] Grid layout para 12 personagens
+**Implementacao**:
+- Expandir SynergySystem com novas combinacoes
+- Visual: particulas coloridas na cor da sinergia
+- Texto flutuante com nome da sinergia
 
-**Selecao de Reliquia (7 reliquias)**
-- [x] Ampulheta (run de 40 min ao inves de 30)
-- [x] Dados de Ouro (+1 reroll por level up)
-- [x] Coracao Extra (+50% HP inicial)
-- [x] Bussola (mostra direcao do proximo evento)
-- [x] Pergaminho Antigo (comeca com 1 arma extra)
-- [x] Medalha de Veterano (+20% XP mas inimigos +15% rapidos)
-- [x] Chave Mestre (2x XP de todas as fontes)
+### B4. Boss Patterns Elaborados
+**Objetivo**: Cada boss tem ataques mais variados e telegrafados.
 
-**Evolucoes adicionais (12 totais)**
-- [x] Zangetsu (Katana + Luva)
-- [x] Cajado do Apocalipse (Staff + Cristal)
-- [x] Death Scythe (Foice + Relogio)
-- [x] Nuke Launcher (Bazuca + Ima)
-- [x] Machado de Ragnarok (Axe + Polvora)
-- [x] Estrela do Blizzard (Shuriken + Capa)
-- [x] Minigun Infernal (Metralhadora + Mira Laser)
-- [x] Senhor dos Mortos (Necro + Grimorio)
-- [x] Inferno Walker (Lanca-chamas + Gasolina)
-- [x] Vampire Whip (Chicote + Sangue de Vampiro)
-- [x] Tempestade Eletrica (Corrente Eletrica + Bateria Tesla)
-- [x] Tempestade de Flechas (Arco Elfico + Capa)
+**Melhorias por boss**:
+- Indicador visual antes de atacar (circulo vermelho no chao, 0.5s warning)
+- Padroes de projeteis mais complexos (espiral, shotgun, grid)
+- Fase de furia (HP < 10%): velocidade +50%, ataques +30%
+- Minions tematicos do stage (nao genericos)
+- Drop de loot unico ao morrer (item raro garantido)
 
-**Tela de Resultado melhorada**
-- [x] Mostra cristais ganhos
-- [x] Mostra desbloqueaveis (se houver)
-- [x] Mostra dano total
-- [x] Botao: Lobby / Replay
+### B5. Novas Armas (4 adicionais)
+**Objetivo**: Expandir opcoes de build.
+
+| Arma | Tipo | Elemento | Descricao |
+|------|------|----------|-----------|
+| Boomerang | ranged | physical | Vai e volta, perfura na ida |
+| Tornado | summon | ice | Vortex giratorio que puxa inimigos |
+| Chain Whip | melee | electric | Chicote que chains entre inimigos |
+| Blood Orb | summon | dark | Orbe que drena vida dos inimigos proximos |
 
 ---
 
-## Fase 3 — Multiplayer Online
+## FASE C — Polish & UX (Prioridade Media)
 
-**Objetivo:** 2-4 jogadores jogando juntos online. O jogo funciona em co-op.
+### C1. Tutorial Interativo
+**Objetivo**: Primeiro run guiada sem frustrar.
 
-**Duracao estimada:** 5 semanas
+- Overlay semi-transparente com setas indicativas
+- Passo 1: "Use WASD para mover" (espera player mover)
+- Passo 2: "Sua arma ataca automaticamente!" (espera primeiro kill)
+- Passo 3: "Colete as gemas azuis!" (espera coletar XP)
+- Passo 4: "Escolha um upgrade!" (espera level up)
+- Passo 5: "Use ESPACO para dash!" (espera dash)
+- Desativa apos completar (salva no SaveManager)
+- Botao "Pular tutorial" visivel
 
-**Pre-requisito:** Fase 2 concluida
+### C2. Dialogos de Boss
+**Objetivo**: Bosses tem personalidade.
 
-### O que entra
+- Antes do boss aparecer: balao de dialogo com fala do boss (2-3 linhas)
+- Ao derrotar: fala de derrota
+- Texto pixel art em balao, auto-skip em 3s
+- Exemplos:
+  - Necromancer: "Vocês ousam invadir meu domínio? Meus mortos vão festejar!"
+  - Demon Lord: "Bem-vindos ao inferno. Não há saída."
+  - Sugar King: "Quem quer doces? HAHAHAHA!"
 
-**Steam Integration**
-- [ ] GodotSteam GDExtension integrado
+### C3. Achievement Popup Bonito
+**Objetivo**: Conquistas devem sentir-se recompensadoras.
+
+- Slide-in do lado direito da tela
+- Icone do achievement (sprite 16x16) + nome + descricao
+- Fundo dourado com brilho
+- Som especial de achievement (novo SFX)
+- Permanece 3s, depois slide-out
+- Queue: se varias conquistas ao mesmo tempo, mostra uma por vez
+
+### C4. Tela de Estatisticas Pos-Run
+**Objetivo**: Expandir a tela de game over.
+
+- Grafico de DPS ao longo do tempo (linha simples)
+- Ranking de armas por dano total
+- Mapa de calor de mortes de inimigos (simplificado)
+- Comparacao com run anterior
+- Botao "Compartilhar" (screenshot salva em user://)
+
+### C5. Mapa de Selecao de Fases
+**Objetivo**: Substituir grid por mapa visual.
+
+- Mapa estilo Super Mario World (nodes conectados por caminhos)
+- Cada node e o sprite do stage (32x32)
+- Caminho dourado entre stages desbloqueados
+- Animacao de andar entre nodes
+- Preview do boss ao hover
+
+### C6. Inventario Visual
+**Objetivo**: Ver todos os itens/armas durante a run.
+
+- Tecla TAB abre inventario overlay
+- Grid de armas com nivel e DPS
+- Grid de itens com efeito
+- Barra de progresso pra evolucoes (arma lv? + item lv?)
+- Mostra sinergias ativas
+
+---
+
+## FASE D — Audio Completo
+
+### D1. SFX Faltantes
+
+**Combate (15 SFX)**:
+| SFX | Descricao | Uso |
+|-----|-----------|-----|
+| sword_slash.wav | Corte rapido de espada | Katana, dual katana, cloud sword |
+| axe_chop.wav | Impacto pesado de machado | Axe |
+| scythe_swoosh.wav | Swoosh circular | Scythe |
+| whip_crack.wav | Estalo de chicote | Whip |
+| hammer_slam.wav | Impacto no chao | Hammer |
+| lance_thrust.wav | Investida rapida | Lance |
+| punch_hit.wav | Soco | Boxing gloves, nunchaku |
+| gun_shot.wav | Tiro de arma | Machinegun, dual pistol |
+| bow_release.wav | Flecha sendo solta | Elven bow, crossbow |
+| magic_cast.wav | Conjuracao magica | Staff, ice staff, magic book |
+| explosion.wav | Explosao | Bazooka, time bomb |
+| electric_zap.wav | Choque eletrico | Lightning chain, totem |
+| poison_splash.wav | Liquido toxico | Poison bottle |
+| fire_whoosh.wav | Rajada de fogo | Flamethrower |
+| summon_pop.wav | Invocacao | Necro, drone, totem |
+
+**UI (8 SFX)**:
+| SFX | Descricao | Uso |
+|-----|-----------|-----|
+| collect_crystal.wav | Coleta de cristal | Crystal pickup |
+| heal.wav | Cura | Health pickup |
+| achievement.wav | Conquista desbloqueada | Achievement popup |
+| reroll.wav | Reroll no level up | Reroll button |
+| banish.wav | Banish no level up | Banish button |
+| select.wav | Selecao de opcao | Level up choice |
+| equip.wav | Equipar arma/item | Level up confirm |
+| error.wav | Acao invalida | Locked character, insufficient crystals |
+
+**Ambiente (6 SFX)**:
+| SFX | Descricao | Uso |
+|-----|-----------|-----|
+| footstep.wav | Passo do jogador | A cada frame de walk |
+| enemy_growl.wav | Grunhido de inimigo | Spawn de inimigo especial |
+| chest_open.wav | Abrir bau | Evolution chest, event chest |
+| portal_hum.wav | Zumbido de portal | Portal weapon, dimensional portal event |
+| lava_bubble.wav | Borbulho de lava | Volcano stage ambient |
+| wind.wav | Vento | Space stage, cemetery ambient |
+
+**Boss (4 SFX)**:
+| SFX | Descricao | Uso |
+|-----|-----------|-----|
+| boss_roar.wav | Rugido do boss | Boss entrance |
+| boss_attack.wav | Ataque do boss | Boss special attacks |
+| boss_phase.wav | Transicao de fase | Boss HP threshold |
+| boss_death.wav | Morte do boss | Boss defeated |
+
+**Total SFX necessarios: 33 novos (temos 10, faltam 33)**
+
+### D2. Musica Adicional
+- victory.mp3 — musica de vitoria (boss derrotado)
+- shop.mp3 — musica da loja (calma, coins)
+- lobby.mp3 — musica do lobby multiplayer
+- game_over.mp3 — musica de derrota (triste, curta)
+
+---
+
+## FASE E — Infraestrutura
+
+### E1. Steam Integration
+- [ ] GodotSteam GDExtension
 - [ ] Steam App ID
-- [x] Inicializacao do Steam ao abrir o jogo (stub via SteamManager)
-
-**Lobby System**
-- [x] Criar sala (ENet)
-- [ ] Listar salas disponiveis (requer Steam)
-- [ ] Entrar em sala por convite Steam
-- [x] Tela de lobby: mostra jogadores conectados, personagem escolhido, botao "pronto"
-- [x] Host inicia quando todos estao prontos
-
-**Networking**
-- [x] ENet multiplayer (fallback, Steam Networking Sockets preparado)
-- [x] Arquitetura host-client
-- [x] Host e autoridade: spawn, dano, drops, boss HP
-- [x] Clients enviam: inputs de movimento
-- [x] Sync de posicoes (unreliable)
-- [x] Sync de eventos criticos (reliable): level up, morte, boss, drops
-
-**Gameplay Online**
-- [x] Cada jogador controla seu personagem independentemente
-- [x] Inimigos perseguem o jogador mais proximo
-
-**Scaling de Dificuldade**
-- [x] HP inimigos: 1x (solo), 1.3x (2p), 1.6x (3p), 2x (4p)
-- [x] Spawn rate: 1x (solo), 1.2x (2p), 1.4x (3p), 1.6x (4p)
-- [x] Boss HP: 1x (solo), 1.5x (2p), 2x (3p), 2.5x (4p)
-
-**HUD Online**
-- [x] HP bars dos aliados (compactas)
-- [x] Setas indicando direcao dos aliados fora da tela
-- [x] Ping/latencia
-
-**Desconexao**
-- [x] Client desconecta: personagem some, scaling ajusta
-- [x] Host desconecta: run termina
-
-**Camera**
-- [x] Cada jogador tem sua propria camera
-- [x] Camera segue o jogador local
-
----
-
-## Fase 4 — Conteudo (10 Fases Completas)
-
-**Objetivo:** Jogo tem variedade suficiente pra Early Access. 10 fases distintas, 28 armas, conteudo pra ~50h de gameplay.
-
-**Duracao estimada:** 6 semanas
-
-**Pre-requisito:** Fase 3 concluida
-
-### O que entra
-
-**Fase 2: Floresta Encantada**
-- [x] Ambiente: floresta magica, cogumelos gigantes, rios brilhantes
-- [x] Inimigos tematicos (Evil Pixie, Treant, Corrupted Unicorn, etc)
-- [x] Mini-boss: Unicornio Negro
-- [x] Boss: Rainha das Fadas (3 fases: teleport, clones, chuva de espinhos)
-- [x] Mecanica: cogumelos dao buffs aleatorios ao destruir
-
-**Fase 3: Fazenda do Apocalipse**
-- [x] Ambiente: fazenda destruida, silos, milharal
-- [x] Inimigos tematicos (Zombie Cow, Killer Chicken, Scarecrow, etc)
-- [x] Mini-boss: Touro Mecanico
-- [x] Boss: Mega Vaca Alienigena (3 fases: projeteis, abducao, vacas mutantes)
-- [x] Mecanica: milharal esconde o jogador dos inimigos
-
-**Fase 4: Toquio Cyberpunk**
-- [x] Ambiente: neon, predios, chuva, paineis eletricos
-- [x] Inimigos tematicos (Nano Slime, Drone, Robot Samurai, Android, etc)
-- [x] Mini-boss: Mecha Ninja
-- [x] Boss: AI Overlord (3 fases: drones, virus, system overload)
-- [x] Mecanica: paineis eletricos no chao causam dano
-
-**Fase 5: Vulcao Infernal**
-- [x] Ambiente: rios de lava, rochas flutuantes, geysers
-- [x] Inimigos tematicos (Magma Slime, Fire Imp, Lava Golem, Demon, etc)
-- [x] Mini-boss: Cerberus
-- [x] Boss: Demon Lord (3 fases: chamas, ground slam, golems de lava)
-- [x] Mecanica: zonas de lava causam dano continuo
-
-**Fase 6: Fundo do Oceano**
-- [x] Ambiente: corais, bolhas, ruinas submarinas
-- [x] Inimigos tematicos (Jellyfish, Flying Fish, Crab, Zombie Shark, etc)
-- [x] Mini-boss: Kraken Bebe
-- [x] Boss: Leviathan (3 fases: tentaculos, vortex, nuvem de tinta)
-- [x] Mecanica: correntes de agua empurram o jogador
-
-**Fase 7: Arena Gladiadora**
-- [x] Ambiente: coliseu, pilares, portoes de ferro, tochas
-- [x] Inimigos tematicos (Slime Gladiator, Eagle, Centurion, Lion, etc)
-- [x] Mini-boss: Gladiador Campeao
-- [x] Boss: Imperador Corrompido (3 fases: gladiadores, sword sweep, pilares de fogo)
-- [x] Mecanica: plateia joga itens (cura ou dano)
-
-**Fase 8: Estacao Espacial**
-- [x] Ambiente: corredores metalicos, janelas com estrelas
-- [x] Inimigos tematicos (Alien Parasite, Space Drone, Xenomorph, Mutant, etc)
-- [x] Mini-boss: Alien Queen
-- [x] Boss: Singularidade (3 fases: gravidade, buraco negro, pull player)
-- [x] Mecanica: zonas de gravidade zero (+50% speed)
-
-**Fase 9: Castelo do Vampiro**
-- [x] Ambiente: gotico, candelabros, vitrais, caixoes
-- [x] Inimigos tematicos (Blood Slime, Vampire Bat, Armor, Gargoyle, etc)
-- [x] Mini-boss: Vampiresa
-- [x] Boss: Conde Dracula (3 fases: bat form, life drain, blood rain)
-- [x] Mecanica: zonas escuras fortalecem inimigos, tochas criam zonas seguras
-
-**Fase 10: Mundo Doce**
-- [x] Ambiente: chocolate, sorvete, candy canes, gummy bears
-- [x] Inimigos tematicos (Gummy Bear, Candy Bat, Cookie Ninja, Cupcake, etc)
-- [x] Mini-boss: Bolo de 3 Andares
-- [x] Boss: Rei Acucar (3 fases: candy army, star projectiles, regen)
-- [x] Mecanica: zonas de caramelo reduzem velocidade
-
-**Armas (28 totais)**
-- [x] 10 melee: Katana, Foice, Machado, Chicote, Lanca, Martelo, Nunchaku, Katana Dupla, Espada Cloud, Luvas de Boxe
-- [x] 10 ranged: Metralhadora, Staff, Bazuca, Shuriken, Pistola Dupla, Lanca-chamas, Cajado de Gelo, Besta, Canhao de Plasma, Arco Elfico
-- [x] 8 summon: Necromante, Drone, Totem, Garrafa de Veneno, Corrente Eletrica, Livro Magico, Bomba Relogio, Portal
-
-**Itens (19 totais)**
-- [x] Todos os 19 itens implementados com efeitos funcionais
-
-**Personagens (12 totais)**
-- [x] Ronin, Soldado, Mago, Berserker, Ninja
-- [x] Necro, Pirata, Engenheiro, Vampiro, Gladiador, Chef
-- [x] ??? (personagem secreto, todas as armas nivel 1)
-- [x] Desbloqueio por conquista (matar X inimigos, completar fases, desbloquear todos)
-
-**Sistema de Eventos (10 eventos)**
-- [x] Horda Dourada, Treasure Goblin, Merchant
-- [x] Eclipse, Chuva de Meteoros, Desafio do Anjo
-- [x] Portal Dimensional, Fever Mode, Chest Mimic
-- [x] Roulette
-
-**Modo Endless**
-- [x] Sem boss, sem limite de tempo
-- [x] Dificuldade continua escalando
-- [x] Leaderboard local (tempo sobrevivido)
-
-**Upgrades de Loja (12 totais)**
-- [x] HP, Velocidade, Dano, Armadura, XP, Magnetismo
-- [x] Cooldown Reduction, Sorte, Reroll, Banish, Revive, Slots de Arma
-
-**Sinergias Elementais (6 combinacoes)**
-- [x] Fogo + Fogo = explosao ao matar
-- [x] Gelo + Gelo = estilhacos ao congelar
-- [x] Eletrico + Eletrico = chain lightning
-- [x] Dark + Dark = area de trevas passiva
-- [x] Fogo + Gelo = steam cloud
-- [x] Eletrico + Gelo = condutor massivo
-
-**Selecao de Fase**
-- [x] Tela de selecao de fase (grid 5 colunas)
-- [x] Fases desbloqueiam progressivamente
-
----
-
-## Fase 5 — Polish + Early Access Launch
-
-**Objetivo:** Jogo pronto pra vender no Steam Early Access.
-
-**Duracao estimada:** 4 semanas
-
-**Pre-requisito:** Fase 4 concluida
-
-### O que entra
-
-**Visual Final**
-- [x] Modelos low-poly com cel-shader polido
-- [x] Ambientes das 10 fases com props procedurais
-- [x] Efeitos de particula (hit, morte, coleta, level up, evolucao, boss)
-- [x] Animacoes procedurais (idle, walk, dash, hit, death)
-- [x] Weapon trails (katana, foice, staff, bazuca)
-- [x] Vignette de HP baixo
-
-**Audio Completo**
-- [x] Sistema de audio com crossfade, SFX pool, auto-load
-- [x] 12 musicas suportadas (menu, 10 stages, boss)
-- [x] 10 SFX suportados (hit, kill, collect, level_up, etc)
-- [ ] Arquivos de audio reais (.ogg/.wav)
-
-**Tutorial / Onboarding**
-- [x] Primeira run guiada (tutorial overlay com instrucoes)
-- [x] Desativa apos primeira run
-
-**Performance**
-- [x] Object pooling para inimigos (11 tipos via ObjectPool)
-- [x] Object pooling para projeteis (bullets, rockets, arrows)
-- [x] MultiMeshInstance3D para renderizar hordas (MultiMeshManager autoload)
-- [x] 60 FPS target
-
-**Steam Integration**
-- [x] SteamManager stub (auto-detect GodotSteam)
-- [x] NetworkBackend enum (ENET/STEAM) em MultiplayerManager
-- [ ] Steam Achievements
+- [ ] Steam Achievements (13)
 - [ ] Steam Cloud Save
 - [ ] Steam Rich Presence
-- [ ] Steam Store page
+- [ ] Steam Networking Sockets (substituir ENet)
+- [ ] Steam Leaderboards (daily challenge)
 
-**Achievements (13)**
-- [x] Meu Primeiro Passeio (sobreviva 5 min)
-- [x] Isso Escala (6 armas evoluidas)
-- [x] Speedrunner (boss em < 15 min)
-- [x] Colecionador (todos os personagens)
-- [x] A Vaca Foi Pro Brejo (Farm sem dano de vaca)
-- [x] Ninguem Merece (morra em 10s)
-- [x] Genocidio (10k kills numa run)
-- [x] Doce Vinganca (complete Candy)
-- [x] I Am The Storm (3 armas eletricas evoluidas)
-- [x] Pacifista (3 min sem atacar)
-- [x] Matrix (dodge 100 projeteis)
-- [x] One Punch (boss com 1 hit)
-- [x] Lucky Day (5 itens lendarios)
+### E2. Build Pipeline
+- [ ] Export preset Windows Desktop
+- [ ] Export preset Linux
+- [ ] GitHub Actions CI/CD
+- [ ] Auto-versioning from VERSION file
+- [ ] Itch.io deploy script
 
-**QA**
-- [x] Teste de balanceamento (balance_test.gd)
-- [x] Bug fixing geral
-
-**Opcoes**
-- [x] Volume (musica, SFX, master)
-- [x] Resolucao e modo de tela (janela, fullscreen, borderless)
-- [x] Keybindings customizaveis
-- [x] Gamepad support
-
-**Localizacao**
-- [x] Portugues (BR) — idioma principal
-- [x] Sistema i18n (LocaleManager)
+### E3. Quality Assurance
+- [ ] Auto-tester expandido (todas 10 fases)
+- [ ] Balance test automatico (DPS curves)
+- [ ] Performance profiling (target 60fps com 500 inimigos)
+- [ ] Multiplayer stress test (4 jogadores, 30 min)
+- [ ] Crash report collection via Telemetry
 
 ---
 
-## Fase 6+ — Pos Early Access (Roadmap)
+## Cronograma Estimado
 
-**Objetivo:** Expandir o jogo com base no feedback dos jogadores.
+| Fase | Escopo | Prioridade |
+|------|--------|-----------|
+| A (Visual) | Walk anims, slash trails, props animados, loading | Alta |
+| B (Gameplay) | Stage mechanics, enemy AI, sinergias, boss patterns | Alta |
+| C (Polish) | Tutorial, dialogos, achievements, stats, mapa | Media |
+| D (Audio) | 33 SFX + 4 musicas | Media |
+| E (Infra) | Steam, build, QA | Baixa (pre-launch) |
 
-**Sem prazo fixo — priorizar pelo feedback da comunidade.**
+---
 
-### Implementado
-- [x] Fases 4-10 (Toquio, Vulcao, Oceano, Arena, Espaco, Castelo, Mundo Doce)
-- [x] Personagens restantes (Pirata, Engenheiro, Vampiro, Gladiador, Chef, ???)
-- [x] Armas restantes (28 armas totais)
-- [x] Todos os itens e evolucoes (19 itens, 12 evolucoes)
+## Metricas de Sucesso
 
-### Pendente
-- [ ] Daily Challenge (requer backend + leaderboard online)
-- [x] Boss Rush mode (10 bosses sequenciais)
-- [x] Hyper Mode (2x velocidade, 2x spawns, 2x XP)
-- [ ] Host migration no multiplayer
-- [ ] Reconnect ao multiplayer
-- [ ] Workshop da Steam (mods)
-- [ ] DLC packs tematicos
-- [ ] Modo Inverse (DLC standalone)
-- [ ] Ranking online
-- [ ] Replays
+- Run media de 15-20 min pra jogador novo
+- 30-40 level ups em 30 min
+- Boss mata ~50% na primeira tentativa
+- 60 FPS com 500 inimigos
+- 0 crashes em 10 runs consecutivas
+- Multiplayer funcional com <100ms de latencia
