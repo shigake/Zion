@@ -20,13 +20,15 @@ const SFX_POOL_SIZE: int = 5
 # Known SFX names
 var _valid_sfx: Array[String] = [
 	"hit", "kill", "collect_xp", "collect_crystal", "level_up",
-	"evolve", "boss_appear", "dash", "player_hurt", "menu_click"
+	"evolve", "boss_appear", "dash", "player_hurt", "menu_click",
+	"boomerang", "tornado", "chain_whip", "blood_orb"
 ]
 
 # Known music names
 var _valid_music: Array[String] = [
 	"menu", "cemetery", "forest", "farm", "boss",
-	"tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"
+	"tokyo", "volcano", "ocean", "arena", "space", "castle", "candy",
+	"victory", "shop", "lobby", "game_over_music"
 ]
 
 # Current music track

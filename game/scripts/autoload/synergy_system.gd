@@ -37,6 +37,13 @@ func check_synergies() -> void:
 		active_synergies.append("water_ice")
 	if "water" in element_count and "dark" in element_count:
 		active_synergies.append("water_dark")
+	# New synergies
+	if "fire" in element_count and "poison" in element_count:
+		active_synergies.append("fire_poison")
+	if "ice" in element_count and "dark" in element_count:
+		active_synergies.append("ice_dark")
+	if "electric" in element_count and "poison" in element_count:
+		active_synergies.append("electric_poison")
 
 func has_synergy(synergy_id: String) -> bool:
 	return synergy_id in active_synergies
@@ -65,6 +72,12 @@ func get_synergy_description(synergy_id: String) -> String:
 			return "Agua + Gelo: Zero absoluto (congela inimigos por 2s em raio de 4)"
 		"water_dark", "dark_water":
 			return "Agua + Dark: Profundezas abissais (inimigos 40% mais lentos)"
+		"fire_poison", "poison_fire":
+			return "Fogo + Veneno: Toxic fire (DoT de fogo dobrado)"
+		"ice_dark", "dark_ice":
+			return "Gelo + Dark: Shadow freeze (congela + drena vida para o jogador)"
+		"electric_poison", "poison_electric":
+			return "Eletrico + Veneno: Toxic shock (stun 0.5s + DoT de veneno)"
 	return ""
 
 # ---- On Kill Synergies ----
@@ -90,6 +103,9 @@ var _steam_explosion_timer: float = 0.0
 var _absolute_zero_timer: float = 0.0
 var _abyssal_depths_timer: float = 0.0
 var _electrolysis_active: bool = false
+var _toxic_fire_timer: float = 0.0
+var _shadow_freeze_timer: float = 0.0
+var _toxic_shock_timer: float = 0.0
 
 func apply_passive_synergies(player_pos: Vector3, _delta: float) -> void:
 	if has_synergy("dark_dark"):
@@ -111,6 +127,13 @@ func apply_passive_synergies(player_pos: Vector3, _delta: float) -> void:
 		_absolute_zero_tick(player_pos)
 	if has_synergy("water_dark"):
 		_abyssal_depths_tick(player_pos)
+	# New synergies
+	if has_synergy("fire_poison"):
+		_toxic_fire_tick(player_pos)
+	if has_synergy("ice_dark"):
+		_shadow_freeze_tick(player_pos)
+	if has_synergy("electric_poison"):
+		_toxic_shock_tick(player_pos)
 
 # ---- Fire + Fire: Explosion on kill ----
 
@@ -347,6 +370,84 @@ func _abyssal_depths_tick(pos: Vector3) -> void:
 	# Subtle dark water particles every tick
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.1, 0), Color(0.1, 0.15, 0.3, 0.4), 3)
 
+# ---- Fire + Poison: Toxic Fire (double fire DoT) ----
+
+func _toxic_fire_tick(pos: Vector3) -> void:
+	_toxic_fire_timer += get_process_delta_time()
+	if _toxic_fire_timer < 1.0:
+		return
+	_toxic_fire_timer = 0.0
+
+	# Double fire DoT — deals fire damage twice as often as normal fire_fire
+	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.8, 0.5, 0.1, 0.7), 6)
+
+	var enemies = GameManager.get_enemies()
+	for e in enemies:
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+			if e.has_method("take_damage"):
+				# 2x DoT: apply fire damage twice
+				e.call_deferred("take_damage", 8, "fire")
+				e.call_deferred("take_damage", 8, "fire")
+
+# ---- Ice + Dark: Shadow Freeze (freeze + life drain to player) ----
+
+func _shadow_freeze_tick(pos: Vector3) -> void:
+	_shadow_freeze_timer += get_process_delta_time()
+	if _shadow_freeze_timer < 2.0:
+		return
+	_shadow_freeze_timer = 0.0
+
+	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(0.3, 0.1, 0.5), 10)
+
+	var total_damage_dealt: float = 0.0
+	var enemies = GameManager.get_enemies()
+	for e in enemies:
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+			if e.has_method("take_damage"):
+				var dmg = 10
+				e.call_deferred("take_damage", dmg, "ice")
+				total_damage_dealt += dmg
+			# Freeze for 1.5s
+			if e is EnemyBase3D:
+				var original_speed = e.speed
+				e.speed = 0.0
+				get_tree().create_timer(1.5).timeout.connect(func():
+					if is_instance_valid(e):
+						e.speed = original_speed
+				)
+
+	# Heal player 2% of damage dealt
+	if total_damage_dealt > 0.0:
+		var heal_amount = total_damage_dealt * 0.02
+		if heal_amount < 1.0:
+			heal_amount = 1.0
+		GameManager.heal_player(heal_amount)
+
+# ---- Electric + Poison: Toxic Shock (stun 0.5s + poison DoT) ----
+
+func _toxic_shock_tick(pos: Vector3) -> void:
+	_toxic_shock_timer += get_process_delta_time()
+	if _toxic_shock_timer < 1.5:
+		return
+	_toxic_shock_timer = 0.0
+
+	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.3, 1.0, 0.3, 0.8), 8)
+
+	var enemies = GameManager.get_enemies()
+	for e in enemies:
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+			if e.has_method("take_damage"):
+				# Poison DoT tick
+				e.call_deferred("take_damage", 6, "poison")
+			# Stun for 0.5s
+			if e is EnemyBase3D:
+				var original_speed = e.speed
+				e.speed = 0.0
+				get_tree().create_timer(0.5).timeout.connect(func():
+					if is_instance_valid(e):
+						e.speed = original_speed
+				)
+
 func reset() -> void:
 	active_synergies.clear()
 	_dark_aura_timer = 0.0
@@ -357,6 +458,9 @@ func reset() -> void:
 	_absolute_zero_timer = 0.0
 	_abyssal_depths_timer = 0.0
 	_electrolysis_active = false
+	_toxic_fire_timer = 0.0
+	_shadow_freeze_timer = 0.0
+	_toxic_shock_timer = 0.0
 	# Restore speeds of abyssal-slowed enemies
 	for eid in _abyssal_slowed_enemies:
 		var e = instance_from_id(eid)
@@ -402,6 +506,13 @@ const CROSS_COMBOS: Dictionary = {
 	"ice_water": {"name": "Absolute Zero", "color": Color(0.6, 0.9, 1.0)},
 	"water_dark": {"name": "Abyssal Depths", "color": Color(0.1, 0.15, 0.4)},
 	"dark_water": {"name": "Abyssal Depths", "color": Color(0.1, 0.15, 0.4)},
+	# New cross-combos
+	"fire_poison": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1)},
+	"poison_fire": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1)},
+	"ice_dark": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
+	"dark_ice": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
+	"electric_poison": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
+	"poison_electric": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
 }
 
 func register_elemental_zone(pos: Vector3, element: String, owner_peer: int, duration: float = 3.0) -> void:
