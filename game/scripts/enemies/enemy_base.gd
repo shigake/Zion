@@ -881,6 +881,8 @@ func _die() -> void:
 		queue_free()
 
 func _apply_death_behavior(pos: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	match _behavior:
 		"spawn_on_death":
 			# Scarecrow: spawns 3 mini crows on death
