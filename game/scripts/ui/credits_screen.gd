@@ -10,6 +10,14 @@ const CREDITS := [
 	"Claudio Ant",
 ]
 
+const EXTRA_CREDITS := [
+	["Codigo", "Claude AI + Erick Higaki"],
+	["Engine", "Godot 4.6"],
+	["Musica", "Suno AI"],
+	["Sprites", "Procedurally generated"],
+	["Modelos 3D", "Quaternius (CC0), KayKit, Kenney"],
+]
+
 const STAR_COLORS := [
 	Color(1.0, 0.85, 0.3),   # Amarelo dourado
 	Color(0.4, 0.7, 1.0),    # Azul claro
@@ -119,6 +127,36 @@ func _setup_top_section() -> void:
 	var sep2 = HSeparator.new()
 	sep2.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.3))
 	vbox.add_child(sep2)
+
+	# Extra credits (engine, musica, assets)
+	var extras_hbox = HBoxContainer.new()
+	extras_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	extras_hbox.add_theme_constant_override("separation", 24)
+	vbox.add_child(extras_hbox)
+
+	for entry in EXTRA_CREDITS:
+		var ecol = VBoxContainer.new()
+		ecol.alignment = BoxContainer.ALIGNMENT_CENTER
+		ecol.add_theme_constant_override("separation", 1)
+		extras_hbox.add_child(ecol)
+
+		var cat_lbl = Label.new()
+		cat_lbl.text = entry[0]
+		cat_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cat_lbl.add_theme_font_size_override("font_size", 9)
+		cat_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.8))
+		ecol.add_child(cat_lbl)
+
+		var val_lbl = Label.new()
+		val_lbl.text = entry[1]
+		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		val_lbl.add_theme_font_size_override("font_size", 11)
+		val_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
+		ecol.add_child(val_lbl)
+
+	var sep3 = HSeparator.new()
+	sep3.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.2))
+	vbox.add_child(sep3)
 
 	# Subtitulo dos herois
 	var heroes_lbl = Label.new()

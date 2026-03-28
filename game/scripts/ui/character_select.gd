@@ -410,6 +410,8 @@ func _on_start() -> void:
 		GameManager.selected_character = char_id
 		GameManager.auto_play = false
 		LoadingScreen.transition_to("res://scenes/ui/mutations_panel.tscn")
+	else:
+		AudioManager.play_sfx("error")
 
 func _on_random_start() -> void:
 	# Pick random unlocked character

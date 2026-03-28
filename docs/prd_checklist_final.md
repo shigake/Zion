@@ -34,7 +34,7 @@
 - [x] banish.wav — conectar em level_up_screen.gd (_on_banish)
 - [x] select.wav — conectar em level_up_screen.gd (_choose)
 - [x] equip.wav — conectar em level_up_screen.gd (apos escolha aplicada)
-- [x] error.wav — conectar quando tenta comprar sem cristais, personagem locked
+- [x] error.wav — conectar quando tenta comprar sem cristais, personagem locked (shop + character_select)
 
 ### Ambiente
 - [x] footstep.wav — conectar em player.gd (cada 0.3s de walk)
@@ -158,7 +158,7 @@
 - [ ] Tela de pausa — mostrar inventario resumido (armas + itens equipados)
 - [ ] Options: slider de volume com preview de som
 - [ ] Options: sensibilidade do gamepad
-- [ ] Tela de creditos — atualizar com todos os assets usados (Suno, Quaternius, etc.)
+- [x] Tela de creditos — atualizar com todos os assets usados (Suno, Quaternius, etc.)
 
 ## MULTIPLAYER
 - [ ] Level up assincrono (design aprovado, implementacao pendente)
@@ -169,7 +169,7 @@
 ## CONTEUDO
 - [ ] Mais dialogos de boss (falas durante a luta, nao so intro/morte)
 - [ ] Descricoes de stages no mapa (lore text)
-- [ ] Tips de loading variados (adicionar 20+ tips)
+- [x] Tips de loading variados (adicionar 20+ tips) — agora 41 tips
 - [ ] Personagem desbloqueavel por completar todos stages: "Fragmentado" (lore-related)
 - [ ] Evento especial: "Eclipse Total" — tela escurece, so inimigos brilham
 

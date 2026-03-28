@@ -84,6 +84,22 @@ const TIPS: Array = [
 	"Quando estilhacos ressoam juntos, sinergias elementais despertam.",
 	"Cada cristal coletado e um pedaco de Zion tentando se reunir.",
 	"Os bosses eram protetores. A corrupcao os transformou em prisoes vivas.",
+	# Dicas de sinergias e armas
+	"Combine fogo + veneno para Toxic Fire (DoT 2x)!",
+	"Gelo + Dark cria Shadow Freeze (congela + drena vida)",
+	"O Boomerang perfura inimigos na ida E na volta",
+	"Blood Orb drena vida dos inimigos e te cura!",
+	"Chain Whip chains entre ate 5 inimigos proximos",
+	"Tornado puxa inimigos pro centro — otimo pra AoE",
+	"Pressione TAB pra ver seu inventario durante a run",
+	"Evolucoes precisam de arma nivel 8 + item nivel 5",
+	"Inimigos Elite aparecem apos o minuto 7",
+	"O boss aparece no minuto 12!",
+	"Cada personagem tem uma passiva unica",
+	"A Bruxa comeca com +2 invocacoes extras",
+	"A Amazona tem bonus de velocidade e dano",
+	"Cristais sao creditados mesmo se voce morrer",
+	"Desafio Diario tem personagem e fase fixos por dia",
 ]
 
 # — Scenes to pre-warm in ObjectPool —
