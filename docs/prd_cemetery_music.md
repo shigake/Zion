@@ -1,8 +1,10 @@
-# PRD — Musica Dinamica da Fase Cemiterio
+# PRD — Musica Dinamica da Fenda do Cemiterio
+
+> *"A primeira fenda. Onde a morte parou de funcionar."*
 
 ## Objetivo
 
-Substituir a track unica `cemetery` por um sistema de musica dinamica com 5 faixas que mudam conforme o progresso da fase, criando uma experiencia sonora que acompanha a escalada de dificuldade — do inicio misterioso ate o boss final epico.
+Substituir a track unica `cemetery` por um sistema de musica dinamica com 5 faixas que acompanham a jornada do Fragmentado na primeira fenda — do misterio inicial ate o confronto epico com o **Necromancer King**, o Sentinela que guardava a fronteira entre vida e morte e agora nem ele consegue morrer.
 
 ## Estado Atual
 
@@ -74,11 +76,11 @@ Substituir a track unica `cemetery` por um sistema de musica dinamica com 5 faix
 
 ---
 
-### 5. Tema do Boss Final — Necromancer King — `cemetery_boss`
+### 5. Tema do Sentinela — Necromancer King — `cemetery_boss`
 
-**Contexto gameplay:** O Rei Necromante aparece. 4 metros de altura, invoca hordas de mortos e lanca magias roxas. Batalha final epica.
+**Contexto gameplay:** O Sentinela Corrompido aparece. O Necromancer King — antigo guardiao da fronteira entre vida e morte — invoca hordas de mortos numa tentativa desesperada de manter a fenda aberta. Ele nao e vilao; e prisioneiro do cristal. Batalha de libertacao.
 
-**Direcao musical:** Epica, misturando o som gotico do cemiterio com a velocidade de uma batalha final. Pipe organ dramatico com bateria rapida.
+**Direcao musical:** Epica, misturando o som gotico do cemiterio com a velocidade de uma batalha final. Pipe organ dramatico com bateria rapida. Tom tragico, nao malvado.
 
 **Prompt para geracao por IA:**
 > "Epic 16-bit final boss theme, dark gothic chiptune, very fast-paced drums, dramatic classical pipe organ solos, Castlevania Symphony of the Night retro style, dark magic atmosphere, high stakes pixel art battle music, instrumental masterpiece"

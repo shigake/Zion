@@ -1,7 +1,9 @@
-# PRD: Leaderboard Online
+# PRD: Leaderboard Online (Registro de Zion)
+
+> Zion registra as proezas de cada Fragmentado — um memorial dos mais poderosos.
 
 ## Objetivo
-Sistema de ranking global para Daily Challenge e modos de jogo.
+Sistema de ranking global para Daily Challenge e modos de jogo. Narrativamente, e o proprio Zion catalogando os feitos dos Fragmentados que lutam para restaura-lo.
 
 ## Arquitetura
 

@@ -1,7 +1,9 @@
-# PRD: Achievement Popup System
+# PRD: Achievement Popup System (Marcos da Restauracao)
+
+> Cada conquista marca um momento na jornada dos Fragmentados para restaurar Zion.
 
 ## Objetivo
-Conquistas devem se sentir recompensadoras e memoraveis. O popup atual e apenas texto no HUD.
+Conquistas devem se sentir recompensadoras e memoraveis. Cada achievement tem um **flavor text narrativo** que conecta a acao ao lore (ver `progressao.md` para lista com flavor texts).
 
 ## Design Visual
 

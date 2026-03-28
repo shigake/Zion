@@ -1,5 +1,7 @@
 # Balance Analysis — Mathematical Report
 
+> Os Sentinelas devem ser desafios significativos — sao guardioes de Zion, nao inimigos comuns. O balanceamento reflete a dificuldade narrativa de libertar cada Sentinela Corrompido.
+
 ## 1. Weapon DPS Table (Single Target)
 
 Formula: `DPS = (base_dmg + dmg_per_lvl * (lvl-1)) / max(0.05, base_cd + cd_per_lvl * (lvl-1))`
@@ -183,33 +185,35 @@ Enemies per wave: `2 * mult`
 | Bomber | damage | 25 | Instant death for low-HP players | 20 |
 | Skeleton Archer | speed | 1.0 | Already slow, OK | 1.0 |
 
-## 9. Boss Balance
+## 9. Sentinela Balance
+
+Os Sentinelas sao guardioes de Zion corrompidos pelo cristal — devem ser desafios dignos, nao punching bags. Suas 3 fases representam camadas de corrupcao (guardiao → possuido → forma final).
 
 With 4-6 weapons averaging 60-80 DPS each at L6-8:
 - Total player DPS: 300-500
-- Boss HP: 1500-2000
+- Sentinela HP: 1500-2000
 - Kill time: 3-7 seconds
 
-**Issue**: Bosses die too fast with evolved weapons (2.5-3.5x mult).
+**Issue**: Sentinelas caiam rapido demais com armas evoluidas (ressonancia cristalina 2.5-3.5x).
 - Evolved DPS: 750-1750
-- Boss kill time with evo: 1-3 seconds = trivial
+- Kill time com evolucao: 1-3 seconds = trivial
 
-**Proposed fix**: Increase boss HP by 50%
+**Proposed fix**: Increase Sentinela HP by 50% (a corrupcao os protege)
 
-| Boss | Old HP | New HP | Kill Time (400 DPS) |
-|------|--------|--------|---------------------|
-| Fairy Queen | 1500 | 2500 | 6.3s |
-| Alien Cow | 1500 | 2500 | 6.3s |
-| Sugar King | 1800 | 3000 | 7.5s |
-| Dracula | 1800 | 3000 | 7.5s |
-| Necromancer | 2000 | 3500 | 8.8s |
-| AI Overlord | 2000 | 3500 | 8.8s |
-| Demon Lord | 2000 | 3500 | 8.8s |
-| Emperor | 2000 | 3500 | 8.8s |
-| Leviathan | 2000 | 3500 | 8.8s |
-| Singularity | 2000 | 3500 | 8.8s |
+| Sentinela | Fenda | Old HP | New HP | Kill Time (400 DPS) |
+|------|------|--------|--------|---------------------|
+| Rainha das Fadas | Floresta | 1500 | 2500 | 6.3s |
+| Mega Vaca Alienigena | Fazenda (anomalia) | 1500 | 2500 | 6.3s |
+| Rei Acucar | Mundo Doce (anomalia) | 1800 | 3000 | 7.5s |
+| Conde Dracula | Castelo | 1800 | 3000 | 7.5s |
+| Necromancer King | Cemiterio | 2000 | 3500 | 8.8s |
+| AI Overlord | Toquio | 2000 | 3500 | 8.8s |
+| Demon Lord | Vulcao | 2000 | 3500 | 8.8s |
+| Imperador Corrompido | Arena (anomalia) | 2000 | 3500 | 8.8s |
+| Leviathan | Oceano | 2000 | 3500 | 8.8s |
+| Singularidade | Espaco | 2000 | 3500 | 8.8s |
 
-All bosses APPLIED ✓
+All Sentinelas APPLIED ✓
 
 ## 10. Evolution Damage Multipliers
 

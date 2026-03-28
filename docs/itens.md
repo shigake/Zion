@@ -1,6 +1,8 @@
-# Itens e Evolucoes
+# Itens, Evolucoes e Reliquias
 
-## Itens Passivos
+> Os itens sao artefatos dimensionais — objetos de diferentes realidades que os Fragmentados encontram nas fendas. Cada um carrega uma ressonancia propria que amplifica o estilhaco do portador.
+
+## Itens Passivos (Artefatos Dimensionais)
 
 | Item | Efeito |
 |---|---|
@@ -26,9 +28,9 @@
 
 ---
 
-## Evolucoes de Arma
+## Evolucoes de Arma (Ressonancia Cristalina)
 
-Combinar uma arma com um item passivo especifico no nivel maximo desbloqueia a evolucao.
+Quando uma arma atinge poder maximo (lv8) e um artefato complementar se alinha (lv5), ocorre uma **ressonancia cristalina** — a energia de Zion funde os dois em algo mais poderoso. Um bau dimensional aparece, e ao abrir, a evolucao se manifesta.
 
 | Arma Base | Item Passivo | Evolucao | Efeito |
 |---|---|---|---|

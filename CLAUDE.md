@@ -3,7 +3,12 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-14 personagens, 28 armas, 10 fases, 10 bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+14 Fragmentados, 28 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+
+### Narrativa
+**Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
+
+**Regra narrativa**: toda feature nova DEVE respeitar a narrativa do story.md. Bosses sao Sentinelas prisioneiros. Fases sao fendas dimensionais. Jogadores sao Fragmentados. Cristais sao partes de Zion.
 
 ## Quick Start
 
@@ -40,10 +45,10 @@ Zion/
 │   ├── prd.md                   # Product Requirements (roadmap fases A-E)
 │   ├── spec.md                  # Especificacao tecnica
 │   ├── story.md                 # Historia, lore, narrativa completa
-│   ├── fases.md                 # 7 fases campanha + 3 bonus detalhadas
+│   ├── fases.md                 # 7 fendas campanha + 3 anomalias
 │   ├── itens.md                 # Itens, evolucoes, reliquias
 │   ├── mecanicas.md             # Mecanicas de gameplay
-│   ├── personagens.md           # 14 personagens
+│   ├── personagens.md           # 14 Fragmentados + backstories
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
 │   ├── art_prompts.md           # Prompts de arte para assets
@@ -61,7 +66,7 @@ Zion/
     ├── VERSION                  # Versao atual (sem "v")
     ├── scenes/ (98 .tscn)        # Cenas
     │   ├── enemies/             # 16 genericos + 10 bosses (26 total)
-    │   ├── stages/              # 10 stages com props procedurais
+    │   ├── stages/              # 10 fendas com props procedurais
     │   ├── weapons/             # 35 cenas (28 armas + projeteis)
     │   ├── ui/                  # HUD, menus, shop, leaderboard, debug overlay
     │   └── player/              # Cena do jogador
@@ -71,7 +76,7 @@ Zion/
     │   ├── enemies/             # Base + spawner + 10 bosses + especiais
     │   ├── weapons/             # 28 armas + projectiles + behaviors
     │   ├── ui/                  # 24 telas + debug overlay (F3/F4)
-    │   ├── stages/              # 10 stages + 10 props + camera + events
+    │   ├── stages/              # 10 fendas + 10 props + camera + events
     │   ├── effects/             # 9 scripts (particulas, shaders, procedural anims)
     │   └── tests/               # Testes
     └── assets/                  # Materiais, shaders, audio
@@ -90,23 +95,24 @@ DebugOverlay fica em scripts/ui/ (registrado como autoload).
 Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao registrados como autoload no project.godot (sao instanciados manualmente).
 
 ### Key Systems
-- **Multiplayer**: Host-client via ENet (Steam Networking Sockets pronto via SteamManager stub), ping RPC, reconexao automatica, host migration
-- **Enemy spawning**: ObjectPool-backed, dificuldade escala com tempo, skins por stage
-- **Weapons**: nivel 1-8, evolucao no 8 com item correspondente no 5
-- **Procedural props**: cada stage gera ambiente (meshes, luzes, particulas)
+- **Multiplayer**: Host-client via ENet, ping RPC, reconexao, host migration. Narrativa: estilhacos ressoam entre Fragmentados
+- **Enemy spawning**: ObjectPool-backed, dificuldade escala com tempo, skins por fenda
+- **Weapons**: nivel 1-8, evolucao no 8 com item no 5 (ressonancia cristalina)
+- **Procedural props**: cada fenda gera ambiente (meshes, luzes, particulas)
 - **Procedural anims**: idle bob, walk lean, hit squash-stretch, death tumble
-- **Synergies**: 6 sinergias base + 4 sinergias de agua + 8 cross-combos (Fogo, Gelo, Eletrico, Dark, Agua)
-- **Logging**: LogManager (5 niveis, arquivo + console, crash reports JSON, rotacao)
-- **Telemetria**: Telemetry client → servidor HTTP (runs, crashes, events, balance)
+- **Synergies**: 6 base + 4 agua + 8 cross-combos. Narrativa: ressonancia entre cristais
+- **Logging**: LogManager (5 niveis, arquivo + console, crash reports JSON)
+- **Telemetria**: Telemetry client → servidor HTTP
 - **Debug overlay**: F3 (overlay tempo real), F4 (filtro de logs)
-- **Mutations/Ascension**: MutationManager — 6 difficulty modifiers that increase crystal rewards
-- **Cross-Combo**: Multiplayer cross-player elemental synergies via SynergySystem
-- **Revive System**: Tombstone-based revival in multiplayer with sacrifice debuff
-- **Daily Challenge**: DailyChallenge singleton — desafio diario com leaderboard online
+- **Mutations/Ascension**: MutationManager — 6 provacoes de Zion que aumentam recompensa de cristais
+- **Cross-Combo**: Ressonancia elemental entre Fragmentados (multiplayer)
+- **Revive System**: Estilhaco compartilhado — sacrificio de cristal pra impedir rebobinamento
+- **Daily Challenge**: DailyChallenge — micro-fraturas diarias com leaderboard
 - **Performance**: LOD system, PerfMonitor, EnemyCuller, pickup cap (200)
 - **Damage Feedback**: Screen shake, damage numbers, player hurt flash
-- **Drops**: Health pickups (5% chance) e magnet pickups (1% chance) de inimigos
-- **Themed HP Bar**: Barra de HP unica por personagem (katana/ronin, calice/vampiro, cristal/mago, etc.)
+- **Drops**: Health pickups (5%) e magnet pickups (1%) de inimigos
+- **Themed HP Bar**: Barra de HP unica por Fragmentado
+- **Narrativa**: Loading screens com lore, dialogos de Sentinelas, backstories, telas de morte/vitoria narrativas
 
 ### Physics Layers
 1. Players
@@ -122,17 +128,17 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 
 ## Content Summary
 
-- **Characters**: 14 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
+- **Fragmentados**: 14 (ronin, soldado, mago, berserker, ninja, necro, pirata, engenheiro, vampiro, gladiador, chef, mystery, amazona, bruxa)
 - **Weapons**: 28 (10 melee, 10 ranged, 8 summon/special)
-- **Stages**: 10 total — 7 campanha (cemetery, forest, tokyo, volcano, ocean, space, castle) + 3 bonus (farm, arena, candy)
-- **Bosses**: 10 (one per stage, each with 3 phases)
-- **Enemies**: 11 genericos + 6 especiais + 40 tematicos (4 por stage)
-- **Items**: 19 passive items
-- **Evolutions**: 12 weapon evolutions
-- **Relics**: 7 pre-run relics
-- **Events**: 10 special events
-- **Achievements**: 13
-- **Shop upgrades**: 12 permanent upgrades
+- **Fendas**: 7 campanha (cemetery, forest, tokyo, volcano, ocean, space, castle) + 3 anomalias (farm, arena, candy)
+- **Sentinelas**: 10 (1 por fenda, 3 fases cada — guardioes corrompidos, nao viloes)
+- **Enemies**: 11 genericos + 6 especiais + 40 tematicos (4 por fenda)
+- **Items**: 19 artefatos dimensionais
+- **Evolutions**: 12 ressonancias cristalinas
+- **Relics**: 7 artefatos ancestrais de Zion
+- **Events**: 10 anomalias dimensionais
+- **Achievements**: 13 marcos da restauracao
+- **Shop upgrades**: 12 restauracoes permanentes
 
 ## Notificacoes Discord
 
@@ -164,16 +170,16 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano. FASE B (gameplay) parcial — 10 mecanicas de stage, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global. FASE D (audio) quase completa — 50 SFX, 15 musicas chiptune, falta musica dinamica por fase. FASE E (infra) pendente.
+Core game completo com camada narrativa implementada. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano. FASE B (gameplay) parcial — 10 mecanicas de fenda, 40 monstros tematicos. FASE C (polish) parcial — achievements popup, leaderboard global, dialogos de Sentinelas. FASE D (audio) quase completa — 50 SFX, 15 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) pendente.
 
-Ver `docs/prd.md` para roadmap completo.
+Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
 ## Remaining Work
 
-- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fase (ver docs/prd_cemetery_music.md)
-- **Visual Polish**: walk animations, slash trails melee, props animados, tela de loading (ver FASE A do prd.md)
+- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fenda
+- **Visual Polish**: walk animations, slash trails melee, props animados
 - **Steam**: plugin GodotSteam necessario para multiplayer P2P
-- **Tutorial**: tutorial interativo para novos jogadores (ver FASE C do prd.md)
+- **Narrativa**: cutscene do ??? (Zion despertando), cinematica de intro, tutorial narrativo
 
 ## Regras Importantes
 

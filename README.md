@@ -1,10 +1,14 @@
 # Zion
 
-Survivors roguelite estilo Vampire Survivors / The Spell Brigade, feito com **Godot 4** (GDScript).
+> *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
+
+Survivors roguelite 3D feito com **Godot 4** (GDScript).
 
 ## Sobre
 
-Zion e um survivors roguelite 3D com tematicas variadas, **12 personagens jogaveis**, **28 armas**, **10 fases** com bosses unicos e sistema de progressao entre runs. Suporta **co-op online ate 4 jogadores** via ENet.
+**Zion** era o ultimo santuario entre dimensoes, mantido por um cristal primordial. Algo o estilhacou. Voce e um **Fragmentado** — arrancado de outra realidade, com um estilhaco do cristal dentro de si. Sua missao: fechar as **7 fendas dimensionais**, libertar os **Sentinelas Corrompidos**, e reconstruir Zion.
+
+**14 Fragmentados jogaveis**, **28 armas**, **7 fendas + 3 anomalias**, **10 Sentinelas** e co-op online ate 4 jogadores via ENet.
 
 ## Requisitos
 
@@ -123,7 +127,7 @@ Zion/
 | GameManager | Estado global, loop do jogo, timers |
 | WeaponDB | Catalogo de 28 armas e stats por level |
 | ItemDB | 19 itens passivos e seus efeitos |
-| CharacterDB | 12 personagens, stats e armas iniciais |
+| CharacterDB | 14 Fragmentados, stats e armas iniciais |
 | EvolutionDB | 12 evolucoes (arma lv8 + item lv5) |
 | RelicDB | 7 reliquias pre-run |
 | ShopDB | 12 upgrades permanentes |
@@ -169,8 +173,8 @@ Zion/
 
 ## Conteudo Implementado
 
-### 12 Personagens
-Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Gladiador, Chef, ???
+### 14 Fragmentados
+Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Gladiador, Chef, Amazona, Bruxa, ???
 
 ### 28 Armas
 | Tipo | Armas |
@@ -179,19 +183,27 @@ Ronin, Soldado, Mago, Berserker, Ninja, Necro, Pirata, Engenheiro, Vampiro, Glad
 | **Ranged** (10) | Metralhadora, Staff, Bazuca, Shuriken, Pistola Dupla, Lanca-chamas, Cajado de Gelo, Besta, Canhao de Plasma, Arco Elfico |
 | **Summon** (8) | Necromante, Drone, Totem, Garrafa de Veneno, Corrente Eletrica, Livro Magico, Bomba Relogio, Portal |
 
-### 10 Fases
-| Fase | Ambiente | Boss | Mecanica Unica |
+### 7 Fendas da Campanha + 3 Anomalias
+
+**Campanha** (arco narrativo — cada fenda e mais profunda na corrupcao):
+
+| Fenda | Ambiente | Sentinela Corrompido | Mecanica |
 |------|---------|------|----------------|
-| Cemiterio | Neblina, lapides | Necromancer King | Lapides destrutiveis |
-| Floresta | Cogumelos magicos | Rainha das Fadas | Cogumelos com buffs |
-| Fazenda | Silos, milharal | Mega Vaca Alienigena | Milharal esconde inimigos |
-| Toquio | Neon cyberpunk | AI Overlord | — |
-| Vulcao | Lava, cavernas | Demon Lord | — |
-| Oceano | Ruinas submarinas | Leviathan | — |
-| Arena | Coliseu romano | Imperador Corrompido | — |
-| Espaco | Estacao espacial | Singularidade | — |
-| Castelo | Gotico, vampiros | Conde Dracula | — |
-| Mundo Doce | Chocolate, sorvete | Rei Acucar | — |
+| 1. Cemiterio | Neblina, lua cheia | Necromancer King | Tumulos destrutiveis |
+| 2. Floresta | Magia selvagem | Rainha das Fadas | Cogumelos de buff |
+| 3. Toquio | Neon cyberpunk | AI Overlord | Paineis eletricos |
+| 4. Vulcao | Lava, furia | Demon Lord | Lava pools |
+| 5. Oceano | Ruinas submarinas | Leviathan | Correntes |
+| 6. Espaco | Estacao orbital | Singularidade | Zero-G zones |
+| 7. Castelo | Gotico, elegante | Conde Dracula | Zonas de sombra |
+
+**Anomalias** (desbloceaveis — realidades instaveis fora das regras):
+
+| Anomalia | Ambiente | Boss | Desbloquear |
+|------|---------|------|-------------|
+| α Fazenda | Rural apocaliptico | Mega Vaca Alienigena | Fendas 1-3 |
+| β Arena | Coliseu romano | Imperador Corrompido | 3 bosses |
+| γ Mundo Doce | Sonho corrompido | Rei Acucar | Campanha completa |
 
 ### Sistemas
 - **19 itens passivos** com efeitos funcionais
@@ -282,7 +294,8 @@ cd server && npm install && npm start
 | [Fases](docs/fases.md) | Detalhes das 10 fases e bosses |
 | [Itens](docs/itens.md) | Itens, evolucoes, reliquias |
 | [Mecanicas](docs/mecanicas.md) | Gameplay e sistemas |
-| [Personagens](docs/personagens.md) | 12 personagens e armas |
+| [Historia](docs/story.md) | Lore completo, backstories, narrativa |
+| [Personagens](docs/personagens.md) | 14 Fragmentados e armas |
 | [Progressao](docs/progressao.md) | Loja, cristais, meta-progressao |
 | [Balance Analysis](docs/balance_analysis.md) | Analise de balanceamento verificada |
 | [Art Prompts](docs/art_prompts.md) | Prompts de arte para geracao de assets |
@@ -308,12 +321,12 @@ cd server && npm install && npm start
 
 ## Status
 
-Em desenvolvimento ativo. Versao atual: **2.64.9**
+Em desenvolvimento ativo. Versao atual: **2.79.0**
 
-Todas as 10 fases, 14 personagens, 28 armas e 10 bosses implementados. Sistema de telemetria e logging completo com dashboard web. Modo ascensao (mutacoes), cross-combos multiplayer, revive com sacrificio, desafio diario, sistema de performance (LOD/culling), drops de vida/ima, barras de HP tematicas por personagem, HUD multiplayer com ping e setas de aliados, sprites pixel art billboard, selecao de personagem estilo Genshin, 13 achievements com popup, leaderboard global, 10 mecanicas unicas de stage, 33 SFX + 12 musicas chiptune, e auto-tester com 8 suites.
+Todas as 7 fendas + 3 anomalias, 14 Fragmentados, 28 armas e 10 Sentinelas implementados. Camada narrativa completa (lore, backstories, dialogos de boss, loading screens com frases de lore). Sistema de telemetria com dashboard web. Modo ascensao (provacoes de Zion), cross-combos multiplayer (ressonancia entre Fragmentados), revive com sacrificio (estilhaco compartilhado), desafio diario, sistema de performance (LOD/culling), sprites pixel art billboard, 13 achievements com popup, leaderboard global, 50 SFX + 15 musicas, auto-tester com 8 suites.
 
 ### Trabalho Restante
-- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fase (ver docs/prd_cemetery_music.md)
-- **Visual Polish**: walk animations, slash trails melee, props animados, tela de loading
+- **Audio**: 50 SFX + 15 musicas implementados; falta musica dinamica por fenda
+- **Visual Polish**: walk animations, slash trails melee, props animados
 - **Steam**: stub existe, falta plugin GodotSteam
-- **Art Direction**: concept art de referencia (ver docs/prd_art_direction.md)
+- **Narrativa**: cutscene do ???, cinematica de intro

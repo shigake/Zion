@@ -1,21 +1,42 @@
-# Personagens e Armas
+# Os Fragmentados e Suas Armas
 
-## Personagens Desblocaveis
+> Quando Zion estilhacou, estilhacos microscopicos do cristal atravessaram dimensoes e se alojaram em pessoas comuns. Sao os **Fragmentados** — arrancados de seus mundos, jogados nas fendas. Ver [story.md](story.md) para lore completo.
 
-| Personagem | Arma Inicial | Passiva | Como Desbloquear |
-|---|---|---|---|
-| **Ronin** | Espada Samurai | +20% critical hit | Inicio |
-| **Soldado** | Metralhadora | +15% attack speed | Inicio |
-| **Mago** | Staff | +25% area de efeito | Sobreviva 10 min |
-| **Berserker** | Machado Viking | +30% dano quando HP < 30% | Mate 5000 inimigos numa run |
-| **Necro** | Necromante | Invocacoes +1 | Complete fase Cemiterio |
-| **Ninja** | Shuriken | +25% velocidade | Complete fase Toquio |
-| **Pirata** | Pistola Dupla | +20% drop de gold | Complete fase Oceano |
-| **Engenheiro** | Drone + Totem | Builds duram mais | Complete fase Estacao Espacial |
-| **Vampiro** | Chicote | Lifesteal natural 3% | Complete fase Castelo sem tomar dano de morcego |
-| **Gladiador** | Lanca | +20% armadura | Complete fase Arena |
-| **Chef** | Lanca-chamas | Comida cura 2x | Complete fase Mundo Doce |
-| **???** | Todas as armas nivel 1 | Nenhuma | Desbloqueie todos os outros personagens |
+## Os 14 Fragmentados
+
+| Fragmentado | Origem | Arma Inicial | Passiva | Como Desbloquear |
+|---|---|---|---|---|
+| **Ronin** | Japao Feudal | Espada Samurai | +20% critical hit | Inicio |
+| **Soldado** | Guerra Moderna | Metralhadora | +15% attack speed | Inicio |
+| **Mago** | Reino de Alta Fantasia | Staff | +25% area de efeito | Sobreviva 10 min |
+| **Berserker** | Era Viking | Machado Viking | +30% dano quando HP < 30% | Mate 5000 inimigos numa run |
+| **Necro** | Plano Etereo | Necromante | Invocacoes +1 | Liberte o Necromancer King (Fenda 1) |
+| **Ninja** | Toquio do Futuro | Shuriken | +25% velocidade | Liberte o AI Overlord (Fenda 3) |
+| **Pirata** | Idade de Ouro da Pirataria | Pistola Dupla | +20% drop de gold | Liberte o Leviathan (Fenda 5) |
+| **Engenheiro** | Estacao Orbital, 2187 | Drone + Totem | Builds duram mais | Liberte a Singularidade (Fenda 6) |
+| **Vampiro** | Transilvania, sec. XVIII | Chicote | Lifesteal natural 3% | Liberte Dracula sem dano de morcego (Fenda 7) |
+| **Gladiador** | Roma Antiga | Lanca | +20% armadura | Derrote o eco do Imperador (Anomalia β) |
+| **Chef** | Paris, Belle Epoque | Lanca-chamas | Comida cura 2x | Desperte o Mundo Doce (Anomalia γ) |
+| **Amazona** | Floresta Amazonica primordial | Arco Elfico | +15% dano a distancia | Sobreviva a Anomalia α (Fazenda) |
+| **Bruxa** | Salem, 1692 | Garrafa de Veneno | +20% dano magico | Liberte a Rainha das Fadas (Fenda 2) |
+| **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (13 desbloqueados) |
+
+### Backstories
+
+- **Ronin:** Samurai sem mestre que vagava entre vilas quando o ceu se abriu
+- **Soldado:** Operativo em missao quando a realidade glitchou ao seu redor
+- **Mago:** Estudava anomalias arcanas. A maior de todas o engoliu
+- **Berserker:** Morreu em batalha viking. Acordou no Vulcao. Achou que era Valhalla
+- **Ninja:** Operativo clandestino que sobreviveu ao blackout da IA em Toquio
+- **Necro:** Aprendiz do Necromancer King antes da corrupcao. Busca salvar o mestre
+- **Pirata:** Navegava mares desconhecidos. Caiu por uma fenda no Triangulo das Bermudas
+- **Engenheiro:** Ultima sobrevivente da Estacao Zenith. Construiu drones com sucata
+- **Vampiro:** Mordido por Dracula, mas o estilhaco impediu a transformacao total
+- **Gladiador:** Espirito da Arena que ganhou corpo quando a anomalia foi perturbada
+- **Chef:** Confeiteiro que caiu no Mundo Doce e tentou civilizar os doces com culinaria
+- **Amazona:** Guerreira tribal que defendia sua terra quando as vacas mutantes invadiram
+- **Bruxa:** Fugiu da fogueira de Salem e caiu direto na Floresta Encantada. Adaptou-se rapido
+- **???:** Quando todos os 13 estilhacos ressoam... Zion acorda. O proprio santuario ganha consciencia
 
 ---
 

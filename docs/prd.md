@@ -1,9 +1,13 @@
-# Zion — PRD Master (v2.60)
+# Zion — PRD Master (v2.79)
+
+> *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
 ## Visao Geral
 
-Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogadores.
-14 personagens, 28 armas, 10 fases, 10 bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 Fragmentados.
+14 Fragmentados, 28 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements.
+
+**Premissa:** O Coracao de Zion estilhacou. Os jogadores sao Fragmentados — pessoas de diferentes realidades com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um Sentinela Corrompido a ser libertado. A narrativa completa esta em [story.md](story.md).
 
 ---
 
@@ -130,14 +134,15 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 - Scale pulse pra organicos
 - Rotation pra objetos giratorios
 
-### A4. Tela de Loading
-**Objetivo**: Transicao suave entre telas.
+### A4. Tela de Loading (Narrativa)
+**Objetivo**: Transicao suave com lore building.
 
 - ColorRect preto com fade in/out (0.5s)
-- Texto "Carregando..." com animacao de pontos
-- Sprite do personagem selecionado no centro
-- Tip de gameplay aleatorio embaixo
+- Sprite do Fragmentado selecionado no centro
+- **Frase de lore da fenda** em destaque (ex: *"A primeira fenda. Onde a morte parou de funcionar."*)
+- Dica de gameplay OU frase narrativa aleatorias (mistura)
 - Barra de progresso (fake, preenche em 1-2s)
+- Frases narrativas: ver `story.md` secao "Telas de Loading"
 
 ### A5. Sprite de Boss no Stage
 **Objetivo**: Bosses devem ter presenca visual maior.
@@ -230,28 +235,32 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 
 ## FASE C — Polish & UX (Prioridade Media)
 
-### C1. Tutorial Interativo
-**Objetivo**: Primeiro run guiada sem frustrar.
+### C1. Tutorial Interativo (Narrativo)
+**Objetivo**: Primeiro run guiada com contexto narrativo.
 
 - Overlay semi-transparente com setas indicativas
-- Passo 1: "Use WASD para mover" (espera player mover)
-- Passo 2: "Sua arma ataca automaticamente!" (espera primeiro kill)
-- Passo 3: "Colete as gemas azuis!" (espera coletar XP)
-- Passo 4: "Escolha um upgrade!" (espera level up)
-- Passo 5: "Use ESPACO para dash!" (espera dash)
+- Passo 1: *"O estilhaco dentro de voce pulsa. Use WASD para mover."*
+- Passo 2: *"Sua arma reage ao cristal — ataca automaticamente!"* (espera primeiro kill)
+- Passo 3: *"Fragmentos de Zion! Colete-os — eles chamam por voce."* (espera coletar XP)
+- Passo 4: *"O cristal quer evoluir. Escolha um upgrade."* (espera level up)
+- Passo 5: *"O estilhaco te da agilidade. Use ESPACO para dash!"*
 - Desativa apos completar (salva no SaveManager)
 - Botao "Pular tutorial" visivel
 
-### C2. Dialogos de Boss
-**Objetivo**: Bosses tem personalidade.
+### C2. Dialogos de Boss (Sentinelas)
+**Objetivo**: Bosses sao Sentinelas Corrompidos com personalidade e lore.
 
-- Antes do boss aparecer: balao de dialogo com fala do boss (2-3 linhas)
-- Ao derrotar: fala de derrota
+Os Sentinelas nao sao viloes — sao guardioes prisioneiros do cristal corrompido. Suas falas refletem quem eram antes da corrupcao. Ao serem derrotados, sao **libertados**, nao mortos.
+
+- Antes do boss aparecer: balao de dialogo (fala do Sentinela, 2-3 linhas)
+- Ao derrotar: fala de **libertacao** (nao derrota)
 - Texto pixel art em balao, auto-skip em 3s
-- Exemplos:
-  - Necromancer: "Vocês ousam invadir meu domínio? Meus mortos vão festejar!"
-  - Demon Lord: "Bem-vindos ao inferno. Não há saída."
-  - Sugar King: "Quem quer doces? HAHAHAHA!"
+- Exemplos narrativos:
+  - Necromancer King: *"Eu era o guardiao da fronteira entre vida e morte... agora nem eu consigo morrer."*
+  - Demon Lord: *"Eu nao sou um Sentinela. Sou a raiva de Zion. Nascido do fogo da destruicao."*
+  - Conde Dracula: *"Eu nao fui corrompido. Eu ESCOLHI o cristal. Zion nao deveria ser restaurado."*
+  - Rei Acucar: *"Isto era o paraiso... eu sou a ultima lembranca... nao me apaguem..."*
+  - Ao morrer (todos): *"Livre... finalmente livre."* / *"Obrigado, Fragmentado."*
 
 ### C3. Achievement Popup Bonito ✅ IMPLEMENTADO
 **Objetivo**: Conquistas devem sentir-se recompensadoras.
@@ -270,14 +279,15 @@ Survivors roguelite 3D com visual pixel art billboard. Co-op online ate 4 jogado
 - Comparacao com run anterior
 - Botao "Compartilhar" (screenshot salva em user://)
 
-### C5. Mapa de Selecao de Fases
-**Objetivo**: Substituir grid por mapa visual.
+### C5. Mapa de Selecao de Fendas
+**Objetivo**: Substituir grid por mapa dimensional.
 
-- Mapa estilo Super Mario World (nodes conectados por caminhos)
-- Cada node e o sprite do stage (32x32)
-- Caminho dourado entre stages desbloqueados
-- Animacao de andar entre nodes
-- Preview do boss ao hover
+- Mapa estilo rede de fendas (nodes conectados por rachaduras dimensionais)
+- Cada node e o sprite da fenda (32x32), fendas fechadas ficam com glow azul
+- Rachaduras brilhantes entre fendas desbloqueadas, apagadas nas trancadas
+- 3 anomalias (Fazenda, Arena, Mundo Doce) aparecem como ramificacoes instáveis
+- Preview do Sentinela ao hover (titulo + sprite do boss)
+- Fendas completadas mostram icone do Sentinela libertado
 
 ### C6. Inventario Visual
 **Objetivo**: Ver todos os itens/armas durante a run.
