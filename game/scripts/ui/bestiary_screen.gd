@@ -442,8 +442,8 @@ func _build_ui() -> void:
 
 	var cam = Camera3D.new()
 	cam.position = Vector3(0, 1.2, 2.5)
-	cam.look_at(Vector3(0, 0.8, 0), Vector3.UP)
 	detail_viewport.add_child(cam)
+	cam.look_at(Vector3(0, 0.8, 0), Vector3.UP)
 	cam.current = true
 
 	var ambient = WorldEnvironment.new()
@@ -453,9 +453,9 @@ func _build_ui() -> void:
 
 	var light = DirectionalLight3D.new()
 	light.position = Vector3(2, 3, 2)
-	light.look_at(Vector3(0, 0, 0), Vector3.UP)
 	light.light_energy = 1.5
 	detail_viewport.add_child(light)
+	light.look_at(Vector3(0, 0, 0), Vector3.UP)
 
 	# Sprite fallback (usado quando nao ha modelo 3D)
 	detail_sprite = TextureRect.new()

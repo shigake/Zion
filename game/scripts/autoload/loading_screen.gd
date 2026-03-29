@@ -295,8 +295,8 @@ func _prewarm_shaders() -> void:
 	# Camera
 	var cam = Camera3D.new()
 	cam.position = Vector3(0, 2, 5)
-	cam.look_at(Vector3.ZERO)
 	temp_viewport.add_child(cam)
+	cam.look_at(Vector3.ZERO)
 
 	# Luz
 	var light = DirectionalLight3D.new()
