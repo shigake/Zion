@@ -55,12 +55,6 @@ const SFX_COOLDOWN_MS: int = 50  # 0.05 seconds minimum between same SFX
 var _audio_cache: Dictionary = {}  # path -> AudioStream or null
 
 func _ready() -> void:
-	# Debug: verify audio system
-	var bus_count = AudioServer.bus_count
-	print("[Audio] AudioServer buses: %d" % bus_count)
-	for i in range(bus_count):
-		print("[Audio]   Bus %d: '%s' mute=%s vol=%.1f" % [i, AudioServer.get_bus_name(i), AudioServer.is_bus_mute(i), db_to_linear(AudioServer.get_bus_volume_db(i))])
-
 	_music_player = AudioStreamPlayer.new()
 	_music_player.name = "MusicPlayer"
 	_music_player.bus = "Master"
