@@ -15,10 +15,10 @@ class_name LODManagerClass
 signal prop_lod_changed(node: Node3D, lod_level: int)  # 0=high, 1=medium, 2=low/hidden
 
 # ---- Constantes ----
-## Distancias padrao (squared) para troca de LOD
-const DEFAULT_HIGH_DIST_SQ := 400.0   # < 20 unidades
-const DEFAULT_MEDIUM_DIST_SQ := 2500.0 # < 50 unidades
-## Acima de 50 = low/hidden
+## Distancias padrao (squared) para troca de LOD (reduzidas para melhor performance)
+const DEFAULT_HIGH_DIST_SQ := 225.0   # < 15 unidades (was 20)
+const DEFAULT_MEDIUM_DIST_SQ := 1600.0 # < 40 unidades (was 50)
+## Acima de 40 = low/hidden
 
 ## Quantidade maxima de props processados por frame (evita spikes)
 const BATCH_SIZE := 50
@@ -257,13 +257,34 @@ func _set_shadow_casting(node: Node3D, enabled: bool) -> void:
 			child.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if enabled else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-func _set_mesh_detail(node: Node3D, _scale: float) -> void:
+func _set_mesh_detail(node: Node3D, detail_scale: float) -> void:
 	## Controla nivel de detalhe do mesh.
-	## Em Godot 4, nao ha LOD automatico simples, entao controlamos via visibilidade
-	## de sub-meshes ou via material override.
-	## Por enquanto, esta funcao e um hook para futuras otimizacoes
-	## (ex: trocar mesh por billboard, reduzir subdivisions, etc.)
-	pass
+	## detail_scale 1.0 = full detail, 0.5 = reduced (disable sub-meshes, reduce material).
+	if node is MeshInstance3D:
+		_apply_mesh_lod(node, detail_scale)
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			_apply_mesh_lod(child, detail_scale)
+		# Desativa particulas filhas em LOD medio/baixo
+		if child is GPUParticles3D and detail_scale < 1.0:
+			child.emitting = false
+		elif child is GPUParticles3D and detail_scale >= 1.0:
+			if child.has_meta("lod_was_emitting"):
+				child.emitting = child.get_meta("lod_was_emitting")
+
+
+func _apply_mesh_lod(mesh_node: MeshInstance3D, detail_scale: float) -> void:
+	## Ajusta propriedades do mesh para reduzir custo de rendering.
+	if detail_scale >= 1.0:
+		# Full detail: restore
+		mesh_node.transparency = 0.0
+		if mesh_node.has_meta("lod_original_gi"):
+			mesh_node.gi_mode = mesh_node.get_meta("lod_original_gi")
+	else:
+		# Reduced detail: disable GI, simplify rendering
+		if not mesh_node.has_meta("lod_original_gi"):
+			mesh_node.set_meta("lod_original_gi", mesh_node.gi_mode)
+		mesh_node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 
 
 # ===========================================================================

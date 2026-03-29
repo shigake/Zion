@@ -24,10 +24,10 @@ const FPS_LOW := 30.0
 const FPS_GOOD := 50.0
 
 ## Intervalo entre checagens de auto-ajuste (segundos)
-const ADJUST_INTERVAL := 3.0
+const ADJUST_INTERVAL := 2.0
 
 ## Tempo minimo entre mudancas de qualidade (evita oscilar)
-const ADJUST_COOLDOWN := 10.0
+const ADJUST_COOLDOWN := 6.0
 
 ## Limites para avisos
 const WARN_FRAME_TIME_MS := 33.3  # abaixo de 30 FPS
@@ -65,6 +65,12 @@ var _game_elapsed: float = 0.0
 ## Registro de avisos emitidos (evita spam)
 var _warned_metrics: Dictionary = {}
 const WARN_COOLDOWN := 30.0  # segundos entre avisos do mesmo tipo
+
+## Dynamic resolution scaling (3D render resolution)
+var _current_render_scale: float = 1.0
+const RENDER_SCALE_MIN := 0.5  # Minimo 50% resolucao
+const RENDER_SCALE_MAX := 1.0  # 100% resolucao
+const RENDER_SCALE_STEP := 0.1  # Step de ajuste
 
 
 func _ready() -> void:
@@ -112,16 +118,18 @@ func get_perf_report() -> Dictionary:
 		"quality_level": quality_level,
 		"quality_name": _quality_name(quality_level),
 		"auto_adjust": auto_adjust_enabled,
+		"render_scale": snappedf(_current_render_scale, 0.01),
 		"lod": lod_stats,
 	}
 
 
 func get_perf_summary() -> String:
 	## Retorna resumo de uma linha para HUD.
-	return "FPS: %d (avg: %d) | Q: %s | Enemies: %d | Mem: %.0fMB" % [
+	return "FPS: %d (avg: %d) | Q: %s | Res: %.0f%% | Enemies: %d | Mem: %.0fMB" % [
 		int(current_fps),
 		int(avg_fps),
 		_quality_name(quality_level),
+		_current_render_scale * 100.0,
 		current_enemy_count,
 		current_memory_mb,
 	]
@@ -151,25 +159,32 @@ func reset_quality() -> void:
 # Coleta de Metricas
 # ===========================================================================
 
+var _metrics_frame_skip: int = 0
+
 func _collect_metrics(_delta: float) -> void:
-	# FPS e frame time
+	# FPS e frame time — sempre coletados
 	current_fps = Engine.get_frames_per_second()
 	current_frame_time_ms = 1000.0 / maxf(current_fps, 1.0)
 
-	# Contagem de inimigos
+	# Contagem de inimigos — barato, sempre atualizado
 	current_enemy_count = GameManager.enemies_alive
 
-	# Contagem de particulas (GPUParticles3D ativas na cena)
-	current_particle_count = _count_active_particles()
+	# Metricas caras: coletar a cada 10 frames
+	_metrics_frame_skip += 1
+	if _metrics_frame_skip >= 10:
+		_metrics_frame_skip = 0
 
-	# Draw calls via Performance monitor do Godot
-	current_draw_calls = int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+		# Contagem de particulas (GPUParticles3D ativas na cena)
+		current_particle_count = _count_active_particles()
 
-	# Memoria
-	current_memory_mb = Performance.get_monitor(Performance.MEMORY_STATIC) / (1024.0 * 1024.0)
+		# Draw calls via Performance monitor do Godot
+		current_draw_calls = int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 
-	# Objetos na cena
-	current_objects = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+		# Memoria
+		current_memory_mb = Performance.get_monitor(Performance.MEMORY_STATIC) / (1024.0 * 1024.0)
+
+		# Objetos na cena
+		current_objects = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
 
 
 func _count_active_particles() -> int:
@@ -300,21 +315,25 @@ func _apply_quality_settings(level: int) -> void:
 			_set_lod_multiplier(1.0)
 			_set_shadow_quality(true)
 			_set_msaa(true)
+			_set_render_scale(1.0)
 		1:  # Medio
 			_set_particle_budget(0.7)
 			_set_lod_multiplier(0.7)  # LODs mais proximos
 			_set_shadow_quality(true)
 			_set_msaa(false)
+			_set_render_scale(0.85)
 		2:  # Baixo
-			_set_particle_budget(0.4)
+			_set_particle_budget(0.3)
 			_set_lod_multiplier(0.5)
 			_set_shadow_quality(false)
 			_set_msaa(false)
+			_set_render_scale(0.7)
 		3:  # Potato
 			_set_particle_budget(0.1)
 			_set_lod_multiplier(0.3)
 			_set_shadow_quality(false)
 			_set_msaa(false)
+			_set_render_scale(0.5)
 
 
 func _set_particle_budget(multiplier: float) -> void:
@@ -362,6 +381,26 @@ func _set_msaa(enabled: bool) -> void:
 			viewport.msaa_3d = Viewport.MSAA_2X
 		else:
 			viewport.msaa_3d = Viewport.MSAA_DISABLED
+
+
+func _set_render_scale(scale: float) -> void:
+	## Ajusta resolucao de renderizacao 3D (dynamic resolution).
+	## Menor resolucao = mais FPS, visual um pouco borrado.
+	scale = clampf(scale, RENDER_SCALE_MIN, RENDER_SCALE_MAX)
+	if absf(scale - _current_render_scale) < 0.01:
+		return
+	_current_render_scale = scale
+	var viewport := get_viewport()
+	if viewport:
+		viewport.scaling_3d_scale = scale
+		if scale < 0.9:
+			viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2
+		else:
+			viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+		LogManager.info("Perf", "Render scale: %.0f%% (mode: %s)" % [
+			scale * 100.0,
+			"FSR2" if scale < 0.9 else "Bilinear"
+		])
 
 
 func _quality_name(level: int) -> String:

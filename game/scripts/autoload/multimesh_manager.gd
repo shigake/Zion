@@ -7,8 +7,8 @@ extends Node
 ## Above THRESHOLD: MultiMesh with shared sprite texture (performance mode).
 
 # --- Enemy MultiMesh ---
-const THRESHOLD := 100  # Switch to multimesh above this count
-const HYSTERESIS := 20  # Prevent flickering near threshold
+const THRESHOLD := 50  # Switch to multimesh above this count (was 100)
+const HYSTERESIS := 15  # Prevent flickering near threshold
 
 var _multimesh_instance: MultiMeshInstance3D = null
 var _multimesh: MultiMesh = null
@@ -17,8 +17,8 @@ var _billboard_material: StandardMaterial3D = null
 var _fallback_texture: Texture2D = null
 
 # --- Pickup MultiMesh ---
-const PICKUP_THRESHOLD := 100
-const PICKUP_HYSTERESIS := 20
+const PICKUP_THRESHOLD := 60
+const PICKUP_HYSTERESIS := 15
 
 var _pickup_mm_instance: MultiMeshInstance3D = null
 var _pickup_mm: MultiMesh = null
@@ -45,7 +45,10 @@ func _create_billboard_material() -> void:
 	if _fallback_texture:
 		_billboard_material.albedo_texture = _fallback_texture
 
-func _process(_delta: float) -> void:
+var _pickup_check_timer: float = 0.0
+const PICKUP_CHECK_INTERVAL := 0.5  # Check pickups every 0.5s instead of every frame
+
+func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -57,7 +60,13 @@ func _process(_delta: float) -> void:
 	elif _active and enemy_count < (THRESHOLD - HYSTERESIS):
 		_deactivate()
 
-	_process_pickups()
+	# Pickups: check activation less frequently, update transforms every frame when active
+	_pickup_check_timer += delta
+	if _pickup_active:
+		_process_pickups()
+	elif _pickup_check_timer >= PICKUP_CHECK_INTERVAL:
+		_pickup_check_timer = 0.0
+		_process_pickups()
 
 func _activate() -> void:
 	_active = true

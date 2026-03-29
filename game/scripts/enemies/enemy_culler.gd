@@ -16,21 +16,22 @@ class_name EnemyCuller
 ##   add_child(culler)
 
 # ---- Constantes ----
-## Distancia ao quadrado para dormir inimigos (60^2 = 3600)
-const SLEEP_DIST_SQ := 3600.0
+## Distancia ao quadrado para dormir inimigos (45^2 = 2025, was 60^2)
+const SLEEP_DIST_SQ := 2025.0
 
-## Distancia ao quadrado para despawnar inimigos (80^2 = 6400)
-const DESPAWN_DIST_SQ := 6400.0
+## Distancia ao quadrado para despawnar inimigos (65^2 = 4225, was 80^2)
+const DESPAWN_DIST_SQ := 4225.0
 
-## Distancia ao quadrado para acordar inimigos dormindo (55^2 = 3025)
+## Distancia ao quadrado para acordar inimigos dormindo (40^2 = 1600, was 55^2)
 ## Um pouco menor que SLEEP para criar histerese e evitar oscilacao
-const WAKE_DIST_SQ := 3025.0
+const WAKE_DIST_SQ := 1600.0
 
 ## Maximo de inimigos processados por frame
-const BATCH_SIZE := 100
+const BATCH_SIZE := 150
 
-## Intervalo entre checagens (segundos)
-const CHECK_INTERVAL := 0.5
+## Intervalo base entre checagens (segundos) — adaptativo com FPS
+const CHECK_INTERVAL_BASE := 0.4
+const CHECK_INTERVAL_FAST := 0.2  # Usado quando FPS < 30
 
 # ---- Estado ----
 var _timer: float = 0.0
@@ -49,7 +50,7 @@ var _stats := {
 
 
 func _ready() -> void:
-	LogManager.info("Culler", "EnemyCuller inicializado — sleep=%dm, despawn=%dm, batch=%d" % [
+	LogManager.info("Culler", "EnemyCuller inicializado — sleep=%dm, despawn=%dm, batch=%d, adaptive_interval" % [
 		int(sqrt(SLEEP_DIST_SQ)), int(sqrt(DESPAWN_DIST_SQ)), BATCH_SIZE
 	])
 
@@ -59,7 +60,11 @@ func _process(delta: float) -> void:
 		return
 
 	_timer += delta
-	if _timer < CHECK_INTERVAL:
+	var check_interval := CHECK_INTERVAL_BASE
+	# Cull mais agressivamente quando FPS esta baixo
+	if Engine.get_frames_per_second() < 30:
+		check_interval = CHECK_INTERVAL_FAST
+	if _timer < check_interval:
 		return
 	_timer = 0.0
 

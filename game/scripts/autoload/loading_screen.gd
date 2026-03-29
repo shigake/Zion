@@ -14,7 +14,7 @@ var _load_complete: bool = false
 var _waiting_for_input: bool = false
 var _prewarm_done: bool = false
 var _prewarm_step: int = 0
-var _total_prewarm_steps: int = 6
+var _total_prewarm_steps: int = 7
 var _fade_alpha: float = 0.0
 
 # — UI refs (criados programaticamente) —
@@ -109,18 +109,22 @@ const PREWARM_ENEMIES: Array = [
 	"res://scenes/enemies/skeleton.tscn",
 	"res://scenes/enemies/ghost.tscn",
 	"res://scenes/enemies/zombie_runner.tscn",
+	"res://scenes/enemies/spider.tscn",
+	"res://scenes/enemies/mushroom.tscn",
+	"res://scenes/enemies/wolf.tscn",
 ]
 
 const PREWARM_PICKUPS: Array = [
 	"res://scenes/xp_gem.tscn",
 	"res://scenes/crystal_pickup.tscn",
 	"res://scenes/health_pickup.tscn",
+	"res://scenes/magnet_pickup.tscn",
 ]
 
 const PREWARM_COUNTS: Dictionary = {
-	"enemy": 10,
-	"pickup": 15,
-	"projectile": 8,
+	"enemy": 15,       # was 10 — more enemies pre-pooled
+	"pickup": 25,      # was 15 — more pickups pre-pooled
+	"projectile": 12,  # was 8 — more projectiles pre-pooled
 }
 
 func _ready() -> void:
@@ -221,9 +225,14 @@ func _do_prewarm_step() -> void:
 		4:
 			_prewarm_audio()
 			_prewarm_step += 1
-			_update_progress(0.93, "Carregando audio...")
+			_update_progress(0.90, "Carregando audio...")
 			call_deferred("_do_prewarm_step")
 		5:
+			_prewarm_materials()
+			_prewarm_step += 1
+			_update_progress(0.96, "Compilando materiais...")
+			call_deferred("_do_prewarm_step")
+		6:
 			_prewarm_step += 1
 			_update_progress(1.0, "Pronto!")
 			_prewarm_done = true
@@ -334,6 +343,68 @@ func _prewarm_shaders() -> void:
 		if is_instance_valid(temp_viewport):
 			temp_viewport.queue_free()
 	)
+
+func _prewarm_materials() -> void:
+	LogManager.info("Loading", "Pre-warming materials and common resources...")
+	## Force-compile common materials used during gameplay to avoid stutters.
+	## This creates a tiny SubViewport with various material types rendered once.
+	var temp_vp = SubViewport.new()
+	temp_vp.size = Vector2i(32, 32)
+	temp_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var temp_world = World3D.new()
+	temp_vp.world_3d = temp_world
+
+	var cam = Camera3D.new()
+	cam.position = Vector3(0, 1, 3)
+	temp_vp.add_child(cam)
+	cam.look_at(Vector3.ZERO)
+
+	# Compile billboard material (used by MultiMeshManager)
+	var billboard_mesh = MeshInstance3D.new()
+	var quad = QuadMesh.new()
+	quad.size = Vector2(0.5, 0.5)
+	billboard_mesh.mesh = quad
+	var bb_mat = StandardMaterial3D.new()
+	bb_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	bb_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bb_mat.vertex_color_use_as_albedo = true
+	bb_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	bb_mat.alpha_scissor_threshold = 0.5
+	billboard_mesh.material_override = bb_mat
+	temp_vp.add_child(billboard_mesh)
+
+	# Compile emission material (used by particles, damage numbers)
+	var emit_mesh = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.2
+	sphere.height = 0.4
+	emit_mesh.mesh = sphere
+	var emit_mat = StandardMaterial3D.new()
+	emit_mat.emission_enabled = true
+	emit_mat.emission = Color.RED
+	emit_mat.emission_energy_multiplier = 2.0
+	emit_mesh.material_override = emit_mat
+	emit_mesh.position = Vector3(1, 0, 0)
+	temp_vp.add_child(emit_mesh)
+
+	# Compile unshaded material (used by enemy projectiles, UI elements)
+	var unshaded_mesh = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = Vector3(0.2, 0.2, 0.2)
+	unshaded_mesh.mesh = box
+	var unshaded_mat = StandardMaterial3D.new()
+	unshaded_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	unshaded_mat.albedo_color = Color.BLUE
+	unshaded_mesh.material_override = unshaded_mat
+	unshaded_mesh.position = Vector3(-1, 0, 0)
+	temp_vp.add_child(unshaded_mesh)
+
+	add_child(temp_vp)
+	get_tree().create_timer(0.15).timeout.connect(func():
+		if is_instance_valid(temp_vp):
+			temp_vp.queue_free()
+	)
+
 
 func _prewarm_multimesh() -> void:
 	LogManager.info("Loading", "Pre-warming MultiMeshManager...")

@@ -32,8 +32,13 @@ var _charge_dir: Vector3 = Vector3.ZERO
 var _is_charging: bool = false
 var _frame_counter: int = 0  # Performance: stagger per-enemy work across frames
 var _cached_separation: Vector3 = Vector3.ZERO  # Cached separation vector (updated every 3rd frame)
+var _cached_enemy_sprite: Node = null  # Cached EnemySprite node reference
+var _cached_enemy_sprite_checked: bool = false  # Whether we've looked up the sprite node
 
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
+## Shared projectile mesh/material — avoid creating new ones every ranged attack
+static var _shared_proj_mesh: SphereMesh = null
+static var _shared_proj_mat: StandardMaterial3D = null
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
@@ -560,14 +565,14 @@ func _physics_process(delta: float) -> void:
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
 		# Update walk animation (AnimatedSprite3D) or procedural animator
-		var _enemy_anim = get_node_or_null("EnemySprite")
+		var _enemy_anim = _get_cached_sprite()
 		if _enemy_anim and _enemy_anim is AnimatedSprite3D:
 			if _enemy_anim.animation != "walk":
 				_enemy_anim.play("walk")
 		if _animator:
 			_animator.set_walking(true)
 	else:
-		var _enemy_anim_idle = get_node_or_null("EnemySprite")
+		var _enemy_anim_idle = _get_cached_sprite()
 		if _enemy_anim_idle and _enemy_anim_idle is AnimatedSprite3D:
 			if _enemy_anim_idle.animation != "idle":
 				_enemy_anim_idle.play("idle")
@@ -611,7 +616,7 @@ func _process_stage_behavior(delta: float) -> void:
 					ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2), 6)
 		"stealth":
 			var alpha = clampf(1.0 - (dist_to_target / _stealth_range), 0.05, 1.0)
-			var sprite = get_node_or_null("EnemySprite")
+			var sprite = _get_cached_sprite()
 			if sprite:
 				sprite.modulate.a = alpha
 			var proc = get_node_or_null("ProceduralModel")
@@ -624,21 +629,39 @@ func _process_stage_behavior(delta: float) -> void:
 		"flying":
 			pass  # Handled in _physics_process movement
 
+func _get_cached_sprite() -> Node:
+	## Cached EnemySprite lookup — avoids get_node_or_null() every frame.
+	if not _cached_enemy_sprite_checked:
+		_cached_enemy_sprite_checked = true
+		_cached_enemy_sprite = get_node_or_null("EnemySprite")
+	return _cached_enemy_sprite
+
+
+static func _get_shared_proj_mesh() -> SphereMesh:
+	if not _shared_proj_mesh:
+		_shared_proj_mesh = SphereMesh.new()
+		_shared_proj_mesh.radius = 0.15
+		_shared_proj_mesh.height = 0.3
+	return _shared_proj_mesh
+
+
+static func _get_shared_proj_mat() -> StandardMaterial3D:
+	if not _shared_proj_mat:
+		_shared_proj_mat = StandardMaterial3D.new()
+		_shared_proj_mat.albedo_color = Color(1.0, 0.3, 0.3)
+		_shared_proj_mat.emission_enabled = true
+		_shared_proj_mat.emission = Color(1.0, 0.2, 0.2)
+		_shared_proj_mat.emission_energy_multiplier = 2.0
+	return _shared_proj_mat
+
+
 func _spawn_enemy_projectile() -> void:
 	if not target or not is_instance_valid(target) or not is_inside_tree():
 		return
 	var dir = (target.global_position - global_position).normalized()
 	var projectile = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.15
-	sphere.height = 0.3
-	projectile.mesh = sphere
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.3, 0.3)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.2, 0.2)
-	mat.emission_energy_multiplier = 2.0
-	projectile.material_override = mat
+	projectile.mesh = _get_shared_proj_mesh()
+	projectile.material_override = _get_shared_proj_mat()
 	projectile.global_position = global_position + Vector3(0, 0.8, 0)
 	var start_pos = global_position + Vector3(0, 0.8, 0)
 	var end_pos = start_pos + dir * 15.0

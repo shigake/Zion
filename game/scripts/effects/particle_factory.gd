@@ -5,7 +5,7 @@ extends Node
 
 # --- Particle Pool ---
 const PARTICLE_POOL_SIZE := 30
-const MAX_ACTIVE_PARTICLES := 50  # Global budget: max simultaneous particle systems
+const MAX_ACTIVE_PARTICLES := 35  # Global budget: max simultaneous particle systems (was 50)
 var _particle_pool: Array = []  # Available GPUParticles3D nodes
 var _active_particles: Dictionary = {}  # node -> cleanup_timer
 
@@ -169,13 +169,28 @@ func return_damage_number(label: Label3D) -> void:
 
 # --- Particle spawn methods ---
 
+## Cached FPS value — updated every 15 frames to avoid per-call overhead
+var _cached_fps: float = 60.0
+var _fps_cache_counter: int = 0
+
+func _get_cached_fps() -> float:
+	_fps_cache_counter += 1
+	if _fps_cache_counter >= 15:
+		_fps_cache_counter = 0
+		_cached_fps = Engine.get_frames_per_second()
+	return _cached_fps
+
+
 func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 6) -> void:
 	# Skip entirely at very low FPS — hit particles are the most frequent spawn
-	var fps = Engine.get_frames_per_second()
-	if fps < 30 and randf() > 0.2:
+	var fps = _get_cached_fps()
+	if fps < 35 and randf() > 0.15:
 		return
-	if fps < 20:
+	if fps < 25:
 		return
+	# Reduce count at medium-low FPS
+	if fps < 45:
+		count = mini(count, 3)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
@@ -212,11 +227,13 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 
 func spawn_death_particles(pos: Vector3, color: Color, count: int = 12) -> void:
 	# Reduce particle count at low FPS
-	var fps = Engine.get_frames_per_second()
+	var fps = _get_cached_fps()
 	if fps < 25:
+		count = 2
+	elif fps < 35:
 		count = 3
-	elif fps < 40:
-		count = mini(count, 6)
+	elif fps < 45:
+		count = mini(count, 5)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
@@ -250,6 +267,9 @@ func spawn_death_particles(pos: Vector3, color: Color, count: int = 12) -> void:
 	_setup_and_emit(particles, pos, 1.5)
 
 func spawn_collect_particles(pos: Vector3, color: Color = Color(0.2, 0.6, 1.0)) -> void:
+	# Skip collect particles at very low FPS
+	if _get_cached_fps() < 30:
+		return
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
