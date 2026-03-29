@@ -414,56 +414,26 @@ func _spawn_merchant() -> void:
 	var center = players[0].global_position
 	var offset = Vector3(rng.randf_range(-3, 3), 0, rng.randf_range(-3, 3))
 
-	# Cria NPC merchant visual — visual mais elaborado
+	# Cria NPC merchant visual — sprite pixel art
 	_merchant_node = Node3D.new()
 	_merchant_node.name = "Merchant"
 
-	# Base body (robe/capa)
-	var body = MeshInstance3D.new()
-	var capsule = CapsuleMesh.new()
-	capsule.radius = 0.35
-	capsule.height = 1.3
-	body.mesh = capsule
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.12, 0.2, 0.45)
-	mat.emission_enabled = true
-	mat.emission = Color(0.08, 0.2, 0.5)
-	mat.emission_energy_multiplier = 2.0
-	body.material_override = mat
-	body.position.y = 0.65
-	_merchant_node.add_child(body)
-
-	# Crystal floating above head (rotating)
-	var crystal_mesh = MeshInstance3D.new()
-	var prism = PrismMesh.new()
-	prism.size = Vector3(0.25, 0.35, 0.25)
-	crystal_mesh.mesh = prism
-	var crystal_mat = StandardMaterial3D.new()
-	crystal_mat.albedo_color = Color(0.3, 0.7, 1.0, 0.85)
-	crystal_mat.emission_enabled = true
-	crystal_mat.emission = Color(0.2, 0.5, 1.0)
-	crystal_mat.emission_energy_multiplier = 3.0
-	crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	crystal_mesh.material_override = crystal_mat
-	crystal_mesh.position.y = 1.7
-	_merchant_node.add_child(crystal_mesh)
-
-	# Floating glow sphere around crystal
-	var glow_mesh = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.2
-	sphere.height = 0.4
-	glow_mesh.mesh = sphere
-	var glow_mat = StandardMaterial3D.new()
-	glow_mat.albedo_color = Color(0.15, 0.4, 0.9, 0.2)
-	glow_mat.emission_enabled = true
-	glow_mat.emission = Color(0.1, 0.3, 0.8)
-	glow_mat.emission_energy_multiplier = 2.5
-	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glow_mat.no_depth_test = true
-	glow_mesh.material_override = glow_mat
-	glow_mesh.position.y = 1.7
-	_merchant_node.add_child(glow_mesh)
+	# Merchant sprite billboard
+	var sprite = Sprite3D.new()
+	var sprite_path = "res://assets/sprites/characters/necro.png"  # Hooded figure works as merchant
+	if ResourceLoader.exists("res://assets/sprites/ui/merchant.png"):
+		sprite_path = "res://assets/sprites/ui/merchant.png"
+	if ResourceLoader.exists(sprite_path):
+		sprite.texture = load(sprite_path)
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.07  # Bigger than enemies
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.modulate = Color(0.6, 0.8, 1.2)  # Blue tint
+	sprite.position.y = 0.9
+	sprite.name = "MerchantSprite"
+	_merchant_node.add_child(sprite)
 
 	# Label
 	var label = Label3D.new()
@@ -504,15 +474,20 @@ func _spawn_merchant() -> void:
 	get_parent().add_child(_merchant_node)
 	_merchant_node.global_position = center + offset
 
-	# Generate 3 random items to sell
+	# Generate 3 random items to sell (exclude disabled)
 	_merchant_items.clear()
 	var all_items = ItemDB.get_all_item_ids()
-	all_items.shuffle()
-	for i in range(mini(3, all_items.size())):
-		var item_data = ItemDB.get_item(all_items[i])
+	var available_items: Array = []
+	for iid in all_items:
+		var data = ItemDB.get_item(iid)
+		if not data.get("disabled", false):
+			available_items.append(iid)
+	available_items.shuffle()
+	for i in range(mini(3, available_items.size())):
+		var item_data = ItemDB.get_item(available_items[i])
 		_merchant_items.append({
-			"id": all_items[i],
-			"name": item_data.get("name", all_items[i]),
+			"id": available_items[i],
+			"name": item_data.get("name", available_items[i]),
 			"cost": rng.randi_range(5, 15),
 		})
 
