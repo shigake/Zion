@@ -19,6 +19,7 @@ var knockback_velocity: Vector3 = Vector3.ZERO
 var _animator: Node = null
 var _hit_count: int = 0
 var _flash_tween: Tween = null  # Reuse tween for flash to avoid creating new ones per hit
+var _sprite_base_scale: Vector3 = Vector3.ONE  # Original scale, never changes
 
 ## Stage behavior system — themed enemies get unique AI
 var _behavior: String = ""
@@ -162,6 +163,7 @@ func _apply_sprite() -> void:
 			anim_sprite.name = "EnemySprite"
 			anim_sprite.position.y = 0.65
 			anim_sprite.play("idle")
+			_sprite_base_scale = anim_sprite.scale
 			add_child(anim_sprite)
 			LogManager.debug("Enemy", "Walk spritesheet loaded: %s for %s" % [walk_path, enemy_type])
 			return
@@ -177,6 +179,7 @@ func _apply_sprite() -> void:
 	sprite.name = "EnemySprite"
 	sprite.position.y = 0.65
 	add_child(sprite)
+	_sprite_base_scale = sprite.scale
 	# Boss aura glow + floating name label
 	if enemy_type.begins_with("Boss"):
 		var aura = Sprite3D.new()
@@ -810,16 +813,15 @@ func _flash_white() -> void:
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:
 		sprite.modulate = Color(5, 2, 2)  # Red-tinted flash
-		# Squash-stretch on hit
-		var orig_scale = sprite.scale
-		sprite.scale = Vector3(orig_scale.x * 1.3, orig_scale.y * 0.7, orig_scale.z)
+		# Squash-stretch on hit — always use base scale to prevent accumulation
+		sprite.scale = Vector3(_sprite_base_scale.x * 1.3, _sprite_base_scale.y * 0.7, _sprite_base_scale.z)
 		# Reuse tween to avoid creating hundreds per second
 		if _flash_tween and _flash_tween.is_valid():
 			_flash_tween.kill()
 		_flash_tween = create_tween()
 		_flash_tween.set_parallel(true)
 		_flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
-		_flash_tween.tween_property(sprite, "scale", orig_scale, 0.12).set_trans(Tween.TRANS_ELASTIC)
+		_flash_tween.tween_property(sprite, "scale", _sprite_base_scale, 0.12).set_trans(Tween.TRANS_ELASTIC)
 		return
 	var proc_model = get_node_or_null("ProceduralModel")
 	if proc_model:
