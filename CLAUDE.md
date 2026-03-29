@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (15 arquivos)          # Game design documents
+├── docs/ (16 arquivos)          # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── prd.md                   # Product Requirements (roadmap fases A-E)
 │   ├── story.md                 # Historia, lore, narrativa completa
@@ -55,6 +55,7 @@ Zion/
 │   ├── prd_leaderboard_online.md # PRD de leaderboard global
 │   ├── prd_cemetery_music.md    # PRD de musica dinamica do cemiterio
 │   ├── prd_checklist_final.md   # Checklist final pre-release
+│   ├── prd_multiplayer_menu.md  # PRD de menu multiplayer (lobby completo)
 │   └── prd_pendencias.md       # Pendencias e tarefas restantes
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
