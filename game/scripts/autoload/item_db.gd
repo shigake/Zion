@@ -121,7 +121,6 @@ var items: Dictionary = {
 		"color": Color(0.9, 0.3, 0.0),
 		"stat": "fire_ground",
 		"value_per_level": 1.0,
-		"disabled": true,
 	},
 	"crown": {
 		"name": "Coroa",
