@@ -11,7 +11,7 @@ on:
         required: false
 
 env:
-  GODOT_VERSION: "4.4.1"
+  GODOT_VERSION: "4.6.1"
 
 jobs:
   build-windows:
