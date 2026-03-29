@@ -116,57 +116,7 @@ func _apply_sprite() -> void:
 	for child in get_children():
 		if child is MeshInstance3D and child != mesh:
 			child.visible = false
-	# Check for walk spritesheet (AnimatedSprite3D)
-	var walk_path = sprite_path.replace(".png", "_walk.png")
-	if ResourceLoader.exists(walk_path):
-		var walk_tex: Texture2D
-		if _sprite_cache.has(walk_path):
-			walk_tex = _sprite_cache[walk_path]
-		else:
-			walk_tex = load(walk_path) as Texture2D
-			if walk_tex:
-				_sprite_cache[walk_path] = walk_tex
-		if walk_tex:
-			var anim_sprite = AnimatedSprite3D.new()
-			var frames = SpriteFrames.new()
-
-			# "walk" animation: 4 frames
-			frames.add_animation("walk")
-			frames.set_animation_speed("walk", 8)
-			frames.set_animation_loop("walk", true)
-			for i in range(4):
-				var atlas = AtlasTexture.new()
-				atlas.atlas = walk_tex
-				atlas.region = Rect2(i * 32, 0, 32, 32)
-				frames.add_frame("walk", atlas)
-
-			# "idle" animation: frames 0 and 2
-			frames.add_animation("idle")
-			frames.set_animation_speed("idle", 2)
-			frames.set_animation_loop("idle", true)
-			for i in [0, 2]:
-				var atlas = AtlasTexture.new()
-				atlas.atlas = walk_tex
-				atlas.region = Rect2(i * 32, 0, 32, 32)
-				frames.add_frame("idle", atlas)
-
-			# Remove the auto-created "default" animation
-			if frames.has_animation("default"):
-				frames.remove_animation("default")
-
-			anim_sprite.sprite_frames = frames
-			anim_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			anim_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			anim_sprite.pixel_size = 0.07 if enemy_type.begins_with("Boss") else 0.05
-			anim_sprite.shaded = false
-			anim_sprite.transparent = true
-			anim_sprite.name = "EnemySprite"
-			anim_sprite.position.y = 0.65
-			anim_sprite.play("idle")
-			_sprite_base_scale = anim_sprite.scale
-			add_child(anim_sprite)
-			LogManager.debug("Enemy", "Walk spritesheet loaded: %s for %s" % [walk_path, enemy_type])
-			return
+	# Walk spritesheets disabled — static sprites with walk bob look better
 	# Fallback: static Sprite3D
 	var sprite = Sprite3D.new()
 	sprite.texture = tex
@@ -567,18 +517,17 @@ func _physics_process(delta: float) -> void:
 		if _behavior == "flying":
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
-		# Update walk animation (AnimatedSprite3D) or procedural animator
-		var _enemy_anim = _get_cached_sprite()
-		if _enemy_anim and _enemy_anim is AnimatedSprite3D:
-			if _enemy_anim.animation != "walk":
-				_enemy_anim.play("walk")
+		# Walk bob on sprite (subtle bounce)
+		var _walk_sprite = get_node_or_null("EnemySprite")
+		if _walk_sprite:
+			_walk_sprite.position.y = 0.65 + abs(sin(GameManager.game_time * 8.0 + global_position.x)) * 0.04
 		if _animator:
 			_animator.set_walking(true)
 	else:
-		var _enemy_anim_idle = _get_cached_sprite()
-		if _enemy_anim_idle and _enemy_anim_idle is AnimatedSprite3D:
-			if _enemy_anim_idle.animation != "idle":
-				_enemy_anim_idle.play("idle")
+		# Idle bob
+		var _idle_sprite = get_node_or_null("EnemySprite")
+		if _idle_sprite:
+			_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 3.0 + global_position.z) * 0.015
 		if _animator:
 			_animator.set_walking(false)
 

@@ -48,52 +48,10 @@ func _ready() -> void:
 	if not char_data.is_empty():
 		original_color = char_data.get("color", original_color)
 
-	# Sprite billboard do personagem (prioridade sobre modelo procedural)
+	# Sprite billboard do personagem — static sprite with walk bob
 	var char_id = GameManager.selected_character
-	var walk_sprite_path = "res://assets/sprites/characters/%s_walk.png" % char_id
 	var char_sprite_path = "res://assets/sprites/characters/%s.png" % char_id
-	if ResourceLoader.exists(walk_sprite_path):
-		# Walk spritesheet available — use AnimatedSprite3D
-		mesh.visible = false
-		var anim_sprite = AnimatedSprite3D.new()
-		var frames = SpriteFrames.new()
-		var walk_tex = load(walk_sprite_path) as Texture2D
-
-		# "walk" animation: 4 frames (0,1,2,3)
-		frames.add_animation("walk")
-		frames.set_animation_speed("walk", 8)
-		frames.set_animation_loop("walk", true)
-		for i in range(4):
-			var atlas = AtlasTexture.new()
-			atlas.atlas = walk_tex
-			atlas.region = Rect2(i * 32, 0, 32, 32)
-			frames.add_frame("walk", atlas)
-
-		# "idle" animation: frames 0 and 2 (both are the neutral stance)
-		frames.add_animation("idle")
-		frames.set_animation_speed("idle", 2)
-		frames.set_animation_loop("idle", true)
-		for i in [0, 2]:
-			var atlas = AtlasTexture.new()
-			atlas.atlas = walk_tex
-			atlas.region = Rect2(i * 32, 0, 32, 32)
-			frames.add_frame("idle", atlas)
-
-		# Remove the auto-created "default" animation
-		if frames.has_animation("default"):
-			frames.remove_animation("default")
-
-		anim_sprite.sprite_frames = frames
-		anim_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		anim_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		anim_sprite.pixel_size = 0.07
-		anim_sprite.shaded = false
-		anim_sprite.transparent = true
-		anim_sprite.name = "PlayerSprite"
-		anim_sprite.position.y = 0.65
-		anim_sprite.play("idle")
-		add_child(anim_sprite)
-	elif ResourceLoader.exists(char_sprite_path):
+	if ResourceLoader.exists(char_sprite_path):
 		# Fallback: static Sprite3D
 		mesh.visible = false
 		var sprite = Sprite3D.new()
@@ -251,6 +209,14 @@ func _physics_process(delta: float) -> void:
 		else:
 			if _anim_sprite.animation != "idle":
 				_anim_sprite.play("idle")
+
+	# Walk bob on sprite (subtle bounce when moving)
+	var player_sprite = get_node_or_null("PlayerSprite")
+	if player_sprite and player_sprite is Sprite3D:
+		if velocity.length() > 0.5:
+			player_sprite.position.y = 0.65 + abs(sin(GameManager.game_time * 10.0)) * 0.06
+		else:
+			player_sprite.position.y = 0.65 + sin(GameManager.game_time * 3.0) * 0.02
 
 	# Update procedural animation
 	if _animator:
