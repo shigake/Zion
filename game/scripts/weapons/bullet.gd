@@ -85,8 +85,6 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if _returning or not is_inside_tree():
 		return
-	_returning = true  # Prevent double-trigger
-	set_deferred("monitoring", false)
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = weapon_id
 		body.call_deferred("take_damage", damage, damage_type)
@@ -102,7 +100,7 @@ func _return_to_pool() -> void:
 	_returning = true
 	timer = 0.0
 	direction = Vector3.FORWARD
-	monitoring = false
+	set_deferred("monitoring", false)
 	call_deferred("_do_return")
 
 func _do_return() -> void:
