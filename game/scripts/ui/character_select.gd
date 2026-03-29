@@ -63,11 +63,22 @@ func _find_first_unlocked() -> void:
 #  BUILD UI — full redesign
 # ===========================================================================
 func _build_ui() -> void:
-	# -- Dark background --
+	# -- Pixel art background texture (fallback to solid color) --
 	_bg_gradient = ColorRect.new()
 	_bg_gradient.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg_gradient.color = BG_COLOR
 	add_child(_bg_gradient)
+
+	var bg_tex_path := "res://assets/sprites/ui/menu_bg.png"
+	if ResourceLoader.exists(bg_tex_path):
+		var bg_tex := TextureRect.new()
+		bg_tex.name = "CharSelectBgTexture"
+		bg_tex.texture = load(bg_tex_path)
+		bg_tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+		bg_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bg_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(bg_tex)
 
 	# Dark overlay for depth
 	var overlay := ColorRect.new()

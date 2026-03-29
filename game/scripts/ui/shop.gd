@@ -9,10 +9,25 @@ extends Control
 func _ready() -> void:
 	get_tree().paused = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_setup_texture_background()
 	back_btn.pressed.connect(_on_back)
 	_build_shop()
 	GamepadUI.notify_menu_opened()
 	AudioManager.play_music("shop")
+
+
+func _setup_texture_background() -> void:
+	var bg_tex_path := "res://assets/sprites/ui/shop_bg.png"
+	if ResourceLoader.exists(bg_tex_path):
+		var bg := TextureRect.new()
+		bg.name = "ShopBgTexture"
+		bg.texture = load(bg_tex_path)
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(bg)
+		move_child(bg, 0)
 
 func _build_shop() -> void:
 	_clear_upgrades()
@@ -24,7 +39,23 @@ func _build_shop() -> void:
 		var cost = ShopDB.get_cost(uid)
 		var maxed = current >= data["max_level"]
 
+		var panel := PanelContainer.new()
+		var panel_tex_path := "res://assets/sprites/ui/panel_bg.png"
+		if ResourceLoader.exists(panel_tex_path):
+			var sb_panel := StyleBoxTexture.new()
+			sb_panel.texture = load(panel_tex_path)
+			sb_panel.texture_margin_left = 6
+			sb_panel.texture_margin_right = 6
+			sb_panel.texture_margin_top = 6
+			sb_panel.texture_margin_bottom = 6
+			sb_panel.content_margin_left = 8
+			sb_panel.content_margin_right = 8
+			sb_panel.content_margin_top = 4
+			sb_panel.content_margin_bottom = 4
+			panel.add_theme_stylebox_override("panel", sb_panel)
+
 		var hbox = HBoxContainer.new()
+		panel.add_child(hbox)
 
 		var icon_path = "res://assets/sprites/upgrades/%s.png" % uid
 		var icon_tex = load(icon_path) if ResourceLoader.exists(icon_path) else null
@@ -57,7 +88,7 @@ func _build_shop() -> void:
 			btn.pressed.connect(func(): _buy(captured_uid))
 		hbox.add_child(btn)
 
-		upgrade_container.add_child(hbox)
+		upgrade_container.add_child(panel)
 
 func _buy(uid: String) -> void:
 	var success = SaveManager.buy_upgrade(uid)

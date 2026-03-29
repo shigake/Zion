@@ -31,10 +31,6 @@ var _particle_colors: Array[Color] = []  # original color per particle
 var _glow_rect: ColorRect = null
 var _glow_time: float = 0.0
 
-# Stars
-var _stars: Array[ColorRect] = []
-var _star_speeds: Array[float] = []
-var _star_base_x: Array[float] = []
 
 # Title sparkles
 var _sparkles: Array[ColorRect] = []
@@ -79,10 +75,6 @@ const COLOR_QUIT_BORDER := Color(0.25, 0.20, 0.20)
 const COLOR_QUIT_TEXT := Color(0.55, 0.50, 0.50)
 const COLOR_QUIT_TEXT_HOVER := Color(0.85, 0.55, 0.50)
 
-# Moon / atmosphere colors
-const COLOR_MOON := Color(0.15, 0.15, 0.25, 0.3)
-const COLOR_GROUND := Color(0.02, 0.02, 0.04)
-const COLOR_FOG := Color(0.02, 0.03, 0.08, 0.5)
 
 
 func _ready() -> void:
@@ -91,10 +83,7 @@ func _ready() -> void:
 	GameManager.paused = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
-	_style_background()
-	_setup_stars()
-	_setup_moon()
-	_setup_ground_silhouette()
+	_setup_texture_background()
 	_style_title()
 	_setup_title_sparkles()
 	_style_crystals()
@@ -104,7 +93,6 @@ func _ready() -> void:
 	_style_bottom_right()
 	_setup_character_silhouettes()
 	_setup_floating_particles()
-	_setup_bottom_fog()
 	_setup_hover_glow()
 
 	# Connect buttons
@@ -151,150 +139,25 @@ func _ready() -> void:
 # Styling
 # ---------------------------------------------------------------------------
 
-func _style_background() -> void:
-	# Use darker base color
+func _setup_texture_background() -> void:
+	# Hide the old ColorRect background and gradient overlay
 	var bg_node = get_node_or_null("Background")
 	if bg_node and bg_node is ColorRect:
 		bg_node.color = COLOR_BG
+	gradient_overlay.visible = false
 
-	var shader := Shader.new()
-	shader.code = """
-shader_type canvas_item;
-
-uniform vec4 color_top : source_color = vec4(0.05, 0.05, 0.09, 1.0);
-uniform vec4 color_bottom : source_color = vec4(0.02, 0.02, 0.03, 1.0);
-uniform float vignette_strength : hint_range(0.0, 1.0) = 0.4;
-uniform float time : hint_range(0.0, 1000.0) = 0.0;
-
-void fragment() {
-	vec2 uv = UV;
-	vec4 grad = mix(color_top, color_bottom, uv.y);
-	// Subtle vignette
-	float dist = distance(uv, vec2(0.5, 0.5));
-	float vignette = smoothstep(0.35, 1.0, dist) * vignette_strength;
-	grad.rgb -= vec3(vignette);
-	// Very subtle color shift over time
-	grad.rgb += vec3(sin(time * 0.3) * 0.005, sin(time * 0.2 + 1.0) * 0.003, sin(time * 0.15 + 2.0) * 0.008);
-	COLOR = grad;
-}
-"""
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	mat.set_shader_parameter("color_top", Color(0.05, 0.05, 0.09, 1.0))
-	mat.set_shader_parameter("color_bottom", Color(0.02, 0.02, 0.03, 1.0))
-	mat.set_shader_parameter("vignette_strength", 0.4)
-	mat.set_shader_parameter("time", 0.0)
-	gradient_overlay.material = mat
-
-
-# ---------------------------------------------------------------------------
-# Stars (background drifting dots)
-# ---------------------------------------------------------------------------
-
-func _setup_stars() -> void:
-	var container := Control.new()
-	container.name = "StarsContainer"
-	container.anchors_preset = Control.PRESET_FULL_RECT
-	container.anchor_right = 1.0
-	container.anchor_bottom = 1.0
-	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(container)
-	move_child(container, 2)
-
-	var star_count := 25
-	for i in range(star_count):
-		var star := ColorRect.new()
-		var star_size := randf_range(1.0, 2.5)
-		star.size = Vector2(star_size, star_size)
-		star.color = Color(0.7, 0.7, 0.85, randf_range(0.08, 0.25))
-		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var px := randf_range(0.0, 1280.0)
-		var py := randf_range(0.0, 720.0)
-		star.position = Vector2(px, py)
-		container.add_child(star)
-		_stars.append(star)
-		_star_speeds.append(randf_range(4.0, 12.0))
-		_star_base_x.append(px)
-
-
-# ---------------------------------------------------------------------------
-# Moon (large dim circle in top-right)
-# ---------------------------------------------------------------------------
-
-func _setup_moon() -> void:
-	var moon := ColorRect.new()
-	moon.name = "Moon"
-	moon.size = Vector2(180, 180)
-	moon.position = Vector2(980, 40)
-	moon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	moon.color = Color(0, 0, 0, 0)  # Drawn via shader
-
-	var shader := Shader.new()
-	shader.code = """
-shader_type canvas_item;
-
-uniform vec4 moon_color : source_color = vec4(0.15, 0.15, 0.25, 0.3);
-uniform float glow_radius : hint_range(0.0, 1.0) = 0.35;
-
-void fragment() {
-	vec2 uv = UV - vec2(0.5);
-	float dist = length(uv);
-	// Soft circle with glow falloff
-	float moon = smoothstep(glow_radius + 0.15, glow_radius - 0.05, dist);
-	// Outer glow
-	float glow = smoothstep(0.5, 0.1, dist) * 0.15;
-	float alpha = (moon * moon_color.a) + glow;
-	COLOR = vec4(moon_color.rgb, alpha);
-}
-"""
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	mat.set_shader_parameter("moon_color", COLOR_MOON)
-	mat.set_shader_parameter("glow_radius", 0.35)
-	moon.material = mat
-
-	add_child(moon)
-	move_child(moon, 3)
-
-
-# ---------------------------------------------------------------------------
-# Ground silhouette (dark wavy terrain at bottom)
-# ---------------------------------------------------------------------------
-
-func _setup_ground_silhouette() -> void:
-	var ground := ColorRect.new()
-	ground.name = "GroundSilhouette"
-	ground.size = Vector2(1280, 80)
-	ground.position = Vector2(0, 640)
-	ground.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ground.color = Color(0, 0, 0, 0)
-
-	var shader := Shader.new()
-	shader.code = """
-shader_type canvas_item;
-
-uniform vec4 ground_color : source_color = vec4(0.02, 0.02, 0.04, 1.0);
-uniform float time : hint_range(0.0, 1000.0) = 0.0;
-
-void fragment() {
-	vec2 uv = UV;
-	// Wavy terrain line
-	float wave = sin(uv.x * 6.0 + time * 0.1) * 0.15
-			   + sin(uv.x * 12.0 - time * 0.05) * 0.08
-			   + sin(uv.x * 3.0 + 1.5) * 0.2;
-	float terrain = smoothstep(0.3 + wave, 0.35 + wave, uv.y);
-	COLOR = vec4(ground_color.rgb, terrain * ground_color.a);
-}
-"""
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	mat.set_shader_parameter("ground_color", COLOR_GROUND)
-	mat.set_shader_parameter("time", 0.0)
-	ground.material = mat
-
-	add_child(ground)
-	# Place above background but below UI
-	move_child(ground, 4)
+	# Use pixel art menu background texture
+	var bg_tex_path := "res://assets/sprites/ui/menu_bg.png"
+	if ResourceLoader.exists(bg_tex_path):
+		var bg := TextureRect.new()
+		bg.name = "MenuBgTexture"
+		bg.texture = load(bg_tex_path)
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(bg)
+		move_child(bg, 0)
 
 
 func _style_title() -> void:
@@ -377,62 +240,12 @@ func _style_play_button() -> void:
 	play_btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.9, 0.4))
 	play_btn.add_theme_color_override("font_focus_color", Color(1.0, 0.95, 0.6))
 
-	# Normal — dark warm bg with gold border
-	var sb_normal := StyleBoxFlat.new()
-	sb_normal.bg_color = COLOR_PLAY_BG
-	sb_normal.border_color = COLOR_PLAY_BORDER
-	sb_normal.set_border_width_all(2)
-	sb_normal.set_corner_radius_all(8)
-	sb_normal.content_margin_left = 24
-	sb_normal.content_margin_right = 24
-	sb_normal.content_margin_top = 12
-	sb_normal.content_margin_bottom = 12
-	# Subtle gold shadow glow
-	sb_normal.shadow_color = Color(0.9, 0.75, 0.2, 0.08)
-	sb_normal.shadow_size = 6
-	play_btn.add_theme_stylebox_override("normal", sb_normal)
-
-	# Hover — brighter
-	var sb_hover := StyleBoxFlat.new()
-	sb_hover.bg_color = COLOR_PLAY_HOVER
-	sb_hover.border_color = COLOR_PLAY_BORDER_GLOW
-	sb_hover.set_border_width_all(2)
-	sb_hover.set_corner_radius_all(8)
-	sb_hover.content_margin_left = 24
-	sb_hover.content_margin_right = 24
-	sb_hover.content_margin_top = 12
-	sb_hover.content_margin_bottom = 12
-	sb_hover.shadow_color = Color(0.9, 0.75, 0.2, 0.15)
-	sb_hover.shadow_size = 10
-	play_btn.add_theme_stylebox_override("hover", sb_hover)
-
-	# Pressed
-	var sb_pressed := StyleBoxFlat.new()
-	sb_pressed.bg_color = COLOR_PLAY_PRESSED
-	sb_pressed.border_color = COLOR_GOLD
-	sb_pressed.set_border_width_all(2)
-	sb_pressed.set_corner_radius_all(8)
-	sb_pressed.content_margin_left = 24
-	sb_pressed.content_margin_right = 24
-	sb_pressed.content_margin_top = 12
-	sb_pressed.content_margin_bottom = 12
-	sb_pressed.shadow_color = Color(0.9, 0.75, 0.2, 0.2)
-	sb_pressed.shadow_size = 4
-	play_btn.add_theme_stylebox_override("pressed", sb_pressed)
-
-	# Focus (gamepad)
-	var sb_focus := StyleBoxFlat.new()
-	sb_focus.bg_color = COLOR_PLAY_HOVER
-	sb_focus.border_color = COLOR_GOLD
-	sb_focus.set_border_width_all(3)
-	sb_focus.set_corner_radius_all(8)
-	sb_focus.content_margin_left = 24
-	sb_focus.content_margin_right = 24
-	sb_focus.content_margin_top = 12
-	sb_focus.content_margin_bottom = 12
-	sb_focus.shadow_color = Color(0.9, 0.75, 0.2, 0.18)
-	sb_focus.shadow_size = 10
-	play_btn.add_theme_stylebox_override("focus", sb_focus)
+	# Use pixel art texture-based button styles
+	_apply_texture_button_style(
+		play_btn,
+		"res://assets/sprites/ui/btn_primary.png",
+		"res://assets/sprites/ui/btn_primary_hover.png"
+	)
 
 
 func _style_secondary_buttons() -> void:
@@ -453,55 +266,14 @@ func _style_secondary_button(btn: Button) -> void:
 	btn.add_theme_color_override("font_pressed_color", COLOR_GOLD)
 	btn.add_theme_color_override("font_focus_color", COLOR_BTN_TEXT_HOVER)
 
-	# Normal
-	var sb_normal := StyleBoxFlat.new()
-	sb_normal.bg_color = COLOR_BTN_NORMAL
-	sb_normal.border_color = COLOR_BORDER
-	sb_normal.set_border_width_all(1)
-	sb_normal.set_corner_radius_all(6)
-	sb_normal.content_margin_left = 20
-	sb_normal.content_margin_right = 20
-	sb_normal.content_margin_top = 8
-	sb_normal.content_margin_bottom = 8
-	btn.add_theme_stylebox_override("normal", sb_normal)
+	# Use pixel art texture-based button styles
+	_apply_texture_button_style(
+		btn,
+		"res://assets/sprites/ui/btn_normal.png",
+		"res://assets/sprites/ui/btn_hover.png"
+	)
 
-	# Hover
-	var sb_hover := StyleBoxFlat.new()
-	sb_hover.bg_color = COLOR_BTN_HOVER
-	sb_hover.border_color = COLOR_BORDER_HOVER
-	sb_hover.set_border_width_all(1)
-	sb_hover.set_corner_radius_all(6)
-	sb_hover.content_margin_left = 20
-	sb_hover.content_margin_right = 20
-	sb_hover.content_margin_top = 8
-	sb_hover.content_margin_bottom = 8
-	btn.add_theme_stylebox_override("hover", sb_hover)
-
-	# Pressed
-	var sb_pressed := StyleBoxFlat.new()
-	sb_pressed.bg_color = COLOR_BTN_PRESSED
-	sb_pressed.border_color = COLOR_GOLD
-	sb_pressed.set_border_width_all(1)
-	sb_pressed.set_corner_radius_all(6)
-	sb_pressed.content_margin_left = 20
-	sb_pressed.content_margin_right = 20
-	sb_pressed.content_margin_top = 8
-	sb_pressed.content_margin_bottom = 8
-	btn.add_theme_stylebox_override("pressed", sb_pressed)
-
-	# Focus (gamepad)
-	var sb_focus := StyleBoxFlat.new()
-	sb_focus.bg_color = COLOR_BTN_HOVER
-	sb_focus.border_color = COLOR_GOLD
-	sb_focus.set_border_width_all(2)
-	sb_focus.set_corner_radius_all(6)
-	sb_focus.content_margin_left = 20
-	sb_focus.content_margin_right = 20
-	sb_focus.content_margin_top = 8
-	sb_focus.content_margin_bottom = 8
-	btn.add_theme_stylebox_override("focus", sb_focus)
-
-	# Disabled
+	# Disabled (fallback StyleBoxFlat since there's no disabled texture)
 	var sb_disabled := StyleBoxFlat.new()
 	sb_disabled.bg_color = Color(0.08, 0.08, 0.10)
 	sb_disabled.border_color = Color(0.15, 0.15, 0.18)
@@ -528,53 +300,43 @@ func _style_quit_button() -> void:
 	quit_btn.add_theme_color_override("font_pressed_color", Color(0.7, 0.4, 0.4))
 	quit_btn.add_theme_color_override("font_focus_color", COLOR_QUIT_TEXT_HOVER)
 
-	# Normal — very subtle
-	var sb_normal := StyleBoxFlat.new()
-	sb_normal.bg_color = COLOR_QUIT_BG
-	sb_normal.border_color = COLOR_QUIT_BORDER
-	sb_normal.set_border_width_all(1)
-	sb_normal.set_corner_radius_all(4)
-	sb_normal.content_margin_left = 16
-	sb_normal.content_margin_right = 16
-	sb_normal.content_margin_top = 6
-	sb_normal.content_margin_bottom = 6
-	quit_btn.add_theme_stylebox_override("normal", sb_normal)
+	# Use pixel art texture-based button styles (smaller variant)
+	_apply_texture_button_style(
+		quit_btn,
+		"res://assets/sprites/ui/btn_normal.png",
+		"res://assets/sprites/ui/btn_hover.png"
+	)
 
-	# Hover
-	var sb_hover := StyleBoxFlat.new()
-	sb_hover.bg_color = COLOR_QUIT_HOVER
-	sb_hover.border_color = Color(0.45, 0.30, 0.30)
-	sb_hover.set_border_width_all(1)
-	sb_hover.set_corner_radius_all(4)
-	sb_hover.content_margin_left = 16
-	sb_hover.content_margin_right = 16
-	sb_hover.content_margin_top = 6
-	sb_hover.content_margin_bottom = 6
-	quit_btn.add_theme_stylebox_override("hover", sb_hover)
 
-	# Pressed
-	var sb_pressed := StyleBoxFlat.new()
-	sb_pressed.bg_color = Color(0.18, 0.10, 0.10)
-	sb_pressed.border_color = Color(0.5, 0.3, 0.3)
-	sb_pressed.set_border_width_all(1)
-	sb_pressed.set_corner_radius_all(4)
-	sb_pressed.content_margin_left = 16
-	sb_pressed.content_margin_right = 16
-	sb_pressed.content_margin_top = 6
-	sb_pressed.content_margin_bottom = 6
-	quit_btn.add_theme_stylebox_override("pressed", sb_pressed)
-
-	# Focus
-	var sb_focus := StyleBoxFlat.new()
-	sb_focus.bg_color = COLOR_QUIT_HOVER
-	sb_focus.border_color = Color(0.5, 0.35, 0.35)
-	sb_focus.set_border_width_all(2)
-	sb_focus.set_corner_radius_all(4)
-	sb_focus.content_margin_left = 16
-	sb_focus.content_margin_right = 16
-	sb_focus.content_margin_top = 6
-	sb_focus.content_margin_bottom = 6
-	quit_btn.add_theme_stylebox_override("focus", sb_focus)
+func _apply_texture_button_style(btn: Button, normal_path: String, hover_path: String) -> void:
+	var normal_tex = load(normal_path) if ResourceLoader.exists(normal_path) else null
+	var hover_tex = load(hover_path) if ResourceLoader.exists(hover_path) else null
+	if normal_tex:
+		var sb_normal := StyleBoxTexture.new()
+		sb_normal.texture = normal_tex
+		sb_normal.texture_margin_left = 6
+		sb_normal.texture_margin_right = 6
+		sb_normal.texture_margin_top = 6
+		sb_normal.texture_margin_bottom = 6
+		sb_normal.content_margin_left = 16
+		sb_normal.content_margin_right = 16
+		sb_normal.content_margin_top = 8
+		sb_normal.content_margin_bottom = 8
+		btn.add_theme_stylebox_override("normal", sb_normal)
+		btn.add_theme_stylebox_override("pressed", sb_normal)
+	if hover_tex:
+		var sb_hover := StyleBoxTexture.new()
+		sb_hover.texture = hover_tex
+		sb_hover.texture_margin_left = 6
+		sb_hover.texture_margin_right = 6
+		sb_hover.texture_margin_top = 6
+		sb_hover.texture_margin_bottom = 6
+		sb_hover.content_margin_left = 16
+		sb_hover.content_margin_right = 16
+		sb_hover.content_margin_top = 8
+		sb_hover.content_margin_bottom = 8
+		btn.add_theme_stylebox_override("hover", sb_hover)
+		btn.add_theme_stylebox_override("focus", sb_hover)
 
 
 func _style_bottom_right() -> void:
@@ -718,37 +480,6 @@ func _setup_floating_particles() -> void:
 		_particle_base_x.append(px)
 		_particle_drift.append(randf_range(-15.0, 15.0))
 		_particle_colors.append(col)
-
-
-# ---------------------------------------------------------------------------
-# Bottom fog
-# ---------------------------------------------------------------------------
-
-func _setup_bottom_fog() -> void:
-	var fog := ColorRect.new()
-	fog.name = "BottomFog"
-	fog.color = Color(0, 0, 0, 0)
-	fog.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	fog.offset_top = -120
-	fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var shader := Shader.new()
-	shader.code = """
-shader_type canvas_item;
-
-uniform vec4 fog_color : source_color = vec4(0.02, 0.03, 0.08, 0.5);
-
-void fragment() {
-	float gradient = smoothstep(0.0, 1.0, UV.y);
-	COLOR = vec4(fog_color.rgb, fog_color.a * gradient);
-}
-"""
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	mat.set_shader_parameter("fog_color", COLOR_FOG)
-	fog.material = mat
-
-	add_child(fog)
 
 
 # ---------------------------------------------------------------------------
@@ -906,15 +637,6 @@ func _setup_gamepad_focus() -> void:
 func _process(delta: float) -> void:
 	_title_time += delta
 
-	# Update background shader time
-	if gradient_overlay.material:
-		gradient_overlay.material.set_shader_parameter("time", _title_time)
-
-	# Update ground silhouette time
-	var ground_node = get_node_or_null("GroundSilhouette")
-	if ground_node and ground_node.material:
-		ground_node.material.set_shader_parameter("time", _title_time)
-
 	# Title floating bob (subtle, ~3px amplitude)
 	title_label.position.y = _title_base_y + sin(_title_time * 1.8) * 3.0
 
@@ -933,18 +655,6 @@ func _process(delta: float) -> void:
 	for i in range(_bg_char_sprites.size()):
 		var spr: TextureRect = _bg_char_sprites[i]
 		spr.position.y += sin(_title_time * (0.8 + i * 0.2) + float(i) * 1.5) * 0.15
-
-	# Update stars (drift upward slowly, wrap)
-	for i in range(_stars.size()):
-		var s: ColorRect = _stars[i]
-		s.position.y -= _star_speeds[i] * delta
-		s.position.x = _star_base_x[i] + sin(_title_time * 0.3 + float(i) * 0.7) * 6.0
-		# Twinkle effect
-		s.color.a = 0.08 + abs(sin(_title_time * (0.5 + float(i) * 0.1) + float(i))) * 0.18
-		if s.position.y < -10.0:
-			s.position.y = 730.0
-			_star_base_x[i] = randf_range(0.0, 1280.0)
-			s.position.x = _star_base_x[i]
 
 	# Update floating particles (gold + blue, with lateral drift)
 	for i in range(_particles.size()):
