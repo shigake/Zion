@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Historico completo para changelog
 
       - name: Ler versao
         id: version
@@ -32,6 +34,28 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Versao: $VERSION"
+
+      # ========== Task 3: Validacao pre-release ==========
+
+      - name: Verificar incremento de versao
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          CURRENT="$( cat game/VERSION | tr -d '[:space:]' )"
+          # Obter a tag anterior (exclui a tag atual)
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -1 || true)
+          if [ -n "$PREV_TAG" ]; then
+            PREV_VERSION="${PREV_TAG#v}"
+            echo "Versao anterior: $PREV_VERSION"
+            echo "Versao atual:    $CURRENT"
+            if [ "$CURRENT" = "$PREV_VERSION" ]; then
+              echo "Erro: game/VERSION ($CURRENT) nao foi incrementado em relacao a tag anterior ($PREV_TAG)."
+              exit 1
+            fi
+            echo "Versao incrementada corretamente."
+          else
+            echo "Nenhuma tag anterior encontrada. Pulando verificacao de incremento."
+          fi
 
       - name: Cache Godot
         uses: actions/cache@v4
@@ -62,10 +86,16 @@ jobs:
             cp /tmp/templates/templates/* "$TEMPLATES_DIR/"
           fi
 
-      - name: Importar projeto
+      - name: Validar projeto (headless import)
         run: |
           cd game
-          godot --headless --import project.godot 2>&1 || true
+          godot --headless --import project.godot 2>&1 | tee /tmp/import.log
+          # Verifica erros criticos de parse (ignora avisos de rendering)
+          if grep -iE "SCRIPT ERROR|Parse Error|FATAL" /tmp/import.log | grep -v "vulkan\|Mesa\|rendering\|display" | head -5; then
+            echo "Erro: Projeto contem erros de parse. Corrigir antes de fazer release."
+            exit 1
+          fi
+          echo "Projeto validado com sucesso."
 
       - name: Exportar Windows
         run: |
@@ -75,12 +105,24 @@ jobs:
           echo ""
           if [ -f ../build/zion.exe ]; then
             SIZE=$(du -h ../build/zion.exe | cut -f1)
-            echo "✅ Build gerado com sucesso: zion.exe ($SIZE)"
+            echo "Build gerado com sucesso: zion.exe ($SIZE)"
           else
-            echo "❌ Falha ao gerar o build"
+            echo "Falha ao gerar o build"
             cat /tmp/export.log
             exit 1
           fi
+
+      - name: Verificar tamanho do executavel
+        run: |
+          # Sanity check: .exe deve ter mais de 10MB
+          SIZE_BYTES=$(stat -c%s build/zion.exe)
+          SIZE_MB=$((SIZE_BYTES / 1048576))
+          echo "Tamanho do executavel: ${SIZE_MB}MB (${SIZE_BYTES} bytes)"
+          if [ "$SIZE_BYTES" -lt 10485760 ]; then
+            echo "Erro: Executavel muito pequeno (${SIZE_MB}MB). Build provavelmente esta incompleto."
+            exit 1
+          fi
+          echo "Tamanho do executavel OK."
 
       - name: Preparar pacote
         run: |
@@ -111,7 +153,7 @@ jobs:
           - TAB: Inventario
           - ESC: Pausa
 
-          Bugs? Reporte em: github.com/REPO/issues
+          Bugs? Reporte em: github.com/shigake/Zion/issues
           READMEEOF
           cd release
           zip -r "../Zion-v${VERSION}-windows.zip" "Zion-v${VERSION}/"
@@ -123,23 +165,156 @@ jobs:
           path: release/Zion-v${{ steps.version.outputs.version }}/
           retention-days: 30
 
+      # ========== Task 2: Changelog automatico ==========
+
+      - name: Gerar changelog
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: changelog
+        run: |
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -1 || true)
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${CURRENT_TAG}"
+            echo "Gerando changelog de ${PREV_TAG} ate ${CURRENT_TAG}"
+          else
+            RANGE="${CURRENT_TAG}"
+            echo "Primeira release — incluindo todos os commits"
+          fi
+
+          # Gerar changelog agrupado por tipo de commit
+          {
+            echo "CHANGELOG<<CHANGELOG_EOF"
+
+            # Features
+            FEATS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^feat" 2>/dev/null || true)
+            if [ -n "$FEATS" ]; then
+              echo "### Novidades"
+              echo "$FEATS"
+              echo ""
+            fi
+
+            # Fixes
+            FIXES=$(git log "$RANGE" --pretty=format:"- %s" --grep="^fix" 2>/dev/null || true)
+            if [ -n "$FIXES" ]; then
+              echo "### Correcoes"
+              echo "$FIXES"
+              echo ""
+            fi
+
+            # Performance
+            PERFS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^perf" 2>/dev/null || true)
+            if [ -n "$PERFS" ]; then
+              echo "### Performance"
+              echo "$PERFS"
+              echo ""
+            fi
+
+            # Docs
+            DOCS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^docs" 2>/dev/null || true)
+            if [ -n "$DOCS" ]; then
+              echo "### Documentacao"
+              echo "$DOCS"
+              echo ""
+            fi
+
+            # Chore e outros
+            OTHERS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^chore\|^refactor\|^style\|^ci\|^build\|^test" 2>/dev/null || true)
+            if [ -n "$OTHERS" ]; then
+              echo "### Outros"
+              echo "$OTHERS"
+              echo ""
+            fi
+
+            # Se nenhum commit convencional, listar todos
+            ALL=$(git log "$RANGE" --pretty=format:"- %s" 2>/dev/null || true)
+            CONVENTIONAL=$(echo -e "${FEATS}\n${FIXES}\n${PERFS}\n${DOCS}\n${OTHERS}" | grep -v "^$" | wc -l)
+            TOTAL=$(echo "$ALL" | grep -v "^$" | wc -l)
+            if [ "$CONVENTIONAL" -eq 0 ] && [ "$TOTAL" -gt 0 ]; then
+              echo "### Mudancas"
+              echo "$ALL"
+              echo ""
+            fi
+
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Criar GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           name: "Zion v${{ steps.version.outputs.version }}"
           body: |
             ## Zion v${{ steps.version.outputs.version }}
 
-            ### Download
-            Baixe o arquivo `.zip`, descompacte e execute `zion.exe`.
+            ${{ steps.changelog.outputs.CHANGELOG }}
 
-            > **Nota**: O Windows Defender pode alertar sobre o executável não assinado.
-            > Clique em "Mais informações" → "Executar mesmo assim".
+            ---
 
-            ### O que há de novo
-            Veja o histórico de commits para detalhes das mudanças.
+            ### Como instalar (Windows)
+            1. Baixe o arquivo `Zion-v${{ steps.version.outputs.version }}-windows.zip` abaixo
+            2. Descompacte em qualquer pasta
+            3. Execute `zion.exe`
+
+            > **Windows Defender**: O executavel nao e assinado digitalmente. O Windows pode exibir um alerta.
+            > Clique em **"Mais informacoes"** e depois **"Executar mesmo assim"**.
+
+            ### Requisitos
+            - Windows 10/11 (64-bit)
+            - Placa de video com suporte a Vulkan
+
+            ### Problemas?
+            Reporte bugs em: [GitHub Issues](https://github.com/shigake/Zion/issues)
           files: |
             Zion-v${{ steps.version.outputs.version }}-windows.zip
           draft: false
           prerelease: false
+
+      # ========== Task 6: Notificacao Discord ==========
+
+      - name: Notificar Discord
+        if: startsWith(github.ref, 'refs/tags/v') && success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_URL="https://github.com/shigake/Zion/releases/tag/v${VERSION}"
+          DOWNLOAD_URL="https://github.com/shigake/Zion/releases/download/v${VERSION}/Zion-v${VERSION}-windows.zip"
+
+          # Resumo do changelog (primeiras 10 linhas)
+          CHANGELOG_SUMMARY=$(echo "${{ steps.changelog.outputs.CHANGELOG }}" | head -15 | sed 's/"/\\"/g')
+
+          # Enviar embed para o Discord via webhook
+          if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
+            curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"embeds\": [{
+                  \"title\": \"Zion v${VERSION} - Nova release disponivel!\",
+                  \"url\": \"${RELEASE_URL}\",
+                  \"color\": 5814783,
+                  \"description\": \"Uma nova versao do Zion foi publicada.\\n\\n${CHANGELOG_SUMMARY}\",
+                  \"fields\": [
+                    {
+                      \"name\": \"Download\",
+                      \"value\": \"[Zion-v${VERSION}-windows.zip](${DOWNLOAD_URL})\",
+                      \"inline\": true
+                    },
+                    {
+                      \"name\": \"Versao\",
+                      \"value\": \"v${VERSION}\",
+                      \"inline\": true
+                    }
+                  ],
+                  \"footer\": {
+                    \"text\": \"Zion - Survivors Roguelite Co-op\"
+                  },
+                  \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+                }]
+              }"
+            echo ""
+            echo "Notificacao Discord enviada."
+          else
+            echo "DISCORD_WEBHOOK_URL nao configurado. Pulando notificacao."
+          fi

@@ -1,8 +1,34 @@
 # ZION
 
+[![Latest Release](https://img.shields.io/github/v/release/shigake/Zion?label=version&style=flat-square)](https://github.com/shigake/Zion/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/shigake/Zion/total?style=flat-square)](https://github.com/shigake/Zion/releases/latest)
+
 > *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
 **ZION** is a **Survivors Roguelite** built with **Godot 4** (GDScript) featuring pixel art sprites and chiptune audio. Fight through dimensional rifts with up to 4 players in online co-op.
+
+## Download & Play
+
+**[Download latest release](https://github.com/shigake/Zion/releases/latest)**
+
+### How to install (Windows)
+1. Go to the [latest release](https://github.com/shigake/Zion/releases/latest)
+2. Download the `Zion-v*-windows.zip` file
+3. Extract the zip to any folder
+4. Run `zion.exe`
+
+### FAQ
+
+**Windows Defender shows a warning?**
+The executable is not digitally signed. Click **"More info"** then **"Run anyway"**. This is normal for indie games distributed outside Steam.
+
+**What are the minimum requirements?**
+- Windows 10/11 (64-bit)
+- GPU with Vulkan support
+- 4GB RAM recommended
+
+**Found a bug?**
+Report it at [GitHub Issues](https://github.com/shigake/Zion/issues). Include your game version (shown in the bottom-right corner of the main menu).
 
 ## Features
 
