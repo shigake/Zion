@@ -15,6 +15,16 @@ var event_timer: float = 0.0
 var next_random_event_time: float = 0.0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
+## Annulus spawning — mesmas constantes do enemy_spawner
+const MIN_SPAWN_RADIUS: float = 15.0
+const MAX_SPAWN_RADIUS: float = 20.0
+
+## Gera posição em anel (annulus) ao redor de um centro
+func _get_annulus_position(center: Vector3, min_r: float = MIN_SPAWN_RADIUS, max_r: float = MAX_SPAWN_RADIUS) -> Vector3:
+	var angle = rng.randf() * TAU
+	var distance = rng.randf_range(min_r, max_r)
+	return center + Vector3(cos(angle), 0, sin(angle)) * distance
+
 # Eclipse state
 var _eclipse_original_energy: float = -1.0
 var _eclipse_original_modulate: Color = Color.WHITE
@@ -203,8 +213,7 @@ func _spawn_golden_horde() -> void:
 	var slime_scene = preload("res://scenes/enemies/slime.tscn")
 
 	for i in range(30):
-		var angle = rng.randf() * TAU
-		var pos = center + Vector3(cos(angle), 0, sin(angle)) * rng.randf_range(15, 25)
+		var pos = _get_annulus_position(center)
 		var enemy = slime_scene.instantiate()
 		if enemy is EnemyBase3D:
 			enemy.enemy_color = Color(1.0, 0.85, 0.2)
@@ -231,9 +240,7 @@ func _spawn_elite_horde() -> void:
 	]
 
 	for i in range(20):
-		var angle = (float(i) / 20.0) * TAU + rng.randf_range(-0.1, 0.1)
-		var dist = rng.randf_range(18, 28)
-		var pos = center + Vector3(cos(angle), 0, sin(angle)) * dist
+		var pos = _get_annulus_position(center)
 		var enemy = enemy_scenes[rng.randi() % enemy_scenes.size()].instantiate()
 		if enemy is EnemyBase3D:
 			enemy.max_hp = int(enemy.max_hp * 3.0)
@@ -271,13 +278,11 @@ func _spawn_massive_horde() -> void:
 		preload("res://scenes/enemies/skeleton_archer.tscn"),
 	]
 
-	# Spawn 50 normais em ondas circulares
+	# Spawn 50 normais em ondas circulares (annulus)
 	for i in range(50):
 		if GameManager.enemies_alive >= GameManager.max_enemies:
 			break
-		var angle = rng.randf() * TAU
-		var dist = rng.randf_range(15, 30)
-		var pos = center + Vector3(cos(angle), 0, sin(angle)) * dist
+		var pos = _get_annulus_position(center)
 		var enemy = basic_scenes[rng.randi() % basic_scenes.size()].instantiate()
 		get_parent().add_child(enemy)
 		enemy.global_position = pos
@@ -287,9 +292,7 @@ func _spawn_massive_horde() -> void:
 	for i in range(10):
 		if GameManager.enemies_alive >= GameManager.max_enemies:
 			break
-		var angle = (float(i) / 10.0) * TAU
-		var dist = rng.randf_range(12, 20)
-		var pos = center + Vector3(cos(angle), 0, sin(angle)) * dist
+		var pos = _get_annulus_position(center)
 		var enemy = elite_scenes[rng.randi() % elite_scenes.size()].instantiate()
 		if enemy is EnemyBase3D:
 			enemy.max_hp = int(enemy.max_hp * 3.0)
@@ -311,8 +314,7 @@ func _spawn_event_miniboss(strong: bool) -> void:
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
-	var angle = rng.randf() * TAU
-	var spawn_pos = pos + Vector3(cos(angle), 0, sin(angle)) * 15.0
+	var spawn_pos = _get_annulus_position(pos)
 
 	var stage = GameManager.selected_stage
 	var mb_config: Dictionary
@@ -402,7 +404,7 @@ func _spawn_treasure_goblin() -> void:
 		goblin.xp_drop = 30
 		goblin.scale = Vector3(1.5, 1.5, 1.5)
 	get_parent().add_child(goblin)
-	goblin.global_position = center + Vector3(10, 0, 10)
+	goblin.global_position = _get_annulus_position(center)
 	GameManager.enemies_alive += 1
 
 func _spawn_merchant() -> void:
@@ -814,8 +816,7 @@ func _start_portal_dimensional() -> void:
 	]
 
 	for i in range(10):
-		var angle = (float(i) / 10.0) * TAU
-		var spawn_pos = dungeon_pos + Vector3(cos(angle), 0, sin(angle)) * rng.randf_range(8, 15)
+		var spawn_pos = _get_annulus_position(dungeon_pos, 8.0, 15.0)
 		var enemy = enemy_scenes[rng.randi() % enemy_scenes.size()].instantiate()
 		# Faz todos elite
 		if enemy is EnemyBase3D:
@@ -857,7 +858,6 @@ func _spawn_chest_mimic() -> void:
 	if players.is_empty():
 		return
 	var center = players[0].global_position
-	var offset = Vector3(rng.randf_range(-8, 8), 0, rng.randf_range(-8, 8))
 
 	var mimic_scene = preload("res://scenes/enemies/mimic.tscn")
 	var mimic = mimic_scene.instantiate()
@@ -869,5 +869,5 @@ func _spawn_chest_mimic() -> void:
 		mimic.xp_drop = 30
 		mimic.scale = Vector3(1.5, 1.5, 1.5)
 	get_parent().add_child(mimic)
-	mimic.global_position = center + offset
+	mimic.global_position = _get_annulus_position(center)
 	GameManager.enemies_alive += 1
