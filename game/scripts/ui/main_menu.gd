@@ -122,6 +122,15 @@ func _ready() -> void:
 		multi_btn.disabled = true
 		multi_btn.modulate.a = 0.5
 
+	# Debug: unlock all button (for testing)
+	var unlock_btn = Button.new()
+	unlock_btn.text = "🔓 Desbloquear Tudo"
+	unlock_btn.add_theme_font_size_override("font_size", 10)
+	unlock_btn.add_theme_color_override("font_color", Color(0.6, 0.6, 0.3))
+	unlock_btn.modulate.a = 0.6
+	unlock_btn.pressed.connect(_on_unlock_all)
+	$BottomRight.add_child(unlock_btn)
+
 	_update_crystals()
 	_update_version()
 	AudioManager.play_music("menu")
@@ -748,6 +757,22 @@ func _on_credits() -> void:
 	AudioManager.play_sfx("menu_click")
 	LoadingScreen.transition_to("res://scenes/ui/credits_screen.tscn")
 
+
+func _on_unlock_all() -> void:
+	AudioManager.play_sfx("achievement")
+	# Unlock all characters
+	for char_id in CharacterDB.get_all_character_ids():
+		SaveManager.unlock_character(char_id)
+	# Unlock all stages
+	for stage in ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]:
+		SaveManager.unlock_stage(stage)
+	# Give lots of crystals
+	SaveManager.data["crystals"] = 99999
+	# Complete all stages
+	SaveManager.data["completed_stages"] = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+	SaveManager.save_game()
+	_update_crystals()
+	LogManager.info("Debug", "ALL UNLOCKED! Characters, stages, 99999 crystals")
 
 func _on_quit() -> void:
 	AudioManager.play_sfx("menu_click")
