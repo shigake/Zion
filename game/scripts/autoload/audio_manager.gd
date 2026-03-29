@@ -114,7 +114,7 @@ func play_music(stream_name: String) -> void:
 		_music_player.volume_db = linear_to_db(music_volume * master_volume)
 
 	_current_music = stream_name
-	# Enable looping for music
+	# Enable looping for music (set on stream AND use finished signal as fallback)
 	if stream is AudioStreamMP3:
 		stream.loop = true
 	elif stream is AudioStreamOggVorbis:
@@ -124,7 +124,15 @@ func play_music(stream_name: String) -> void:
 		stream.loop_end = stream.mix_rate * int(stream.get_length())
 	_music_player.stream = stream
 	_music_player.play()
+	# Fallback loop: if stream.loop doesn't work (import override), restart on finish
+	if not _music_player.finished.is_connected(_on_music_finished):
+		_music_player.finished.connect(_on_music_finished)
 	LogManager.info("Audio", "Music: " + stream_name)
+
+func _on_music_finished() -> void:
+	# Fallback loop: restart music if it ended (import loop=false override)
+	if _music_player.stream and not _current_music.is_empty():
+		_music_player.play()
 
 func stop_music() -> void:
 	LogManager.info("Audio", "Music stopped")
