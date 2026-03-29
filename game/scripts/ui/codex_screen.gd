@@ -3,8 +3,8 @@ extends Control
 ## Codex de armas — catalogo de todas as armas com stats e info de evolucao.
 ## Ao clicar numa arma, exibe detalhes e visual no painel direito.
 
-const COLUMNS := 3
-const CARD_SIZE := Vector2(190, 120)
+const COLUMNS := 4
+const CARD_SIZE := Vector2(175, 130)
 
 var grid: GridContainer
 var back_btn: Button
@@ -61,10 +61,13 @@ func _build_ui() -> void:
 	scroll = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	content_hbox.add_child(scroll)
 
 	grid = GridContainer.new()
 	grid.columns = COLUMNS
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 8)
 	scroll.add_child(grid)
@@ -243,7 +246,7 @@ func _populate_grid() -> void:
 			if icon_tex:
 				var icon_rect = TextureRect.new()
 				icon_rect.texture = icon_tex
-				icon_rect.custom_minimum_size = Vector2(32, 32)
+				icon_rect.custom_minimum_size = Vector2(40, 40)
 				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				icon_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
