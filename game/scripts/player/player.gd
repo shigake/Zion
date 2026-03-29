@@ -404,7 +404,7 @@ void fragment() {
 		mat.set_shader_parameter("time_offset", float(i) * 1.5)
 		wall.material_override = mat
 
-		wall.global_position = cfg["pos"]
+		wall.position = cfg["pos"]
 		if cfg["rot"] != 0.0:
 			wall.rotation.y = cfg["rot"]
 
