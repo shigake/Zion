@@ -414,33 +414,80 @@ func _spawn_merchant() -> void:
 	var center = players[0].global_position
 	var offset = Vector3(rng.randf_range(-3, 3), 0, rng.randf_range(-3, 3))
 
-	# Cria NPC merchant visual
+	# Cria NPC merchant visual — visual mais elaborado
 	_merchant_node = Node3D.new()
 	_merchant_node.name = "Merchant"
 
+	# Base body (robe/capa)
 	var body = MeshInstance3D.new()
 	var capsule = CapsuleMesh.new()
-	capsule.radius = 0.3
-	capsule.height = 1.2
+	capsule.radius = 0.35
+	capsule.height = 1.3
 	body.mesh = capsule
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 0.5, 0.9)
+	mat.albedo_color = Color(0.12, 0.2, 0.45)
 	mat.emission_enabled = true
-	mat.emission = Color(0.1, 0.3, 0.6)
-	mat.emission_energy_multiplier = 1.5
+	mat.emission = Color(0.08, 0.2, 0.5)
+	mat.emission_energy_multiplier = 2.0
 	body.material_override = mat
-	body.position.y = 0.6
+	body.position.y = 0.65
 	_merchant_node.add_child(body)
+
+	# Crystal floating above head (rotating)
+	var crystal_mesh = MeshInstance3D.new()
+	var prism = PrismMesh.new()
+	prism.size = Vector3(0.25, 0.35, 0.25)
+	crystal_mesh.mesh = prism
+	var crystal_mat = StandardMaterial3D.new()
+	crystal_mat.albedo_color = Color(0.3, 0.7, 1.0, 0.85)
+	crystal_mat.emission_enabled = true
+	crystal_mat.emission = Color(0.2, 0.5, 1.0)
+	crystal_mat.emission_energy_multiplier = 3.0
+	crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	crystal_mesh.material_override = crystal_mat
+	crystal_mesh.position.y = 1.7
+	_merchant_node.add_child(crystal_mesh)
+
+	# Floating glow sphere around crystal
+	var glow_mesh = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.2
+	sphere.height = 0.4
+	glow_mesh.mesh = sphere
+	var glow_mat = StandardMaterial3D.new()
+	glow_mat.albedo_color = Color(0.15, 0.4, 0.9, 0.2)
+	glow_mat.emission_enabled = true
+	glow_mat.emission = Color(0.1, 0.3, 0.8)
+	glow_mat.emission_energy_multiplier = 2.5
+	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glow_mat.no_depth_test = true
+	glow_mesh.material_override = glow_mat
+	glow_mesh.position.y = 1.7
+	_merchant_node.add_child(glow_mesh)
 
 	# Label
 	var label = Label3D.new()
-	label.text = "Mercador"
-	label.font_size = 32
-	label.outline_size = 4
-	label.modulate = Color(0.2, 0.5, 0.9)
+	label.text = "✦ Mercador ✦"
+	label.font_size = 36
+	label.outline_size = 6
+	label.outline_modulate = Color(0.05, 0.1, 0.3)
+	label.modulate = Color(0.4, 0.7, 1.0)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.position.y = 1.6
+	label.position.y = 2.1
+	label.no_depth_test = true
 	_merchant_node.add_child(label)
+
+	# Subtitle hint
+	var hint_label = Label3D.new()
+	hint_label.text = "Aproxime-se"
+	hint_label.font_size = 20
+	hint_label.outline_size = 3
+	hint_label.outline_modulate = Color(0.05, 0.05, 0.15)
+	hint_label.modulate = Color(0.6, 0.65, 0.8, 0.8)
+	hint_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	hint_label.position.y = 1.85
+	hint_label.no_depth_test = true
+	_merchant_node.add_child(hint_label)
 
 	# Interaction Area
 	var area = Area3D.new()
@@ -481,52 +528,346 @@ func _show_merchant_ui() -> void:
 	# Se ja tem UI aberta, nao abre outra
 	if get_node_or_null("MerchantUI"):
 		return
-	# Cria UI de merchant como CanvasLayer
+
+	AudioManager.play_sfx("menu_click")
+
+	# --- CanvasLayer ---
 	var canvas = CanvasLayer.new()
 	canvas.name = "MerchantUI"
 	canvas.layer = 15
-	canvas.process_mode = Node.PROCESS_MODE_ALWAYS  # Funciona mesmo com tree pausada
+	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 
+	# --- Dark overlay backdrop ---
+	var overlay = ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0, 0, 0, 0)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.add_child(overlay)
+
+	# Fade in overlay
+	var overlay_tween = create_tween()
+	overlay_tween.tween_property(overlay, "color", Color(0, 0, 0, 0.65), 0.25)
+
+	# --- Center container for the panel ---
+	var center = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(center)
+
+	# --- Main panel with custom style ---
 	var panel = PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-200, -150)
-	panel.custom_minimum_size = Vector2(400, 300)
-	canvas.add_child(panel)
+	panel.custom_minimum_size = Vector2(480, 0)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.1, 0.18, 0.97)
+	panel_style.border_color = Color(0.2, 0.5, 0.9, 0.8)
+	panel_style.set_border_width_all(2)
+	panel_style.border_width_top = 3
+	panel_style.set_corner_radius_all(12)
+	panel_style.set_content_margin_all(20)
+	panel_style.content_margin_top = 16
+	panel_style.content_margin_bottom = 16
+	panel_style.shadow_color = Color(0.1, 0.3, 0.6, 0.4)
+	panel_style.shadow_size = 12
+	panel_style.shadow_offset = Vector2(0, 6)
+	panel.add_theme_stylebox_override("panel", panel_style)
+	center.add_child(panel)
 
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
+	var main_vbox = VBoxContainer.new()
+	main_vbox.add_theme_constant_override("separation", 12)
+	panel.add_child(main_vbox)
+
+	# --- Header section ---
+	var header = VBoxContainer.new()
+	header.add_theme_constant_override("separation", 4)
+	main_vbox.add_child(header)
+
+	# Merchant icon + title
+	var title_row = HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 10)
+	header.add_child(title_row)
+
+	# Crystal icon
+	var crystal_icon_path = "res://assets/sprites/ui/currency.png"
+	if ResourceLoader.exists(crystal_icon_path):
+		var crystal_icon = TextureRect.new()
+		crystal_icon.texture = load(crystal_icon_path)
+		crystal_icon.custom_minimum_size = Vector2(32, 32)
+		crystal_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		crystal_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		title_row.add_child(crystal_icon)
 
 	var title = Label.new()
-	title.text = LocaleManager.tr_key("merchant_title")
+	title.text = "MERCADOR DIMENSIONAL"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(0.3, 0.65, 1.0))
+	title_row.add_child(title)
 
-	for item in _merchant_items:
+	# Title bounce animation
+	title.pivot_offset = Vector2(100, 14)
+	title.scale = Vector2(0.5, 0.5)
+	var title_tween = create_tween()
+	title_tween.set_ease(Tween.EASE_OUT)
+	title_tween.set_trans(Tween.TRANS_BACK)
+	title_tween.tween_property(title, "scale", Vector2.ONE, 0.4)
+
+	# Subtitle
+	var subtitle = Label.new()
+	subtitle.text = "Fragmentos dimensionais a venda"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 12)
+	subtitle.add_theme_color_override("font_color", Color(0.5, 0.55, 0.7))
+	header.add_child(subtitle)
+
+	# --- Crystal balance ---
+	var balance_center = CenterContainer.new()
+	main_vbox.add_child(balance_center)
+	var balance_panel = PanelContainer.new()
+	var balance_style = StyleBoxFlat.new()
+	balance_style.bg_color = Color(0.1, 0.12, 0.2, 0.8)
+	balance_style.border_color = Color(1.0, 0.85, 0.2, 0.5)
+	balance_style.set_border_width_all(1)
+	balance_style.set_corner_radius_all(6)
+	balance_style.content_margin_left = 16
+	balance_style.content_margin_right = 16
+	balance_style.content_margin_top = 6
+	balance_style.content_margin_bottom = 6
+	balance_panel.add_theme_stylebox_override("panel", balance_style)
+	balance_center.add_child(balance_panel)
+
+	var balance_label = Label.new()
+	balance_label.name = "BalanceLabel"
+	balance_label.text = "💎 %d cristais" % GameManager.crystals_this_run
+	balance_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	balance_label.add_theme_font_size_override("font_size", 16)
+	balance_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	balance_panel.add_child(balance_label)
+
+	# --- Separator ---
+	var sep = HSeparator.new()
+	main_vbox.add_child(sep)
+
+	# --- Item cards ---
+	var cards_vbox = VBoxContainer.new()
+	cards_vbox.add_theme_constant_override("separation", 8)
+	main_vbox.add_child(cards_vbox)
+
+	for i in range(_merchant_items.size()):
+		var item = _merchant_items[i]
+		var item_data = ItemDB.get_item(item["id"])
+		var can_afford = GameManager.crystals_this_run >= item["cost"]
+		var already_bought = item.get("bought", false)
+
+		# Card container
+		var card = PanelContainer.new()
+		var item_color = item_data.get("color", Color(0.4, 0.6, 0.9))
+		var card_style = StyleBoxFlat.new()
+		if already_bought:
+			card_style.bg_color = Color(0.06, 0.08, 0.1, 0.6)
+			card_style.border_color = Color(0.3, 0.3, 0.3, 0.3)
+		elif can_afford:
+			card_style.bg_color = Color(item_color.r * 0.15 + 0.06, item_color.g * 0.15 + 0.06, item_color.b * 0.15 + 0.08, 0.9)
+			card_style.border_color = Color(item_color.r, item_color.g, item_color.b, 0.6)
+		else:
+			card_style.bg_color = Color(0.08, 0.08, 0.1, 0.7)
+			card_style.border_color = Color(0.3, 0.2, 0.2, 0.4)
+		card_style.set_border_width_all(1)
+		card_style.set_corner_radius_all(8)
+		card_style.content_margin_left = 12
+		card_style.content_margin_right = 12
+		card_style.content_margin_top = 10
+		card_style.content_margin_bottom = 10
+		card.add_theme_stylebox_override("panel", card_style)
+		cards_vbox.add_child(card)
+
+		var card_hbox = HBoxContainer.new()
+		card_hbox.add_theme_constant_override("separation", 12)
+		card.add_child(card_hbox)
+
+		# Item icon
+		var icon_bg = ColorRect.new()
+		icon_bg.custom_minimum_size = Vector2(48, 48)
+		icon_bg.color = Color(item_color.r * 0.3, item_color.g * 0.3, item_color.b * 0.3, 0.5)
+		card_hbox.add_child(icon_bg)
+
+		var icon_path = "res://assets/sprites/items/%s.png" % item["id"]
+		if ResourceLoader.exists(icon_path):
+			var icon = TextureRect.new()
+			icon.texture = load(icon_path)
+			icon.custom_minimum_size = Vector2(40, 40)
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			icon.position = Vector2(4, 4)
+			icon_bg.add_child(icon)
+		else:
+			var icon_fallback = Label.new()
+			icon_fallback.text = "💎"
+			icon_fallback.add_theme_font_size_override("font_size", 24)
+			icon_fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			icon_fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			icon_fallback.set_anchors_preset(Control.PRESET_FULL_RECT)
+			icon_bg.add_child(icon_fallback)
+
+		# Item info (name + description)
+		var info_vbox = VBoxContainer.new()
+		info_vbox.add_theme_constant_override("separation", 2)
+		info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card_hbox.add_child(info_vbox)
+
+		var name_label = Label.new()
+		name_label.text = item["name"]
+		name_label.add_theme_font_size_override("font_size", 15)
+		if already_bought:
+			name_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.45))
+		else:
+			name_label.add_theme_color_override("font_color", Color(item_color.r * 0.5 + 0.5, item_color.g * 0.5 + 0.5, item_color.b * 0.5 + 0.5))
+		info_vbox.add_child(name_label)
+
+		var desc = item_data.get("description", "")
+		if desc != "":
+			var desc_label = Label.new()
+			desc_label.text = desc
+			desc_label.add_theme_font_size_override("font_size", 11)
+			desc_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55))
+			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			info_vbox.add_child(desc_label)
+
+		# Buy button / status
 		var btn = Button.new()
-		btn.text = "%s - %d cristais" % [item["name"], item["cost"]]
-		btn.pressed.connect(_buy_merchant_item.bind(item, btn))
-		vbox.add_child(btn)
+		btn.custom_minimum_size = Vector2(110, 40)
+		if already_bought:
+			btn.text = "✓ Comprado"
+			btn.disabled = true
+			btn.add_theme_color_override("font_disabled_color", Color(0.3, 0.6, 0.3))
+		elif can_afford:
+			btn.text = "💎 %d" % item["cost"]
+			var btn_style = StyleBoxFlat.new()
+			btn_style.bg_color = Color(0.12, 0.3, 0.15, 0.9)
+			btn_style.border_color = Color(0.3, 0.8, 0.4, 0.7)
+			btn_style.set_border_width_all(1)
+			btn_style.set_corner_radius_all(6)
+			btn_style.set_content_margin_all(8)
+			btn.add_theme_stylebox_override("normal", btn_style)
+			var btn_hover = btn_style.duplicate()
+			btn_hover.bg_color = Color(0.15, 0.4, 0.2, 0.95)
+			btn_hover.border_color = Color(0.4, 0.9, 0.5, 0.9)
+			btn.add_theme_stylebox_override("hover", btn_hover)
+			var btn_pressed = btn_style.duplicate()
+			btn_pressed.bg_color = Color(0.08, 0.25, 0.1, 0.9)
+			btn.add_theme_stylebox_override("pressed", btn_pressed)
+			btn.add_theme_color_override("font_color", Color(0.7, 1.0, 0.7))
+			btn.add_theme_color_override("font_hover_color", Color(0.9, 1.0, 0.9))
+			btn.pressed.connect(_buy_merchant_item.bind(item, canvas))
+		else:
+			btn.text = "💎 %d" % item["cost"]
+			btn.disabled = true
+			var btn_dis_style = StyleBoxFlat.new()
+			btn_dis_style.bg_color = Color(0.12, 0.08, 0.08, 0.7)
+			btn_dis_style.border_color = Color(0.4, 0.2, 0.2, 0.4)
+			btn_dis_style.set_border_width_all(1)
+			btn_dis_style.set_corner_radius_all(6)
+			btn_dis_style.set_content_margin_all(8)
+			btn.add_theme_stylebox_override("disabled", btn_dis_style)
+			btn.add_theme_color_override("font_disabled_color", Color(0.6, 0.3, 0.3))
+		card_hbox.add_child(btn)
 
+		# Staggered card animation
+		card.modulate = Color(1, 1, 1, 0)
+		card.position.y += 20
+		var card_tween = create_tween()
+		card_tween.set_ease(Tween.EASE_OUT)
+		card_tween.set_trans(Tween.TRANS_CUBIC)
+		card_tween.tween_property(card, "modulate:a", 1.0, 0.3).set_delay(0.1 + i * 0.1)
+		var pos_tween = create_tween()
+		pos_tween.set_ease(Tween.EASE_OUT)
+		pos_tween.set_trans(Tween.TRANS_CUBIC)
+		pos_tween.tween_property(card, "position:y", 0.0, 0.3).set_delay(0.1 + i * 0.1)
+
+	# --- Separator ---
+	var sep2 = HSeparator.new()
+	main_vbox.add_child(sep2)
+
+	# --- Close button ---
+	var close_center = CenterContainer.new()
+	main_vbox.add_child(close_center)
 	var close_btn = Button.new()
-	close_btn.text = LocaleManager.tr_key("merchant_close")
+	close_btn.text = "Fechar"
+	close_btn.custom_minimum_size = Vector2(140, 38)
+	var close_style = StyleBoxFlat.new()
+	close_style.bg_color = Color(0.2, 0.15, 0.15, 0.8)
+	close_style.border_color = Color(0.5, 0.3, 0.3, 0.5)
+	close_style.set_border_width_all(1)
+	close_style.set_corner_radius_all(6)
+	close_style.set_content_margin_all(8)
+	close_btn.add_theme_stylebox_override("normal", close_style)
+	var close_hover = close_style.duplicate()
+	close_hover.bg_color = Color(0.3, 0.18, 0.18, 0.9)
+	close_hover.border_color = Color(0.7, 0.35, 0.35, 0.7)
+	close_btn.add_theme_stylebox_override("hover", close_hover)
+	close_btn.add_theme_font_size_override("font_size", 14)
+	close_btn.add_theme_color_override("font_color", Color(0.8, 0.7, 0.7))
+	close_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.85, 0.85))
 	close_btn.pressed.connect(func():
+		AudioManager.play_sfx("menu_click")
 		canvas.queue_free()
 		GameManager.paused = false
 		get_tree().paused = false
 	)
-	vbox.add_child(close_btn)
+	close_center.add_child(close_btn)
+
+	# --- Keyboard hint ---
+	var hint = Label.new()
+	hint.text = "ESC para fechar"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 10)
+	hint.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))
+	main_vbox.add_child(hint)
 
 	add_child(canvas)
 	GameManager.paused = true
 	get_tree().paused = true
 
-func _buy_merchant_item(item: Dictionary, btn: Button) -> void:
+	# Focus first buyable button
+	await get_tree().process_frame
+	var first_btn = _find_first_buyable_btn(cards_vbox)
+	if first_btn:
+		first_btn.grab_focus()
+
+func _find_first_buyable_btn(container: VBoxContainer) -> Button:
+	for card in container.get_children():
+		if card is PanelContainer:
+			var hbox = card.get_child(0)
+			if hbox is HBoxContainer:
+				for child in hbox.get_children():
+					if child is Button and not child.disabled:
+						return child
+	return null
+
+func _buy_merchant_item(item: Dictionary, canvas: CanvasLayer) -> void:
 	if GameManager.crystals_this_run >= item["cost"]:
 		GameManager.crystals_this_run -= item["cost"]
 		GameManager.add_item(item["id"])
-		btn.text = item["name"] + " - " + LocaleManager.tr_key("merchant_bought")
-		btn.disabled = true
+		item["bought"] = true
+		AudioManager.play_sfx("menu_click")
+		# Rebuild the merchant UI to reflect changes
+		var old_canvas = canvas
+		old_canvas.queue_free()
+		GameManager.paused = false
+		get_tree().paused = false
+		# Re-show with updated state
+		call_deferred("_show_merchant_ui")
+	else:
+		AudioManager.play_sfx("error")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		var ui = get_node_or_null("MerchantUI")
+		if ui:
+			if get_viewport(): get_viewport().set_input_as_handled()
+			AudioManager.play_sfx("menu_click")
+			ui.queue_free()
+			GameManager.paused = false
+			get_tree().paused = false
 
 func _cleanup_merchant() -> void:
 	if is_instance_valid(_merchant_node):
