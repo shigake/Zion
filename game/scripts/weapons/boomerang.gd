@@ -155,8 +155,12 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if data["going_out"]:
-		# Flying outward
+		# Flying outward with slight arc
 		var traveled = bullet.global_position.distance_to(data["start_pos"])
+		var arc_t = traveled / data["max_distance"]
+		var arc_offset = sin(arc_t * PI) * 2.0
+		var right_dir = data["original_direction"].cross(Vector3.UP).normalized()
+		bullet.global_position += right_dir * arc_offset * delta
 		if traveled >= data["max_distance"]:
 			data["going_out"] = false
 			bullet.set_meta("boomerang_data", data)

@@ -59,6 +59,7 @@ func _physics_process(delta: float) -> void:
 		phase = 3
 	if phase != old_phase:
 		AudioManager.play_sfx("boss_phase")
+		ScreenEffects.shake(0.2)
 		GameManager.boss_phase_changed.emit(name, phase)
 
 	# Fury phase (HP < 10%)

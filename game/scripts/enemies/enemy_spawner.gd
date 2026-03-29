@@ -395,6 +395,12 @@ func _process_boss_rush(delta: float) -> void:
 	GameManager.boss_spawned.emit(boss.name)
 	_boss_rush_active_boss = true
 
+	# Dramatic boss entrance effects
+	ScreenEffects.shake(0.4)
+	ScreenEffects.slow_motion(1.0, 0.3)
+	ScreenEffects.level_up_flash()
+	AudioManager.play_sfx("boss_roar")
+
 	# Restore original stage
 	GameManager.selected_stage = original_stage
 
@@ -491,3 +497,9 @@ func _spawn_boss() -> void:
 	boss.global_position = spawn_pos
 	GameManager.enemies_alive += 1
 	GameManager.boss_spawned.emit(boss.name)
+
+	# Dramatic boss entrance effects
+	ScreenEffects.shake(0.4)
+	ScreenEffects.slow_motion(1.0, 0.3)
+	ScreenEffects.level_up_flash()
+	AudioManager.play_sfx("boss_roar")

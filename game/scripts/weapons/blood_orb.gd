@@ -166,6 +166,9 @@ class BloodOrbInstance extends Area3D:
 			body.call_deferred("take_damage", damage, "dark")
 			total_damage_dealt += damage
 
+			# Red drain line from enemy to orb
+			_spawn_drain_line(body.global_position)
+
 			# Dark drain visual
 			_spawn_drain_wisps(body.global_position)
 
@@ -203,3 +206,48 @@ class BloodOrbInstance extends Area3D:
 		var tween = wisp.create_tween()
 		tween.tween_property(wisp, "global_position", global_position, 0.35).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 		tween.tween_callback(wisp.queue_free)
+
+	func _spawn_drain_line(from_pos: Vector3) -> void:
+		if not is_inside_tree():
+			return
+		if Engine.get_frames_per_second() < 35:
+			return
+		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+		if not scene:
+			return
+
+		var line_mesh = MeshInstance3D.new()
+		var im = ImmediateMesh.new()
+		var start = from_pos + Vector3(0, 0.5, 0)
+		var end = global_position
+
+		# Slightly wavy line with 4 segments
+		im.surface_begin(Mesh.PRIMITIVE_LINES)
+		im.surface_set_color(Color(0.9, 0.1, 0.15, 0.6))
+		var seg_count := 4
+		for i in range(seg_count):
+			var t0 = float(i) / float(seg_count)
+			var t1 = float(i + 1) / float(seg_count)
+			var p0 = start.lerp(end, t0)
+			var p1 = start.lerp(end, t1)
+			if i > 0 and i < seg_count:
+				p0 += Vector3(randf_range(-0.1, 0.1), randf_range(-0.05, 0.05), randf_range(-0.1, 0.1))
+			im.surface_add_vertex(p0)
+			im.surface_add_vertex(p1)
+		im.surface_end()
+		line_mesh.mesh = im
+
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.9, 0.1, 0.15, 0.6)
+		mat.emission_enabled = true
+		mat.emission = Color(0.8, 0.05, 0.1)
+		mat.emission_energy_multiplier = 5.0
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.no_depth_test = true
+		line_mesh.material_override = mat
+
+		scene.add_child(line_mesh)
+		var line_tween = line_mesh.create_tween()
+		line_tween.tween_property(line_mesh, "transparency", 1.0, 0.25)
+		line_tween.tween_callback(line_mesh.queue_free)

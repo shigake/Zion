@@ -138,11 +138,14 @@ class TornadoInstance extends Area3D:
 		)
 		global_position = orbit_pos
 
-		# Spin visual
+		# Spin visual + scale pulse (breathing effect)
+		var pulse = 1.0 + sin(_lifetime_timer * 3.0) * 0.15
 		if _mesh:
 			_mesh.rotation.y += 8.0 * delta
+			_mesh.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
 		if _sprite:
 			_sprite.rotation.y += 8.0 * delta
+			_sprite.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
 
 		# Damage tick
 		_damage_timer += delta
