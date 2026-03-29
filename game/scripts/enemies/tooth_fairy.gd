@@ -123,7 +123,8 @@ func _die() -> void:
 	if is_dead:
 		return
 	# Spawna muitos cristais antes de morrer
-	_spawn_crystal_shower()
+	if is_inside_tree():
+		_spawn_crystal_shower()
 	super._die()
 
 func _spawn_crystal_shower() -> void:

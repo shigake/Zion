@@ -264,7 +264,7 @@ func _physics_process(delta: float) -> void:
 			_emote_label.visible = false
 
 	# Emote wheel (T key)
-	if is_local and Input.is_action_just_pressed("emote"):
+	if is_local and InputMap.has_action("emote") and Input.is_action_just_pressed("emote"):
 		_toggle_emote_wheel()
 
 	# Sync posicao no multiplayer
