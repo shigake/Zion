@@ -13,6 +13,19 @@ signal boss_spawned(boss_name: String)
 signal boss_died(boss_name: String)
 signal boss_phase_changed(boss_name: String, phase: int)
 
+# Annulus spawning — constantes e utilitário centralizado (ver PRD annulus_spawning)
+const SPAWN_MIN_RADIUS: float = 15.0   # Logo fora da visão da câmera top-down
+const SPAWN_MAX_RADIUS: float = 20.0   # Limite máximo do anel
+const BOSS_SPAWN_MIN_RADIUS: float = 18.0  # Bosses surgem um pouco mais longe
+const BOSS_SPAWN_MAX_RADIUS: float = 22.0
+
+## Gera posição de spawn em anel (annulus) ao redor de um centro.
+## Coordenadas polares → XZ, garantindo que inimigos nunca "pipoquem" na tela.
+static func get_annulus_position(center: Vector3, min_r: float = SPAWN_MIN_RADIUS, max_r: float = SPAWN_MAX_RADIUS) -> Vector3:
+	var angle = randf() * TAU
+	var distance = randf_range(min_r, max_r)
+	return center + Vector3(cos(angle), 0, sin(angle)) * distance
+
 # Tempo e dificuldade
 var game_time: float = 0.0
 var enemies_alive: int = 0

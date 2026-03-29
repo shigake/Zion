@@ -39,17 +39,17 @@ func _get_annulus_spawn_position(center: Vector3) -> Vector3:
 O `MIN_SPAWN_RADIUS` deve ser ajustado conforme a altura e FOV da câmera top-down. O objetivo é que o inimigo apareça ~1-2 unidades fora da borda visível.
 
 ## Critérios de Aceite
-- [ ] Nenhum inimigo surge repentinamente dentro do campo de visão do jogador
-- [ ] Inimigos surgem em todas as direções (360°) de forma fluida
-- [ ] O cálculo é leve e não afeta a meta de 60 FPS mesmo com 500 inimigos
-- [ ] Bosses e mini-bosses também usam annulus spawning
-- [ ] Código centralizado — uma única função utilitária reutilizada por todos os spawners
+- [x] Nenhum inimigo surge repentinamente dentro do campo de visão do jogador
+- [x] Inimigos surgem em todas as direções (360°) de forma fluida
+- [x] O cálculo é leve e não afeta a meta de 60 FPS mesmo com 500 inimigos
+- [x] Bosses e mini-bosses também usam annulus spawning
+- [x] Código centralizado — uma única função utilitária reutilizada por todos os spawners
 
 ## Implementação
-1. Criar função `_get_annulus_position(center, min_r, max_r)` no `enemy_spawner.gd`
-2. Substituir todos os cálculos de posição de spawn por chamadas a essa função
-3. Fazer o mesmo no `event_manager.gd`
-4. Remover a variável `@export spawn_distance` (substituída pelas constantes do annulus)
+1. ~~Criar função `_get_annulus_position(center, min_r, max_r)` no `enemy_spawner.gd`~~ → Centralizado em `GameManager.get_annulus_position()` (static)
+2. ~~Substituir todos os cálculos de posição de spawn por chamadas a essa função~~ ✅
+3. ~~Fazer o mesmo no `event_manager.gd`~~ ✅
+4. ~~Remover a variável `@export spawn_distance` (substituída pelas constantes do annulus)~~ ✅
 
 ## Prioridade
 Alta — afeta diretamente a sensação de jogo (game feel).

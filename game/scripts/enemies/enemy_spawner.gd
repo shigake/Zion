@@ -3,24 +3,11 @@ extends Node3D
 ## Spawna inimigos fora da area visivel, com dificuldade crescente.
 ## Segue tabela de spawn por minuto da spec.
 
-## Annulus spawning — inimigos surgem em um anel fora da visão da câmera
-const MIN_SPAWN_RADIUS: float = 15.0   # Logo fora da visão da câmera top-down
-const MAX_SPAWN_RADIUS: float = 20.0   # Limite máximo do anel
-const BOSS_MIN_SPAWN_RADIUS: float = 18.0  # Bosses surgem um pouco mais longe
-const BOSS_MAX_SPAWN_RADIUS: float = 22.0
-
 @export var base_spawn_interval: float = 1.2
 @export var base_enemies_per_spawn: int = 2
 
 var spawn_timer: float = 0.0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-
-## Gera posição de spawn em anel (annulus) ao redor de um centro.
-## Coordenadas polares → XZ, garantindo que inimigos nunca "pipoquem" na tela.
-func _get_annulus_position(center: Vector3, min_r: float = MIN_SPAWN_RADIUS, max_r: float = MAX_SPAWN_RADIUS) -> Vector3:
-	var angle = rng.randf() * TAU
-	var distance = rng.randf_range(min_r, max_r)
-	return center + Vector3(cos(angle), 0, sin(angle)) * distance
 
 # Enemy scenes
 var slime_scene: PackedScene = preload("res://scenes/enemies/slime.tscn")
@@ -122,7 +109,7 @@ func _spawn_wave(mult: float) -> void:
 		if enemy == null:
 			continue
 
-		var spawn_pos = _get_annulus_position(target_pos)
+		var spawn_pos = GameManager.get_annulus_position(target_pos)
 
 		# Apply stage-specific skin (color + name)
 		_apply_stage_skin(enemy)
@@ -366,7 +353,7 @@ func _process_boss_rush(delta: float) -> void:
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
-	var spawn_pos = _get_annulus_position(pos, BOSS_MIN_SPAWN_RADIUS, BOSS_MAX_SPAWN_RADIUS)
+	var spawn_pos = GameManager.get_annulus_position(pos, GameManager.BOSS_SPAWN_MIN_RADIUS, GameManager.BOSS_SPAWN_MAX_RADIUS)
 
 	# Temporarily set selected_stage to get the right boss
 	var original_stage = GameManager.selected_stage
@@ -419,7 +406,7 @@ func _spawn_miniboss() -> void:
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
-	var spawn_pos = _get_annulus_position(pos)
+	var spawn_pos = GameManager.get_annulus_position(pos)
 
 	var stage = GameManager.selected_stage
 	var boss: Node3D
@@ -471,7 +458,7 @@ func _spawn_boss() -> void:
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
-	var spawn_pos = _get_annulus_position(pos, BOSS_MIN_SPAWN_RADIUS, BOSS_MAX_SPAWN_RADIUS)
+	var spawn_pos = GameManager.get_annulus_position(pos, GameManager.BOSS_SPAWN_MIN_RADIUS, GameManager.BOSS_SPAWN_MAX_RADIUS)
 
 	AudioManager.play_sfx("boss_appear")
 	AudioManager.play_music("boss")
