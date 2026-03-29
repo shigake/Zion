@@ -2,9 +2,9 @@ extends SceneTree
 
 ## Generates walk spritesheets (4 frames, 128x32) for characters and enemies.
 ## Frame 0: original sprite (idle)
-## Frame 1: shifted 1px left + 1px down (left step lean)
+## Frame 1: bottom half shifted 1px left, top half shifted 1px right (left step lean)
 ## Frame 2: original sprite (idle)
-## Frame 3: shifted 1px right + 1px down (right step lean)
+## Frame 3: bottom half shifted 1px right, top half shifted 1px left (right step lean)
 ## Run: godot --headless --script res://scripts/tools/walk_spritesheet_gen.gd
 
 const FRAME_SIZE := 32
@@ -15,7 +15,7 @@ const SHEET_HEIGHT := 32
 const CHARACTERS := [
 	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
 	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery",
-	"amazona", "bruxa"
+	"amazona", "bruxa", "fragmentado"
 ]
 
 # All generic enemies
@@ -71,15 +71,15 @@ func _generate_walk_sheet(src_path: String, dst_path: String, id: String) -> voi
 	# Frame 0: original (idle) — blit at x=0
 	_blit_centered(sheet, src_img, 0)
 
-	# Frame 1: shifted 1px left + 1px down (left step lean)
-	var frame1 = _shift_image(src_img, -1, 1)
+	# Frame 1: left step lean (bottom half 1px left, top half 1px right)
+	var frame1 = _lean_image(src_img, -1, 1)
 	_blit_centered(sheet, frame1, FRAME_SIZE)
 
 	# Frame 2: original (idle) — blit at x=64
 	_blit_centered(sheet, src_img, FRAME_SIZE * 2)
 
-	# Frame 3: shifted 1px right + 1px down (right step lean)
-	var frame3 = _shift_image(src_img, 1, 1)
+	# Frame 3: right step lean (bottom half 1px right, top half 1px left)
+	var frame3 = _lean_image(src_img, 1, -1)
 	_blit_centered(sheet, frame3, FRAME_SIZE * 3)
 
 	# Save
@@ -89,19 +89,22 @@ func _generate_walk_sheet(src_path: String, dst_path: String, id: String) -> voi
 	sheet.save_png(dst_path)
 	print("Saved: ", dst_path, " (from ", src_w, "x", src_h, " source)")
 
-func _shift_image(src: Image, dx: int, dy: int) -> Image:
-	## Create a copy of src shifted by dx, dy pixels. Pixels that go out of bounds are clipped.
+func _lean_image(src: Image, bottom_dx: int, top_dx: int) -> Image:
+	## Create a walk frame by splitting the image at the midpoint:
+	## - Top half is shifted by top_dx pixels horizontally (body leans)
+	## - Bottom half is shifted by bottom_dx pixels horizontally (legs step)
 	var w = src.get_width()
 	var h = src.get_height()
+	var mid_y = h / 2  # Split at midpoint
 	var result = Image.create(w, h, false, Image.FORMAT_RGBA8)
 	result.fill(Color(0, 0, 0, 0))
 
 	for x in range(w):
 		for y in range(h):
+			var dx = top_dx if y < mid_y else bottom_dx
 			var sx = x - dx
-			var sy = y - dy
-			if sx >= 0 and sx < w and sy >= 0 and sy < h:
-				result.set_pixel(x, y, src.get_pixel(sx, sy))
+			if sx >= 0 and sx < w:
+				result.set_pixel(x, y, src.get_pixel(sx, y))
 	return result
 
 func _blit_centered(sheet: Image, src: Image, offset_x: int) -> void:
