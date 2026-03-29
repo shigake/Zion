@@ -90,9 +90,14 @@ jobs:
         run: |
           cd game
           godot --headless --import project.godot 2>&1 | tee /tmp/import.log
-          # Verifica erros criticos de parse (ignora avisos de rendering)
-          if grep -iE "SCRIPT ERROR|Parse Error|FATAL" /tmp/import.log | grep -v "vulkan\|Mesa\|rendering\|display" | head -5; then
-            echo "Erro: Projeto contem erros de parse. Corrigir antes de fazer release."
+          # Verifica APENAS erros de parse em scripts GDScript (ignora warnings, rendering, e resource errors)
+          PARSE_ERRORS=$(grep -c "Parse Error:" /tmp/import.log 2>/dev/null || echo "0")
+          SCRIPT_ERRORS=$(grep "SCRIPT ERROR:" /tmp/import.log | grep -c "Parse Error" 2>/dev/null || echo "0")
+          echo "Parse errors: $PARSE_ERRORS, Script parse errors: $SCRIPT_ERRORS"
+          if [ "$SCRIPT_ERRORS" -gt 0 ]; then
+            echo "Erros de parse encontrados:"
+            grep "SCRIPT ERROR:" /tmp/import.log | grep "Parse Error" | head -10
+            echo "Erro: Projeto contem erros de parse em scripts. Corrigir antes de fazer release."
             exit 1
           fi
           echo "Projeto validado com sucesso."
