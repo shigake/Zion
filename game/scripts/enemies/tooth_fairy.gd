@@ -14,7 +14,7 @@ enum FairyState { APPROACHING, RETREATING }
 var _state: FairyState = FairyState.APPROACHING
 var _bob_time: float = 0.0
 var _wing_time: float = 0.0
-var _glow_mesh: MeshInstance3D = null
+var _glow_sprite: Sprite3D = null
 
 func _ready() -> void:
 	speed = approach_speed
@@ -33,22 +33,26 @@ func _ready() -> void:
 	_create_glow_effect()
 
 func _create_glow_effect() -> void:
-	# Aura brilhante em volta da fada
-	_glow_mesh = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.6
-	sphere.height = 1.2
-	_glow_mesh.mesh = sphere
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.9, 0.3, 0.2)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.85, 0.2)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	_glow_mesh.material_override = mat
-	_glow_mesh.position = Vector3(0, 0.5, 0)
-	add_child(_glow_mesh)
+	# Aura brilhante em volta da fada (pixel-art glow sprite)
+	_glow_sprite = Sprite3D.new()
+	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	var center = 8
+	for x in range(16):
+		for y in range(16):
+			var dx = x - center
+			var dy = y - center
+			var dist = sqrt(dx * dx + dy * dy)
+			if dist < 7:
+				var alpha = clampf((7.0 - dist) / 7.0 * 0.3, 0.0, 0.3)
+				img.set_pixel(x, y, Color(1.0, 0.9, 0.3, alpha))
+	_glow_sprite.texture = ImageTexture.create_from_image(img)
+	_glow_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_glow_sprite.pixel_size = 0.08
+	_glow_sprite.shaded = false
+	_glow_sprite.transparent = true
+	_glow_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	_glow_sprite.position = Vector3(0, 0.5, 0)
+	add_child(_glow_sprite)
 
 func _physics_process(delta: float) -> void:
 	if is_dead or GameManager.paused:
@@ -100,10 +104,10 @@ func _physics_process(delta: float) -> void:
 		proc_model.position.y = bob_offset
 
 	# Glow pulsa
-	if _glow_mesh:
-		_glow_mesh.position.y = 0.5 + bob_offset
+	if _glow_sprite:
+		_glow_sprite.position.y = 0.5 + bob_offset
 		var pulse = 0.8 + sin(_bob_time * 1.5) * 0.2
-		_glow_mesh.scale = Vector3(pulse, pulse, pulse)
+		_glow_sprite.scale = Vector3(pulse, pulse, pulse)
 
 	# Particulas de brilho periodicas
 	_wing_time += delta

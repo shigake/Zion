@@ -1,35 +1,40 @@
-extends MeshInstance3D
+extends Node3D
 
 ## Aura visual ao redor do jogador. Pulsa suavemente.
+## Uses a flat pixel-art circle sprite instead of a 3D TorusMesh.
 
 var base_color: Color = Color(0.2, 0.8, 0.3, 0.15)
+var _sprite: Sprite3D = null
 
 func _ready() -> void:
-	# Flat ring mesh
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.8
-	torus.outer_radius = 1.0
-	torus.rings = 16
-	torus.ring_segments = 8
-	mesh = torus
-
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = base_color
-	mat.emission_enabled = true
-	mat.emission = Color(base_color.r, base_color.g, base_color.b)
-	mat.emission_energy_multiplier = 1.5
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.no_depth_test = true
-	material_override = mat
-
-	position.y = 0.05  # Just above ground
-	rotation.x = 0  # Flat
+	# Draw a simple circle ring as pixel art
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	for x in range(32):
+		for y in range(32):
+			var dx = x - 16
+			var dy = y - 16
+			var dist = sqrt(dx * dx + dy * dy)
+			if dist > 11 and dist < 14:
+				img.set_pixel(x, y, base_color)
+	var tex = ImageTexture.create_from_image(img)
+	_sprite = Sprite3D.new()
+	_sprite.texture = tex
+	_sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED  # Flat on ground
+	_sprite.rotation.x = deg_to_rad(-90)
+	_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	_sprite.pixel_size = 0.08
+	_sprite.shaded = false
+	_sprite.transparent = true
+	_sprite.position.y = 0.05
+	add_child(_sprite)
 
 func _process(delta: float) -> void:
-	# Gentle pulse
+	if not _sprite:
+		return
+	# Gentle pulse via modulate alpha and scale
 	var pulse = sin(Time.get_ticks_msec() * 0.003) * 0.1 + 0.9
-	scale = Vector3(pulse, 1.0, pulse)
+	_sprite.scale = Vector3(pulse, pulse, 1.0)
+	_sprite.modulate.a = 0.6 + sin(Time.get_ticks_msec() * 0.004) * 0.3
 
 	# Rotate slowly
-	rotation.y += delta * 0.5
+	_sprite.rotation.z += delta * 0.5

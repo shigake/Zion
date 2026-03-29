@@ -31,53 +31,40 @@ func _ready() -> void:
 	_build_soul_particles()
 
 func _build_visual() -> void:
-	# Tombstone mesh
-	var stone = MeshInstance3D.new()
-	var mesh = BoxMesh.new()
-	mesh.size = Vector3(0.6, 1.0, 0.15)
-	stone.mesh = mesh
-	stone.position = Vector3(0, 0.5, 0)
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.35, 0.35, 0.4)
-	mat.roughness = 0.9
-	stone.material_override = mat
-	add_child(stone)
+	# Tombstone billboard sprite
+	var sprite = Sprite3D.new()
+	var tex_path = "res://assets/sprites/props/cemetery/tombstone1.png"
+	if ResourceLoader.exists(tex_path):
+		sprite.texture = load(tex_path)
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.pixel_size = 0.06
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.position.y = 0.8
+	sprite.name = "TombstoneSprite"
+	add_child(sprite)
 
-	# Cross on top
-	var cross_v = MeshInstance3D.new()
-	var cv_mesh = BoxMesh.new()
-	cv_mesh.size = Vector3(0.08, 0.35, 0.08)
-	cross_v.mesh = cv_mesh
-	cross_v.position = Vector3(0, 1.15, 0)
-	var cross_mat = StandardMaterial3D.new()
-	cross_mat.albedo_color = Color(0.5, 0.5, 0.55)
-	cross_v.material_override = cross_mat
-	add_child(cross_v)
-
-	var cross_h = MeshInstance3D.new()
-	var ch_mesh = BoxMesh.new()
-	ch_mesh.size = Vector3(0.25, 0.08, 0.08)
-	cross_h.mesh = ch_mesh
-	cross_h.position = Vector3(0, 1.22, 0)
-	cross_h.material_override = cross_mat
-	add_child(cross_h)
-
-	# Ground circle indicator
-	var circle = MeshInstance3D.new()
-	var disc = CylinderMesh.new()
-	disc.top_radius = INTERACT_RADIUS
-	disc.bottom_radius = INTERACT_RADIUS
-	disc.height = 0.02
-	circle.mesh = disc
-	circle.position = Vector3(0, 0.01, 0)
-	var circle_mat = StandardMaterial3D.new()
-	circle_mat.albedo_color = Color(0.2, 0.6, 1.0, 0.2)
-	circle_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	circle_mat.emission_enabled = true
-	circle_mat.emission = Color(0.2, 0.5, 1.0)
-	circle_mat.emission_energy_multiplier = 0.5
-	circle.material_override = circle_mat
-	add_child(circle)
+	# Ground circle indicator (flat pixel-art ring)
+	var circle_sprite = Sprite3D.new()
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	var ring_color = Color(0.2, 0.6, 1.0, 0.3)
+	for x in range(32):
+		for y in range(32):
+			var dx = x - 16
+			var dy = y - 16
+			var dist = sqrt(dx * dx + dy * dy)
+			if dist > 12 and dist < 15:
+				img.set_pixel(x, y, ring_color)
+	circle_sprite.texture = ImageTexture.create_from_image(img)
+	circle_sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	circle_sprite.rotation.x = deg_to_rad(-90)
+	circle_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	circle_sprite.pixel_size = 0.12
+	circle_sprite.shaded = false
+	circle_sprite.transparent = true
+	circle_sprite.position.y = 0.02
+	add_child(circle_sprite)
 
 func _build_revive_area() -> void:
 	var a = Area3D.new()

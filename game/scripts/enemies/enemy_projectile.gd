@@ -15,7 +15,7 @@ class_name EnemyProjectile
 var direction: Vector3 = Vector3.FORWARD
 var _velocity: Vector3 = Vector3.ZERO
 var _timer: float = 0.0
-var _mesh_inst: MeshInstance3D = null
+var _sprite: Sprite3D = null
 var _col_shape: CollisionShape3D = null
 var _initialized: bool = false
 
@@ -40,18 +40,23 @@ func _ready() -> void:
 	_velocity = direction.normalized() * speed
 
 func _setup_visuals() -> void:
-	_mesh_inst = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = projectile_radius
-	sphere.height = projectile_radius * 2.0
-	_mesh_inst.mesh = sphere
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = projectile_color
-	mat.emission_enabled = true
-	mat.emission = projectile_color
-	mat.emission_energy_multiplier = 2.0
-	_mesh_inst.material_override = mat
-	add_child(_mesh_inst)
+	_sprite = Sprite3D.new()
+	# Create a small circle dot texture
+	var size = 8
+	var img = Image.create(size, size, false, Image.FORMAT_RGBA8)
+	for x in range(size):
+		for y in range(size):
+			var dx = x - size / 2
+			var dy = y - size / 2
+			if dx * dx + dy * dy < 12:
+				img.set_pixel(x, y, projectile_color)
+	_sprite.texture = ImageTexture.create_from_image(img)
+	_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_sprite.pixel_size = projectile_radius * 0.25
+	_sprite.shaded = false
+	_sprite.transparent = true
+	_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	add_child(_sprite)
 
 	_col_shape = CollisionShape3D.new()
 	var shape = SphereShape3D.new()
@@ -60,15 +65,18 @@ func _setup_visuals() -> void:
 	add_child(_col_shape)
 
 func _update_visuals() -> void:
-	if _mesh_inst and _mesh_inst.material_override:
-		var mat = _mesh_inst.material_override as StandardMaterial3D
-		mat.albedo_color = projectile_color
-		mat.emission = projectile_color
-	if _mesh_inst and _mesh_inst.mesh:
-		var sphere = _mesh_inst.mesh as SphereMesh
-		if sphere:
-			sphere.radius = projectile_radius
-			sphere.height = projectile_radius * 2.0
+	if _sprite:
+		# Regenerate texture with new color
+		var size = 8
+		var img = Image.create(size, size, false, Image.FORMAT_RGBA8)
+		for x in range(size):
+			for y in range(size):
+				var dx = x - size / 2
+				var dy = y - size / 2
+				if dx * dx + dy * dy < 12:
+					img.set_pixel(x, y, projectile_color)
+		_sprite.texture = ImageTexture.create_from_image(img)
+		_sprite.pixel_size = projectile_radius * 0.25
 
 func _physics_process(delta: float) -> void:
 	_timer += delta
