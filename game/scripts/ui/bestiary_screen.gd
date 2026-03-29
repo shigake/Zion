@@ -211,6 +211,7 @@ var detail_kills: Label
 var detail_desc: Label
 var detail_viewport: SubViewport
 var detail_model_root: Node3D
+var detail_sprite: TextureRect = null
 var current_model: Node3D = null
 var count_label: Label
 var filter_container: HBoxContainer
@@ -456,6 +457,17 @@ func _build_ui() -> void:
 	light.light_energy = 1.5
 	detail_viewport.add_child(light)
 
+	# Sprite fallback (usado quando nao ha modelo 3D)
+	detail_sprite = TextureRect.new()
+	detail_sprite.custom_minimum_size = Vector2(240, 180)
+	detail_sprite.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	detail_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	detail_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	detail_sprite.visible = false
+	detail_sprite.name = "DetailSprite"
+	detail_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dp_vbox.add_child(detail_sprite)
+
 	detail_name = Label.new()
 	detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_name.add_theme_font_size_override("font_size", 20)
@@ -618,7 +630,6 @@ func _show_enemy_details(entry: Dictionary, kills: int) -> void:
 			if hint:
 				hint.visible = false
 
-	detail_portrait.visible = true
 	_load_enemy_model(entry["id"])
 
 	detail_name.text = entry["name"]
@@ -639,15 +650,26 @@ func _load_enemy_model(enemy_id: String) -> void:
 	if current_model:
 		current_model.queue_free()
 		current_model = null
+	detail_sprite.visible = false
+	detail_portrait.visible = false
 
-	# Tenta caminhos comuns para modelos
-	var paths_to_try = [
+	# 1) Tenta carregar sprite 2D (cobre a maioria dos monstros)
+	var sprite_path := _resolve_sprite_path(enemy_id)
+	if sprite_path != "":
+		var tex = load(sprite_path) as Texture2D
+		if tex:
+			detail_sprite.texture = tex
+			detail_sprite.visible = true
+			return
+
+	# 2) Fallback: modelo 3D (.glb)
+	var model_paths := [
 		"res://assets/models/enemies/%s.glb" % enemy_id,
 		"res://assets/models/bosses/%s.glb" % enemy_id,
 		"res://assets/models/enemies/%s.glb" % enemy_id.to_lower(),
+		"res://assets/models/bosses/%s.glb" % enemy_id.to_lower(),
 	]
-
-	for path in paths_to_try:
+	for path in model_paths:
 		if ResourceLoader.exists(path):
 			var scene = load(path)
 			if scene:
@@ -656,7 +678,38 @@ func _load_enemy_model(enemy_id: String) -> void:
 				if current_model is Node3D:
 					current_model.rotation.y = 0.5
 					current_model.scale = Vector3.ONE * 1.2
+				detail_portrait.visible = true
 				return
+
+## Resolve o caminho do sprite para qualquer tipo de inimigo
+func _resolve_sprite_path(enemy_id: String) -> String:
+	# Tematicos: "cemetery_zombie" → res://assets/sprites/enemies/cemetery/cemetery_zombie.png
+	var stage_sprites: Dictionary = EnemyBase.STAGE_ENEMY_SPRITES
+	for stage_name in stage_sprites:
+		var mapping: Dictionary = stage_sprites[stage_name]
+		for _key in mapping:
+			if mapping[_key] == enemy_id:
+				var path = "res://assets/sprites/enemies/%s/%s.png" % [stage_name, enemy_id]
+				if ResourceLoader.exists(path):
+					return path
+
+	# Bosses: "BossNecromancer" → res://assets/sprites/bosses/boss_necromancer.png
+	if enemy_id.begins_with("Boss"):
+		var boss_path = "res://assets/sprites/bosses/%s.png" % enemy_id.to_snake_case()
+		if ResourceLoader.exists(boss_path):
+			return boss_path
+
+	# Genericos: "Slime" → res://assets/sprites/enemies/slime.png
+	var generic_snake = enemy_id.to_snake_case()
+	var generic_paths := [
+		"res://assets/sprites/enemies/%s.png" % generic_snake,
+		"res://assets/sprites/enemies/%s.png" % enemy_id.to_lower(),
+	]
+	for path in generic_paths:
+		if ResourceLoader.exists(path):
+			return path
+
+	return ""
 
 func _get_enemy_kills(enemy_id: String, bestiary: Dictionary) -> int:
 	if enemy_id in bestiary:
