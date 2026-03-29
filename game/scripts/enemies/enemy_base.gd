@@ -156,7 +156,7 @@ func _apply_sprite() -> void:
 			anim_sprite.sprite_frames = frames
 			anim_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 			anim_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			anim_sprite.pixel_size = 0.06 if enemy_type.begins_with("Boss") else 0.05
+			anim_sprite.pixel_size = 0.09 if enemy_type.begins_with("Boss") else 0.07
 			anim_sprite.shaded = false
 			anim_sprite.transparent = true
 			anim_sprite.name = "EnemySprite"
@@ -170,7 +170,7 @@ func _apply_sprite() -> void:
 	sprite.texture = tex
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sprite.pixel_size = 0.06 if enemy_type.begins_with("Boss") else 0.05
+	sprite.pixel_size = 0.09 if enemy_type.begins_with("Boss") else 0.07
 	sprite.shaded = false
 	sprite.transparent = true
 	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD

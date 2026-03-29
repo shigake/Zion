@@ -86,7 +86,7 @@ func _ready() -> void:
 		anim_sprite.sprite_frames = frames
 		anim_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		anim_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		anim_sprite.pixel_size = 0.04
+		anim_sprite.pixel_size = 0.07
 		anim_sprite.shaded = false
 		anim_sprite.transparent = true
 		anim_sprite.name = "PlayerSprite"
@@ -100,7 +100,7 @@ func _ready() -> void:
 		sprite.texture = load(char_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.04
+		sprite.pixel_size = 0.07
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "PlayerSprite"
