@@ -26,6 +26,11 @@ var _animator: Node = null
 var _footstep_timer: float = 0.0
 var _dust_timer: float = 0.0
 
+# ---- Emote System ----
+var _emote_wheel_open: bool = false
+var _emote_label: Label3D = null
+var _emote_timer: float = 0.0
+
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
 const BARRIER_SHOW_DIST: float = 12.0  # distancia para comecar a mostrar
@@ -135,6 +140,21 @@ func _ready() -> void:
 	aura.base_color = Color(original_color.r, original_color.g, original_color.b, 0.15)
 	add_child(aura)
 
+	# Emote label (billboard text above player)
+	_emote_label = Label3D.new()
+	_emote_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_emote_label.pixel_size = 0.01
+	_emote_label.font_size = 32
+	_emote_label.outline_size = 4
+	_emote_label.modulate = Color(1, 1, 0.8)
+	_emote_label.position = Vector3(0, 2.0, 0)
+	_emote_label.visible = false
+	add_child(_emote_label)
+
+	# Listen for emotes from other players
+	if MultiplayerManager.has_signal("emote_received"):
+		MultiplayerManager.emote_received.connect(_on_emote_received)
+
 	# Barrier walls — 4 paredes vermelhas translucidas nas bordas do mapa
 	# Wait 2 frames so global_position and scene tree are fully set up
 	await get_tree().process_frame
@@ -236,6 +256,16 @@ func _physics_process(delta: float) -> void:
 	if _animator:
 		_animator.set_walking(velocity.length() > 0.5)
 		_animator.set_move_direction(move_direction)
+
+	# Emote timer
+	if _emote_timer > 0:
+		_emote_timer -= delta
+		if _emote_timer <= 0 and _emote_label:
+			_emote_label.visible = false
+
+	# Emote wheel (T key)
+	if is_local and Input.is_action_just_pressed("emote"):
+		_toggle_emote_wheel()
 
 	# Sync posicao no multiplayer
 	if MultiplayerManager.is_online:
@@ -413,6 +443,67 @@ void fragment() {
 		wall.visible = false
 		get_tree().current_scene.call_deferred("add_child", wall)
 		_barrier_walls.append(wall)
+
+# ---- Emote System ----
+
+func _toggle_emote_wheel() -> void:
+	if _emote_wheel_open:
+		_close_emote_wheel()
+		return
+	_emote_wheel_open = true
+	# Create a simple radial menu as a CanvasLayer overlay
+	var canvas = CanvasLayer.new()
+	canvas.name = "EmoteWheel"
+	canvas.layer = 100
+	add_child(canvas)
+
+	var center_screen = get_viewport().get_visible_rect().size / 2.0
+	var radius = 120.0
+
+	for i in range(MultiplayerManager.EMOTE_LIST.size()):
+		var angle = (i / float(MultiplayerManager.EMOTE_LIST.size())) * TAU - PI / 2.0
+		var btn = Button.new()
+		btn.text = MultiplayerManager.EMOTE_LIST[i]
+		btn.custom_minimum_size = Vector2(80, 30)
+		btn.position = center_screen + Vector2(cos(angle), sin(angle)) * radius - Vector2(40, 15)
+		btn.pressed.connect(_send_emote.bind(i))
+		canvas.add_child(btn)
+
+	# Close button in center
+	var close_btn = Button.new()
+	close_btn.text = "X"
+	close_btn.custom_minimum_size = Vector2(30, 30)
+	close_btn.position = center_screen - Vector2(15, 15)
+	close_btn.pressed.connect(_close_emote_wheel)
+	canvas.add_child(close_btn)
+
+func _close_emote_wheel() -> void:
+	_emote_wheel_open = false
+	var wheel = get_node_or_null("EmoteWheel")
+	if wheel:
+		wheel.queue_free()
+
+func _send_emote(emote_id: int) -> void:
+	_close_emote_wheel()
+	MultiplayerManager.send_emote(emote_id)
+	_show_emote(emote_id)
+
+func _on_emote_received(peer_id: int, emote_id: int) -> void:
+	if peer_id == player_id:
+		_show_emote(emote_id)
+
+func _show_emote(emote_id: int) -> void:
+	if not _emote_label:
+		return
+	if emote_id < 0 or emote_id >= MultiplayerManager.EMOTE_LIST.size():
+		return
+	_emote_label.text = MultiplayerManager.EMOTE_LIST[emote_id]
+	_emote_label.visible = true
+	_emote_timer = 3.0
+	# Pop animation
+	_emote_label.scale = Vector3(0.5, 0.5, 0.5)
+	var tw = create_tween()
+	tw.tween_property(_emote_label, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _update_barrier_walls() -> void:
 	if _barrier_walls.is_empty():

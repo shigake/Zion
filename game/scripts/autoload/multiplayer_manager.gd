@@ -21,12 +21,18 @@ signal reconnection_succeeded()
 signal reconnection_failed()
 signal ping_updated(ping_ms: int)
 signal lobby_state_updated()
+signal chat_message_received(sender_name: String, text: String, color: Color)
+signal stage_selection_updated()
+signal lan_server_found(server_info: Dictionary)
+signal password_required()
 
 const DEFAULT_PORT := 7777
+const LAN_BROADCAST_PORT := 7778
 const MAX_PLAYERS := 4
 const PING_INTERVAL := 2.0          # Mede ping a cada 2 segundos
 const MAX_RECONNECT_ATTEMPTS := 3   # Máximo de tentativas de reconexão
 const RECONNECT_INTERVAL := 2.0     # Intervalo entre tentativas (segundos)
+const LAN_BROADCAST_INTERVAL := 2.0 # Broadcast LAN a cada 2s
 
 enum NetworkBackend { ENET, STEAM }
 
@@ -36,6 +42,9 @@ var local_player_id: int = 0
 var is_online: bool = false
 var backend: int = NetworkBackend.ENET
 var current_host_id: int = 1  # Quem é o host atual
+
+# --- Lobby stage (host-controlled) ---
+var lobby_stage: String = "cemetery"
 
 # --- Ping ---
 var _ping_ms: int = 0               # Último ping medido em milissegundos
@@ -48,6 +57,17 @@ var _reconnect_timer: float = 0.0
 var _reconnecting: bool = false
 var _last_address: String = ""
 var _last_port: int = DEFAULT_PORT
+
+# --- LAN Discovery ---
+var _lan_broadcast_peer: PacketPeerUDP = null
+var _lan_discovery_peer: PacketPeerUDP = null
+var _lan_broadcast_timer: float = 0.0
+var _lan_broadcasting: bool = false
+var _lan_discovering: bool = false
+
+# --- Room Password ---
+var _room_password_hash: String = ""   # Host's room password (SHA-256)
+var _client_password_hash: String = "" # Client's password attempt
 
 # --- Host Migration ---
 var _migration_in_progress: bool = false
@@ -72,6 +92,17 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 func _process(delta: float) -> void:
+	# --- LAN broadcast (host) ---
+	if _lan_broadcasting and _lan_broadcast_peer:
+		_lan_broadcast_timer += delta
+		if _lan_broadcast_timer >= LAN_BROADCAST_INTERVAL:
+			_lan_broadcast_timer = 0.0
+			_send_lan_broadcast()
+
+	# --- LAN discovery (client) ---
+	if _lan_discovering and _lan_discovery_peer:
+		_poll_lan_discovery()
+
 	if not is_online:
 		return
 
@@ -155,6 +186,8 @@ func join_server(address: String = "127.0.0.1", port: int = DEFAULT_PORT) -> Err
 func disconnect_from_game() -> void:
 	_reconnecting = false
 	_reconnect_attempts = 0
+	stop_lan_broadcast()
+	stop_lan_discovery()
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
@@ -163,6 +196,9 @@ func disconnect_from_game() -> void:
 	_remote_positions.clear()
 	local_player_id = 0
 	is_online = false
+	lobby_stage = "cemetery"
+	_room_password_hash = ""
+	_client_password_hash = ""
 
 ## Tenta reconectar a um servidor após desconexão.
 ## Usado após host migration ou perda de conexão.
@@ -781,3 +817,161 @@ func _handle_level_up_choice(peer_id: int, _choice_data: Dictionary) -> void:
 		_set_global_pause.rpc(false)
 		level_up_resumed.emit()
 		LogManager.info("MP", "All level-up choices made, game resumed")
+
+# ===========================================================
+# LAN BROADCAST / DISCOVERY (Task 5)
+# ===========================================================
+
+## Host: start broadcasting server info on LAN via UDP.
+func start_lan_broadcast() -> void:
+	stop_lan_broadcast()
+	_lan_broadcast_peer = PacketPeerUDP.new()
+	_lan_broadcast_peer.set_broadcast_enabled(true)
+	_lan_broadcast_peer.set_dest_address("255.255.255.255", LAN_BROADCAST_PORT)
+	_lan_broadcasting = true
+	_lan_broadcast_timer = 0.0
+	LogManager.info("MP", "LAN broadcast started on port %d" % LAN_BROADCAST_PORT)
+
+func stop_lan_broadcast() -> void:
+	_lan_broadcasting = false
+	if _lan_broadcast_peer:
+		_lan_broadcast_peer.close()
+		_lan_broadcast_peer = null
+
+func _send_lan_broadcast() -> void:
+	if not _lan_broadcast_peer:
+		return
+	var version_str = ""
+	if FileAccess.file_exists("res://VERSION"):
+		var f = FileAccess.open("res://VERSION", FileAccess.READ)
+		if f:
+			version_str = f.get_as_text().strip_edges()
+	var payload = {
+		"game": "zion",
+		"version": version_str,
+		"host_name": "Sala de %s" % SaveManager.data.get("player_name", "Jogador"),
+		"players": get_player_count(),
+		"max_players": MAX_PLAYERS,
+		"stage": lobby_stage,
+		"port": _last_port,
+		"has_password": _room_password_hash != "",
+	}
+	var json = JSON.stringify(payload)
+	_lan_broadcast_peer.put_packet(json.to_utf8_buffer())
+
+## Client: start listening for LAN broadcasts.
+func start_lan_discovery() -> void:
+	stop_lan_discovery()
+	_lan_discovery_peer = PacketPeerUDP.new()
+	var err = _lan_discovery_peer.bind(LAN_BROADCAST_PORT)
+	if err != OK:
+		LogManager.error("MP", "Failed to bind LAN discovery port %d: %s" % [LAN_BROADCAST_PORT, err])
+		_lan_discovery_peer = null
+		return
+	_lan_discovering = true
+	LogManager.info("MP", "LAN discovery started on port %d" % LAN_BROADCAST_PORT)
+
+func stop_lan_discovery() -> void:
+	_lan_discovering = false
+	if _lan_discovery_peer:
+		_lan_discovery_peer.close()
+		_lan_discovery_peer = null
+
+func _poll_lan_discovery() -> void:
+	if not _lan_discovery_peer:
+		return
+	while _lan_discovery_peer.get_available_packet_count() > 0:
+		var packet = _lan_discovery_peer.get_packet()
+		var ip = _lan_discovery_peer.get_packet_ip()
+		var text = packet.get_string_from_utf8()
+		var json = JSON.new()
+		if json.parse(text) != OK:
+			continue
+		var data = json.data
+		if not data is Dictionary:
+			continue
+		if data.get("game", "") != "zion":
+			continue
+		data["ip"] = ip
+		lan_server_found.emit(data)
+
+# ===========================================================
+# STAGE SELECTION SYNC (Task 4)
+# ===========================================================
+
+## Host broadcasts stage selection to all clients.
+func broadcast_stage_selection(stage_id: String) -> void:
+	lobby_stage = stage_id
+	GameManager.selected_stage = stage_id
+	if multiplayer.is_server():
+		_sync_stage_selection.rpc(stage_id)
+		stage_selection_updated.emit()
+
+@rpc("authority", "reliable")
+func _sync_stage_selection(stage_id: String) -> void:
+	lobby_stage = stage_id
+	GameManager.selected_stage = stage_id
+	stage_selection_updated.emit()
+
+# ===========================================================
+# CHAT SYSTEM (Task 8)
+# ===========================================================
+
+## Send a chat message from local player. Host retransmits to all.
+func send_chat_message(text: String) -> void:
+	var name = SaveManager.data.get("player_name", "Jogador")
+	if multiplayer.is_server():
+		# Host: broadcast directly
+		var color = get_player_colors().get(local_player_id, Color.WHITE)
+		_receive_chat_message.rpc(name, text, color.to_html(false))
+		chat_message_received.emit(name, text, color)
+	else:
+		_send_chat_to_host.rpc_id(1, name, text)
+
+@rpc("any_peer", "reliable")
+func _send_chat_to_host(sender_name: String, text: String) -> void:
+	if not multiplayer.is_server():
+		return
+	var sender_id = multiplayer.get_remote_sender_id()
+	var color = get_player_colors().get(sender_id, Color.WHITE)
+	# Retransmit to all (including sender)
+	_receive_chat_message.rpc(sender_name, text, color.to_html(false))
+	chat_message_received.emit(sender_name, text, color)
+
+@rpc("authority", "reliable")
+func _receive_chat_message(sender_name: String, text: String, color_hex: String) -> void:
+	var color = Color.from_string(color_hex, Color.WHITE)
+	chat_message_received.emit(sender_name, text, color)
+
+# ===========================================================
+# ROOM PASSWORD (Task 10)
+# ===========================================================
+
+## Host sets room password (SHA-256 hash or empty string for no password).
+func set_room_password(password_hash: String) -> void:
+	_room_password_hash = password_hash
+
+## Client sets password attempt for handshake.
+func set_client_password(password_hash: String) -> void:
+	_client_password_hash = password_hash
+
+# ===========================================================
+# EMOTE SYSTEM (Task 9)
+# ===========================================================
+
+const EMOTE_LIST: Array = ["Vamos!", "Cuidado!", "Ajuda!", "GG", "Aqui!", "Esperem", "Obrigado!", "LOL"]
+
+signal emote_received(peer_id: int, emote_id: int)
+
+## Broadcast an emote to all players.
+func send_emote(emote_id: int) -> void:
+	if not is_online:
+		return
+	if emote_id < 0 or emote_id >= EMOTE_LIST.size():
+		return
+	_broadcast_emote.rpc(local_player_id, emote_id)
+	emote_received.emit(local_player_id, emote_id)
+
+@rpc("any_peer", "unreliable")
+func _broadcast_emote(peer_id: int, emote_id: int) -> void:
+	emote_received.emit(peer_id, emote_id)

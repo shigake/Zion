@@ -305,18 +305,18 @@ lobby_stage = "cemetery"  # Controlado apenas pelo host
 
 ## Critérios de Aceitação
 
-- [ ] Jogador pode selecionar Fragmentado, relíquia e ver a fenda dentro do lobby
-- [ ] Host pode selecionar fenda; clientes veem a seleção em tempo real
-- [ ] Lista de jogadores mostra: sprite, nome, relíquia, status pronto, ping, badge host
-- [ ] Servidores LAN aparecem automaticamente na lista (< 3s de delay)
-- [ ] Servidores recentes são salvos e permitem reconexão rápida
-- [ ] Chat funciona no lobby com anti-flood
-- [ ] Emotes funcionam in-game via roda radial
-- [ ] Feedback visual de reconexão aparece ao perder conexão
-- [ ] Sala com senha exige input antes de conectar
-- [ ] Layout responsivo funciona em 1280x720
-- [ ] Toda a UI usa sentence case conforme padrão do projeto
-- [ ] Narrativa respeitada: terminologia usa "Fragmentados", "fendas", "relíquias", "estilhaços"
+- [x] Jogador pode selecionar Fragmentado, relíquia e ver a fenda dentro do lobby
+- [x] Host pode selecionar fenda; clientes veem a seleção em tempo real
+- [x] Lista de jogadores mostra: sprite, nome, relíquia, status pronto, ping, badge host
+- [x] Servidores LAN aparecem automaticamente na lista (< 3s de delay)
+- [x] Servidores recentes são salvos e permitem reconexão rápida
+- [x] Chat funciona no lobby com anti-flood
+- [x] Emotes funcionam in-game via roda radial
+- [x] Feedback visual de reconexão aparece ao perder conexão
+- [x] Sala com senha exige input antes de conectar
+- [x] Layout responsivo funciona em 1280x720
+- [x] Toda a UI usa sentence case conforme padrão do projeto
+- [x] Narrativa respeitada: terminologia usa "Fragmentados", "fendas", "relíquias", "estilhaços"
 
 ## Métricas de Sucesso
 

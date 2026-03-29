@@ -17,6 +17,7 @@ var defaults: Dictionary = {
 	"level_up_choice_2": {"key": KEY_2},
 	"level_up_choice_3": {"key": KEY_3},
 	"level_up_reroll": {"key": KEY_SPACE, "gamepad_button": JOY_BUTTON_Y},
+	"emote": {"key": KEY_T},
 }
 
 var bindings: Dictionary = {}
@@ -34,6 +35,7 @@ var action_names: Dictionary = {
 	"level_up_choice_2": "Level Up - Escolha 2",
 	"level_up_choice_3": "Level Up - Escolha 3",
 	"level_up_reroll": "Level Up - Reroll",
+	"emote": "Emotes",
 }
 
 func _ready() -> void:
