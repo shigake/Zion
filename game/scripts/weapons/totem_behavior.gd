@@ -29,30 +29,26 @@ func _process(delta: float) -> void:
 
 	anim_time += delta
 
-	# Animate aura ring: pulse scale and alpha
-	var aura_ring = get_meta("aura_ring") if has_meta("aura_ring") else null
-	if aura_ring and is_instance_valid(aura_ring):
-		var aura_pulse = 1.0 + sin(anim_time * 2.5) * 0.05
-		aura_ring.scale = Vector3(aura_pulse, 1.0, aura_pulse)
-		var mat = aura_ring.material_override
-		if mat:
-			var alpha = 0.3 + sin(anim_time * 3.0) * 0.1
-			mat.albedo_color.a = alpha
-
-	# Animate energy orb: pulsing glow
-	var energy_orb = get_meta("energy_orb") if has_meta("energy_orb") else null
-	if energy_orb and is_instance_valid(energy_orb):
-		var orb_mat = energy_orb.material_override
-		if orb_mat:
-			orb_mat.emission_energy_multiplier = 2.0 + sin(anim_time * 4.0) * 1.0
-
-	# Intermittent electric arc particles
-	arc_timer -= delta
-	if arc_timer <= 0:
-		arc_timer = randf_range(1.0, 2.0)
-		var arc_particles = get_meta("arc_particles") if has_meta("arc_particles") else null
-		if arc_particles and is_instance_valid(arc_particles):
-			arc_particles.emitting = true
+	# Animate zap sprites: orbit around totem + pulse
+	var parent = get_parent()
+	if parent:
+		for i in range(3):
+			var zap = parent.get_node_or_null("ZapSprite_%d" % i)
+			if zap and is_instance_valid(zap):
+				var angle = anim_time * 2.0 + i * TAU / 3.0
+				var area_node: Area3D = get_meta("area") if has_meta("area") else null
+				var radius = 2.0
+				if area_node and is_instance_valid(area_node):
+					var shape = area_node.get_child(0) as CollisionShape3D
+					if shape and shape.shape is SphereShape3D:
+						radius = shape.shape.radius * 0.5
+				zap.position = Vector3(cos(angle) * radius, 0.3 + sin(anim_time * 5.0 + i) * 0.2, sin(angle) * radius)
+				zap.modulate.a = 0.4 + sin(anim_time * 6.0 + i * 2.0) * 0.3
+		# Pulse totem sprite on damage tick
+		var totem_sprite = parent.get_node_or_null("TotemSprite")
+		if totem_sprite and is_instance_valid(totem_sprite):
+			var pulse = 1.0 + sin(anim_time * 3.0) * 0.05
+			totem_sprite.modulate = Color(0.8 + sin(anim_time * 4.0) * 0.2, 0.9, 1.2)
 
 	damage_timer -= delta
 	if damage_timer <= 0:
@@ -65,8 +61,19 @@ func _deal_damage() -> void:
 		return
 	var dmg: int = get_meta("damage")
 	var bodies = area.get_overlapping_bodies()
+	var hit_count := 0
 	for body in bodies:
 		if body.is_in_group("enemies") and body.has_method("take_damage"):
 			GameManager._last_attacking_weapon = "totem"
 			body.call_deferred("take_damage", dmg, "electric")
-	ParticleFactory.spawn_hit_particles(get_parent().global_position + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))
+			hit_count += 1
+	# Visual feedback: electric flash + particles when hitting enemies
+	if hit_count > 0:
+		ParticleFactory.spawn_hit_particles(get_parent().global_position + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))
+		AudioManager.play_sfx("electric_zap")
+		# Flash the totem sprite bright on damage
+		var totem_sprite = get_parent().get_node_or_null("TotemSprite")
+		if totem_sprite and is_instance_valid(totem_sprite):
+			totem_sprite.modulate = Color(3, 3, 5)
+			var tw = create_tween()
+			tw.tween_property(totem_sprite, "modulate", Color(0.8, 0.9, 1.2), 0.15)
