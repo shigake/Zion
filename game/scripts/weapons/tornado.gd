@@ -40,6 +40,8 @@ func _spawn_tornado(level: int) -> void:
 	if not player:
 		return
 
+	AudioManager.play_sfx("tornado")
+
 	var tornado = TornadoInstance.new()
 	tornado.player = player
 	tornado.level = level
@@ -147,6 +149,10 @@ class TornadoInstance extends Area3D:
 			_sprite.rotation.y += 8.0 * delta
 			_sprite.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
 
+		# Spawn vortex trail particles
+		if Engine.get_frames_per_second() > 35:
+			_spawn_vortex_particles()
+
 		# Damage tick
 		_damage_timer += delta
 		if _damage_timer >= _damage_interval:
@@ -172,3 +178,39 @@ class TornadoInstance extends Area3D:
 				var pull_dir = (global_position - body.global_position).normalized()
 				pull_dir.y = 0
 				body.global_position += pull_dir * _pull_strength * _damage_interval
+
+	func _spawn_vortex_particles() -> void:
+		if not is_inside_tree():
+			return
+		# Only spawn every few frames for performance
+		if Engine.get_process_frames() % 3 != 0:
+			return
+		var scene = get_tree().current_scene
+		if not scene:
+			return
+		# Small ice/wind particle orbiting the tornado
+		var particle = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.06
+		sphere.height = 0.12
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.6, 0.85, 1.0, 0.6)
+		mat.emission_enabled = true
+		mat.emission = Color(0.5, 0.8, 1.0)
+		mat.emission_energy_multiplier = 4.0
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sphere.surface_set_material(0, mat)
+		particle.mesh = sphere
+		scene.add_child(particle)
+		# Start at random position around tornado
+		var angle = randf() * TAU
+		var offset = Vector3(cos(angle) * 0.5, randf_range(-0.3, 1.5), sin(angle) * 0.5)
+		particle.global_position = global_position + offset
+		# Spiral outward and fade
+		var tween = particle.create_tween()
+		tween.set_parallel(true)
+		var end_pos = global_position + Vector3(cos(angle) * 2.0, 1.5, sin(angle) * 2.0)
+		tween.tween_property(particle, "global_position", end_pos, 0.5)
+		tween.tween_property(particle, "scale", Vector3(0.1, 0.1, 0.1), 0.5)
+		tween.chain().tween_callback(particle.queue_free)

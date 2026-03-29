@@ -74,6 +74,15 @@ func _ready() -> void:
 		_sfx_players.append(player)
 
 	_apply_volumes()
+	# Connect boss phase signal for dynamic music intensity
+	GameManager.boss_phase_changed.connect(_on_boss_phase_changed)
+	GameManager.boss_died.connect(_on_boss_died_music)
+
+func _on_boss_phase_changed(_boss_name: String, phase: int) -> void:
+	set_boss_phase_intensity(phase)
+
+func _on_boss_died_music(_boss_name: String) -> void:
+	reset_music_intensity()
 
 func _process(delta: float) -> void:
 	if _crossfading:
@@ -237,6 +246,39 @@ func _load_audio(base_path: String, extensions: Array) -> AudioStream:
 	# No file found - cache null to avoid repeated lookups
 	_audio_cache[base_path] = null
 	return null
+
+## Boss phase music intensity — increases pitch and volume at higher phases
+func set_boss_phase_intensity(phase: int) -> void:
+	if not _music_player or not _music_player.playing:
+		return
+	if _current_music != "boss":
+		return
+	# Phase 1: normal, Phase 2: slightly faster/louder, Phase 3: intense
+	match phase:
+		1:
+			_music_player.pitch_scale = 1.0
+			_apply_volumes()
+		2:
+			_music_player.pitch_scale = 1.08
+			# Slight volume boost
+			var vol = minf(music_volume * master_volume * 1.15, 1.0)
+			_music_player.volume_db = linear_to_db(maxf(vol, 0.0001))
+		3:
+			_music_player.pitch_scale = 1.18
+			# More volume boost
+			var vol = minf(music_volume * master_volume * 1.3, 1.0)
+			_music_player.volume_db = linear_to_db(maxf(vol, 0.0001))
+		_:
+			# Fury mode (phase 4+)
+			_music_player.pitch_scale = 1.25
+			var vol = minf(music_volume * master_volume * 1.4, 1.0)
+			_music_player.volume_db = linear_to_db(maxf(vol, 0.0001))
+
+## Reset boss music intensity (called on boss death / stage end)
+func reset_music_intensity() -> void:
+	if _music_player:
+		_music_player.pitch_scale = 1.0
+		_apply_volumes()
 
 # ---- Integration points ----
 # Call AudioManager.play_sfx("hit") when an enemy is hit

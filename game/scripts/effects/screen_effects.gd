@@ -323,24 +323,136 @@ func _show_kill_streak(count: int) -> void:
 
 # ---- Boss Entrance Effect ----
 
+var _boss_title_label: Label = null
+var _boss_subtitle_label: Label = null
+
 func _on_boss_entrance(_boss_name: String) -> void:
 	boss_entrance_effect()
 
-## Dramatic boss entrance: shake + slow-mo + flash
-func boss_entrance_effect() -> void:
-	# 1. Strong screen shake
-	shake(0.35)
+## Boss names for title display
+var _boss_display_names: Dictionary = {
+	"BossNecromancer": "SENTINELA NECROMANTE",
+	"BossFairyQueen": "SENTINELA RAINHA FADA",
+	"BossAlienCow": "SENTINELA VACA ALIENIGENA",
+	"BossAiOverlord": "SENTINELA IA SUPREMA",
+	"BossDemonLord": "SENTINELA SENHOR DEMONIO",
+	"BossLeviathan": "SENTINELA LEVIATA",
+	"BossEmperor": "SENTINELA IMPERADOR",
+	"BossSingularity": "SENTINELA SINGULARIDADE",
+	"BossDracula": "SENTINELA DRACULA",
+	"BossSugarKing": "SENTINELA REI DO ACUCAR",
+}
 
-	# 2. White flash
+## Dramatic boss entrance: vignette + zoom + title card + shake + slow-mo
+func boss_entrance_effect() -> void:
+	# 1. Dark vignette overlay (cinematic bars feel)
+	if _vignette_rect:
+		var vig_tween = create_tween()
+		_vignette_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+		vig_tween.tween_property(_vignette_rect, "color:a", 0.5, 0.3)
+		vig_tween.tween_interval(1.5)
+		vig_tween.tween_property(_vignette_rect, "color:a", 0.0, 0.5)
+
+	# 2. Strong camera shake (escalating)
+	shake(0.5)
+
+	# 3. White flash → red flash sequence
 	if _flash_overlay:
-		_flash_overlay.color = Color(1.0, 1.0, 1.0, 0.5)
+		_flash_overlay.color = Color(1.0, 0.9, 0.8, 0.6)
 		_flash_overlay.visible = true
 		var flash_tween = create_tween()
-		flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.4)
+		flash_tween.tween_property(_flash_overlay, "color", Color(0.8, 0.1, 0.0, 0.3), 0.2)
+		flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.5)
 		flash_tween.tween_callback(func(): _flash_overlay.visible = false)
 
-	# 3. Brief slow-motion for dramatic effect
-	slow_motion(0.5, 0.3)
+	# 4. Slow-motion with dramatic timing
+	slow_motion(1.2, 0.2)
 
-	# 4. Gamepad rumble
-	Input.start_joy_vibration(0, 0.7, 0.5, 0.5)
+	# 5. Camera zoom pulse (zoom in then back)
+	_boss_camera_zoom()
+
+	# 6. Extended gamepad rumble
+	Input.start_joy_vibration(0, 1.0, 0.8, 0.8)
+
+## Boss title card — displays boss name with dramatic animation
+func boss_title_card(boss_name: String) -> void:
+	var display_name = _boss_display_names.get(boss_name, boss_name.to_upper())
+	if not _vignette_canvas:
+		return
+
+	# Title label
+	if _boss_title_label and is_instance_valid(_boss_title_label):
+		_boss_title_label.queue_free()
+	_boss_title_label = Label.new()
+	_boss_title_label.text = display_name
+	_boss_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_boss_title_label.anchors_preset = Control.PRESET_CENTER
+	_boss_title_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_boss_title_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_boss_title_label.position.y = -40
+	_boss_title_label.add_theme_font_size_override("font_size", 36)
+	_boss_title_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.1))
+	_boss_title_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
+	_boss_title_label.add_theme_constant_override("outline_size", 6)
+	_boss_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_title_label.modulate.a = 0.0
+	_boss_title_label.scale = Vector2(0.3, 0.3)
+	_boss_title_label.pivot_offset = Vector2(300, 20)
+	_vignette_canvas.add_child(_boss_title_label)
+
+	# Subtitle
+	if _boss_subtitle_label and is_instance_valid(_boss_subtitle_label):
+		_boss_subtitle_label.queue_free()
+	_boss_subtitle_label = Label.new()
+	_boss_subtitle_label.text = "— Guardiao corrompido —"
+	_boss_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_subtitle_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_boss_subtitle_label.anchors_preset = Control.PRESET_CENTER
+	_boss_subtitle_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_boss_subtitle_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_boss_subtitle_label.position.y = 10
+	_boss_subtitle_label.add_theme_font_size_override("font_size", 16)
+	_boss_subtitle_label.add_theme_color_override("font_color", Color(0.8, 0.7, 0.5))
+	_boss_subtitle_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
+	_boss_subtitle_label.add_theme_constant_override("outline_size", 3)
+	_boss_subtitle_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_subtitle_label.modulate.a = 0.0
+	_vignette_canvas.add_child(_boss_subtitle_label)
+
+	# Animate title: zoom in with bounce
+	var title_tween = create_tween()
+	title_tween.set_parallel(true)
+	title_tween.tween_property(_boss_title_label, "modulate:a", 1.0, 0.3)
+	title_tween.tween_property(_boss_title_label, "scale", Vector2(1.1, 1.1), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	title_tween.chain().tween_property(_boss_title_label, "scale", Vector2(1.0, 1.0), 0.15)
+
+	# Subtitle fade in delayed
+	var sub_tween = create_tween()
+	sub_tween.tween_interval(0.4)
+	sub_tween.tween_property(_boss_subtitle_label, "modulate:a", 1.0, 0.3)
+
+	# Hold then fade out
+	var fade_tween = create_tween()
+	fade_tween.tween_interval(2.5)
+	fade_tween.set_parallel(true)
+	fade_tween.tween_property(_boss_title_label, "modulate:a", 0.0, 0.5)
+	fade_tween.tween_property(_boss_subtitle_label, "modulate:a", 0.0, 0.5)
+	fade_tween.chain().tween_callback(func():
+		if is_instance_valid(_boss_title_label):
+			_boss_title_label.queue_free()
+		if is_instance_valid(_boss_subtitle_label):
+			_boss_subtitle_label.queue_free()
+	)
+
+## Camera zoom pulse for boss entrance
+func _boss_camera_zoom() -> void:
+	if not camera or not is_instance_valid(camera):
+		camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	var original_fov = camera.fov
+	var zoom_tween = create_tween()
+	zoom_tween.tween_property(camera, "fov", original_fov - 10.0, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	zoom_tween.tween_interval(0.5)
+	zoom_tween.tween_property(camera, "fov", original_fov, 0.4).set_ease(Tween.EASE_IN_OUT)

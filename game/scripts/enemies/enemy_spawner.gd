@@ -396,9 +396,8 @@ func _process_boss_rush(delta: float) -> void:
 	_boss_rush_active_boss = true
 
 	# Dramatic boss entrance effects
-	ScreenEffects.shake(0.4)
-	ScreenEffects.slow_motion(1.0, 0.3)
-	ScreenEffects.level_up_flash()
+	ScreenEffects.boss_entrance_effect()
+	ScreenEffects.boss_title_card(boss.name)
 	AudioManager.play_sfx("boss_roar")
 
 	# Restore original stage
@@ -499,7 +498,6 @@ func _spawn_boss() -> void:
 	GameManager.boss_spawned.emit(boss.name)
 
 	# Dramatic boss entrance effects
-	ScreenEffects.shake(0.4)
-	ScreenEffects.slow_motion(1.0, 0.3)
-	ScreenEffects.level_up_flash()
+	ScreenEffects.boss_entrance_effect()
+	ScreenEffects.boss_title_card(boss.name)
 	AudioManager.play_sfx("boss_roar")

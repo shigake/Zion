@@ -124,7 +124,11 @@ func _attack(level: int) -> void:
 
 		current_target = next_target
 
+	AudioManager.play_sfx("chain_whip")
 	AudioManager.play_sfx("hit")
+	# Spawn electric sparks at first hit
+	if not hit_targets.is_empty():
+		_spawn_electric_burst(hit_targets[0].global_position + Vector3(0, 0.5, 0))
 
 func _draw_chain(from: Vector3, to: Vector3) -> void:
 	var container = Node3D.new()
@@ -212,6 +216,39 @@ func _draw_chain(from: Vector3, to: Vector3) -> void:
 
 	get_tree().current_scene.call_deferred("add_child", container)
 	chain_visuals.append({"node": container, "timer": 0.2})
+
+func _spawn_electric_burst(pos: Vector3) -> void:
+	if Engine.get_frames_per_second() < 30:
+		return
+	var scene = get_tree().current_scene
+	if not scene:
+		return
+	# Spawn 4-6 small electric sparks radiating outward
+	var spark_count = randi_range(4, 6)
+	for i in range(spark_count):
+		var spark = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.04
+		sphere.height = 0.08
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.7, 0.9, 1.0, 0.8)
+		mat.emission_enabled = true
+		mat.emission = Color(0.6, 0.85, 1.0)
+		mat.emission_energy_multiplier = 12.0
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sphere.surface_set_material(0, mat)
+		spark.mesh = sphere
+		scene.add_child(spark)
+		spark.global_position = pos
+		# Random direction
+		var dir = Vector3(randf_range(-1, 1), randf_range(0, 1), randf_range(-1, 1)).normalized()
+		var end_pos = pos + dir * randf_range(0.3, 0.8)
+		var tween = spark.create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(spark, "global_position", end_pos, 0.15)
+		tween.tween_property(spark, "scale", Vector3(0.01, 0.01, 0.01), 0.2)
+		tween.chain().tween_callback(spark.queue_free)
 
 func _cleanup_visuals(delta: float) -> void:
 	var to_remove: Array = []

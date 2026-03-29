@@ -63,6 +63,8 @@ func _fire(level: int) -> void:
 	var speed = WeaponDB.get_weapon("boomerang").get("base_speed", 15.0) + (level - 1) * 1.0
 	var max_distance = 15.0 + level * 1.0
 
+	AudioManager.play_sfx("boomerang")
+
 	var scene_root = get_tree().current_scene
 	if not is_instance_valid(scene_root):
 		return
@@ -181,5 +183,28 @@ func _physics_process(delta: float) -> void:
 	var sprite = bullet.get_node_or_null("BoomerangSprite")
 	if sprite:
 		sprite.rotation.y += 15.0 * delta
+
+	# Spinning trail particle (every 4 frames)
+	if Engine.get_process_frames() % 4 == 0 and Engine.get_frames_per_second() > 35:
+		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+		if scene:
+			var trail = MeshInstance3D.new()
+			var s = SphereMesh.new()
+			s.radius = 0.025
+			s.height = 0.05
+			var m = StandardMaterial3D.new()
+			m.albedo_color = Color(0.9, 0.8, 0.4, 0.5)
+			m.emission_enabled = true
+			m.emission = Color(1.0, 0.9, 0.5)
+			m.emission_energy_multiplier = 4.0
+			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			s.surface_set_material(0, m)
+			trail.mesh = s
+			scene.add_child(trail)
+			trail.global_position = bullet.global_position
+			var tw = trail.create_tween()
+			tw.tween_property(trail, "scale", Vector3(0.01, 0.01, 0.01), 0.25)
+			tw.tween_callback(trail.queue_free)
 """
 	_boomerang_ctrl_script.reload()

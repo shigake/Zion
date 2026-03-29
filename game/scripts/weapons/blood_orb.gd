@@ -40,6 +40,8 @@ func _spawn_orb(level: int) -> void:
 	if not player:
 		return
 
+	AudioManager.play_sfx("blood_orb")
+
 	var orb = BloodOrbInstance.new()
 	orb.player = player
 	orb.level = level
@@ -114,6 +116,8 @@ class BloodOrbInstance extends Area3D:
 			_mesh.material_override = mat
 			add_child(_mesh)
 
+	var _trail_timer: float = 0.0
+
 	func _process(delta: float) -> void:
 		if not is_inside_tree():
 			return
@@ -137,13 +141,20 @@ class BloodOrbInstance extends Area3D:
 		)
 		global_position = orbit_pos
 
-		# Pulse visual
+		# Pulse visual — heartbeat pattern
+		var heartbeat = abs(sin(_lifetime_timer * 5.0)) * 0.15
 		if _mesh:
-			var pulse = 1.0 + sin(_lifetime_timer * 4.0) * 0.1
+			var pulse = 1.0 + heartbeat
 			_mesh.scale = Vector3(pulse, pulse, pulse)
 		if _sprite:
-			var pulse = 1.0 + sin(_lifetime_timer * 4.0) * 0.1
+			var pulse = 1.0 + heartbeat
 			_sprite.scale = Vector3(pulse, pulse, pulse)
+
+		# Dark trail particles
+		_trail_timer += delta
+		if _trail_timer >= 0.12 and Engine.get_frames_per_second() > 35:
+			_trail_timer = 0.0
+			_spawn_dark_trail()
 
 		# Damage tick
 		_damage_timer += delta
@@ -251,3 +262,31 @@ class BloodOrbInstance extends Area3D:
 		var line_tween = line_mesh.create_tween()
 		line_tween.tween_property(line_mesh, "transparency", 1.0, 0.25)
 		line_tween.tween_callback(line_mesh.queue_free)
+
+	func _spawn_dark_trail() -> void:
+		if not is_inside_tree():
+			return
+		var scene = get_tree().current_scene
+		if not scene:
+			return
+		var trail = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.04
+		sphere.height = 0.08
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.5, 0.0, 0.05, 0.5)
+		mat.emission_enabled = true
+		mat.emission = Color(0.6, 0.05, 0.1)
+		mat.emission_energy_multiplier = 3.0
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sphere.surface_set_material(0, mat)
+		trail.mesh = sphere
+		scene.add_child(trail)
+		trail.global_position = global_position + Vector3(randf_range(-0.15, 0.15), randf_range(-0.1, 0.1), randf_range(-0.15, 0.15))
+		# Float down and fade
+		var tween = trail.create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(trail, "global_position:y", trail.global_position.y - 0.4, 0.4)
+		tween.tween_property(trail, "scale", Vector3(0.01, 0.01, 0.01), 0.4)
+		tween.chain().tween_callback(trail.queue_free)
