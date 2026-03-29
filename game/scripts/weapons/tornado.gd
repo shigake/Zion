@@ -140,14 +140,16 @@ class TornadoInstance extends Area3D:
 		)
 		global_position = orbit_pos
 
-		# Spin visual + scale pulse (breathing effect)
+		# Spin visual + scale pulse (breathing effect) + glow modulate
 		var pulse = 1.0 + sin(_lifetime_timer * 3.0) * 0.15
+		var glow_alpha = 0.85 + sin(_lifetime_timer * 4.5) * 0.15
 		if _mesh:
 			_mesh.rotation.y += 8.0 * delta
 			_mesh.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
 		if _sprite:
 			_sprite.rotation.y += 8.0 * delta
 			_sprite.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
+			_sprite.modulate = Color(0.9 + sin(_lifetime_timer * 5.0) * 0.1, 0.95, 1.0, glow_alpha)
 
 		# Spawn vortex trail particles
 		if Engine.get_frames_per_second() > 35:

@@ -20,6 +20,7 @@ var _animator: Node = null
 var _hit_count: int = 0
 var _flash_tween: Tween = null  # Reuse tween for flash to avoid creating new ones per hit
 var _sprite_base_scale: Vector3 = Vector3.ONE  # Original scale, never changes
+var _entrance_invincible: bool = false  # Boss entrance invincibility
 
 ## Stage behavior system — themed enemies get unique AI
 var _behavior: String = ""
@@ -518,17 +519,27 @@ func _physics_process(delta: float) -> void:
 		if _behavior == "flying":
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
-		# Walk bob on sprite (subtle bounce)
+		# Walk bob on sprite (bounce proportional to speed + lean toward movement)
 		var _walk_sprite = get_node_or_null("EnemySprite")
 		if _walk_sprite:
-			_walk_sprite.position.y = 0.65 + abs(sin(GameManager.game_time * 8.0 + global_position.x)) * 0.04
+			var _move_spd = velocity.length()
+			var _bob_freq = 6.0 + _move_spd * 0.5  # Faster enemies bob faster
+			var _bob_amp = clampf(_move_spd * 0.006, 0.02, 0.06)  # Amplitude scales with speed
+			_walk_sprite.position.y = 0.65 + abs(sin(GameManager.game_time * _bob_freq + global_position.x)) * _bob_amp
+			# Lean toward movement direction (subtle tilt)
+			var _lean_target = 0.0
+			if abs(velocity.x) > 0.1:
+				_lean_target = -sign(velocity.x) * clampf(abs(velocity.x) * 0.01, 0.0, 0.05)
+			_walk_sprite.rotation.z = lerp(_walk_sprite.rotation.z, _lean_target, 0.15)
 		if _animator:
 			_animator.set_walking(true)
 	else:
-		# Idle bob
+		# Idle bob (gentle floating)
 		var _idle_sprite = get_node_or_null("EnemySprite")
 		if _idle_sprite:
-			_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 3.0 + global_position.z) * 0.015
+			_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 2.5 + global_position.z) * 0.015
+			# Return lean to neutral when idle
+			_idle_sprite.rotation.z = lerp(_idle_sprite.rotation.z, 0.0, 0.1)
 		if _animator:
 			_animator.set_walking(false)
 
@@ -680,6 +691,9 @@ func _find_target() -> void:
 
 func take_damage(amount: int, damage_type: String = "physical") -> void:
 	if is_dead or not is_inside_tree():
+		return
+	# Boss entrance invincibility — ignore all damage during entrance animation
+	if _entrance_invincible:
 		return
 	# Apply resistance multiplier (minimum 1 damage)
 	var resist_mult: float = resistances.get(damage_type, 1.0)
@@ -1016,6 +1030,27 @@ func _spawn_fire_ground(pos: Vector3) -> void:
 func _apply_furious_boss_mutation() -> void:
 	if is_in_group("boss") and MutationManager.is_active("furious_bosses"):
 		hp = int(max_hp * 0.75)
+
+## Dramatic boss entrance: scale from 0 to full size with invincibility period.
+## Called by enemy_spawner after adding the boss to the scene tree.
+func play_boss_entrance() -> void:
+	_entrance_invincible = true
+	# Store original scale and start at zero
+	var original_scale = scale
+	scale = Vector3.ZERO
+	# Scale up from 0 to full size over 0.5s with elastic overshoot
+	var entrance_tween = create_tween()
+	entrance_tween.tween_property(self, "scale", original_scale * 1.15, 0.35).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	entrance_tween.tween_property(self, "scale", original_scale, 0.15).set_ease(Tween.EASE_IN_OUT)
+	# Ground impact particles when scale-up finishes
+	entrance_tween.tween_callback(func():
+		ParticleFactory.spawn_explosion_particles(global_position + Vector3(0, 0.3, 0))
+		ScreenEffects.shake(0.3)
+	)
+	# Remove invincibility after 1 second
+	get_tree().create_timer(1.0).timeout.connect(func():
+		_entrance_invincible = false
+	)
 
 func _mutation_explode(pos: Vector3) -> void:
 	## Mutation "explosive_enemies": AoE damage on death (like Bomber)

@@ -359,7 +359,6 @@ func _process_boss_rush(delta: float) -> void:
 	var original_stage = GameManager.selected_stage
 	GameManager.selected_stage = _boss_rush_stages[_boss_rush_index]
 
-	AudioManager.play_sfx("boss_appear")
 	AudioManager.play_music("boss")
 
 	var boss_paths = {
@@ -382,10 +381,12 @@ func _process_boss_rush(delta: float) -> void:
 	GameManager.boss_spawned.emit(boss.name)
 	_boss_rush_active_boss = true
 
-	# Dramatic boss entrance effects
+	# Dramatic boss entrance effects (includes SFX: boss_roar + boss_appear)
 	ScreenEffects.boss_entrance_effect()
 	ScreenEffects.boss_title_card(boss.name)
-	AudioManager.play_sfx("boss_roar")
+	# Boss scale-up entrance animation with invincibility
+	if boss.has_method("play_boss_entrance"):
+		boss.play_boss_entrance()
 
 	# Restore original stage
 	GameManager.selected_stage = original_stage
@@ -460,7 +461,6 @@ func _spawn_boss() -> void:
 	var pos = players[0].global_position
 	var spawn_pos = GameManager.get_annulus_position(pos, GameManager.BOSS_SPAWN_MIN_RADIUS, GameManager.BOSS_SPAWN_MAX_RADIUS)
 
-	AudioManager.play_sfx("boss_appear")
 	AudioManager.play_music("boss")
 
 	# Boss por stage
@@ -487,4 +487,6 @@ func _spawn_boss() -> void:
 	# Dramatic boss entrance effects
 	ScreenEffects.boss_entrance_effect()
 	ScreenEffects.boss_title_card(boss.name)
-	AudioManager.play_sfx("boss_roar")
+	# Boss scale-up entrance animation with invincibility
+	if boss.has_method("play_boss_entrance"):
+		boss.play_boss_entrance()

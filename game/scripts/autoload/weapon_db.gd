@@ -245,6 +245,8 @@ var weapons: Dictionary = {
 		"damage_per_level": 3,
 		"cooldown_per_level": -0.15,
 		"area_per_level": 0.3,
+		# Disabled: flamethrower requires manual aiming (cone direction),
+		# but the game uses auto-aim only. Keep disabled until manual aim is supported.
 		"disabled": true,
 	},
 	"ice_staff": {

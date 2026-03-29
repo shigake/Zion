@@ -26,6 +26,12 @@ var _animator: Node = null
 var _footstep_timer: float = 0.0
 var _dust_timer: float = 0.0
 
+# Walk animation state
+var _walk_phase: float = 0.0  # Continuous phase for smooth bob cycle
+var _prev_bob_y: float = 0.0  # Previous bob height to detect landing
+var _landing_squash: float = 0.0  # Current squash amount (decays over time)
+var _sprite_base_scale: Vector3 = Vector3.ONE  # Stored after sprite creation
+
 # ---- Emote System ----
 var _emote_wheel_open: bool = false
 var _emote_label: Label3D = null
@@ -64,6 +70,7 @@ func _ready() -> void:
 		sprite.name = "PlayerSprite"
 		sprite.position.y = 0.65
 		add_child(sprite)
+		_sprite_base_scale = sprite.scale
 	else:
 		# Fallback: modelo procedural
 		var model = ModelFactory.get_model_for_character(GameManager.selected_character)
@@ -210,13 +217,58 @@ func _physics_process(delta: float) -> void:
 			if _anim_sprite.animation != "idle":
 				_anim_sprite.play("idle")
 
-	# Walk bob on sprite (subtle bounce when moving)
+	# Enhanced walk animation on sprite (bob + lean + squash-stretch + idle breathing)
 	var player_sprite = get_node_or_null("PlayerSprite")
 	if player_sprite and player_sprite is Sprite3D:
-		if velocity.length() > 0.5:
-			player_sprite.position.y = 0.65 + abs(sin(GameManager.game_time * 10.0)) * 0.06
+		var spd = velocity.length()
+		if spd > 0.5:
+			# Advance walk phase based on actual speed for natural rhythm
+			_walk_phase += delta * (8.0 + spd * 0.3)
+
+			# Smooth vertical bob using sin (full cycle = 2*PI)
+			var bob_val = abs(sin(_walk_phase))
+			var bob_height = bob_val * 0.06
+			player_sprite.position.y = 0.65 + bob_height
+
+			# Detect landing (bob descending past midpoint) for squash-stretch
+			if bob_height < _prev_bob_y and _prev_bob_y > 0.03:
+				_landing_squash = 0.08  # Trigger subtle squash on landing
+			_prev_bob_y = bob_height
+
+			# Horizontal lean: tilt sprite slightly in movement direction
+			var lean_target = -move_direction.x * 0.06  # Lean into movement (radians)
+			player_sprite.rotation.z = lerp(player_sprite.rotation.z, lean_target, delta * 10.0)
+
+			# Squash-stretch on landing (decay smoothly)
+			if _landing_squash > 0.001:
+				var sq = _landing_squash
+				player_sprite.scale = Vector3(
+					_sprite_base_scale.x * (1.0 + sq),
+					_sprite_base_scale.y * (1.0 - sq),
+					_sprite_base_scale.z
+				)
+				_landing_squash = lerp(_landing_squash, 0.0, delta * 12.0)
+			else:
+				player_sprite.scale = _sprite_base_scale
 		else:
-			player_sprite.position.y = 0.65 + sin(GameManager.game_time * 3.0) * 0.02
+			# Idle: gentle breathing / floating effect
+			var breath = sin(GameManager.game_time * 2.5) * 0.015
+			player_sprite.position.y = 0.65 + breath
+
+			# Subtle idle scale pulse (breathing)
+			var breath_scale = sin(GameManager.game_time * 2.5) * 0.01
+			player_sprite.scale = Vector3(
+				_sprite_base_scale.x * (1.0 - breath_scale * 0.5),
+				_sprite_base_scale.y * (1.0 + breath_scale),
+				_sprite_base_scale.z
+			)
+
+			# Smoothly return lean to neutral
+			player_sprite.rotation.z = lerp(player_sprite.rotation.z, 0.0, delta * 6.0)
+
+			# Reset walk state
+			_prev_bob_y = 0.0
+			_landing_squash = 0.0
 
 	# Update procedural animation
 	if _animator:

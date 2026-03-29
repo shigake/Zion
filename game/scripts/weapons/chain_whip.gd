@@ -98,6 +98,8 @@ func _attack(level: int) -> void:
 		current_target.call_deferred("take_damage", current_damage, "electric")
 		hit_targets.append(current_target)
 		ParticleFactory.spawn_hit_particles(current_target.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.9, 1.0))
+		# Impact flash/glow at hit point
+		_spawn_impact_flash(current_target.global_position + Vector3(0, 0.5, 0))
 
 		# Draw chain line from previous to current
 		if hit_targets.size() >= 2:
@@ -249,6 +251,34 @@ func _spawn_electric_burst(pos: Vector3) -> void:
 		tween.tween_property(spark, "global_position", end_pos, 0.15)
 		tween.tween_property(spark, "scale", Vector3(0.01, 0.01, 0.01), 0.2)
 		tween.chain().tween_callback(spark.queue_free)
+
+func _spawn_impact_flash(pos: Vector3) -> void:
+	var scene = get_tree().current_scene
+	if not scene:
+		return
+	# Bright white-blue flash sphere that scales up and fades fast
+	var flash = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.1
+	sphere.height = 0.2
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.9, 0.95, 1.0, 0.9)
+	mat.emission_enabled = true
+	mat.emission = Color(0.7, 0.9, 1.0)
+	mat.emission_energy_multiplier = 20.0
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	sphere.surface_set_material(0, mat)
+	flash.mesh = sphere
+	scene.add_child(flash)
+	flash.global_position = pos
+	# Quick scale-up then fade out
+	var tween = flash.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(flash, "scale", Vector3(3.0, 3.0, 3.0), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(flash, "scale", Vector3(0.01, 0.01, 0.01), 0.12).set_delay(0.08)
+	tween.chain().tween_callback(flash.queue_free)
 
 func _cleanup_visuals(delta: float) -> void:
 	var to_remove: Array = []

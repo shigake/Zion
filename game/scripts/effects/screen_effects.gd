@@ -343,35 +343,39 @@ var _boss_display_names: Dictionary = {
 	"BossSugarKing": "SENTINELA REI DO ACUCAR",
 }
 
-## Dramatic boss entrance: vignette + zoom + title card + shake + slow-mo
+## Dramatic boss entrance: vignette + zoom + title card + shake + slow-mo + roar
 func boss_entrance_effect() -> void:
 	# 1. Dark vignette overlay (cinematic bars feel)
 	if _vignette_rect:
 		var vig_tween = create_tween()
 		_vignette_rect.color = Color(0.0, 0.0, 0.0, 0.0)
-		vig_tween.tween_property(_vignette_rect, "color:a", 0.5, 0.3)
+		vig_tween.tween_property(_vignette_rect, "color:a", 0.6, 0.2)
 		vig_tween.tween_interval(1.5)
 		vig_tween.tween_property(_vignette_rect, "color:a", 0.0, 0.5)
 
 	# 2. Strong camera shake (escalating)
-	shake(0.5)
+	shake(0.6)
 
 	# 3. White flash → red flash sequence
 	if _flash_overlay:
-		_flash_overlay.color = Color(1.0, 0.9, 0.8, 0.6)
+		_flash_overlay.color = Color(1.0, 0.95, 0.85, 0.7)
 		_flash_overlay.visible = true
 		var flash_tween = create_tween()
-		flash_tween.tween_property(_flash_overlay, "color", Color(0.8, 0.1, 0.0, 0.3), 0.2)
-		flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.5)
+		flash_tween.tween_property(_flash_overlay, "color", Color(0.8, 0.1, 0.0, 0.4), 0.15)
+		flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.4)
 		flash_tween.tween_callback(func(): _flash_overlay.visible = false)
 
-	# 4. Slow-motion with dramatic timing
-	slow_motion(1.2, 0.2)
+	# 4. Boss roar SFX + appearance SFX
+	AudioManager.play_sfx("boss_roar")
+	AudioManager.play_sfx("boss_appear")
 
-	# 5. Camera zoom pulse (zoom in then back)
+	# 5. Brief dramatic slow-motion (snappy, not long)
+	slow_motion(0.3, 0.3)
+
+	# 6. Camera zoom pulse (zoom in then back)
 	_boss_camera_zoom()
 
-	# 6. Extended gamepad rumble
+	# 7. Extended gamepad rumble
 	Input.start_joy_vibration(0, 1.0, 0.8, 0.8)
 
 ## Boss title card — displays boss name with dramatic animation

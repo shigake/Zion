@@ -183,6 +183,9 @@ func _physics_process(delta: float) -> void:
 	var sprite = bullet.get_node_or_null("BoomerangSprite")
 	if sprite:
 		sprite.rotation.y += 15.0 * delta
+		# Afterimage ghost: briefly flash brighter when spinning fast
+		var spin_glow = 0.8 + sin(bullet.get_meta("boomerang_data")["speed"] * 0.5 + Engine.get_process_frames() * 0.15) * 0.2
+		sprite.modulate = Color(1.0, 1.0, spin_glow, 1.0)
 
 	# Spinning trail particle (every 4 frames)
 	if Engine.get_process_frames() % 4 == 0 and Engine.get_frames_per_second() > 35:

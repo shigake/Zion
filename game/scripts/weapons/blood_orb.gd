@@ -132,23 +132,26 @@ class BloodOrbInstance extends Area3D:
 			queue_free()
 			return
 
-		# Gentle orbit around player
+		# Gentle orbit around player with floating bob
 		_orbit_angle += _orbit_speed * delta
+		var bob_offset = sin(_lifetime_timer * 2.5) * 0.25
 		var orbit_pos = player.global_position + Vector3(
 			cos(_orbit_angle) * orbit_radius,
-			1.0,
+			1.0 + bob_offset,
 			sin(_orbit_angle) * orbit_radius
 		)
 		global_position = orbit_pos
 
-		# Pulse visual — heartbeat pattern
+		# Pulse visual — heartbeat pattern + alpha glow oscillation
 		var heartbeat = abs(sin(_lifetime_timer * 5.0)) * 0.15
+		var glow_alpha = 0.75 + sin(_lifetime_timer * 3.5) * 0.25
 		if _mesh:
 			var pulse = 1.0 + heartbeat
 			_mesh.scale = Vector3(pulse, pulse, pulse)
 		if _sprite:
 			var pulse = 1.0 + heartbeat
 			_sprite.scale = Vector3(pulse, pulse, pulse)
+			_sprite.modulate = Color(1.0, 0.85 + sin(_lifetime_timer * 4.0) * 0.15, 0.9, glow_alpha)
 
 		# Dark trail particles
 		_trail_timer += delta
