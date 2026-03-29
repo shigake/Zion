@@ -170,6 +170,8 @@ func play_sfx(sfx_name: String) -> void:
 	player.stream = stream
 	player.volume_db = linear_to_db(maxf(sfx_volume * master_volume, 0.0001))
 	player.play()
+	if not player.playing:
+		push_warning("[Audio] SFX player NOT playing after play() call: %s (vol_db=%.1f)" % [sfx_name, player.volume_db])
 
 func set_music_volume(vol: float) -> void:
 	music_volume = clampf(vol, 0.0, 1.0)
@@ -203,8 +205,8 @@ func _get_available_sfx_player() -> AudioStreamPlayer:
 	return _sfx_players[0]
 
 func _load_audio(base_path: String, extensions: Array) -> AudioStream:
-	# Check cache first
-	if base_path in _audio_cache:
+	# Check cache first (skip null entries to retry on next call)
+	if base_path in _audio_cache and _audio_cache[base_path] != null:
 		return _audio_cache[base_path]
 
 	# Determine subdirectories to search based on path type
