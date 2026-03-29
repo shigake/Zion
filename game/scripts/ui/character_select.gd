@@ -206,6 +206,9 @@ func _build_ui() -> void:
 	_start_btn.pressed.connect(_on_start)
 	btn_row.add_child(_start_btn)
 
+	# --- Extra navigation (moved from main menu for cleaner design) ---
+	_build_extra_nav()
+
 func _build_character_strip(grid: GridContainer) -> void:
 	_char_buttons.clear()
 	for i in range(all_character_ids.size()):
@@ -454,3 +457,57 @@ func _on_random_start() -> void:
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
+
+
+func _build_extra_nav() -> void:
+	# Small navigation buttons at bottom-left corner for secondary screens
+	var nav_container := HBoxContainer.new()
+	nav_container.anchor_left = 0.0
+	nav_container.anchor_top = 1.0
+	nav_container.anchor_right = 0.65
+	nav_container.anchor_bottom = 1.0
+	nav_container.offset_top = -44
+	nav_container.offset_left = 12
+	nav_container.offset_right = -12
+	nav_container.offset_bottom = -8
+	nav_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	nav_container.add_theme_constant_override("separation", 8)
+	add_child(nav_container)
+
+	var nav_items := [
+		{"icon": "📅", "label": "Desafio diario", "scene": "res://scenes/ui/daily_challenge_screen.tscn"},
+		{"icon": "🏆", "label": "Ranking", "scene": "res://scenes/ui/leaderboard_screen.tscn"},
+		{"icon": "📖", "label": "Bestiario", "scene": "res://scenes/ui/bestiary_screen.tscn"},
+		{"icon": "📜", "label": "Codex", "scene": "res://scenes/ui/codex_screen.tscn"},
+		{"icon": "🏆", "label": "Conquistas", "scene": "res://scenes/ui/achievements_screen.tscn"},
+	]
+
+	for item in nav_items:
+		var btn := Button.new()
+		btn.text = "%s %s" % [item["icon"], item["label"]]
+		btn.custom_minimum_size = Vector2(0, 30)
+		btn.add_theme_font_size_override("font_size", 11)
+		btn.add_theme_color_override("font_color", Color(0.55, 0.55, 0.65))
+		btn.add_theme_color_override("font_hover_color", Color(0.9, 0.85, 0.6))
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.06, 0.06, 0.08, 0.8)
+		sb.set_corner_radius_all(4)
+		sb.set_border_width_all(1)
+		sb.border_color = Color(0.15, 0.15, 0.2)
+		sb.content_margin_left = 8
+		sb.content_margin_right = 8
+		sb.content_margin_top = 4
+		sb.content_margin_bottom = 4
+		btn.add_theme_stylebox_override("normal", sb)
+		var sb_h := sb.duplicate()
+		sb_h.bg_color = Color(0.10, 0.10, 0.14, 0.9)
+		sb_h.border_color = Color(0.7, 0.6, 0.2, 0.5)
+		btn.add_theme_stylebox_override("hover", sb_h)
+		btn.add_theme_stylebox_override("focus", sb_h.duplicate())
+		btn.add_theme_stylebox_override("pressed", sb.duplicate())
+		var scene_path: String = item["scene"]
+		btn.pressed.connect(func():
+			AudioManager.play_sfx("menu_click")
+			LoadingScreen.transition_to(scene_path)
+		)
+		nav_container.add_child(btn)
