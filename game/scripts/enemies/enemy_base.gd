@@ -193,7 +193,8 @@ func _apply_stage_behavior() -> void:
 		"castle_gargoyle":
 			_behavior = "flying"
 		"candy_gummy":
-			_behavior = "split"
+			if not has_meta("no_split"):
+				_behavior = "split"
 		# --- New stage-exclusive enemy behaviors ---
 		"cemetery_banshee":
 			_behavior = "teleport"
@@ -902,7 +903,9 @@ func _apply_death_behavior(pos: Vector3) -> void:
 					if p.has_method("take_damage"):
 						p.take_damage(damage * 2, pos)
 		"split":
-			# Gummy: splits into 2 smaller copies
+			# Gummy: splits into 2 smaller copies (only if not already a split clone)
+			if scale.x < 0.5:
+				return  # Too small — don't split further (prevents infinite loop)
 			for i in 2:
 				var clone = preload("res://scenes/enemies/slime.tscn").instantiate()
 				clone.max_hp = maxi(1, max_hp / 2)
@@ -910,10 +913,13 @@ func _apply_death_behavior(pos: Vector3) -> void:
 				clone.damage = maxi(1, damage / 2)
 				clone.scale = self.scale * 0.6
 				clone.xp_drop = 1
+				clone.set_meta("no_split", true)  # Prevent recursive splitting
 				var offset = Vector3(randf_range(-1.0, 1.0), 0, randf_range(-1.0, 1.0))
-				get_tree().current_scene.call_deferred("add_child", clone)
-				clone.global_position = pos + offset
-				GameManager.enemies_alive += 1
+				var scene_root = get_tree().current_scene
+				if is_instance_valid(scene_root):
+					scene_root.add_child(clone)
+					clone.global_position = pos + offset
+					GameManager.enemies_alive += 1
 
 func _spawn_xp_gem(pos: Vector3) -> void:
 	var gem_scene = preload("res://scenes/xp_gem.tscn")

@@ -663,7 +663,8 @@ func _on_start() -> void:
 		AudioManager.play_sfx("menu_click")
 		GameManager.selected_character = char_id
 		GameManager.auto_play = false
-		LoadingScreen.transition_to("res://scenes/ui/mutations_panel.tscn")
+		MutationManager.reset()  # Skip mutations panel
+		LoadingScreen.transition_to("res://scenes/ui/stage_select.tscn")
 	else:
 		AudioManager.play_sfx("error")
 
