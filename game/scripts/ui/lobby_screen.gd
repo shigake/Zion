@@ -312,6 +312,7 @@ func _build_center_column() -> void:
 	var send_btn = Button.new()
 	send_btn.text = "Enviar"
 	send_btn.custom_minimum_size = Vector2(70, 0)
+	send_btn.focus_mode = Control.FOCUS_NONE
 	send_btn.pressed.connect(func(): _on_chat_submit(_chat_input.text))
 	chat_row.add_child(send_btn)
 
@@ -860,7 +861,7 @@ func _on_chat_submit(text: String) -> void:
 	if text == "":
 		return
 	_chat_input.text = ""
-	_chat_input.grab_focus()
+	_chat_input.call_deferred("grab_focus")
 
 	# Anti-flood
 	var now = Time.get_ticks_msec() / 1000.0
