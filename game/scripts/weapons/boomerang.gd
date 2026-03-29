@@ -75,11 +75,11 @@ func _fire(level: int) -> void:
 	bullet.lifetime = 10.0  # Long lifetime; return logic handles removal
 	bullet.damage_type = "physical"
 	bullet.weapon_id = "boomerang"
-	bullet.position = pos
 	# Attach boomerang behavior script
 	_attach_boomerang_behavior(bullet, player, max_distance, speed)
 	_apply_boomerang_visual(bullet)
 	scene_root.add_child(bullet)
+	bullet.global_position = pos
 
 func _attach_boomerang_behavior(bullet: Node, player: Node3D, max_dist: float, spd: float) -> void:
 	# Remove existing boomerang meta if reused from pool

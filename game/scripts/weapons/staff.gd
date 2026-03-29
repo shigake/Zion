@@ -81,8 +81,8 @@ func _fire(level: int) -> void:
 			var spread = (randf() - 0.5) * 0.2 * i
 			proj.direction = proj.direction.rotated(Vector3.UP, spread).normalized()
 			proj.damage = int(WeaponDB.get_damage("staff", level))
-			proj.position = pos
 			scene_root.add_child(proj)
+			proj.global_position = pos
 	else:
 		# Auto-aim: homing projectiles
 		var targets = _get_nearest_enemies(player_pos, num_projectiles)
@@ -93,8 +93,8 @@ func _fire(level: int) -> void:
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = int(WeaponDB.get_damage("staff", level))
-			proj.position = pos
 			scene_root.add_child(proj)
+			proj.global_position = pos
 
 ## Client-only: spawns visual projectile without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -131,8 +131,8 @@ func _fire_visual_only(level: int) -> void:
 			proj.collision_mask = 0
 			proj.set_deferred("monitorable", false)
 			proj.set_deferred("monitoring", false)
-			proj.position = pos
 			scene_root.add_child(proj)
+			proj.global_position = pos
 	else:
 		var targets = _get_nearest_enemies(player_pos, num_projectiles)
 		for t in targets:
@@ -146,8 +146,8 @@ func _fire_visual_only(level: int) -> void:
 			proj.collision_mask = 0
 			proj.set_deferred("monitorable", false)
 			proj.set_deferred("monitoring", false)
-			proj.position = pos
 			scene_root.add_child(proj)
+			proj.global_position = pos
 
 func _get_nearest_enemies(from: Vector3, count: int) -> Array:
 	var enemies = GameManager.get_enemies()

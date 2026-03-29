@@ -99,8 +99,8 @@ func _fire(level: int) -> void:
 			bullet.queue_free()
 	, CONNECT_ONE_SHOT)
 
-	bullet.position = pos
 	scene_root.add_child(bullet)
+	bullet.global_position = pos
 
 ## Client-only: spawns visual ice projectile without collision (no damage/freeze).
 func _fire_visual_only(level: int) -> void:
@@ -149,8 +149,8 @@ func _fire_visual_only(level: int) -> void:
 	proj.collision_mask = 0
 	proj.set_deferred("monitorable", false)
 	proj.set_deferred("monitoring", false)
-	proj.position = pos
 	scene_root.add_child(proj)
+	proj.global_position = pos
 
 func _freeze_area(pos: Vector3, level: int) -> void:
 	var freeze_radius = 3.0 + (level - 1) * 0.3

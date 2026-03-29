@@ -101,7 +101,6 @@ func _fire(level: int) -> void:
 		return
 	for i in range(num_bullets):
 		var bullet = ObjectPool.get_instance(projectile_scene)
-		bullet.position = drone_global_pos
 		var spread = (randf() - 0.5) * 0.15
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		bullet.direction = spread_dir.normalized()
@@ -111,6 +110,7 @@ func _fire(level: int) -> void:
 		bullet.damage_type = "electric"
 		bullet.weapon_id = "drone"
 		scene_root.add_child(bullet)
+		bullet.global_position = drone_global_pos
 
 	AudioManager.play_sfx("hit")
 	ParticleFactory.spawn_hit_particles(drone_global_pos, Color(0.3, 0.7, 1.0))
@@ -147,9 +147,11 @@ func _fire_visual_only(level: int) -> void:
 	if level >= 8:
 		num_bullets = 3
 
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
 	for i in range(num_bullets):
 		var proj = projectile_scene.instantiate()
-		proj.global_position = drone_global_pos
 		var spread = (randf() - 0.5) * 0.15
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		proj.direction = spread_dir.normalized()
@@ -161,7 +163,8 @@ func _fire_visual_only(level: int) -> void:
 		proj.collision_mask = 0
 		proj.set_deferred("monitorable", false)
 		proj.set_deferred("monitoring", false)
-		get_tree().current_scene.call_deferred("add_child", proj)
+		scene_root.add_child(proj)
+		proj.global_position = drone_global_pos
 
 	AudioManager.play_sfx("hit")
 	ParticleFactory.spawn_hit_particles(drone_global_pos, Color(0.3, 0.7, 1.0))

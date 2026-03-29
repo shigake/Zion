@@ -145,7 +145,6 @@ func _fire_page(level: int) -> void:
 		return
 	for i in range(num_pages):
 		var page = ObjectPool.get_instance(projectile_scene)
-		page.position = book_global_pos
 		var spread = (randf() - 0.5) * 0.2
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		page.direction = spread_dir.normalized()
@@ -154,5 +153,6 @@ func _fire_page(level: int) -> void:
 		page.lifetime = 2.0
 		page.damage_type = "physical"
 		scene_root.add_child(page)
+		page.global_position = book_global_pos
 
 	AudioManager.play_sfx("magic_cast")

@@ -45,10 +45,10 @@ func _summon(level: int) -> void:
 	if not is_instance_valid(scene_root):
 		return
 	var skeleton = ObjectPool.get_instance(skeleton_scene)
-	skeleton.position = player_pos + offset
 	skeleton.damage = int(WeaponDB.get_damage("necro", level))
 	skeleton.lifetime = 8.0 + level * 2.0
 	scene_root.add_child(skeleton)
+	skeleton.global_position = player_pos + offset
 	AudioManager.play_sfx("summon_pop")
 	# Green summon circle
 	_spawn_summon_circle(player_pos + offset)

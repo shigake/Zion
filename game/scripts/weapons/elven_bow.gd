@@ -89,8 +89,8 @@ func _fire(level: int) -> void:
 		arrow.damage_type = "physical"
 		arrow.pierce = true
 		arrow.ricochet_distance = 15.0
-		arrow.position = pos
 		scene_root.add_child(arrow)
+		arrow.global_position = pos
 
 	AudioManager.play_sfx("bow_release")
 
@@ -147,7 +147,7 @@ func _fire_visual_only(level: int) -> void:
 		arrow.collision_mask = 0
 		arrow.set_deferred("monitorable", false)
 		arrow.set_deferred("monitoring", false)
-		arrow.position = pos
 		scene_root.add_child(arrow)
+		arrow.global_position = pos
 
 	AudioManager.play_sfx("bow_release")

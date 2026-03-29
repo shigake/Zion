@@ -109,8 +109,8 @@ func _fire(level: int) -> void:
 		bullet.lifetime = 2.0
 		bullet.damage_type = "electric"
 		bullet.weapon_id = "machinegun"
-		bullet.position = pos
 		scene_root.add_child(bullet)
+		bullet.global_position = pos
 
 ## Client-only: spawns visual projectile without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -167,5 +167,5 @@ func _fire_visual_only(level: int) -> void:
 		proj.collision_mask = 0
 		proj.set_deferred("monitorable", false)
 		proj.set_deferred("monitoring", false)
-		proj.position = pos
 		scene_root.add_child(proj)
+		proj.global_position = pos

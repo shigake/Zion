@@ -99,8 +99,8 @@ func _fire(level: int) -> void:
 			ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
 	)
 
-	bolt.position = pos
 	scene_root.add_child(bolt)
+	bolt.global_position = pos
 
 ## Client-only: spawns visual bolt without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -149,5 +149,5 @@ func _fire_visual_only(level: int) -> void:
 	proj.collision_mask = 0
 	proj.set_deferred("monitorable", false)
 	proj.set_deferred("monitoring", false)
-	proj.position = pos
 	scene_root.add_child(proj)
+	proj.global_position = pos

@@ -94,8 +94,8 @@ func _fire(level: int) -> void:
 		bullet.damage_type = "ice"
 		bullet.weapon_id = "shuriken"
 		_apply_shuriken_mesh(bullet)
-		bullet.position = pos
 		scene_root.add_child(bullet)
+		bullet.global_position = pos
 
 ## Client-only: spawns visual shurikens without collision (no damage).
 func _fire_visual_only(level: int) -> void:
@@ -123,8 +123,8 @@ func _fire_visual_only(level: int) -> void:
 		proj.set_deferred("monitorable", false)
 		proj.set_deferred("monitoring", false)
 		_apply_shuriken_mesh(proj)
-		proj.position = pos
 		scene_root.add_child(proj)
+		proj.global_position = pos
 
 func _apply_shuriken_mesh(bullet: Node) -> void:
 	## Replace bullet's default mesh with a billboard sprite or spinning ninja-star shape.
