@@ -12,6 +12,7 @@ var damage_type: String = "physical"
 var weapon_id: String = ""  # Set by weapon spawner for damage tracking
 var _returning: bool = false
 var _trail_counter: int = 0
+var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -29,13 +30,18 @@ func _setup_billboard_sprite() -> void:
 			existing_mesh.visible = false
 		var sprite = Sprite3D.new()
 		sprite.texture = load(sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		sprite.pixel_size = 0.04
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "ProjectileSprite"
+		# Deita o sprite no plano XZ (virado pra camera top-down)
+		sprite.rotation.x = -PI / 2.0
 		add_child(sprite)
+		_sprite = sprite
+		# Rotaciona pra apontar na direcao de viagem
+		_update_sprite_rotation()
 
 func _ensure_bullet_mesh() -> void:
 	var mesh_instance = get_node_or_null("Mesh")
@@ -43,35 +49,25 @@ func _ensure_bullet_mesh() -> void:
 		mesh_instance = get_node_or_null("MeshInstance3D")
 	if not mesh_instance:
 		return
-	# If the mesh is still a SphereMesh, replace it with a metallic bullet
-	if mesh_instance.mesh is SphereMesh:
-		var bullet_mesh = CylinderMesh.new()
-		bullet_mesh.top_radius = 0.02
-		bullet_mesh.bottom_radius = 0.04
-		bullet_mesh.height = 0.15
-		mesh_instance.mesh = bullet_mesh
-		mesh_instance.rotation.x = deg_to_rad(90)  # Point forward
-
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.9, 0.75, 0.2)
-		mat.metallic = 0.8
-		mat.roughness = 0.3
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.85, 0.3)
-		mat.emission_energy_multiplier = 1.5
-		mesh_instance.material_override = mat
+	# Esconde o mesh 3D — usamos apenas o sprite
+	mesh_instance.visible = false
 
 func _spawn_muzzle_flash() -> void:
-	var mesh_instance = get_node_or_null("Mesh")
-	if not mesh_instance:
-		mesh_instance = get_node_or_null("MeshInstance3D")
-	if not mesh_instance:
+	if not _sprite:
 		return
-	# Brief scale-up flash effect on spawn
-	var original_scale = mesh_instance.scale
-	mesh_instance.scale = original_scale * 2.5
+	# Brief scale-up flash effect on spawn usando o sprite
+	var original_scale = _sprite.scale
+	_sprite.scale = original_scale * 2.5
 	var tween = create_tween()
-	tween.tween_property(mesh_instance, "scale", original_scale, 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(_sprite, "scale", original_scale, 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+func _update_sprite_rotation() -> void:
+	if not _sprite:
+		return
+	# Rotaciona o sprite ao redor de Z local (que aponta pra cima no plano XZ)
+	# para que a bala aponte na direcao de viagem vista de cima
+	var angle = atan2(direction.x, direction.z)
+	_sprite.rotation.z = angle
 
 
 func _physics_process(delta: float) -> void:
@@ -83,6 +79,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_inside_tree():
 		global_position += direction * speed * delta
+		# Mantem a bala na altura correta (acima do chao)
+		global_position.y = maxf(global_position.y, 0.8)
 
 func _on_body_entered(body: Node3D) -> void:
 	if _returning or not is_inside_tree():
@@ -120,4 +118,8 @@ func _reset_for_reuse() -> void:
 	monitoring = true
 	timer = 0.0
 	_trail_counter = 0
+	# Reconecta referencia do sprite (pode ter sido perdida no pool)
+	if not _sprite:
+		_sprite = get_node_or_null("ProjectileSprite")
+	_update_sprite_rotation()
 	_spawn_muzzle_flash()

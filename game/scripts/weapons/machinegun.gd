@@ -99,7 +99,7 @@ func _fire(level: int) -> void:
 
 	for i in range(num_bullets):
 		var bullet = ObjectPool.get_instance(projectile_scene)
-		var pos = player_pos + Vector3(0, 0.5, 0)
+		var pos = player_pos + Vector3(0, 0.8, 0)
 		# Adiciona spread (reduced by accuracy)
 		var spread = (randf() - 0.5) * 0.3 * GameManager.get_accuracy_spread()
 		var spread_dir = direction.rotated(Vector3.UP, spread)
@@ -155,7 +155,7 @@ func _fire_visual_only(level: int) -> void:
 
 	for i in range(num_bullets):
 		var proj = projectile_scene.instantiate()
-		var pos = player_pos + Vector3(0, 0.5, 0)
+		var pos = player_pos + Vector3(0, 0.8, 0)
 		var spread = (randf() - 0.5) * 0.3 * GameManager.get_accuracy_spread()
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		proj.direction = spread_dir.normalized()
