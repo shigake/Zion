@@ -89,7 +89,7 @@ godot --headless --path game --export-release "Windows Desktop" ../build/zion.ex
 Zion/
 ├── CLAUDE.md               # Development guide (AI/dev instructions)
 ├── README.md               # This file
-├── docs/                   # Game design documents (18+ files)
+├── docs/                   # Game design documents (15 files)
 │   ├── gdd.md              # Game Design Document
 │   ├── prd.md              # Product Requirements Document (roadmap)
 │   ├── spec.md             # Technical specification
@@ -120,14 +120,14 @@ Zion/
 | Audio | Chiptune / synthesized (procedural generation) |
 | Multiplayer | ENet (Steam Networking Sockets ready) |
 | Telemetry | Node.js + Express + SQLite |
-| CI/Export | Godot headless export |
+| CI/CD | GitHub Actions (CI + build/release automatico) |
 
 ## Content summary
 
 | Category | Count |
 |----------|-------|
 | Characters | 15 (including mystery unlock) |
-| Weapons | 32 (10 melee, 10 ranged, 8 summon, 4 new elemental) |
+| Weapons | 32 (11 melee, 11 ranged, 10 summon/special) |
 | Stages | 10 (7 campaign + 3 anomalies) |
 | Bosses | 10 (one per stage, 3 phases each) |
 | Items | 19 passive items |
@@ -177,4 +177,4 @@ Features: run statistics, crash reports, balance analytics, Discord webhook noti
 
 In active development. Current version: see `game/VERSION`.
 
-All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. Full narrative layer (lore, backstories, boss dialogues). Telemetry dashboard. Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard.
+All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. 415+ sprites, 43 SFX, 16 music tracks. Full narrative layer (lore, backstories, boss dialogues). Telemetry dashboard. CI/CD pipeline. Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard, tutorial, world map, inventory overlay, bestiary, codex.
