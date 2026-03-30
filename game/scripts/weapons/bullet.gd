@@ -55,11 +55,12 @@ func _ensure_bullet_mesh() -> void:
 func _spawn_muzzle_flash() -> void:
 	if not _sprite:
 		return
-	# Brief scale-up flash effect on spawn usando o sprite
-	var original_scale = _sprite.scale
-	_sprite.scale = original_scale * 2.5
+	# Reset sprite to base scale first (prevents accumulation from pool reuse)
+	_sprite.scale = Vector3.ONE
+	# Brief scale-up flash effect on spawn
+	_sprite.scale = Vector3.ONE * 1.8
 	var tween = create_tween()
-	tween.tween_property(_sprite, "scale", original_scale, 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(_sprite, "scale", Vector3.ONE, 0.08).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func _update_sprite_rotation() -> void:
 	if not _sprite:
@@ -119,5 +120,11 @@ func _reset_for_reuse() -> void:
 	# Reconecta referencia do sprite (pode ter sido perdida no pool)
 	if not _sprite:
 		_sprite = get_node_or_null("ProjectileSprite")
+	# Kill any running tweens to prevent scale accumulation
+	for child in get_children():
+		if child is Tween:
+			child.kill()
+	if _sprite:
+		_sprite.scale = Vector3.ONE
 	_update_sprite_rotation()
 	_spawn_muzzle_flash()

@@ -29,7 +29,7 @@ static func get_annulus_position(center: Vector3, min_r: float = SPAWN_MIN_RADIU
 # Tempo e dificuldade
 var game_time: float = 0.0
 var enemies_alive: int = 0
-var max_enemies: int = 500
+var max_enemies: int = 200
 # Cached enemy list (updated once per frame to avoid 45+ get_nodes_in_group calls)
 var _cached_enemies: Array = []
 var _enemies_cache_frame: int = -1
