@@ -2,7 +2,7 @@
 
 > Quando Zion estilhacou, estilhacos microscopicos do cristal atravessaram dimensoes e se alojaram em pessoas comuns. Sao os **Fragmentados** — arrancados de seus mundos, jogados nas fendas. Ver [story.md](story.md) para lore completo.
 
-## Os 16 Fragmentados
+## Os 15 Fragmentados
 
 | Fragmentado | Origem | Arma Inicial | Passiva | Como Desbloquear |
 |---|---|---|---|---|
@@ -10,7 +10,6 @@
 | **Soldado** | Guerra Moderna | Metralhadora | +15% attack speed | Inicio |
 | **Mago** | Reino de Alta Fantasia | Staff | +25% area de efeito | Sobreviva 10 min |
 | **Berserker** | Era Viking | Machado Viking | +30% dano quando HP < 30% | Mate 5000 inimigos numa run |
-| **Necro** | Plano Etereo | Necromante | Invocacoes +1 | Liberte o Necromancer King (Fenda 1) |
 | **Ninja** | Toquio do Futuro | Shuriken | +25% velocidade | Liberte o AI Overlord (Fenda 3) |
 | **Pirata** | Idade de Ouro da Pirataria | Pistola Dupla | +20% drop de gold | Liberte o Leviathan (Fenda 5) |
 | **Engenheiro** | Estacao Orbital, 2187 | Drone + Totem | Builds duram mais | Liberte a Singularidade (Fenda 6) |
@@ -21,7 +20,7 @@
 | **Amazona** | Floresta Amazonica primordial | Lanca | +15% velocidade +10% dano | Inicio |
 | **Bruxa** | Salem, 1692 | Necromante | +2 invocacoes +20% dano de invocacao | Inicio |
 | **Fragmentado** | Entre dimensoes | Corrente Eletrica | +10% a todos os stats, aparencia glitch | Sobreviva 20 min com 3 mutacoes ativas |
-| **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (14 desbloqueados) |
+| **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (13 desbloqueados) |
 
 ### Backstories
 
@@ -30,7 +29,6 @@
 - **Mago:** Estudava anomalias arcanas. A maior de todas o engoliu
 - **Berserker:** Morreu em batalha viking. Acordou no Vulcao. Achou que era Valhalla
 - **Ninja:** Operativo clandestino que sobreviveu ao blackout da IA em Toquio
-- **Necro:** Aprendiz do Necromancer King antes da corrupcao. Busca salvar o mestre
 - **Pirata:** Navegava mares desconhecidos. Caiu por uma fenda no Triangulo das Bermudas
 - **Engenheiro:** Ultima sobrevivente da Estacao Zenith. Construiu drones com sucata
 - **Vampiro:** Mordido por Dracula, mas o estilhaco impediu a transformacao total

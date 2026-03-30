@@ -697,9 +697,6 @@ func _apply_character_bonuses() -> void:
 	# Pirata: +20% crystal drop
 	if selected_character == "pirata":
 		luck_mult += 0.20  # Affects crystal drop rates
-	# Necro: +1 summon (applied via extra_projectiles which summon weapons use)
-	if selected_character == "necro":
-		extra_projectiles += 1
 	# Vampiro: lifesteal natural + 10% attack speed
 	if selected_character == "vampiro":
 		lifesteal += 0.05

@@ -2,7 +2,7 @@ extends SceneTree
 
 func _init() -> void:
 	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	var skin = Color(0.85, 0.78, 0.72)
+	var skin = Color(0.35, 0.22, 0.15)
 	var hair = Color(0.15, 0.08, 0.2)  # Dark purple-black
 	var hat = Color(0.2, 0.1, 0.3)
 	var hat_band = Color(0.6, 0.2, 0.7)  # Purple band
@@ -41,8 +41,8 @@ func _init() -> void:
 	img.set_pixel(13, 8, Color(0.2, 0.7, 0.2))
 	img.set_pixel(16, 8, Color(0.2, 0.7, 0.2))
 	# Smile
-	img.set_pixel(14, 9, Color(0.6, 0.3, 0.35))
-	img.set_pixel(15, 9, Color(0.6, 0.3, 0.35))
+	img.set_pixel(14, 9, Color(0.45, 0.2, 0.22))
+	img.set_pixel(15, 9, Color(0.45, 0.2, 0.22))
 
 	# Dress body
 	_fill(img, 11, 10, 8, 3, dress)

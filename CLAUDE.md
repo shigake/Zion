@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-16 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 415+ sprites, 43 SFX, 16 musicas.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 415+ sprites, 43 SFX, 16 musicas.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -47,7 +47,7 @@ Zion/
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
 │   ├── itens.md                 # Itens, evolucoes, reliquias
 │   ├── mecanicas.md             # Mecanicas de gameplay
-│   ├── personagens.md           # 16 Fragmentados + backstories
+│   ├── personagens.md           # 15 Fragmentados + backstories
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
 │   ├── prd_auto_tester.md       # PRD de testes automatizados (8 suites)
@@ -184,7 +184,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 16 Fragmentados, 32 armas, 415+ sprites, 43 SFX, 16 musicas. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano, bullet trails, slash trails melee (10 armas com trails + sparks). FASE B (gameplay) ~90% — 10 mecanicas de fenda, 40 monstros tematicos, sinergias, boss patterns. FASE C (polish) ~95% — achievements popup, leaderboard global, dialogos de Sentinelas com typewriter + fases + cores tematicas + i18n, tutorial, inventario, mapa, bestiary, codex. FASE D (audio) ~70% — 43 SFX, 16 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) ~50% — CI/CD GitHub Actions implementado, falta Steam e distribuicao.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 415+ sprites, 43 SFX, 16 musicas. FASE A (visual) parcial — sprites billboard, efeitos de tela, feedback de dano, bullet trails, slash trails melee (10 armas com trails + sparks). FASE B (gameplay) ~90% — 10 mecanicas de fenda, 40 monstros tematicos, sinergias, boss patterns. FASE C (polish) ~95% — achievements popup, leaderboard global, dialogos de Sentinelas com typewriter + fases + cores tematicas + i18n, tutorial, inventario, mapa, bestiary, codex. FASE D (audio) ~70% — 43 SFX, 16 musicas chiptune, falta musica dinamica por fenda. FASE E (infra) ~50% — CI/CD GitHub Actions implementado, falta Steam e distribuicao.
 
 Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 

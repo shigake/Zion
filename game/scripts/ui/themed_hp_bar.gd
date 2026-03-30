@@ -45,14 +45,6 @@ const THEMES := {
 		"bg_color": Color(0.05, 0.03, 0.1, 0.92),
 		"label": "CHI",
 	},
-	"necro": {
-		"shape": "skull",
-		"fill_color": Color(0.15, 0.85, 0.3),
-		"fill_low": Color(0.6, 0.1, 0.6),
-		"border_color": Color(0.2, 0.6, 0.3, 0.6),
-		"bg_color": Color(0.05, 0.1, 0.05, 0.92),
-		"label": "ALMA",
-	},
 	"pirata": {
 		"shape": "bottle",
 		"fill_color": Color(0.7, 0.5, 0.15),

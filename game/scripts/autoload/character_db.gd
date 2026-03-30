@@ -71,17 +71,6 @@ var characters: Dictionary = {
 		"unlock_value": "tokyo",
 		"unlock_description": "Complete Toquio Cyberpunk",
 	},
-	"necro": {
-		"name": "Necro",
-		"starting_weapon": "necro",
-		"passive": "Invocacoes +1",
-		"color": Color(0.15, 0.4, 0.15),
-		"speed_bonus": 0.0,
-		"damage_bonus": 0.0,
-		"unlock_condition": "complete_stage",
-		"unlock_value": "cemetery",
-		"unlock_description": "Complete o Cemiterio",
-	},
 	"pirata": {
 		"name": "Pirata",
 		"starting_weapon": "dual_pistol",
