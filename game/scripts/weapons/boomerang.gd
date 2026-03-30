@@ -166,48 +166,80 @@ func _physics_process(delta: float) -> void:
 		if traveled >= data["max_distance"]:
 			data["going_out"] = false
 			bullet.set_meta("boomerang_data", data)
+			# Visual burst when reversing direction
+			if Engine.get_frames_per_second() > 30:
+				var scene2 = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+				if scene2:
+					for k in range(5):
+						var burst = MeshInstance3D.new()
+						var bs = SphereMesh.new()
+						bs.radius = 0.035
+						bs.height = 0.07
+						var bm = StandardMaterial3D.new()
+						bm.albedo_color = Color(1.0, 0.9, 0.3, 0.7)
+						bm.emission_enabled = true
+						bm.emission = Color(1.0, 0.85, 0.4)
+						bm.emission_energy_multiplier = 6.0
+						bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+						bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+						bs.surface_set_material(0, bm)
+						burst.mesh = bs
+						scene2.add_child(burst)
+						burst.global_position = bullet.global_position
+						var bdir = Vector3(randf_range(-1, 1), randf_range(0, 0.5), randf_range(-1, 1)).normalized()
+						var btw = burst.create_tween()
+						btw.set_parallel(true)
+						btw.tween_property(burst, "global_position", bullet.global_position + bdir * 0.6, 0.3)
+						btw.tween_property(burst, "scale", Vector3(0.01, 0.01, 0.01), 0.3)
+						btw.chain().tween_callback(burst.queue_free)
 	else:
-		# Returning to player
+		# Returning to player — accelerates as it gets closer
 		var to_player = (player.global_position + Vector3(0, 0.5, 0) - bullet.global_position).normalized()
+		var dist_to_player = bullet.global_position.distance_to(player.global_position + Vector3(0, 0.5, 0))
+		var return_speed = data["speed"] * (1.0 + (1.0 / max(dist_to_player, 0.5)) * 2.0)
 		bullet.direction = to_player
-		bullet.global_position += to_player * data["speed"] * delta
-		# Override bullet's own movement by zeroing its speed temporarily
+		bullet.global_position += to_player * return_speed * delta
 		bullet.speed = 0.0
 
-		# Check if close enough to player to despawn
-		if bullet.global_position.distance_to(player.global_position + Vector3(0, 0.5, 0)) < 1.0:
+		if dist_to_player < 1.0:
 			bullet.queue_free()
 			return
 
-	# Spin visual
+	# Spin visual — faster on return
 	var sprite = bullet.get_node_or_null("BoomerangSprite")
 	if sprite:
-		sprite.rotation.y += 15.0 * delta
-		# Afterimage ghost: briefly flash brighter when spinning fast
+		var spin_speed = 15.0 if data["going_out"] else 25.0
+		sprite.rotation.y += spin_speed * delta
+		# Afterimage glow: phase-based brightness + spin glow on return
 		var spin_glow = 0.8 + sin(bullet.get_meta("boomerang_data")["speed"] * 0.5 + Engine.get_process_frames() * 0.15) * 0.2
-		sprite.modulate = Color(1.0, 1.0, spin_glow, 1.0)
+		if not data["going_out"]:
+			sprite.modulate = Color(1.2, 1.1, spin_glow)
+		else:
+			sprite.modulate = Color(1.0, 1.0, spin_glow, 1.0)
 
-	# Spinning trail particle (every 4 frames)
-	if Engine.get_process_frames() % 4 == 0 and Engine.get_frames_per_second() > 35:
+	# Trail particle (every 3 frames — denser trail)
+	if Engine.get_process_frames() % 3 == 0 and Engine.get_frames_per_second() > 35:
 		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 		if scene:
 			var trail = MeshInstance3D.new()
 			var s = SphereMesh.new()
-			s.radius = 0.025
-			s.height = 0.05
+			s.radius = 0.03
+			s.height = 0.06
 			var m = StandardMaterial3D.new()
-			m.albedo_color = Color(0.9, 0.8, 0.4, 0.5)
+			var trail_color = Color(0.9, 0.8, 0.4, 0.6) if data["going_out"] else Color(1.0, 0.6, 0.2, 0.7)
+			m.albedo_color = trail_color
 			m.emission_enabled = true
-			m.emission = Color(1.0, 0.9, 0.5)
-			m.emission_energy_multiplier = 4.0
+			m.emission = Color(trail_color.r, trail_color.g, trail_color.b)
+			m.emission_energy_multiplier = 5.0
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			s.surface_set_material(0, m)
 			trail.mesh = s
 			scene.add_child(trail)
 			trail.global_position = bullet.global_position
+			var fade_time = 0.3 if data["going_out"] else 0.2
 			var tw = trail.create_tween()
-			tw.tween_property(trail, "scale", Vector3(0.01, 0.01, 0.01), 0.25)
+			tw.tween_property(trail, "scale", Vector3(0.01, 0.01, 0.01), fade_time)
 			tw.tween_callback(trail.queue_free)
 """
 	_boomerang_ctrl_script.reload()

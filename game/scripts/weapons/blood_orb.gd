@@ -186,11 +186,17 @@ class BloodOrbInstance extends Area3D:
 			# Dark drain visual
 			_spawn_drain_wisps(body.global_position)
 
-		# Lifesteal heal
+		# Lifesteal heal with visual feedback
 		if total_damage_dealt > 0:
 			var heal_amount = int(total_damage_dealt * lifesteal)
 			if heal_amount > 0:
 				GameManager.heal(heal_amount)
+				# Green heal flash on significant heal
+				if heal_amount >= 3:
+					_spawn_heal_pulse()
+				# Screen pulse on big drain (5+ enemies)
+				if total_damage_dealt >= damage * 5:
+					ScreenEffects.shake(0.06)
 
 	func _spawn_drain_wisps(from_pos: Vector3) -> void:
 		if not is_inside_tree():
@@ -265,6 +271,34 @@ class BloodOrbInstance extends Area3D:
 		var line_tween = line_mesh.create_tween()
 		line_tween.tween_property(line_mesh, "transparency", 1.0, 0.25)
 		line_tween.tween_callback(line_mesh.queue_free)
+
+	func _spawn_heal_pulse() -> void:
+		if not is_inside_tree():
+			return
+		var scene = get_tree().current_scene
+		if not scene:
+			return
+		# Green-red heal ring expanding from orb
+		var ring = MeshInstance3D.new()
+		var torus = SphereMesh.new()
+		torus.radius = 0.15
+		torus.height = 0.05
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.2, 0.9, 0.3, 0.6)
+		mat.emission_enabled = true
+		mat.emission = Color(0.3, 1.0, 0.4)
+		mat.emission_energy_multiplier = 5.0
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		torus.surface_set_material(0, mat)
+		ring.mesh = torus
+		scene.add_child(ring)
+		ring.global_position = global_position
+		var htw = ring.create_tween()
+		htw.set_parallel(true)
+		htw.tween_property(ring, "scale", Vector3(5.0, 1.0, 5.0), 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		htw.tween_property(ring, "scale:y", 0.01, 0.4)
+		htw.chain().tween_callback(ring.queue_free)
 
 	func _spawn_dark_trail() -> void:
 		if not is_inside_tree():

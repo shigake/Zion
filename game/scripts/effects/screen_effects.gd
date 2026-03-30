@@ -343,25 +343,30 @@ var _boss_display_names: Dictionary = {
 	"BossSugarKing": "SENTINELA REI DO ACUCAR",
 }
 
-## Dramatic boss entrance: vignette + zoom + title card + shake + slow-mo + roar
+## Dramatic boss entrance: letterbox + vignette + zoom + title card + shake + slow-mo + roar + particles
 func boss_entrance_effect() -> void:
-	# 1. Dark vignette overlay (cinematic bars feel)
+	# 0. Cinematic letterbox bars (top and bottom black bars)
+	_show_letterbox(2.5)
+
+	# 1. Dark vignette overlay (builds tension)
 	if _vignette_rect:
 		var vig_tween = create_tween()
 		_vignette_rect.color = Color(0.0, 0.0, 0.0, 0.0)
 		vig_tween.tween_property(_vignette_rect, "color:a", 0.6, 0.2)
-		vig_tween.tween_interval(1.5)
+		vig_tween.tween_interval(1.8)
 		vig_tween.tween_property(_vignette_rect, "color:a", 0.0, 0.5)
 
-	# 2. Strong camera shake (escalating)
-	shake(0.6)
+	# 2. Escalating camera shake — starts light, gets intense
+	shake(0.15)
+	_escalate_shake()
 
-	# 3. White flash → red flash sequence
+	# 3. White flash → deep red flash → fade
 	if _flash_overlay:
 		_flash_overlay.color = Color(1.0, 0.95, 0.85, 0.7)
 		_flash_overlay.visible = true
 		var flash_tween = create_tween()
-		flash_tween.tween_property(_flash_overlay, "color", Color(0.8, 0.1, 0.0, 0.4), 0.15)
+		flash_tween.tween_property(_flash_overlay, "color", Color(0.9, 0.15, 0.0, 0.5), 0.15)
+		flash_tween.tween_property(_flash_overlay, "color", Color(0.6, 0.0, 0.0, 0.2), 0.3)
 		flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.4)
 		flash_tween.tween_callback(func(): _flash_overlay.visible = false)
 
@@ -369,14 +374,113 @@ func boss_entrance_effect() -> void:
 	AudioManager.play_sfx("boss_roar")
 	AudioManager.play_sfx("boss_appear")
 
-	# 5. Brief dramatic slow-motion (snappy, not long)
-	slow_motion(0.3, 0.3)
+	# 5. Dramatic slow-motion (middle ground: 0.5s at 0.25 scale)
+	slow_motion(0.5, 0.25)
 
-	# 6. Camera zoom pulse (zoom in then back)
+	# 6. Camera zoom pulse (deeper zoom, dramatic snap-back)
 	_boss_camera_zoom()
 
-	# 7. Extended gamepad rumble
-	Input.start_joy_vibration(0, 1.0, 0.8, 0.8)
+	# 7. Extended gamepad rumble (two waves)
+	Input.start_joy_vibration(0, 0.6, 0.4, 0.3)
+	_delayed_rumble()
+
+	# 8. Boss spawn particles (ground shockwave)
+	_boss_spawn_particles()
+
+func _escalate_shake() -> void:
+	await get_tree().create_timer(0.2).timeout
+	shake(0.35)
+	await get_tree().create_timer(0.15).timeout
+	shake(0.6)
+
+func _delayed_rumble() -> void:
+	await get_tree().create_timer(0.3).timeout
+	Input.start_joy_vibration(0, 1.0, 0.9, 0.8)
+
+## Cinematic letterbox bars
+var _letterbox_top: ColorRect = null
+var _letterbox_bottom: ColorRect = null
+
+func _show_letterbox(duration: float) -> void:
+	if not _vignette_canvas:
+		return
+	# Top bar
+	if _letterbox_top and is_instance_valid(_letterbox_top):
+		_letterbox_top.queue_free()
+	_letterbox_top = ColorRect.new()
+	_letterbox_top.color = Color(0, 0, 0, 1)
+	_letterbox_top.anchor_left = 0.0
+	_letterbox_top.anchor_right = 1.0
+	_letterbox_top.anchor_top = 0.0
+	_letterbox_top.anchor_bottom = 0.0
+	_letterbox_top.offset_bottom = 0.0
+	_letterbox_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette_canvas.add_child(_letterbox_top)
+
+	# Bottom bar
+	if _letterbox_bottom and is_instance_valid(_letterbox_bottom):
+		_letterbox_bottom.queue_free()
+	_letterbox_bottom = ColorRect.new()
+	_letterbox_bottom.color = Color(0, 0, 0, 1)
+	_letterbox_bottom.anchor_left = 0.0
+	_letterbox_bottom.anchor_right = 1.0
+	_letterbox_bottom.anchor_top = 1.0
+	_letterbox_bottom.anchor_bottom = 1.0
+	_letterbox_bottom.offset_top = 0.0
+	_letterbox_bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette_canvas.add_child(_letterbox_bottom)
+
+	var bar_height = 60.0
+	# Slide in
+	var in_tween = create_tween().set_parallel(true)
+	in_tween.tween_property(_letterbox_top, "offset_bottom", bar_height, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	in_tween.tween_property(_letterbox_bottom, "offset_top", -bar_height, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	# Slide out after duration
+	var out_tween = create_tween()
+	out_tween.tween_interval(duration)
+	out_tween.set_parallel(true)
+	out_tween.tween_property(_letterbox_top, "offset_bottom", 0.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	out_tween.tween_property(_letterbox_bottom, "offset_top", 0.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	out_tween.chain().tween_callback(func():
+		if is_instance_valid(_letterbox_top): _letterbox_top.queue_free()
+		if is_instance_valid(_letterbox_bottom): _letterbox_bottom.queue_free()
+	)
+
+## Boss spawn ground shockwave particles
+func _boss_spawn_particles() -> void:
+	var players = GameManager.get_players()
+	if players.is_empty():
+		return
+	# Spawn a ring of particles around the player
+	var center = players[0].global_position
+	var scene = get_tree().current_scene
+	if not scene:
+		return
+	for i in range(12):
+		var angle = float(i) / 12.0 * TAU
+		var pos = center + Vector3(cos(angle) * 3.0, 0.2, sin(angle) * 3.0)
+		var particle = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.12
+		sphere.height = 0.24
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.3, 0.1, 0.8)
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.4, 0.15)
+		mat.emission_energy_multiplier = 6.0
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sphere.surface_set_material(0, mat)
+		particle.mesh = sphere
+		scene.add_child(particle)
+		particle.global_position = center + Vector3(0, 0.2, 0)
+		# Expand outward in a ring
+		var tween = particle.create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(particle, "global_position", pos + Vector3(0, 0.5, 0), 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(particle, "scale", Vector3(0.01, 0.01, 0.01), 0.6)
+		tween.chain().tween_callback(particle.queue_free)
 
 ## Boss title card — displays boss name with dramatic animation
 func boss_title_card(boss_name: String) -> void:
@@ -449,7 +553,7 @@ func boss_title_card(boss_name: String) -> void:
 			_boss_subtitle_label.queue_free()
 	)
 
-## Camera zoom pulse for boss entrance
+## Camera zoom pulse for boss entrance — deeper zoom, dramatic snap-back
 func _boss_camera_zoom() -> void:
 	if not camera or not is_instance_valid(camera):
 		camera = get_viewport().get_camera_3d()
@@ -457,6 +561,10 @@ func _boss_camera_zoom() -> void:
 		return
 	var original_fov = camera.fov
 	var zoom_tween = create_tween()
-	zoom_tween.tween_property(camera, "fov", original_fov - 10.0, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	zoom_tween.tween_interval(0.5)
-	zoom_tween.tween_property(camera, "fov", original_fov, 0.4).set_ease(Tween.EASE_IN_OUT)
+	# Quick zoom in (dramatic)
+	zoom_tween.tween_property(camera, "fov", original_fov - 15.0, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	# Hold at zoom
+	zoom_tween.tween_interval(0.8)
+	# Snap back with slight overshoot
+	zoom_tween.tween_property(camera, "fov", original_fov + 3.0, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	zoom_tween.tween_property(camera, "fov", original_fov, 0.3).set_ease(Tween.EASE_IN_OUT)

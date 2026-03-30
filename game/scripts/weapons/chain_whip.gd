@@ -128,9 +128,17 @@ func _attack(level: int) -> void:
 
 	AudioManager.play_sfx("chain_whip")
 	AudioManager.play_sfx("hit")
-	# Spawn electric sparks at first hit
-	if not hit_targets.is_empty():
-		_spawn_electric_burst(hit_targets[0].global_position + Vector3(0, 0.5, 0))
+
+	# Screen feedback scales with chain length
+	if hit_targets.size() >= 3:
+		ScreenEffects.shake(0.15)
+		ScreenEffects.flash(0.06, 0.12)
+	elif hit_targets.size() >= 2:
+		ScreenEffects.shake(0.08)
+
+	# Spawn electric sparks at each hit (limited for performance)
+	for i in range(mini(hit_targets.size(), 3)):
+		_spawn_electric_burst(hit_targets[i].global_position + Vector3(0, 0.5, 0))
 
 func _draw_chain(from: Vector3, to: Vector3) -> void:
 	var container = Node3D.new()

@@ -163,6 +163,7 @@ class TornadoInstance extends Area3D:
 
 	func _deal_damage_and_pull(_delta: float) -> void:
 		var bodies = get_overlapping_bodies()
+		var hit_count := 0
 		for body in bodies:
 			if not is_instance_valid(body):
 				continue
@@ -174,6 +175,7 @@ class TornadoInstance extends Area3D:
 			# Damage
 			GameManager._last_attacking_weapon = weapon_id
 			body.call_deferred("take_damage", damage, "ice")
+			hit_count += 1
 
 			# Pull toward center
 			if body is CharacterBody3D or body is RigidBody3D:
@@ -181,16 +183,24 @@ class TornadoInstance extends Area3D:
 				pull_dir.y = 0
 				body.global_position += pull_dir * _pull_strength * _damage_interval
 
+			# Ice hit particles on enemy (limit to 3 for performance)
+			if hit_count <= 3 and Engine.get_frames_per_second() > 40:
+				ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.85, 1.0), 3)
+
+		# Screen shake if vortex is hitting many enemies
+		if hit_count >= 3:
+			ScreenEffects.shake(0.08)
+
 	func _spawn_vortex_particles() -> void:
 		if not is_inside_tree():
 			return
-		# Only spawn every few frames for performance
-		if Engine.get_process_frames() % 3 != 0:
+		# Denser spawn: every 2 frames for more vortex feel
+		if Engine.get_process_frames() % 2 != 0:
 			return
 		var scene = get_tree().current_scene
 		if not scene:
 			return
-		# Small ice/wind particle orbiting the tornado
+		# Ice/wind particle spiraling around tornado
 		var particle = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
 		sphere.radius = 0.06
@@ -205,14 +215,37 @@ class TornadoInstance extends Area3D:
 		sphere.surface_set_material(0, mat)
 		particle.mesh = sphere
 		scene.add_child(particle)
-		# Start at random position around tornado
 		var angle = randf() * TAU
-		var offset = Vector3(cos(angle) * 0.5, randf_range(-0.3, 1.5), sin(angle) * 0.5)
-		particle.global_position = global_position + offset
-		# Spiral outward and fade
-		var tween = particle.create_tween()
-		tween.set_parallel(true)
-		var end_pos = global_position + Vector3(cos(angle) * 2.0, 1.5, sin(angle) * 2.0)
-		tween.tween_property(particle, "global_position", end_pos, 0.5)
-		tween.tween_property(particle, "scale", Vector3(0.1, 0.1, 0.1), 0.5)
-		tween.chain().tween_callback(particle.queue_free)
+		var p_offset = Vector3(cos(angle) * 0.5, randf_range(-0.3, 1.5), sin(angle) * 0.5)
+		particle.global_position = global_position + p_offset
+		# Spiral outward and upward
+		var p_tween = particle.create_tween()
+		p_tween.set_parallel(true)
+		var end_pos = global_position + Vector3(cos(angle) * 2.0, 2.0, sin(angle) * 2.0)
+		p_tween.tween_property(particle, "global_position", end_pos, 0.5)
+		p_tween.tween_property(particle, "scale", Vector3(0.1, 0.1, 0.1), 0.5)
+		p_tween.chain().tween_callback(particle.queue_free)
+
+		# Secondary debris particle (ground debris sucked up) — every other spawn
+		if Engine.get_process_frames() % 4 == 0:
+			var debris = MeshInstance3D.new()
+			var box = BoxMesh.new()
+			box.size = Vector3(0.04, 0.04, 0.04)
+			var dmat = StandardMaterial3D.new()
+			dmat.albedo_color = Color(0.3, 0.25, 0.2, 0.5)
+			dmat.emission_enabled = true
+			dmat.emission = Color(0.2, 0.15, 0.1)
+			dmat.emission_energy_multiplier = 1.0
+			dmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			dmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			box.surface_set_material(0, dmat)
+			debris.mesh = box
+			scene.add_child(debris)
+			var d_angle = randf() * TAU
+			debris.global_position = global_position + Vector3(cos(d_angle) * 0.3, 0.1, sin(d_angle) * 0.3)
+			var dtw = debris.create_tween()
+			dtw.set_parallel(true)
+			dtw.tween_property(debris, "global_position:y", global_position.y + 2.5, 0.6)
+			dtw.tween_property(debris, "rotation", Vector3(randf() * 5.0, randf() * 5.0, randf() * 5.0), 0.6)
+			dtw.tween_property(debris, "scale", Vector3(0.01, 0.01, 0.01), 0.6)
+			dtw.chain().tween_callback(debris.queue_free)

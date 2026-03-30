@@ -519,27 +519,43 @@ func _physics_process(delta: float) -> void:
 		if _behavior == "flying":
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
-		# Walk bob on sprite (bounce proportional to speed + lean toward movement)
+		# Walk bob on sprite (speed-proportional bob + lean + flip + squash-stretch)
 		var _walk_sprite = get_node_or_null("EnemySprite")
 		if _walk_sprite:
 			var _move_spd = velocity.length()
 			var _bob_freq = 6.0 + _move_spd * 0.5  # Faster enemies bob faster
 			var _bob_amp = clampf(_move_spd * 0.006, 0.02, 0.06)  # Amplitude scales with speed
-			_walk_sprite.position.y = 0.65 + abs(sin(GameManager.game_time * _bob_freq + global_position.x)) * _bob_amp
+			var phase = GameManager.game_time * _bob_freq + global_position.x
+			_walk_sprite.position.y = 0.65 + abs(sin(phase)) * _bob_amp
+			# Flip sprite toward player
+			if target and is_instance_valid(target):
+				var dir_x = target.global_position.x - global_position.x
+				if dir_x > 0.3:
+					_walk_sprite.flip_h = false
+				elif dir_x < -0.3:
+					_walk_sprite.flip_h = true
 			# Lean toward movement direction (subtle tilt)
 			var _lean_target = 0.0
 			if abs(velocity.x) > 0.1:
 				_lean_target = -sign(velocity.x) * clampf(abs(velocity.x) * 0.01, 0.0, 0.05)
 			_walk_sprite.rotation.z = lerp(_walk_sprite.rotation.z, _lean_target, 0.15)
+			# Subtle squash-stretch
+			var walk_phase = sin(phase)
+			_walk_sprite.scale = Vector3(
+				_sprite_base_scale.x * (1.0 - abs(walk_phase) * 0.025),
+				_sprite_base_scale.y * (1.0 + abs(walk_phase) * 0.035),
+				_sprite_base_scale.z
+			)
 		if _animator:
 			_animator.set_walking(true)
 	else:
-		# Idle bob (gentle floating)
+		# Idle bob + reset scale + return lean to neutral
 		var _idle_sprite = get_node_or_null("EnemySprite")
 		if _idle_sprite:
 			_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 2.5 + global_position.z) * 0.015
-			# Return lean to neutral when idle
+			_idle_sprite.position.x = 0.0
 			_idle_sprite.rotation.z = lerp(_idle_sprite.rotation.z, 0.0, 0.1)
+			_idle_sprite.scale = _sprite_base_scale
 		if _animator:
 			_animator.set_walking(false)
 

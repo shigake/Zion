@@ -81,10 +81,10 @@
 - [ ] Testar export Windows localmente
 
 ### SPRINT 2 — Visual Polish (3-5 dias)
-- [ ] Walk animations: gerar spritesheets 128x32 (4 frames) para 15 personagens + 16 inimigos
-- [ ] Boss entrance dramatica: zoom camera + shake + roar
-- [ ] Efeito visual nas 4 armas novas (boomerang spin, tornado vortex, chain, orb glow)
-- [ ] Boss phase music: intensificar trilha ao mudar de fase
+- [x] Walk animations: bob + flip + squash-stretch para personagens e inimigos
+- [x] Boss entrance dramatica: letterbox + zoom + escalating shake + spawn particles + slow-mo
+- [x] Efeito visual nas 4 armas novas (boomerang phase burst, tornado debris+shake, chain flash+shake, orb heal pulse)
+- [x] Boss phase music: intensificar trilha ao mudar de fase
 
 ### SPRINT 3 — QA Completo (3-5 dias)
 - [ ] Teste manual: cada personagem em cada stage (15 x 10 = 150 combinacoes)

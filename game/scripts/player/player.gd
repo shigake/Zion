@@ -217,7 +217,7 @@ func _physics_process(delta: float) -> void:
 			if _anim_sprite.animation != "idle":
 				_anim_sprite.play("idle")
 
-	# Enhanced walk animation on sprite (bob + lean + squash-stretch + idle breathing)
+	# Enhanced walk animation on sprite (bob + lean + squash-stretch + flip + idle breathing)
 	var player_sprite = get_node_or_null("PlayerSprite")
 	if player_sprite and player_sprite is Sprite3D:
 		var spd = velocity.length()
@@ -234,6 +234,12 @@ func _physics_process(delta: float) -> void:
 			if bob_height < _prev_bob_y and _prev_bob_y > 0.03:
 				_landing_squash = 0.08  # Trigger subtle squash on landing
 			_prev_bob_y = bob_height
+
+			# Flip sprite to face movement direction (X axis)
+			if move_direction.x > 0.1:
+				player_sprite.flip_h = false
+			elif move_direction.x < -0.1:
+				player_sprite.flip_h = true
 
 			# Horizontal lean: tilt sprite slightly in movement direction
 			var lean_target = -move_direction.x * 0.06  # Lean into movement (radians)
