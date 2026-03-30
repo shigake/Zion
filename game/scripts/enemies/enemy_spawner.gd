@@ -58,7 +58,7 @@ func _process(delta: float) -> void:
 		mult *= 2.0
 	# Mutation: endless horde
 	mult *= MutationManager.get_spawn_modifier()
-	var interval = maxf(0.15, base_spawn_interval / mult)
+	var interval = maxf(GameConstants.SPAWN_MIN_INTERVAL, base_spawn_interval / mult)
 
 	# Boss Rush: spawn bosses sequentially instead of normal enemies
 	if GameManager.game_mode == "boss_rush":
@@ -73,7 +73,7 @@ func _process(delta: float) -> void:
 	# Mini-boss agora é gerenciado pelo EventManager (min 10 e min 20)
 
 	# Boss no minuto 12
-	if not boss_spawned and GameManager.game_time >= 720.0:
+	if not boss_spawned and GameManager.game_time >= GameConstants.BOSS_SPAWN_TIME:
 		boss_spawned = true
 		_spawn_boss()
 
@@ -82,15 +82,15 @@ func _spawn_wave(mult: float) -> void:
 		return
 	# Dynamic cap: reduce spawns when FPS is low — aggressive throttling
 	var fps = Engine.get_frames_per_second()
-	if fps < 20.0 and GameManager.enemies_alive > 30:
+	if fps < GameConstants.FPS_CRITICAL and GameManager.enemies_alive > GameConstants.ENEMIES_CAP_CRITICAL:
 		return  # Critical: hard stop spawning
-	if fps < 30.0 and GameManager.enemies_alive > 60:
+	if fps < GameConstants.FPS_LOW and GameManager.enemies_alive > GameConstants.ENEMIES_CAP_LOW:
 		return  # Low FPS: stop spawning early
-	if fps < 45.0 and GameManager.enemies_alive > 120:
+	if fps < GameConstants.FPS_MEDIUM and GameManager.enemies_alive > GameConstants.ENEMIES_CAP_MEDIUM:
 		return  # Medium FPS: soft cap
 	# At low FPS, reduce wave size
 	if fps < 35.0:
-		mult *= 0.5
+		mult *= GameConstants.FPS_LOW_SPAWN_MULT
 
 	var players = GameManager.get_players()
 	if players.is_empty():
@@ -115,7 +115,7 @@ func _spawn_wave(mult: float) -> void:
 		_apply_stage_skin(enemy)
 
 		# Elite enemies after minute 15
-		if minute >= 15.0 and rng.randf() < 0.1:
+		if minute >= GameConstants.ELITE_MIN_MINUTE and rng.randf() < GameConstants.ELITE_SPAWN_CHANCE:
 			_make_elite(enemy)
 
 		add_child(enemy)
@@ -133,12 +133,12 @@ func _pick_enemy(minute: float) -> Node3D:
 	var roll = rng.randf()
 	var is_cemetery = GameManager.selected_stage == "cemetery" or GameManager.selected_stage == ""
 
-	if minute < 2.0:
+	if minute < GameConstants.SPAWN_PHASE_1_END:
 		# So slimes (+ fantasminhas brancos no cemiterio)
-		if is_cemetery and roll > 0.8:
+		if is_cemetery and roll > GameConstants.SPAWN_GHOST_CEMETERY_CHANCE:
 			return ObjectPool.get_instance(ghost_white_scene)
 		return ObjectPool.get_instance(slime_scene)
-	elif minute < 5.0:
+	elif minute < GameConstants.SPAWN_PHASE_2_END:
 		# Slimes + Bats (+ fantasminhas no cemiterio)
 		if is_cemetery and roll < 0.25:
 			return _pick_ghost_variant()
@@ -146,10 +146,10 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(slime_scene)
 		else:
 			return ObjectPool.get_instance(bat_scene)
-	elif minute < 8.0:
+	elif minute < GameConstants.SPAWN_PHASE_3_END:
 		# Skeletons + Bats + Slimes Grandes (+ fantasminhas)
 		# Fada dos Dentes: 3% de chance a partir do minuto 5
-		if roll < 0.03:
+		if roll < GameConstants.SPAWN_TOOTH_FAIRY_CHANCE:
 			return ObjectPool.get_instance(tooth_fairy_scene)
 		if is_cemetery and roll < 0.2:
 			return _pick_ghost_variant()
@@ -161,10 +161,10 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(skeleton_scene)
 		else:
 			return ObjectPool.get_instance(slime_big_scene)
-	elif minute < 12.0:
+	elif minute < GameConstants.SPAWN_PHASE_4_END:
 		# Archers + Zombies + Ghosts + Bombers
 		# Fada dos Dentes: 3% de chance
-		if roll < 0.03:
+		if roll < GameConstants.SPAWN_TOOTH_FAIRY_CHANCE:
 			return ObjectPool.get_instance(tooth_fairy_scene)
 		if roll < 0.2:
 			return ObjectPool.get_instance(archer_scene)
@@ -176,10 +176,10 @@ func _pick_enemy(minute: float) -> Node3D:
 			return ObjectPool.get_instance(bomber_scene)
 		else:
 			return ObjectPool.get_instance(skeleton_scene)
-	elif minute < 20.0:
+	elif minute < GameConstants.SPAWN_PHASE_5_END:
 		# Mix de tudo + Tanks + Swarms
 		# Fada dos Dentes: 3% de chance
-		if roll < 0.03:
+		if roll < GameConstants.SPAWN_TOOTH_FAIRY_CHANCE:
 			return ObjectPool.get_instance(tooth_fairy_scene)
 		if roll < 0.06:
 			return ObjectPool.get_instance(tank_scene)
@@ -198,7 +198,7 @@ func _pick_enemy(minute: float) -> Node3D:
 	else:
 		# Endgame: tudo, mais tanks, bombers, swarms
 		# Fada dos Dentes: 3% de chance
-		if roll < 0.03:
+		if roll < GameConstants.SPAWN_TOOTH_FAIRY_CHANCE:
 			return ObjectPool.get_instance(tooth_fairy_scene)
 		if is_cemetery:
 			var scenes = [skeleton_scene, zombie_scene, ghost_white_scene, ghost_green_scene,
@@ -331,9 +331,9 @@ func _process_boss_rush(delta: float) -> void:
 
 	# Spawn some filler enemies to keep it interesting
 	spawn_timer += delta
-	if spawn_timer >= 1.5:
+	if spawn_timer >= GameConstants.BOSS_RUSH_FILLER_INTERVAL:
 		spawn_timer = 0.0
-		var mult = 1.0 + _boss_rush_index * 0.3
+		var mult = 1.0 + _boss_rush_index * GameConstants.BOSS_RUSH_MULT_PER_BOSS
 		_spawn_wave(mult)
 
 	# Check if current boss is dead
@@ -342,10 +342,10 @@ func _process_boss_rush(delta: float) -> void:
 		if bosses.is_empty():
 			_boss_rush_active_boss = false
 			_boss_rush_index += 1
-			_boss_rush_cooldown = 3.0  # 3s break between bosses
+			_boss_rush_cooldown = GameConstants.BOSS_RUSH_COOLDOWN  # Break between bosses
 			# Heal player between bosses
 			GameManager.heal(GameManager.get_effective_max_hp() / 2)
-			GameManager.add_xp(20)
+			GameManager.add_xp(GameConstants.BOSS_RUSH_XP_REWARD)
 		return
 
 	# Spawn next boss
@@ -361,19 +361,7 @@ func _process_boss_rush(delta: float) -> void:
 
 	AudioManager.play_music("boss")
 
-	var boss_paths = {
-		"cemetery": "res://scenes/enemies/boss_necromancer.tscn",
-		"forest": "res://scenes/enemies/boss_fairy_queen.tscn",
-		"farm": "res://scenes/enemies/boss_alien_cow.tscn",
-		"tokyo": "res://scenes/enemies/boss_ai_overlord.tscn",
-		"volcano": "res://scenes/enemies/boss_demon_lord.tscn",
-		"ocean": "res://scenes/enemies/boss_leviathan.tscn",
-		"arena": "res://scenes/enemies/boss_emperor.tscn",
-		"space": "res://scenes/enemies/boss_singularity.tscn",
-		"castle": "res://scenes/enemies/boss_dracula.tscn",
-		"candy": "res://scenes/enemies/boss_sugar_king.tscn",
-	}
-	var path = boss_paths.get(_boss_rush_stages[_boss_rush_index], "res://scenes/enemies/boss_necromancer.tscn")
+	var path = GameConstants.BOSS_SCENE_PATHS.get(_boss_rush_stages[_boss_rush_index], "res://scenes/enemies/boss_necromancer.tscn")
 	var boss = load(path).instantiate()
 	add_child(boss)
 	boss.global_position = spawn_pos
@@ -393,13 +381,13 @@ func _process_boss_rush(delta: float) -> void:
 
 func _make_elite(enemy: Node3D) -> void:
 	if enemy is EnemyBase3D:
-		enemy.max_hp = int(enemy.max_hp * 3.0)
+		enemy.max_hp = int(enemy.max_hp * GameConstants.ELITE_HP_MULT)
 		enemy.hp = enemy.max_hp
-		enemy.damage = int(enemy.damage * 1.5)
-		enemy.xp_drop = enemy.xp_drop * 5
-		enemy.speed *= 1.2
-		enemy.enemy_color = Color(1.0, 0.85, 0.2)  # Dourado
-		enemy.scale = Vector3(1.3, 1.3, 1.3)
+		enemy.damage = int(enemy.damage * GameConstants.ELITE_DAMAGE_MULT)
+		enemy.xp_drop = enemy.xp_drop * GameConstants.ELITE_XP_MULT
+		enemy.speed *= GameConstants.ELITE_SPEED_MULT
+		enemy.enemy_color = GameConstants.ELITE_COLOR
+		enemy.scale = GameConstants.ELITE_SCALE
 		AudioManager.play_sfx("enemy_growl")
 
 func _spawn_miniboss() -> void:
@@ -442,9 +430,9 @@ func _spawn_miniboss() -> void:
 		boss.hp = mb_config["hp"]
 		boss.damage = mb_config["dmg"]
 		boss.speed = mb_config["spd"]
-		boss.xp_drop = 50
+		boss.xp_drop = GameConstants.MINIBOSS_XP_DROP
 		boss.enemy_color = mb_config["color"]
-		boss.scale = Vector3(2.5, 2.5, 2.5)
+		boss.scale = GameConstants.MINIBOSS_SCALE
 	add_child(boss)
 	boss.global_position = spawn_pos
 	GameManager.enemies_alive += 1
@@ -464,19 +452,7 @@ func _spawn_boss() -> void:
 	AudioManager.play_music("boss")
 
 	# Boss por stage
-	var boss_paths = {
-		"cemetery": "res://scenes/enemies/boss_necromancer.tscn",
-		"forest": "res://scenes/enemies/boss_fairy_queen.tscn",
-		"farm": "res://scenes/enemies/boss_alien_cow.tscn",
-		"tokyo": "res://scenes/enemies/boss_ai_overlord.tscn",
-		"volcano": "res://scenes/enemies/boss_demon_lord.tscn",
-		"ocean": "res://scenes/enemies/boss_leviathan.tscn",
-		"arena": "res://scenes/enemies/boss_emperor.tscn",
-		"space": "res://scenes/enemies/boss_singularity.tscn",
-		"castle": "res://scenes/enemies/boss_dracula.tscn",
-		"candy": "res://scenes/enemies/boss_sugar_king.tscn",
-	}
-	var boss_scene_path: String = boss_paths.get(GameManager.selected_stage, "res://scenes/enemies/boss_necromancer.tscn")
+	var boss_scene_path: String = GameConstants.BOSS_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/enemies/boss_necromancer.tscn")
 	var boss_scene_res = load(boss_scene_path)
 	var boss = boss_scene_res.instantiate()
 	add_child(boss)
