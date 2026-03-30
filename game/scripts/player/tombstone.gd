@@ -7,18 +7,11 @@ extends Node3D
 signal player_revived(peer_id: int)
 
 var dead_peer_id: int = 0
-var despawn_timer: float = 60.0
+var despawn_timer: float = GameConstants.TOMBSTONE_DESPAWN_TIME
 var revive_progress: float = 0.0
 var allies_in_range: Array[Node3D] = []
 var is_reviving: bool = false
 var _revived: bool = false
-
-const REVIVE_TIME := 5.0
-const REVIVE_HP_PERCENT := 0.5
-const INVULN_DURATION := 2.0
-const DEBUFF_HP_REDUCTION := 0.30
-const DEBUFF_DURATION := 30.0
-const INTERACT_RADIUS := 2.5
 
 @onready var area: Area3D = $ReviveArea
 @onready var progress_bar: MeshInstance3D = $ProgressBar
@@ -38,10 +31,10 @@ func _build_visual() -> void:
 		sprite.texture = load(tex_path)
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sprite.pixel_size = 0.06
+	sprite.pixel_size = GameConstants.TOMBSTONE_SPRITE_PIXEL_SIZE
 	sprite.shaded = false
 	sprite.transparent = true
-	sprite.position.y = 0.8
+	sprite.position.y = GameConstants.TOMBSTONE_SPRITE_Y
 	sprite.name = "TombstoneSprite"
 	add_child(sprite)
 
@@ -60,7 +53,7 @@ func _build_visual() -> void:
 	circle_sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	circle_sprite.rotation.x = deg_to_rad(-90)
 	circle_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	circle_sprite.pixel_size = 0.12
+	circle_sprite.pixel_size = GameConstants.TOMBSTONE_RING_PIXEL_SIZE
 	circle_sprite.shaded = false
 	circle_sprite.transparent = true
 	circle_sprite.position.y = 0.02
@@ -73,7 +66,7 @@ func _build_revive_area() -> void:
 	a.collision_mask = 1  # Players
 	var col = CollisionShape3D.new()
 	var shape = SphereShape3D.new()
-	shape.radius = INTERACT_RADIUS
+	shape.radius = GameConstants.TOMBSTONE_INTERACT_RADIUS
 	col.shape = shape
 	a.add_child(col)
 	a.body_entered.connect(_on_ally_entered)
@@ -87,7 +80,7 @@ func _build_progress_bar() -> void:
 	var mesh = BoxMesh.new()
 	mesh.size = Vector3(1.0, 0.08, 0.08)
 	bar.mesh = mesh
-	bar.position = Vector3(0, 1.6, 0)
+	bar.position = Vector3(0, GameConstants.TOMBSTONE_PROGRESS_BAR_Y, 0)
 	bar.visible = false
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = Color(0.2, 0.8, 1.0)
@@ -101,7 +94,7 @@ func _build_progress_bar() -> void:
 func _build_soul_particles() -> void:
 	var p = GPUParticles3D.new()
 	p.name = "SoulParticles"
-	p.amount = 12
+	p.amount = GameConstants.TOMBSTONE_SOUL_PARTICLES
 	p.lifetime = 2.0
 	p.position = Vector3(0, 0.5, 0)
 	var mat = ParticleProcessMaterial.new()
@@ -153,10 +146,10 @@ func _process(delta: float) -> void:
 		revive_progress += delta
 		# Update progress bar
 		progress_bar.visible = true
-		var pct = clampf(revive_progress / REVIVE_TIME, 0.0, 1.0)
+		var pct = clampf(revive_progress / GameConstants.TOMBSTONE_REVIVE_TIME, 0.0, 1.0)
 		progress_bar.scale.x = pct
 		progress_bar.position.x = (pct - 1.0) * 0.5
-		if revive_progress >= REVIVE_TIME:
+		if revive_progress >= GameConstants.TOMBSTONE_REVIVE_TIME:
 			_do_revive()
 	else:
 		is_reviving = false
@@ -199,18 +192,18 @@ func _do_revive() -> void:
 func _revive_on_host() -> void:
 	# Restore player HP to 50%
 	var max_hp = GameManager.get_effective_max_hp()
-	GameManager.player_hp = int(max_hp * REVIVE_HP_PERCENT)
+	GameManager.player_hp = int(max_hp * GameConstants.TOMBSTONE_REVIVE_HP_PCT)
 	GameManager.is_game_over = false
 
 func _apply_sacrifice_debuff() -> void:
 	## Reduce max HP by 30% for 30 seconds
 	var original_mult = GameManager.max_hp_mult
-	GameManager.max_hp_mult *= (1.0 - DEBUFF_HP_REDUCTION)
+	GameManager.max_hp_mult *= (1.0 - GameConstants.TOMBSTONE_DEBUFF_HP_REDUCTION)
 	# Cap current HP to new max
 	var new_max = GameManager.get_effective_max_hp()
 	GameManager.player_hp = mini(GameManager.player_hp, new_max)
 	# Restore after duration
-	get_tree().create_timer(DEBUFF_DURATION).timeout.connect(func():
+	get_tree().create_timer(GameConstants.TOMBSTONE_DEBUFF_DURATION).timeout.connect(func():
 		GameManager.max_hp_mult = original_mult
 	)
-	LogManager.info("Game", "Sacrifice debuff applied: -%.0f%% max HP for %.0fs" % [DEBUFF_HP_REDUCTION * 100, DEBUFF_DURATION])
+	LogManager.info("Game", "Sacrifice debuff applied: -%.0f%% max HP for %.0fs" % [GameConstants.TOMBSTONE_DEBUFF_HP_REDUCTION * 100, GameConstants.TOMBSTONE_DEBUFF_DURATION])

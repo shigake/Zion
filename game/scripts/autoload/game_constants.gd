@@ -422,3 +422,139 @@ const SPAWN_ON_DEATH_DMG_DIV := 2
 const SPAWN_ON_DEATH_SCALE := Vector3(0.5, 0.5, 0.5)
 const SPAWN_ON_DEATH_OFFSET := 1.5
 const EXPLODE_ON_DEATH_RADIUS := 2.5
+
+# ==================================================================
+# ANNULUS SPAWNING
+# ==================================================================
+const ANNULUS_MIN_RADIUS := 15.0       # Logo fora da visao da camera top-down
+const ANNULUS_MAX_RADIUS := 20.0       # Limite maximo do anel
+const BOSS_ANNULUS_MIN_RADIUS := 18.0  # Bosses surgem mais longe
+const BOSS_ANNULUS_MAX_RADIUS := 22.0
+
+# ==================================================================
+# MULTIPLAYER SCALING
+# ==================================================================
+const MP_HP_MULT := [1.0, 1.0, 1.3, 1.6, 2.0]
+const MP_SPAWN_MULT := [1.0, 1.0, 1.2, 1.4, 1.6]
+const MP_BOSS_HP_MULT := [1.0, 1.0, 1.5, 2.0, 2.5]
+
+# ==================================================================
+# DIFFICULTY
+# ==================================================================
+const DIFFICULTY_CAP := 8.0
+const HYPER_XP_MULT := 2.0
+const XP_LEVEL_SCALE := 1.15
+const XP_LEVEL_FLAT := 3
+const ARMOR_DIMINISH_DIVISOR := 50   # reduction = armor / (armor + 50)
+const ONESHOT_THRESHOLD_RATIO := 0.5 # Alerta se dano > 50% max HP
+const REVIVE_HP_FRACTION := 0.5      # Revive com 50% HP
+
+# ==================================================================
+# TOMBSTONE (Multiplayer Revive)
+# ==================================================================
+const TOMBSTONE_DESPAWN_TIME := 60.0
+const TOMBSTONE_REVIVE_TIME := 5.0
+const TOMBSTONE_REVIVE_HP_PCT := 0.5
+const TOMBSTONE_INVULN_DURATION := 2.0
+const TOMBSTONE_DEBUFF_HP_REDUCTION := 0.30
+const TOMBSTONE_DEBUFF_DURATION := 30.0
+const TOMBSTONE_INTERACT_RADIUS := 2.5
+const TOMBSTONE_SPRITE_PIXEL_SIZE := 0.06
+const TOMBSTONE_SPRITE_Y := 0.8
+const TOMBSTONE_RING_PIXEL_SIZE := 0.12
+const TOMBSTONE_SOUL_PARTICLES := 12
+const TOMBSTONE_PROGRESS_BAR_Y := 1.6
+
+# ==================================================================
+# EVENT MANAGER
+# ==================================================================
+const EVENT_WARNING_TIME := 10.0        # Aviso N segundos antes
+const EVENT_FIRST_RANDOM_MIN := 120.0   # Primeiro evento aleatorio: min
+const EVENT_FIRST_RANDOM_MAX := 240.0   # Primeiro evento aleatorio: max
+const EVENT_RANDOM_INTERVAL_MIN := 90.0
+const EVENT_RANDOM_INTERVAL_MAX := 180.0
+
+# ---- Event Durations ----
+const EVENT_GOLDEN_HORDE_DURATION := 20.0
+const EVENT_ELITE_HORDE_DURATION := 25.0
+const EVENT_MASSIVE_HORDE_DURATION := 30.0
+const EVENT_ECLIPSE_DURATION := 15.0
+const EVENT_METEOR_DURATION := 12.0
+const EVENT_ROULETTE_DURATION := 5.0
+const EVENT_MERCHANT_DURATION := 30.0
+const EVENT_PORTAL_DURATION := 30.0
+const EVENT_CHEST_MIMIC_DURATION := 30.0
+const EVENT_GOBLIN_DURATION := 30.0
+
+# ---- Event Spawn Counts ----
+const EVENT_GOLDEN_HORDE_COUNT := 30
+const EVENT_ELITE_HORDE_COUNT := 20
+const EVENT_MASSIVE_NORMAL_COUNT := 50
+const EVENT_MASSIVE_ELITE_COUNT := 10
+const EVENT_PORTAL_ENEMY_COUNT := 10
+const EVENT_STRONG_MINIBOSS_ESCORTS := 5
+
+# ---- Fever Mode ----
+const FEVER_KILL_WINDOW := 5.0       # Janela de tempo para contar kills
+const FEVER_KILL_THRESHOLD := 20     # Kills necessarios para ativar
+const FEVER_DURATION := 10.0         # Duracao do modo febre
+const FEVER_DAMAGE_MULT := 2.0
+const FEVER_SPEED_MULT := 1.5
+const FEVER_SHAKE_INTERVAL := 2.0
+const FEVER_SHAKE_INTENSITY := 0.06
+
+# ---- Eclipse ----
+const ECLIPSE_LIGHT_ENERGY := 0.15
+const ECLIPSE_DARKEN_COLOR := Color(0.2, 0.2, 0.3)
+const ECLIPSE_ENEMY_GLOW := Color(2.0, 2.0, 2.5)
+const ECLIPSE_XP_MULT := 1.5
+
+# ---- Meteor Shower ----
+const METEOR_COUNT := 15
+const METEOR_SPAWN_DURATION := 10.0
+const METEOR_DAMAGE := 50
+const METEOR_RADIUS := 2.0
+const METEOR_OFFSET_RANGE := 12.0
+const METEOR_FALL_HEIGHT := 20.0
+
+# ---- Roulette ----
+const ROULETTE_SPEED_BOOST := 0.5
+const ROULETTE_DAMAGE_BOOST := 0.3
+const ROULETTE_HEAL_AMOUNT := 50
+const ROULETTE_SLOW_AMOUNT := 0.3
+const ROULETTE_SLOW_MIN := 0.5
+
+# ---- Portal Dimensional ----
+const PORTAL_DUNGEON_POS := Vector3(500, 0, 500)
+const PORTAL_SPAWN_MIN := 8.0
+const PORTAL_SPAWN_MAX := 15.0
+const PORTAL_REWARD_XP := 50
+
+# ---- Treasure Goblin ----
+const GOBLIN_SPEED := 8.0
+const GOBLIN_HP := 100
+const GOBLIN_XP := 30
+const GOBLIN_SCALE := Vector3(1.5, 1.5, 1.5)
+
+# ---- Chest Mimic ----
+const MIMIC_HP := 300
+const MIMIC_DAMAGE := 30
+const MIMIC_XP := 30
+const MIMIC_SCALE := Vector3(1.5, 1.5, 1.5)
+
+# ---- Miniboss Strong Multipliers ----
+const MINIBOSS_STRONG_HP_MULT := 2.0
+const MINIBOSS_STRONG_DMG_MULT := 1.5
+const MINIBOSS_STRONG_SPD_MULT := 1.3
+const MINIBOSS_STRONG_SCALE := 3.0
+const MINIBOSS_NORMAL_SCALE := 2.5
+const MINIBOSS_STRONG_XP := 100
+const MINIBOSS_NORMAL_XP := 50
+const MINIBOSS_ESCORT_HP_MULT := 2.0
+const MINIBOSS_ESCORT_DMG_MULT := 1.3
+const MINIBOSS_ESCORT_SCALE := Vector3(1.5, 1.5, 1.5)
+const MINIBOSS_ESCORT_RADIUS := 5.0
+
+# ---- Camera ----
+const CAMERA_SMOOTH_SPEED := 5.0
+const CAMERA_LOOK_AHEAD := 0.3

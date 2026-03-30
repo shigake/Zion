@@ -50,7 +50,7 @@ var _portal_active: bool = false
 
 # Warning state
 var _warned_events: Array = []  # events already warned about
-const WARNING_TIME: float = 10.0  # warn 10 seconds before
+const WARNING_TIME: float = GameConstants.EVENT_WARNING_TIME
 
 # Eventos fixos por tempo — estilo Vampire Survivors (a cada ~3-5 min)
 var timed_events: Dictionary = {
@@ -69,7 +69,7 @@ var triggered_timed: Array = []
 
 func _ready() -> void:
 	rng.randomize()
-	next_random_event_time = rng.randf_range(120, 240)  # Primeiro evento aleatorio entre 2-4 min
+	next_random_event_time = rng.randf_range(GameConstants.EVENT_FIRST_RANDOM_MIN, GameConstants.EVENT_FIRST_RANDOM_MAX)
 	GameManager.enemy_killed.connect(_on_enemy_killed)
 
 func _process(delta: float) -> void:
@@ -86,19 +86,19 @@ func _process(delta: float) -> void:
 
 	# Fever mode kill tracking - prune old kills
 	var current_time = GameManager.game_time
-	while not _recent_kills.is_empty() and current_time - _recent_kills[0] > 5.0:
+	while not _recent_kills.is_empty() and current_time - _recent_kills[0] > GameConstants.FEVER_KILL_WINDOW:
 		_recent_kills.remove_at(0)
 
 	# Check fever mode trigger (20+ kills in 5 seconds)
-	if not _fever_active and _recent_kills.size() >= 20:
+	if not _fever_active and _recent_kills.size() >= GameConstants.FEVER_KILL_THRESHOLD:
 		_start_fever_mode()
 
 	# Fever mode screen shake pulse every 2 seconds
 	if _fever_active:
 		_fever_shake_timer += delta
-		if _fever_shake_timer >= 2.0:
+		if _fever_shake_timer >= GameConstants.FEVER_SHAKE_INTERVAL:
 			_fever_shake_timer = 0.0
-			ScreenEffects.shake(0.06)
+			ScreenEffects.shake(GameConstants.FEVER_SHAKE_INTENSITY)
 
 	# Evento ativo
 	if active_event != "":
@@ -126,7 +126,7 @@ func _process(delta: float) -> void:
 		var random_events = ["treasure_goblin", "merchant", "chest_mimic"]
 		var event = random_events[rng.randi() % random_events.size()]
 		_start_event(event)
-		next_random_event_time = GameManager.game_time + rng.randf_range(90, 180)
+		next_random_event_time = GameManager.game_time + rng.randf_range(GameConstants.EVENT_RANDOM_INTERVAL_MIN, GameConstants.EVENT_RANDOM_INTERVAL_MAX)
 
 func _on_enemy_killed(position: Vector3, xp_value: int) -> void:
 	_recent_kills.append(GameManager.game_time)
@@ -143,13 +143,13 @@ func _start_event(event_name: String) -> void:
 
 	match event_name:
 		"golden_horde":
-			event_timer = 20.0
+			event_timer = GameConstants.EVENT_GOLDEN_HORDE_DURATION
 			_spawn_golden_horde()
 		"elite_horde":
-			event_timer = 25.0
+			event_timer = GameConstants.EVENT_ELITE_HORDE_DURATION
 			_spawn_elite_horde()
 		"massive_horde":
-			event_timer = 30.0
+			event_timer = GameConstants.EVENT_MASSIVE_HORDE_DURATION
 			_spawn_massive_horde()
 		"miniboss":
 			event_timer = 1.0  # Instant spawn, boss stays until killed
@@ -158,28 +158,28 @@ func _start_event(event_name: String) -> void:
 			event_timer = 1.0  # Instant spawn, boss stays until killed
 			_spawn_event_miniboss(true)
 		"treasure_goblin":
-			event_timer = 30.0
+			event_timer = GameConstants.EVENT_GOBLIN_DURATION
 			_spawn_treasure_goblin()
 		"merchant":
-			event_timer = 30.0
+			event_timer = GameConstants.EVENT_MERCHANT_DURATION
 			_spawn_merchant()
 		"roulette":
-			event_timer = 5.0
+			event_timer = GameConstants.EVENT_ROULETTE_DURATION
 			_do_roulette()
 		"eclipse":
-			event_timer = 15.0
+			event_timer = GameConstants.EVENT_ECLIPSE_DURATION
 			_start_eclipse()
 		"meteor_shower":
-			event_timer = 12.0  # 10s of spawns + 2s buffer for last meteor
+			event_timer = GameConstants.EVENT_METEOR_DURATION
 			_start_meteor_shower()
 		"angel_challenge":
 			event_timer = 1.0  # Instant effect, short timer
 			_do_angel_challenge()
 		"portal_dimensional":
-			event_timer = 30.0
+			event_timer = GameConstants.EVENT_PORTAL_DURATION
 			_start_portal_dimensional()
 		"chest_mimic":
-			event_timer = 30.0
+			event_timer = GameConstants.EVENT_CHEST_MIMIC_DURATION
 			_spawn_chest_mimic()
 
 func _end_event() -> void:
@@ -204,7 +204,7 @@ func _spawn_golden_horde() -> void:
 	var center = players[0].global_position
 	var slime_scene = preload("res://scenes/enemies/slime.tscn")
 
-	for i in range(30):
+	for i in range(GameConstants.EVENT_GOLDEN_HORDE_COUNT):
 		var pos = GameManager.get_annulus_position(center)
 		var enemy = slime_scene.instantiate()
 		if enemy is EnemyBase3D:
@@ -231,17 +231,17 @@ func _spawn_elite_horde() -> void:
 		preload("res://scenes/enemies/ghost.tscn"),
 	]
 
-	for i in range(20):
+	for i in range(GameConstants.EVENT_ELITE_HORDE_COUNT):
 		var pos = GameManager.get_annulus_position(center)
 		var enemy = enemy_scenes[rng.randi() % enemy_scenes.size()].instantiate()
 		if enemy is EnemyBase3D:
-			enemy.max_hp = int(enemy.max_hp * 3.0)
+			enemy.max_hp = int(enemy.max_hp * GameConstants.ELITE_HP_MULT)
 			enemy.hp = enemy.max_hp
-			enemy.damage = int(enemy.damage * 1.5)
-			enemy.speed *= 1.2
-			enemy.xp_drop = enemy.xp_drop * 5
-			enemy.enemy_color = Color(1.0, 0.85, 0.2)  # Dourado
-			enemy.scale = Vector3(1.3, 1.3, 1.3)
+			enemy.damage = int(enemy.damage * GameConstants.ELITE_DAMAGE_MULT)
+			enemy.speed *= GameConstants.ELITE_SPEED_MULT
+			enemy.xp_drop = enemy.xp_drop * GameConstants.ELITE_XP_MULT
+			enemy.enemy_color = GameConstants.ELITE_COLOR
+			enemy.scale = GameConstants.ELITE_SCALE
 		get_parent().add_child(enemy)
 		enemy.global_position = pos
 		GameManager.enemies_alive += 1
@@ -270,8 +270,8 @@ func _spawn_massive_horde() -> void:
 		preload("res://scenes/enemies/skeleton_archer.tscn"),
 	]
 
-	# Spawn 50 normais em ondas circulares (annulus)
-	for i in range(50):
+	# Spawn normais em ondas circulares (annulus)
+	for i in range(GameConstants.EVENT_MASSIVE_NORMAL_COUNT):
 		if GameManager.enemies_alive >= GameManager.max_enemies:
 			break
 		var pos = GameManager.get_annulus_position(center)
@@ -280,20 +280,20 @@ func _spawn_massive_horde() -> void:
 		enemy.global_position = pos
 		GameManager.enemies_alive += 1
 
-	# Spawn 10 elites (mais fortes, dourados)
-	for i in range(10):
+	# Spawn elites (mais fortes, dourados)
+	for i in range(GameConstants.EVENT_MASSIVE_ELITE_COUNT):
 		if GameManager.enemies_alive >= GameManager.max_enemies:
 			break
 		var pos = GameManager.get_annulus_position(center)
 		var enemy = elite_scenes[rng.randi() % elite_scenes.size()].instantiate()
 		if enemy is EnemyBase3D:
-			enemy.max_hp = int(enemy.max_hp * 3.0)
+			enemy.max_hp = int(enemy.max_hp * GameConstants.ELITE_HP_MULT)
 			enemy.hp = enemy.max_hp
-			enemy.damage = int(enemy.damage * 1.5)
-			enemy.speed *= 1.2
-			enemy.xp_drop = enemy.xp_drop * 5
-			enemy.enemy_color = Color(1.0, 0.85, 0.2)
-			enemy.scale = Vector3(1.3, 1.3, 1.3)
+			enemy.damage = int(enemy.damage * GameConstants.ELITE_DAMAGE_MULT)
+			enemy.speed *= GameConstants.ELITE_SPEED_MULT
+			enemy.xp_drop = enemy.xp_drop * GameConstants.ELITE_XP_MULT
+			enemy.enemy_color = GameConstants.ELITE_COLOR
+			enemy.scale = GameConstants.ELITE_SCALE
 		get_parent().add_child(enemy)
 		enemy.global_position = pos
 		GameManager.enemies_alive += 1
@@ -334,11 +334,11 @@ func _spawn_event_miniboss(strong: bool) -> void:
 		_:
 			mb_config = {"hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15), "name": "Giant Zombie"}
 
-	# Mini-boss forte (min 20): 2x HP, 1.5x damage, mais rapido, maior
-	var hp_mult := 2.0 if strong else 1.0
-	var dmg_mult := 1.5 if strong else 1.0
-	var spd_mult := 1.3 if strong else 1.0
-	var scale_val := 3.0 if strong else 2.5
+	# Mini-boss forte (min 20): mais HP, damage, rapido e maior
+	var hp_mult := GameConstants.MINIBOSS_STRONG_HP_MULT if strong else 1.0
+	var dmg_mult := GameConstants.MINIBOSS_STRONG_DMG_MULT if strong else 1.0
+	var spd_mult := GameConstants.MINIBOSS_STRONG_SPD_MULT if strong else 1.0
+	var scale_val := GameConstants.MINIBOSS_STRONG_SCALE if strong else GameConstants.MINIBOSS_NORMAL_SCALE
 	var boss_name: String = mb_config["name"]
 	if strong:
 		boss_name = "Mega " + boss_name
@@ -350,7 +350,7 @@ func _spawn_event_miniboss(strong: bool) -> void:
 		boss.hp = boss.max_hp
 		boss.damage = int(mb_config["dmg"] * dmg_mult)
 		boss.speed = mb_config["spd"] * spd_mult
-		boss.xp_drop = 50 if not strong else 100
+		boss.xp_drop = GameConstants.MINIBOSS_NORMAL_XP if not strong else GameConstants.MINIBOSS_STRONG_XP
 		boss.enemy_color = mb_config["color"]
 		boss.scale = Vector3(scale_val, scale_val, scale_val)
 	get_parent().add_child(boss)
@@ -362,20 +362,20 @@ func _spawn_event_miniboss(strong: bool) -> void:
 
 	# Tambem spawna escoltas com o mini-boss forte
 	if strong:
-		for i in range(5):
-			var escort_angle = (float(i) / 5.0) * TAU
-			var escort_pos = spawn_pos + Vector3(cos(escort_angle), 0, sin(escort_angle)) * 5.0
+		for i in range(GameConstants.EVENT_STRONG_MINIBOSS_ESCORTS):
+			var escort_angle = (float(i) / float(GameConstants.EVENT_STRONG_MINIBOSS_ESCORTS)) * TAU
+			var escort_pos = spawn_pos + Vector3(cos(escort_angle), 0, sin(escort_angle)) * GameConstants.MINIBOSS_ESCORT_RADIUS
 			var escort_scenes = [
 				preload("res://scenes/enemies/skeleton.tscn"),
 				preload("res://scenes/enemies/bomber.tscn"),
 			]
 			var escort = escort_scenes[rng.randi() % escort_scenes.size()].instantiate()
 			if escort is EnemyBase3D:
-				escort.max_hp = int(escort.max_hp * 2.0)
+				escort.max_hp = int(escort.max_hp * GameConstants.MINIBOSS_ESCORT_HP_MULT)
 				escort.hp = escort.max_hp
-				escort.damage = int(escort.damage * 1.3)
+				escort.damage = int(escort.damage * GameConstants.MINIBOSS_ESCORT_DMG_MULT)
 				escort.enemy_color = mb_config["color"].lightened(0.3)
-				escort.scale = Vector3(1.5, 1.5, 1.5)
+				escort.scale = GameConstants.MINIBOSS_ESCORT_SCALE
 			get_parent().add_child(escort)
 			escort.global_position = escort_pos
 			GameManager.enemies_alive += 1
@@ -390,11 +390,11 @@ func _spawn_treasure_goblin() -> void:
 	var goblin = bat_scene.instantiate()
 	if goblin is EnemyBase3D:
 		goblin.enemy_color = Color(0.2, 1.0, 0.3)
-		goblin.speed = 8.0  # Rapido, foge
-		goblin.max_hp = 100
-		goblin.hp = 100
-		goblin.xp_drop = 30
-		goblin.scale = Vector3(1.5, 1.5, 1.5)
+		goblin.speed = GameConstants.GOBLIN_SPEED
+		goblin.max_hp = GameConstants.GOBLIN_HP
+		goblin.hp = GameConstants.GOBLIN_HP
+		goblin.xp_drop = GameConstants.GOBLIN_XP
+		goblin.scale = GameConstants.GOBLIN_SCALE
 	get_parent().add_child(goblin)
 	goblin.global_position = GameManager.get_annulus_position(center)
 	GameManager.enemies_alive += 1
@@ -850,13 +850,13 @@ func _do_roulette() -> void:
 	var effect = effects[rng.randi() % effects.size()]
 	match effect:
 		"speed_boost":
-			GameManager.speed_mult += 0.5
+			GameManager.speed_mult += GameConstants.ROULETTE_SPEED_BOOST
 		"damage_boost":
-			GameManager.perm_damage_mult += 0.3
+			GameManager.perm_damage_mult += GameConstants.ROULETTE_DAMAGE_BOOST
 		"heal":
-			GameManager.heal(50)
+			GameManager.heal(GameConstants.ROULETTE_HEAL_AMOUNT)
 		"slow":
-			GameManager.speed_mult = maxf(0.5, GameManager.speed_mult - 0.3)
+			GameManager.speed_mult = maxf(GameConstants.ROULETTE_SLOW_MIN, GameManager.speed_mult - GameConstants.ROULETTE_SLOW_AMOUNT)
 
 # ---- Eclipse Total (min 8) ----
 # Darken the stage, enemies get a glow effect, bonus XP for 15 seconds
@@ -865,14 +865,14 @@ func _start_eclipse() -> void:
 	var dir_light = _find_directional_light()
 	if dir_light:
 		_eclipse_original_energy = dir_light.light_energy
-		dir_light.light_energy = 0.15
+		dir_light.light_energy = GameConstants.ECLIPSE_LIGHT_ENERGY
 
 	# Darken the stage by modulating the current scene
 	var root = get_tree().current_scene
 	if root:
 		_eclipse_original_modulate = root.modulate if "modulate" in root else Color.WHITE
 		var tween = create_tween()
-		tween.tween_property(root, "modulate", Color(0.2, 0.2, 0.3), 1.0)
+		tween.tween_property(root, "modulate", GameConstants.ECLIPSE_DARKEN_COLOR, 1.0)
 
 	# Add subtle dark overlay via CanvasLayer for extra atmosphere
 	var overlay = ColorRect.new()
@@ -891,13 +891,13 @@ func _start_eclipse() -> void:
 	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
 		if is_instance_valid(enemy) and enemy is Node3D:
-			enemy.modulate = Color(2.0, 2.0, 2.5)  # Bright glow
+			enemy.modulate = GameConstants.ECLIPSE_ENEMY_GLOW
 			_eclipse_glowing_enemies.append(enemy)
 
 	# Bonus XP during eclipse (1.5x multiplier)
 	_eclipse_xp_bonus_active = true
 	_eclipse_prev_xp_mult = GameManager.xp_mult
-	GameManager.xp_mult = _eclipse_prev_xp_mult * 1.5
+	GameManager.xp_mult = _eclipse_prev_xp_mult * GameConstants.ECLIPSE_XP_MULT
 
 func _end_eclipse() -> void:
 	# Restore DirectionalLight
@@ -944,8 +944,8 @@ func _find_directional_light() -> DirectionalLight3D:
 # Spawn 15 meteors staggered over 10 seconds, each falls from y=20 to y=0
 # dealing 50 damage in radius 2.0 to enemies AND player
 func _start_meteor_shower() -> void:
-	_meteor_spawns_remaining = 15
-	_meteor_spawn_interval = 10.0 / 15.0  # ~0.67s between spawns
+	_meteor_spawns_remaining = GameConstants.METEOR_COUNT
+	_meteor_spawn_interval = GameConstants.METEOR_SPAWN_DURATION / float(GameConstants.METEOR_COUNT)
 	_meteor_spawn_timer = 0.0  # Spawn first immediately
 
 func _spawn_single_meteor() -> void:
@@ -955,7 +955,7 @@ func _spawn_single_meteor() -> void:
 	var center = players[0].global_position
 
 	# Random position near player
-	var offset = Vector3(rng.randf_range(-12, 12), 0, rng.randf_range(-12, 12))
+	var offset = Vector3(rng.randf_range(-GameConstants.METEOR_OFFSET_RANGE, GameConstants.METEOR_OFFSET_RANGE), 0, rng.randf_range(-GameConstants.METEOR_OFFSET_RANGE, GameConstants.METEOR_OFFSET_RANGE))
 	var target_pos = center + offset
 	target_pos.y = 0.0
 
@@ -966,7 +966,7 @@ func _spawn_single_meteor() -> void:
 	# Collision shape (sphere radius 2.0 for damage area)
 	var col_shape = CollisionShape3D.new()
 	var sphere_shape = SphereShape3D.new()
-	sphere_shape.radius = 2.0
+	sphere_shape.radius = GameConstants.METEOR_RADIUS
 	col_shape.shape = sphere_shape
 	meteor.add_child(col_shape)
 
@@ -986,7 +986,7 @@ func _spawn_single_meteor() -> void:
 
 	# Start position (above target)
 	get_parent().add_child(meteor)
-	meteor.global_position = target_pos + Vector3(0, 20, 0)
+	meteor.global_position = target_pos + Vector3(0, GameConstants.METEOR_FALL_HEIGHT, 0)
 
 	# Animate falling with a tween
 	var tween = create_tween()
@@ -997,8 +997,8 @@ func _meteor_impact(meteor: Node3D, impact_pos: Vector3) -> void:
 	if not is_instance_valid(meteor):
 		return
 
-	var damage := 50
-	var radius := 2.0
+	var damage := GameConstants.METEOR_DAMAGE
+	var radius := GameConstants.METEOR_RADIUS
 
 	# Damage enemies in radius
 	var enemies = GameManager.get_enemies()
@@ -1032,8 +1032,8 @@ func _start_fever_mode() -> void:
 	_fever_active = true
 	_fever_prev_damage_mult = GameManager.perm_damage_mult
 	_fever_prev_speed_mult = GameManager.speed_mult
-	GameManager.perm_damage_mult *= 2.0
-	GameManager.speed_mult *= 1.5
+	GameManager.perm_damage_mult *= GameConstants.FEVER_DAMAGE_MULT
+	GameManager.speed_mult *= GameConstants.FEVER_SPEED_MULT
 	event_started.emit("fever_mode")
 
 	# Clear recent kills to prevent re-triggering immediately
@@ -1059,7 +1059,7 @@ func _start_fever_mode() -> void:
 	_fever_pulse_tween.tween_property(_fever_overlay, "color:a", 0.05, 0.8).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 	# Timer to end fever mode after 10 seconds
-	var timer = get_tree().create_timer(10.0)
+	var timer = get_tree().create_timer(GameConstants.FEVER_DURATION)
 	timer.timeout.connect(_end_fever_mode)
 
 func _end_fever_mode() -> void:
@@ -1094,7 +1094,7 @@ func _start_portal_dimensional() -> void:
 	_portal_active = true
 
 	# Teletransporta o jogador para longe (mini-dungeon area)
-	var dungeon_pos = Vector3(500, 0, 500)  # Longe da arena principal
+	var dungeon_pos = GameConstants.PORTAL_DUNGEON_POS
 	player.global_position = dungeon_pos
 
 	# Visual: flash branco
@@ -1115,7 +1115,7 @@ func _start_portal_dimensional() -> void:
 	ScreenEffects.shake(0.2)
 
 	# Spawna inimigos de elite na mini-dungeon
-	_portal_enemies_remaining = 10
+	_portal_enemies_remaining = GameConstants.EVENT_PORTAL_ENEMY_COUNT
 	var enemy_scenes = [
 		preload("res://scenes/enemies/skeleton.tscn"),
 		preload("res://scenes/enemies/zombie_runner.tscn"),
@@ -1123,17 +1123,17 @@ func _start_portal_dimensional() -> void:
 		preload("res://scenes/enemies/ghost.tscn"),
 	]
 
-	for i in range(10):
-		var spawn_pos = GameManager.get_annulus_position(dungeon_pos, 8.0, 15.0)
+	for i in range(GameConstants.EVENT_PORTAL_ENEMY_COUNT):
+		var spawn_pos = GameManager.get_annulus_position(dungeon_pos, GameConstants.PORTAL_SPAWN_MIN, GameConstants.PORTAL_SPAWN_MAX)
 		var enemy = enemy_scenes[rng.randi() % enemy_scenes.size()].instantiate()
 		# Faz todos elite
 		if enemy is EnemyBase3D:
-			enemy.max_hp = int(enemy.max_hp * 3.0)
+			enemy.max_hp = int(enemy.max_hp * GameConstants.ELITE_HP_MULT)
 			enemy.hp = enemy.max_hp
-			enemy.damage = int(enemy.damage * 1.5)
-			enemy.xp_drop = enemy.xp_drop * 5
-			enemy.enemy_color = Color(0.6, 0.2, 0.9)  # Roxo
-			enemy.scale = Vector3(1.3, 1.3, 1.3)
+			enemy.damage = int(enemy.damage * GameConstants.ELITE_DAMAGE_MULT)
+			enemy.xp_drop = enemy.xp_drop * GameConstants.ELITE_XP_MULT
+			enemy.enemy_color = Color(0.6, 0.2, 0.9)  # Roxo portal
+			enemy.scale = GameConstants.ELITE_SCALE
 		get_parent().add_child(enemy)
 		enemy.global_position = spawn_pos
 		GameManager.enemies_alive += 1
@@ -1154,7 +1154,7 @@ func _end_portal_dimensional() -> void:
 
 	# Recompensa: cura + XP bonus
 	GameManager.heal(GameManager.get_effective_max_hp() / 2)
-	GameManager.add_xp(50)
+	GameManager.add_xp(GameConstants.PORTAL_REWARD_XP)
 
 	ScreenEffects.shake(0.15)
 
@@ -1171,11 +1171,11 @@ func _spawn_chest_mimic() -> void:
 	var mimic = mimic_scene.instantiate()
 	# Faz o mimic mais forte como mini-boss
 	if mimic is EnemyBase3D:
-		mimic.max_hp = 300
-		mimic.hp = 300
-		mimic.damage = 30
-		mimic.xp_drop = 30
-		mimic.scale = Vector3(1.5, 1.5, 1.5)
+		mimic.max_hp = GameConstants.MIMIC_HP
+		mimic.hp = GameConstants.MIMIC_HP
+		mimic.damage = GameConstants.MIMIC_DAMAGE
+		mimic.xp_drop = GameConstants.MIMIC_XP
+		mimic.scale = GameConstants.MIMIC_SCALE
 	get_parent().add_child(mimic)
 	mimic.global_position = GameManager.get_annulus_position(center)
 	GameManager.enemies_alive += 1

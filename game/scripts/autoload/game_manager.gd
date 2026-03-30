@@ -13,15 +13,11 @@ signal boss_spawned(boss_name: String)
 signal boss_died(boss_name: String)
 signal boss_phase_changed(boss_name: String, phase: int)
 
-# Annulus spawning — constantes e utilitário centralizado (ver PRD annulus_spawning)
-const SPAWN_MIN_RADIUS: float = 15.0   # Logo fora da visão da câmera top-down
-const SPAWN_MAX_RADIUS: float = 20.0   # Limite máximo do anel
-const BOSS_SPAWN_MIN_RADIUS: float = 18.0  # Bosses surgem um pouco mais longe
-const BOSS_SPAWN_MAX_RADIUS: float = 22.0
+# Annulus spawning — constantes centralizadas em GameConstants
 
 ## Gera posição de spawn em anel (annulus) ao redor de um centro.
 ## Coordenadas polares → XZ, garantindo que inimigos nunca "pipoquem" na tela.
-static func get_annulus_position(center: Vector3, min_r: float = SPAWN_MIN_RADIUS, max_r: float = SPAWN_MAX_RADIUS) -> Vector3:
+static func get_annulus_position(center: Vector3, min_r: float = GameConstants.ANNULUS_MIN_RADIUS, max_r: float = GameConstants.ANNULUS_MAX_RADIUS) -> Vector3:
 	var angle = randf() * TAU
 	var distance = randf_range(min_r, max_r)
 	return center + Vector3(cos(angle), 0, sin(angle)) * distance
@@ -29,7 +25,7 @@ static func get_annulus_position(center: Vector3, min_r: float = SPAWN_MIN_RADIU
 # Tempo e dificuldade
 var game_time: float = 0.0
 var enemies_alive: int = 0
-var max_enemies: int = 200
+var max_enemies: int = GameConstants.PICKUP_CAP  # Nota: usa PICKUP_CAP como default, ajustado por spawner
 # Cached enemy list (updated once per frame to avoid 45+ get_nodes_in_group calls)
 var _cached_enemies: Array = []
 var _enemies_cache_frame: int = -1
@@ -284,12 +280,12 @@ func add_xp(amount: int) -> void:
 		return
 	var final_mult = xp_mult
 	if game_mode == "hyper":
-		final_mult *= 2.0
+		final_mult *= GameConstants.HYPER_XP_MULT
 	player_xp += int(amount * final_mult)
 	while player_xp >= player_xp_to_next:
 		player_xp -= player_xp_to_next
 		player_level += 1
-		player_xp_to_next = int(player_xp_to_next * 1.15) + 3
+		player_xp_to_next = int(player_xp_to_next * GameConstants.XP_LEVEL_SCALE) + GameConstants.XP_LEVEL_FLAT
 		player_leveled_up.emit(player_level)
 		AudioManager.play_sfx("level_up")
 		# Level up particles
@@ -299,21 +295,21 @@ func add_xp(amount: int) -> void:
 			ScreenEffects.shake(0.1)
 
 func get_difficulty_multiplier() -> float:
-	# Cresce mais devagar, cap em 8x
-	return minf(8.0, 1.0 + (game_time / 60.0) * 0.35)
+	# Cresce mais devagar, cap em GameConstants.DIFFICULTY_CAP
+	return minf(GameConstants.DIFFICULTY_CAP, 1.0 + (game_time / 60.0) * GameConstants.DIFFICULTY_TIME_SCALE)
 
 # ---- Multiplayer Scaling ----
 func get_mp_hp_mult() -> float:
 	var count = MultiplayerManager.get_player_count()
-	return [1.0, 1.0, 1.3, 1.6, 2.0][mini(count, 4)]
+	return GameConstants.MP_HP_MULT[mini(count, 4)]
 
 func get_mp_spawn_mult() -> float:
 	var count = MultiplayerManager.get_player_count()
-	return [1.0, 1.0, 1.2, 1.4, 1.6][mini(count, 4)]
+	return GameConstants.MP_SPAWN_MULT[mini(count, 4)]
 
 func get_mp_boss_hp_mult() -> float:
 	var count = MultiplayerManager.get_player_count()
-	return [1.0, 1.0, 1.5, 2.0, 2.5][mini(count, 4)]
+	return GameConstants.MP_BOSS_HP_MULT[mini(count, 4)]
 
 func take_damage(amount: int) -> void:
 	if is_game_over:
@@ -325,7 +321,7 @@ func take_damage(amount: int) -> void:
 	AudioManager.play_sfx("player_hurt")
 	# Armor: percentage-based damage reduction (diminishing returns)
 	# Formula: reduction = armor / (armor + 50), caps around ~60% at max armor
-	var armor_reduction := perm_armor / float(perm_armor + 50)
+	var armor_reduction := perm_armor / float(perm_armor + GameConstants.ARMOR_DIMINISH_DIVISOR)
 	var reduced = maxi(1, int(amount * (1.0 - armor_reduction)))
 	# Thorns: reflect damage to nearest enemy
 	if thorns_mult > 0.0:
@@ -351,12 +347,12 @@ func take_damage(amount: int) -> void:
 	# Lifesteal tracking (applied by weapons on hit, not here)
 	if player_hp <= 0:
 		# One-shot kill detection (possible balance issue or bug)
-		if amount > get_effective_max_hp() / 2:
+		if amount > get_effective_max_hp() * GameConstants.ONESHOT_THRESHOLD_RATIO:
 			LogManager.warn("Balance", "One-shot kill! Damage: %d, Max HP: %d" % [amount, get_effective_max_hp()])
 		# Revive check
 		if revives_remaining > 0:
 			revives_remaining -= 1
-			player_hp = get_effective_max_hp() / 2
+			player_hp = int(get_effective_max_hp() * GameConstants.REVIVE_HP_FRACTION)
 			ScreenEffects.shake(0.3)
 			return
 		player_hp = 0

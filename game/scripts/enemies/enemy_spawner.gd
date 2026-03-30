@@ -353,7 +353,7 @@ func _process_boss_rush(delta: float) -> void:
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
-	var spawn_pos = GameManager.get_annulus_position(pos, GameManager.BOSS_SPAWN_MIN_RADIUS, GameManager.BOSS_SPAWN_MAX_RADIUS)
+	var spawn_pos = GameManager.get_annulus_position(pos, GameConstants.BOSS_ANNULUS_MIN_RADIUS, GameConstants.BOSS_ANNULUS_MAX_RADIUS)
 
 	# Temporarily set selected_stage to get the right boss
 	var original_stage = GameManager.selected_stage
@@ -447,7 +447,7 @@ func _spawn_boss() -> void:
 	if players.is_empty():
 		return
 	var pos = players[0].global_position
-	var spawn_pos = GameManager.get_annulus_position(pos, GameManager.BOSS_SPAWN_MIN_RADIUS, GameManager.BOSS_SPAWN_MAX_RADIUS)
+	var spawn_pos = GameManager.get_annulus_position(pos, GameConstants.BOSS_ANNULUS_MIN_RADIUS, GameConstants.BOSS_ANNULUS_MAX_RADIUS)
 
 	AudioManager.play_music("boss")
 
