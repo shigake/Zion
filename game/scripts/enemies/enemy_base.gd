@@ -38,6 +38,7 @@ var _cached_enemy_sprite: Node = null  # Cached EnemySprite node reference
 var _cached_enemy_sprite_checked: bool = false  # Whether we've looked up the sprite node
 
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
+static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
 ## Shared projectile mesh/material — avoid creating new ones every ranged attack
 static var _shared_proj_mesh: SphereMesh = null
 static var _shared_proj_mat: StandardMaterial3D = null
@@ -81,27 +82,35 @@ func _get_base_enemy_type() -> String:
 
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
-	var sprite_path = "res://assets/sprites/enemies/%s.png" % enemy_type.to_snake_case()
-	# Try stage-themed sprite first
 	var stage = GameManager.selected_stage
-	if STAGE_ENEMY_SPRITES.has(stage):
-		var stage_map = STAGE_ENEMY_SPRITES[stage]
-		if stage_map.has(enemy_type):
-			var themed_path = "res://assets/sprites/enemies/%s/%s.png" % [stage, stage_map[enemy_type]]
-			if ResourceLoader.exists(themed_path):
-				sprite_path = themed_path
-	if not ResourceLoader.exists(sprite_path):
-		# Also try bosses/ folder (e.g. BossNecromancer -> boss_necromancer.png)
-		var boss_sprite = "res://assets/sprites/bosses/%s.png" % enemy_type.to_snake_case()
-		if ResourceLoader.exists(boss_sprite):
-			sprite_path = boss_sprite
-		else:
-			LogManager.debug("Enemy", "Sprite not found: %s, trying slime fallback" % sprite_path)
-			sprite_path = "res://assets/sprites/enemies/slime.png"
-	if not ResourceLoader.exists(sprite_path):
-		LogManager.debug("Enemy", "No sprites found at all, using procedural model")
-		_apply_procedural_model()
-		return
+	var cache_key = "%s_%s" % [enemy_type, stage]
+	var sprite_path: String
+	# Use cached path resolution to avoid repeated ResourceLoader.exists() calls
+	if _sprite_path_cache.has(cache_key):
+		sprite_path = _sprite_path_cache[cache_key]
+		if sprite_path.is_empty():
+			_apply_procedural_model()
+			return
+	else:
+		var snake_type = enemy_type.to_snake_case()
+		sprite_path = "res://assets/sprites/enemies/%s.png" % snake_type
+		if STAGE_ENEMY_SPRITES.has(stage):
+			var stage_map = STAGE_ENEMY_SPRITES[stage]
+			if stage_map.has(enemy_type):
+				var themed_path = "res://assets/sprites/enemies/%s/%s.png" % [stage, stage_map[enemy_type]]
+				if ResourceLoader.exists(themed_path):
+					sprite_path = themed_path
+		if not ResourceLoader.exists(sprite_path):
+			var boss_sprite = "res://assets/sprites/bosses/%s.png" % snake_type
+			if ResourceLoader.exists(boss_sprite):
+				sprite_path = boss_sprite
+			else:
+				sprite_path = "res://assets/sprites/enemies/slime.png"
+		if not ResourceLoader.exists(sprite_path):
+			_sprite_path_cache[cache_key] = ""
+			_apply_procedural_model()
+			return
+		_sprite_path_cache[cache_key] = sprite_path
 	var tex: Texture2D
 	if _sprite_cache.has(sprite_path):
 		tex = _sprite_cache[sprite_path]

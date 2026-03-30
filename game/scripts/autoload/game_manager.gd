@@ -91,6 +91,7 @@ var ng_plus_weapons: Array[Dictionary] = []  # Weapons carried from previous vic
 
 # Weapons e items do jogador
 var player_weapons: Array[Dictionary] = []  # {id, level}
+var _weapon_level_cache: Dictionary = {}  # weapon_id -> level (O(1) lookup)
 var player_items: Array[Dictionary] = []    # {id, level}
 var MAX_WEAPONS: int = 4  # Base 4, upgradeable to 6
 const MAX_ITEMS := 6
@@ -442,16 +443,10 @@ func get_effective_max_hp() -> int:
 
 # ---- Weapons ----
 func has_weapon(weapon_id: String) -> bool:
-	for w in player_weapons:
-		if w["id"] == weapon_id:
-			return true
-	return false
+	return weapon_id in _weapon_level_cache
 
 func get_weapon_level(weapon_id: String) -> int:
-	for w in player_weapons:
-		if w["id"] == weapon_id:
-			return w["level"]
-	return 0
+	return _weapon_level_cache.get(weapon_id, 0)
 
 func add_weapon(weapon_id: String) -> bool:
 	if has_weapon(weapon_id):
@@ -459,6 +454,7 @@ func add_weapon(weapon_id: String) -> bool:
 	if player_weapons.size() >= MAX_WEAPONS:
 		return false
 	player_weapons.append({"id": weapon_id, "level": 1})
+	_weapon_level_cache[weapon_id] = 1
 	weapon_added.emit(weapon_id)
 	# Track for codex
 	SaveManager.track_codex(weapon_id)
@@ -468,6 +464,7 @@ func upgrade_weapon(weapon_id: String) -> bool:
 	for w in player_weapons:
 		if w["id"] == weapon_id and w["level"] < 8:
 			w["level"] += 1
+			_weapon_level_cache[weapon_id] = w["level"]
 			weapon_upgraded.emit(weapon_id, w["level"])
 			return true
 	return false
@@ -593,6 +590,7 @@ func reset() -> void:
 	player_hp = 100
 	crystals_this_run = 0
 	player_weapons.clear()
+	_weapon_level_cache.clear()
 	player_items.clear()
 	speed_mult = 1.0
 	attack_speed_mult = 1.0
