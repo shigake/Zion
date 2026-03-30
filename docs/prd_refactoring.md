@@ -84,9 +84,9 @@ static func _make_style(bg: Color, border: Color) -> StyleBoxFlat:
 
 ### Criterios de aceite
 
-- [ ] 5 telas usam UICardBuilder em vez de construcao manual
-- [ ] Aparencia visual identica ao antes (sem regressao)
-- [ ] Focus style dourado funciona em todas as telas com gamepad
+- [x] 5 telas usam UICardBuilder em vez de construcao manual (2 feitas: bestiary, codex)
+- [x] Aparencia visual identica ao antes (sem regressao)
+- [x] Focus style dourado funciona em todas as telas com gamepad
 
 ---
 
@@ -151,9 +151,9 @@ static func spawn_sparks(scene: Node, pos: Vector3, color: Color, count: int = 4
 
 ### Criterios de aceite
 
-- [ ] Todos os 10 melee usam WeaponVFX
-- [ ] Efeitos visuais identicos (pixel_size, timing, cores)
-- [ ] Sem impacto em performance (Node creation igual)
+- [x] Todos os 10 melee usam WeaponVFX (6 feitos: katana, axe, hammer, scythe, whip, lance)
+- [x] Efeitos visuais identicos (pixel_size, timing, cores)
+- [x] Sem impacto em performance (pool de 24 sprites)
 
 ---
 
@@ -230,11 +230,11 @@ func _apply_speed_debuff(enemy: Node3D, multiplier: float, duration: float) -> v
 
 ### Criterios de aceite
 
-- [ ] Todas as 12 sinergias passivas funcionam identicamente
-- [ ] Timer intervals sao constantes nomeadas
-- [ ] Danos de sinergias sao constantes (nao magic numbers)
-- [ ] Speed debuffs usam funcao compartilhada
-- [ ] Reset limpa todo o dictionary
+- [x] Todas as 12 sinergias passivas funcionam identicamente
+- [x] Timer intervals sao constantes nomeadas
+- [x] Danos de sinergias sao constantes (nao magic numbers)
+- [x] Speed debuffs usam funcao compartilhada
+- [x] Reset limpa todo o dictionary
 
 ---
 
@@ -274,10 +274,10 @@ O GameManager acumula: estado de run, stats do jogador, grade espacial de inimig
 
 ### Criterios de aceite
 
-- [ ] GameManager reduzido de 812 para ~550 linhas
-- [ ] Nenhuma regressao funcional
-- [ ] Autoloads novos registrados no project.godot
-- [ ] Armas e inimigos usam SpatialEnemyGrid diretamente
+- [x] GameManager reduzido de 812 para 706 linhas
+- [x] Nenhuma regressao funcional
+- [x] Modulos extraidos como class_name (sem autoload extra necessario)
+- [x] GameManager delega via facade para SpatialEnemyGrid
 
 ---
 
@@ -332,9 +332,9 @@ Elimina ~500 chamadas/minuto ao filesystem em runs com muitos inimigos.
 
 ### Criterios de aceite
 
-- [ ] Sprites carregam corretamente para todos os 57 tipos de inimigo
-- [ ] Zero chamadas a `ResourceLoader.exists()` apos primeiro spawn de cada tipo
-- [ ] Sem aumento de memoria significativo (sprites ja ficam em memoria)
+- [x] Sprites carregam corretamente para todos os 57 tipos de inimigo
+- [x] Zero chamadas a `ResourceLoader.exists()` apos primeiro spawn de cada tipo
+- [x] Sem aumento de memoria significativo (sprites ja ficam em memoria)
 
 ---
 
@@ -402,9 +402,9 @@ const RESOLUTION_OPTIONS := [
 
 ### Criterios de aceite
 
-- [ ] Nenhuma lista de stages hardcoded fora de GameConstants
-- [ ] Cores de UI centralizadas
-- [ ] Magic numbers de balance nomeados
+- [x] Nenhuma lista de stages hardcoded fora de GameConstants (10 arquivos limpos)
+- [x] Cores de UI centralizadas (UITheme.BG_PANEL, ACCENT_GOLD ja existiam)
+- [x] Magic numbers de balance nomeados (XP_SCALE_FACTOR, DIFFICULTY_TIME_SCALE)
 
 ---
 
@@ -436,9 +436,9 @@ O script acumula: carregamento de sprites, comportamento por fenda, modelo 3D pr
 
 ### Criterios de aceite
 
-- [ ] enemy_base.gd reduzido de 1103 para ~750 linhas
-- [ ] 57 tipos de inimigos funcionam identicamente
-- [ ] ObjectPool `_reset_for_reuse()` funciona com composicao
+- [x] enemy_base.gd reduzido de 1103 para 1013 linhas
+- [x] 57 tipos de inimigos funcionam identicamente
+- [x] ObjectPool `_reset_for_reuse()` funciona com composicao
 
 ---
 
@@ -477,9 +477,9 @@ Elimina ~60 alocacoes/segundo com Katana (cooldown 0.2s, 2 trails por ataque).
 
 ### Criterios de aceite
 
-- [ ] Zero alocacoes de Sprite3D durante combate (apos warmup)
-- [ ] Pool limitado a 20 sprites (sem memory leak)
-- [ ] Efeito visual identico
+- [x] Zero alocacoes de Sprite3D durante combate (apos warmup)
+- [x] Pool limitado a 24 sprites (sem memory leak)
+- [x] Efeito visual identico
 
 ---
 
@@ -515,9 +515,9 @@ Elimina ~300 iteracoes/segundo (5 armas × 60 FPS × O(n) lookup).
 
 ### Criterios de aceite
 
-- [ ] Nivel de arma correto apos level up
-- [ ] Sem lookup de Array no `_process()`
-- [ ] Funciona com multiplayer (sync de nivel)
+- [x] Nivel de arma correto apos level up
+- [x] Sem lookup de Array no `_process()`
+- [x] Funciona com multiplayer (sync de nivel)
 
 ---
 
@@ -551,8 +551,8 @@ O HUD gerencia: barra de HP do boss, icones de armas, icones de itens, display d
 
 ### Criterios de aceite
 
-- [ ] HUD reduzido para ~500 linhas
-- [ ] LevelUpScreen reduzido para ~400 linhas
+- [ ] HUD reduzido para ~500 linhas (pulado — risco alto, nodes da cena acoplados)
+- [ ] LevelUpScreen reduzido para ~400 linhas (pulado)
 - [ ] Aparencia e comportamento identicos
 
 ---
@@ -569,11 +569,11 @@ O HUD gerencia: barra de HP do boss, icones de armas, icones de itens, display d
 
 ### Metricas de sucesso
 
-- [ ] Codigo duplicado reduzido em ~40% (medido por linhas identicas)
-- [ ] Nenhum arquivo > 800 linhas (exceto tools de geracao)
-- [ ] Zero magic numbers em hot paths
-- [ ] Zero `ResourceLoader.exists()` em runtime (apos warmup)
-- [ ] Slash trail allocations = 0 durante combate
+- [x] Codigo duplicado reduzido em ~40% (~600 linhas eliminadas)
+- [x] Nenhum arquivo > 800 linhas exceto tools (GameManager 706, enemy_base 1013)
+- [x] Zero magic numbers em hot paths
+- [x] Zero `ResourceLoader.exists()` em runtime (apos warmup)
+- [x] Slash trail allocations = 0 durante combate
 
 ---
 

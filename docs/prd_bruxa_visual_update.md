@@ -93,10 +93,10 @@ O `walk_spritesheet_gen.gd` (linha 18) inclui `"bruxa"` na lista `CHARACTERS` e 
 
 ### Critérios de aceite
 
-- [ ] `bruxa.png` exibe pele negra no rosto e mãos
-- [ ] `bruxa_walk.png` (4 frames) reflete a nova cor
-- [ ] Contraste visual suficiente entre pele, outline, cabelo e vestido roxo
-- [ ] Sem pixels "fantasma" da cor antiga (regeneração completa)
+- [x] `bruxa.png` exibe pele negra no rosto e mãos
+- [x] `bruxa_walk.png` (4 frames) reflete a nova cor
+- [x] Contraste visual suficiente entre pele, outline, cabelo e vestido roxo
+- [x] Sem pixels "fantasma" da cor antiga (regeneração completa)
 
 ---
 
@@ -120,10 +120,10 @@ O `game_manager.gd` (linha 716) referencia `"bruxa"` para aplicar bônus de invo
 
 ### Critérios de aceite
 
-- [ ] Character Select mostra a Bruxa com pele negra
-- [ ] HUD in-game mostra o retrato atualizado
-- [ ] Cena de créditos mostra o sprite atualizado na fogueira
-- [ ] Nenhum script usa a cor de pele hardcoded (tudo lê do PNG)
+- [x] Character Select mostra a Bruxa com pele negra
+- [x] HUD in-game mostra o retrato atualizado
+- [x] Cena de créditos mostra o sprite atualizado na fogueira
+- [x] Nenhum script usa a cor de pele hardcoded (tudo lê do PNG)
 
 ---
 

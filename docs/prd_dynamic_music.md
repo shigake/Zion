@@ -42,9 +42,9 @@ O cenário atual: cada stage script deve chamar `AudioManager.play_music(stage_n
 
 ### Critérios de aceite
 
-- [ ] Cada fenda toca uma música distinta ao entrar
-- [ ] Crossfade suave de 1s entre menu → stage
-- [ ] Sem interrupção abrupta de áudio
+- [x] Cada fenda toca uma música distinta ao entrar
+- [x] Crossfade suave de 1s entre menu → stage
+- [x] Sem interrupção abrupta de áudio
 
 ---
 
@@ -78,9 +78,9 @@ Menu → play_music("menu")
 
 ### Critérios de aceite
 
-- [ ] Música troca automaticamente para "boss" quando o Sentinela spawna
-- [ ] Intensificação de pitch funciona nas 3 fases + fury (já implementado)
-- [ ] Ao derrotar o boss, toca "victory" com crossfade
+- [x] Música troca automaticamente para "boss" quando o Sentinela spawna
+- [x] Intensificação de pitch funciona nas 3 fases + fury (já implementado)
+- [x] Ao derrotar o boss, toca "victory" com crossfade
 
 ---
 
@@ -104,9 +104,9 @@ Chamar essa função no `_process()` do `AudioManager`, após o bloco de crossfa
 
 ### Critérios de aceite
 
-- [ ] Música da fenda fica sutilmente mais rápida conforme a pressão aumenta
-- [ ] Máximo de 12% de aceleração (quase imperceptível mas tensiona)
-- [ ] Não aplica em tracks de menu/boss/victory
+- [x] Música da fenda fica sutilmente mais rápida conforme a pressão aumenta
+- [x] Máximo de 12% de aceleração (quase imperceptível mas tensiona)
+- [x] Não aplica em tracks de menu/boss/victory
 
 ---
 

@@ -49,10 +49,10 @@ tween.tween_property(dancer_root, "position:y", base_y, 0.2).set_trans(Tween.TRA
 
 ### Critérios de aceite
 
-- [ ] Sprites 2x maiores sem borrar a pixel art (filtro NEAREST mantido)
-- [ ] Bobbing vertical suave com offset randômico por herói (sem sincronismo)
-- [ ] 1 herói aleatório executa dança (Tween looping de rotação + pulo)
-- [ ] Código modular (arrays de dados por herói, fácil de estender)
+- [x] Sprites 2x maiores sem borrar a pixel art (filtro NEAREST mantido)
+- [x] Bobbing vertical suave com offset randômico por herói (sem sincronismo)
+- [x] 1 herói aleatório executa dança (Tween looping de rotação + pulo)
+- [x] Código modular (arrays de dados por herói, fácil de estender)
 
 ---
 
@@ -101,9 +101,9 @@ Portanto, **não é necessário reimplementar**. Basta resolver o nome.
 
 ### Critérios de aceite
 
-- [ ] Sinergia Ice+Dark (Shadow Freeze) não crasha mais ao curar
-- [ ] Cura respeitada com clamp, bônus do Chef e multiplicador de mutação
-- [ ] HUD atualiza HP via sync existente do `MultiplayerManager.notify_damage()`
+- [x] Sinergia Ice+Dark (Shadow Freeze) não crasha mais ao curar
+- [x] Cura respeitada com clamp, bônus do Chef e multiplicador de mutação
+- [x] HUD atualiza HP via sync existente do `MultiplayerManager.notify_damage()`
 
 ---
 
@@ -141,9 +141,9 @@ O script `main_menu.gd` (linha 202) altera o subtítulo para *"Survive the horde
 
 ### Critérios de aceite
 
-- [ ] Subtítulo visualmente separado do logo (mínimo ~12px de gap)
-- [ ] Layout responsivo ao redimensionar a janela (anchors + VBox)
-- [ ] Sem regressão nos botões e cristais abaixo
+- [x] Subtítulo visualmente separado do logo (mínimo ~12px de gap)
+- [x] Layout responsivo ao redimensionar a janela (anchors + VBox)
+- [x] Sem regressão nos botões e cristais abaixo
 
 ---
 
@@ -178,9 +178,9 @@ vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 ### Critérios de aceite
 
-- [ ] VBox interno do card ocupa 100% da área do botão
-- [ ] Texto dos 90+ monstros centralizado horizontal e verticalmente
-- [ ] Alinhamento mantido ao redimensionar/scrollar
+- [x] VBox interno do card ocupa 100% da área do botão
+- [x] Texto dos 90+ monstros centralizado horizontal e verticalmente
+- [x] Alinhamento mantido ao redimensionar/scrollar
 
 ---
 
@@ -223,10 +223,10 @@ name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 ### Critérios de aceite
 
-- [ ] VBox do card preenche o botão inteiro
-- [ ] Nomes longos de armas truncados com ellipsis ("Tempest...") sem vazar
-- [ ] Padronização estética entre Codex e Bestiário confirmada
-- [ ] Informação de evolução legível (`autowrap` já existe no `detail_evo`)
+- [x] VBox do card preenche o botão inteiro
+- [x] Nomes longos de armas truncados com ellipsis ("Tempest...") sem vazar
+- [x] Padronização estética entre Codex e Bestiário confirmada
+- [x] Informação de evolução legível (`autowrap` já existe no `detail_evo`)
 
 ---
 
@@ -323,11 +323,11 @@ Porém, se o design permitir rebind de **botões de gamepad** no futuro, será n
 
 ### Critérios de aceite
 
-- [ ] R1 avança para a próxima aba (Video → Gráficos → Audio → ... → Idioma → Video)
-- [ ] L1 volta para a aba anterior (com wrapping circular)
-- [ ] SFX `menu_click` toca ao trocar de aba
-- [ ] Não conflita com rebind de tecla (R1/L1 ignorados durante rebind)
-- [ ] Hint visual `[L1] ◄  ► [R1]` aparece quando gamepad está conectado
+- [x] R1 avança para a próxima aba (Video → Gráficos → Audio → ... → Idioma → Video)
+- [x] L1 volta para a aba anterior (com wrapping circular)
+- [x] SFX `menu_click` toca ao trocar de aba
+- [x] Não conflita com rebind de tecla (R1/L1 ignorados durante rebind)
+- [x] Hint visual `[L1] ◄  ► [R1]` aparece quando gamepad está conectado
 
 ---
 

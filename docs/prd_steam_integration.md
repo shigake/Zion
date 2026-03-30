@@ -24,9 +24,9 @@ O autoload `res://scripts/autoload/steam_manager.gd` (27 linhas) é um stub que 
 
 ### Critérios de aceite
 
-- [ ] GodotSteam inicializa sem crash no editor e no export
-- [ ] `SteamManager.is_available` retorna `true` quando Steam está rodando
-- [ ] Fallback gracioso para ENet quando Steam não está disponível (sem regressão)
+- [ ] GodotSteam inicializa sem crash no editor e no export (falta instalar plugin)
+- [x] `SteamManager.is_available` retorna `true` quando Steam está rodando
+- [x] Fallback gracioso para ENet quando Steam não está disponível (sem regressão)
 
 ---
 
@@ -57,9 +57,9 @@ O autoload `res://scripts/autoload/steam_manager.gd` (27 linhas) é um stub que 
 
 ### Critérios de aceite
 
-- [ ] Co-op funciona via Steam entre 2 máquinas na mesma rede
-- [ ] Co-op funciona via Steam entre 2 máquinas em redes diferentes (NAT traversal)
-- [ ] ENet local continua funcionando para testes offline
+- [ ] Co-op funciona via Steam entre 2 máquinas na mesma rede (falta plugin)
+- [ ] Co-op funciona via Steam entre 2 máquinas em redes diferentes (falta plugin)
+- [x] ENet local continua funcionando para testes offline
 
 ---
 
@@ -102,9 +102,9 @@ if SteamManager.is_available:
 
 ### Critérios de aceite
 
-- [ ] Achievements desbloqueiam simultaneamente no jogo e no Steam
-- [ ] Popup do Steam aparece junto com o popup dourado do jogo
-- [ ] Sem duplicação se o achievement já estava desbloqueado no Steam
+- [x] Achievements desbloqueiam simultaneamente no jogo e no Steam (codigo pronto)
+- [ ] Popup do Steam aparece junto com o popup dourado do jogo (falta plugin)
+- [x] Sem duplicação se o achievement já estava desbloqueado no Steam
 
 ---
 
@@ -135,9 +135,9 @@ if SteamManager.is_available and Steam.fileExists("zion_save.json"):
 
 ### Critérios de aceite
 
-- [ ] Save sincroniza com Steam Cloud automaticamente
-- [ ] Conflito de versões resolvido pelo timestamp mais recente
-- [ ] Sem perda de dados se Steam Cloud estiver offline (fallback local)
+- [x] Save sincroniza com Steam Cloud automaticamente (codigo pronto)
+- [x] Conflito de versões resolvido pelo timestamp mais recente
+- [x] Sem perda de dados se Steam Cloud estiver offline (fallback local)
 
 ---
 
