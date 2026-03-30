@@ -230,6 +230,107 @@ name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 ---
 
+## Tarefa 6: Navegação de Abas com R1/L1 na Tela de Opções
+
+**Objetivo:** Permitir que o jogador troque entre as 7 abas da tela de Opções usando os bumpers (R1/L1) do controle.
+
+### Contexto
+
+O script `res://scripts/ui/options_screen.gd` constrói a tela com um `TabContainer` (linha 184) contendo 7 abas criadas sequencialmente (linhas 190-196):
+
+| Índice | Aba | Build Function |
+|---|---|---|
+| 0 | Video | `_build_tab_video()` |
+| 1 | Gráficos | `_build_tab_graficos()` |
+| 2 | Áudio | `_build_tab_audio()` |
+| 3 | Gameplay | `_build_tab_gameplay()` |
+| 4 | Controles | `_build_tab_controles()` |
+| 5 | Acessibilidade | `_build_tab_acessibilidade()` |
+| 6 | Idioma | `_build_tab_idioma()` |
+
+Atualmente, a `_unhandled_input()` (linha 560) só processa `ui_cancel` (voltar) e rebind de tecla. **Não existe nenhum suporte para trocar abas via gamepad.** As abas só são clicáveis via mouse ou D-pad, o que é ruim para UX de controle.
+
+### Solução
+
+**Passo 1:** Registrar input actions para os bumpers no `project.godot` (ou via código no `_ready()`):
+
+```gdscript
+# No _ready() do options_screen.gd, registrar as actions se não existirem
+if not InputMap.has_action("ui_tab_next"):
+    InputMap.add_action("ui_tab_next")
+    var ev_r1 = InputEventJoypadButton.new()
+    ev_r1.button_index = JOY_BUTTON_RIGHT_SHOULDER
+    InputMap.action_add_event("ui_tab_next", ev_r1)
+
+if not InputMap.has_action("ui_tab_prev"):
+    InputMap.add_action("ui_tab_prev")
+    var ev_l1 = InputEventJoypadButton.new()
+    ev_l1.button_index = JOY_BUTTON_LEFT_SHOULDER
+    InputMap.action_add_event("ui_tab_prev", ev_l1)
+```
+
+**Passo 2:** Na `_unhandled_input()` (linha 560), **antes** do bloco de `waiting_for_key`, adicionar a lógica de troca de aba:
+
+```gdscript
+func _unhandled_input(event: InputEvent) -> void:
+    # --- NOVO: Navegação de abas com R1/L1 ---
+    if event.is_action_pressed("ui_tab_next"):
+        var next = (tab_container.current_tab + 1) % tab_container.get_tab_count()
+        tab_container.current_tab = next
+        AudioManager.play_sfx("menu_click")
+        if get_viewport(): get_viewport().set_input_as_handled()
+        return
+    if event.is_action_pressed("ui_tab_prev"):
+        var prev = (tab_container.current_tab - 1 + tab_container.get_tab_count()) % tab_container.get_tab_count()
+        tab_container.current_tab = prev
+        AudioManager.play_sfx("menu_click")
+        if get_viewport(): get_viewport().set_input_as_handled()
+        return
+
+    # --- Código existente de rebind e ui_cancel ---
+    if waiting_for_key.is_empty():
+        if event.is_action_pressed("ui_cancel"):
+            _on_back()
+            # ...
+```
+
+**Passo 3 (Opcional — Indicador visual):** Adicionar um hint visual no header das abas mostrando os ícones `[L1]` e `[R1]` quando um gamepad for detectado:
+
+```gdscript
+# No _build_ui(), após criar o tab_container
+var tab_hint = Label.new()
+tab_hint.text = "[L1] ◄  ► [R1]"
+tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+tab_hint.add_theme_font_size_override("font_size", 12)
+tab_hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
+tab_hint.visible = Input.get_connected_joypads().size() > 0
+root_vbox.add_child(tab_hint)
+root_vbox.move_child(tab_hint, tab_container.get_index())  # Acima do TabContainer
+```
+
+### Observação: Conflito com Rebind
+
+Quando `waiting_for_key` não está vazio (o jogador está rebindando uma tecla, linha 566), a lógica de R1/L1 **não deve capturar os bumpers**. A order do `return` no código acima cuida disso: se `waiting_for_key` não estiver vazio, o fluxo cai no bloco de rebind original.
+
+Porém, se o design permitir rebind de **botões de gamepad** no futuro, será necessário filtrar `InputEventJoypadButton` no bloco de rebind e ignorar R1/L1 explicitamente.
+
+### Arquivos impactados
+
+| Arquivo | Ação |
+|---|---|
+| `scripts/ui/options_screen.gd` | Adicionar input handling de R1/L1 em `_unhandled_input()` |
+| `project.godot` (ou via código) | Registrar `ui_tab_next` e `ui_tab_prev` |
+
+### Critérios de aceite
+
+- [ ] R1 avança para a próxima aba (Video → Gráficos → Audio → ... → Idioma → Video)
+- [ ] L1 volta para a aba anterior (com wrapping circular)
+- [ ] SFX `menu_click` toca ao trocar de aba
+- [ ] Não conflita com rebind de tecla (R1/L1 ignorados durante rebind)
+- [ ] Hint visual `[L1] ◄  ► [R1]` aparece quando gamepad está conectado
+
+---
+
 ## Dependências
 
 | Sistema | Tarefas |
@@ -240,16 +341,17 @@ name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 | `main_menu.gd` + `.tscn` | Tarefa 3 |
 | `bestiary_screen.gd` | Tarefa 4 |
 | `codex_screen.gd` | Tarefa 5 |
+| `options_screen.gd` | Tarefa 6 |
 
 ## Ordem de implementação
 
 | Fase | Tarefas | Descrição |
 |---|---|---|
 | A | 2 | Bugfix crítico — resolve crash da sinergia Ice+Dark |
-| B | 3 | Menu principal — descolagem de logo/subtítulo |
+| B | 3, 6 | Menu principal + Opções (UI de navegação) |
 | C | 4, 5 | Padronização de UI — Bestiário + Codex em paralelo |
 | D | 1 | Polish — animação procedural na tela de créditos |
 
 ## Prioridade
 
-Média-alta — o bugfix (Tarefa 2) é bloqueante para gameplay com sinergia Ice+Dark. As UIs são cosméticas mas afetam percepção de qualidade.
+Média-alta — o bugfix (Tarefa 2) é bloqueante para gameplay com sinergia Ice+Dark. A Tarefa 6 é essencial para UX com gamepad. As UIs restantes são cosméticas mas afetam percepção de qualidade.
