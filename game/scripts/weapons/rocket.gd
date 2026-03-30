@@ -8,6 +8,7 @@ extends Area3D
 
 var target_pos: Vector3 = Vector3.ZERO
 var direction: Vector3 = Vector3.FORWARD
+var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	direction = (target_pos - global_position).normalized()
@@ -18,6 +19,14 @@ func _ready() -> void:
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
+	# Guard: nao recria sprite se ja existe
+	if _sprite and is_instance_valid(_sprite):
+		_update_sprite_rotation()
+		return
+	_sprite = get_node_or_null("ProjectileSprite")
+	if _sprite:
+		_update_sprite_rotation()
+		return
 	var sprite_path = "res://assets/sprites/projectiles/rocket.png"
 	if ResourceLoader.exists(sprite_path):
 		var existing_mesh = get_node_or_null("Mesh")
@@ -27,13 +36,23 @@ func _setup_billboard_sprite() -> void:
 			existing_mesh.visible = false
 		var sprite = Sprite3D.new()
 		sprite.texture = load(sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		sprite.pixel_size = 0.04
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "ProjectileSprite"
+		# Deita no plano XZ (top-down)
+		sprite.rotation.x = -PI / 2.0
 		add_child(sprite)
+		_sprite = sprite
+		_update_sprite_rotation()
+
+func _update_sprite_rotation() -> void:
+	if not _sprite:
+		return
+	var angle = atan2(-direction.z, direction.x)
+	_sprite.rotation.z = angle
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta

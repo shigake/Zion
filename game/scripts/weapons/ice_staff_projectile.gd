@@ -12,12 +12,19 @@ var damage_type: String = "ice"
 var weapon_id: String = ""
 var _returning: bool = false
 var _spin_speed: float = 3.0
+var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
+	# Guard: nao recria sprite se ja existe (pool reuse)
+	if _sprite and is_instance_valid(_sprite):
+		return
+	_sprite = get_node_or_null("ProjectileSprite")
+	if _sprite:
+		return
 	var sprite_path = "res://assets/sprites/projectiles/ice_crystal.png"
 	if ResourceLoader.exists(sprite_path):
 		var existing_mesh = get_node_or_null("Mesh")
@@ -34,6 +41,7 @@ func _setup_billboard_sprite() -> void:
 		sprite.transparent = true
 		sprite.name = "ProjectileSprite"
 		add_child(sprite)
+		_sprite = sprite
 
 func _physics_process(delta: float) -> void:
 	if _returning:
@@ -77,3 +85,9 @@ func _reset_for_reuse() -> void:
 	monitoring = true
 	timer = 0.0
 	rotation = Vector3.ZERO
+	# Reconecta referencia do sprite (pode ter sido perdida no pool)
+	if not _sprite:
+		_sprite = get_node_or_null("ProjectileSprite")
+	# Forca escala base (previne acumulo no pool)
+	if _sprite:
+		_sprite.scale = Vector3.ONE

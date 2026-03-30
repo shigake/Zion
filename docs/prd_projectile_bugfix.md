@@ -89,10 +89,10 @@ func _spawn_muzzle_flash() -> void:
 
 ### Critérios de aceite
 
-- [ ] Balas permanecem no tamanho `pixel_size = 0.04` após centenas de reciclagens
-- [ ] Muzzle flash visual ainda funciona (2.5x → 1x em 0.1s)
-- [ ] Funciona com Metralhadora (cooldown 0.15s, cenário de pior caso)
-- [ ] Sem regressão em Shuriken, Crossbow, Boomerang, etc.
+- [x] Balas permanecem no tamanho `pixel_size = 0.04` após centenas de reciclagens
+- [x] Muzzle flash visual ainda funciona (2.5x → 1x em 0.1s)
+- [x] Funciona com Metralhadora (cooldown 0.15s, cenário de pior caso)
+- [x] Sem regressão em Shuriken, Crossbow, Boomerang, etc.
 
 ---
 
@@ -183,10 +183,10 @@ Teste com 8 direções:
 
 ### Critérios de aceite
 
-- [ ] Ponta da bala aponta na direção de viagem em todas as 8 direções
-- [ ] Funciona com Metralhadora, Pistola Dupla, Crossbow, Shuriken
-- [ ] Flecha do Arco Élfico e Foguete da Bazuca também apontam corretamente
-- [ ] Sem rotação "jittery" durante o voo (ângulo estável se `direction` não muda)
+- [x] Ponta da bala aponta na direção de viagem em todas as 8 direções
+- [x] Funciona com Metralhadora, Pistola Dupla, Crossbow, Shuriken
+- [x] Flecha do Arco Élfico e Foguete da Bazuca também apontam corretamente
+- [x] Sem rotação "jittery" durante o voo (ângulo estável se `direction` não muda)
 
 ---
 
@@ -232,8 +232,8 @@ func _setup_billboard_sprite() -> void:
 
 ### Critérios de aceite
 
-- [ ] Após 100 reciclagens, a bala continua com exatamente 1 Sprite3D filho
-- [ ] Sem aumento progressivo de draw calls ou memória
+- [x] Após 100 reciclagens, a bala continua com exatamente 1 Sprite3D filho
+- [x] Sem aumento progressivo de draw calls ou memória
 
 ---
 

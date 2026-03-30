@@ -13,12 +13,21 @@ var pierce: bool = true
 var ricochet_distance: float = 15.0
 var distance_traveled: float = 0.0
 var has_ricocheted: bool = false
+var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
+	# Guard: nao recria sprite se ja existe
+	if _sprite and is_instance_valid(_sprite):
+		_update_sprite_rotation()
+		return
+	_sprite = get_node_or_null("ProjectileSprite")
+	if _sprite:
+		_update_sprite_rotation()
+		return
 	var sprite_path = "res://assets/sprites/projectiles/arrow.png"
 	if ResourceLoader.exists(sprite_path):
 		var existing_mesh = get_node_or_null("Mesh")
@@ -28,13 +37,23 @@ func _setup_billboard_sprite() -> void:
 			existing_mesh.visible = false
 		var sprite = Sprite3D.new()
 		sprite.texture = load(sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		sprite.pixel_size = 0.04
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "ProjectileSprite"
+		# Deita no plano XZ (top-down)
+		sprite.rotation.x = -PI / 2.0
 		add_child(sprite)
+		_sprite = sprite
+		_update_sprite_rotation()
+
+func _update_sprite_rotation() -> void:
+	if not _sprite:
+		return
+	var angle = atan2(-direction.z, direction.x)
+	_sprite.rotation.z = angle
 
 func _physics_process(delta: float) -> void:
 	timer += delta
@@ -46,11 +65,15 @@ func _physics_process(delta: float) -> void:
 	global_position += move
 	distance_traveled += move.length()
 
+	# Atualiza rotacao do sprite durante o voo
+	_update_sprite_rotation()
+
 	# Ricocheta uma vez apos percorrer ricochet_distance
 	if not has_ricocheted and distance_traveled >= ricochet_distance:
 		has_ricocheted = true
 		var angle = randf_range(-PI, PI)
 		direction = direction.rotated(Vector3.UP, angle).normalized()
+		_update_sprite_rotation()
 		_spawn_ricochet_flash()
 
 func _spawn_ricochet_flash() -> void:
