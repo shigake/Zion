@@ -74,34 +74,65 @@ func _restore_settings() -> void:
 	call_deferred("_restore_audio")
 
 func save_game() -> void:
+	data["last_save_timestamp"] = int(Time.get_unix_time_from_system())
+	var json_str = JSON.stringify(data, "\t")
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify(data, "\t"))
+		file.store_string(json_str)
 		file.close()
 	else:
 		LogManager.error("Save", "Failed to write save file: %s" % SAVE_PATH)
+	# Sync to Steam Cloud
+	SteamManager.cloud_save(json_str)
 
 func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		LogManager.info("Save", "No save file found, using defaults")
+	# Try Steam Cloud first (may be more recent than local)
+	var cloud_json = SteamManager.cloud_load()
+	var local_exists = FileAccess.file_exists(SAVE_PATH)
+
+	if not cloud_json.is_empty() and not local_exists:
+		# Only cloud save exists — use it
+		_apply_save_json(cloud_json, "cloud")
 		return
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file:
-		var json = JSON.new()
-		var result = json.parse(file.get_as_text())
-		if result == OK:
-			var loaded = json.data
-			if loaded is Dictionary:
-				for key in loaded:
-					data[key] = loaded[key]
-				LogManager.info("Save", "Save loaded: %d crystals, %d runs" % [data.get("crystals", 0), data.get("total_runs", 0)])
-			else:
-				LogManager.error("Save", "Save file has invalid format (not a Dictionary)")
+
+	if local_exists:
+		var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+		if file:
+			var local_json = file.get_as_text()
+			file.close()
+			_apply_save_json(local_json, "local")
+
+			# If cloud has data, compare timestamps and use the newer one
+			if not cloud_json.is_empty():
+				var cloud_data = _parse_json(cloud_json)
+				if cloud_data is Dictionary:
+					var cloud_ts = cloud_data.get("last_save_timestamp", 0)
+					var local_ts = data.get("last_save_timestamp", 0)
+					if cloud_ts > local_ts:
+						LogManager.info("Save", "Cloud save is newer, using cloud data")
+						_apply_save_json(cloud_json, "cloud")
 		else:
-			LogManager.error("Save", "Failed to parse save file: %s" % json.get_error_message())
-		file.close()
+			LogManager.error("Save", "Failed to open save file: %s" % SAVE_PATH)
+		return
+
+	LogManager.info("Save", "No save file found, using defaults")
+
+func _apply_save_json(json_str: String, source: String) -> void:
+	var loaded = _parse_json(json_str)
+	if loaded is Dictionary:
+		for key in loaded:
+			data[key] = loaded[key]
+		LogManager.info("Save", "Save loaded from %s: %d crystals, %d runs" % [source, data.get("crystals", 0), data.get("total_runs", 0)])
 	else:
-		LogManager.error("Save", "Failed to open save file: %s" % SAVE_PATH)
+		LogManager.error("Save", "Save from %s has invalid format" % source)
+
+func _parse_json(json_str: String) -> Variant:
+	var json = JSON.new()
+	var result = json.parse(json_str)
+	if result == OK:
+		return json.data
+	LogManager.error("Save", "Failed to parse JSON: %s" % json.get_error_message())
+	return null
 
 func _ensure_default_unlocks() -> void:
 	## Ensure starter characters are always unlocked (handles existing saves)

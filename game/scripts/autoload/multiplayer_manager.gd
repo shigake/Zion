@@ -120,25 +120,31 @@ func _process(delta: float) -> void:
 			_try_reconnect()
 
 func _create_server_peer(port: int) -> Array:
-	# Returns [peer, error]. Override for Steam networking when available.
+	# Steam Networking Sockets — NAT traversal sem servidor dedicado
 	if backend == NetworkBackend.STEAM and SteamManager.is_available:
-		# Steam Networking Sockets - requires GodotSteam plugin
-		# var peer = SteamMultiplayerPeer.new()
-		# var error = peer.create_host(0, [])
-		# return [peer, error]
-		pass
+		if ClassDB.class_exists(&"SteamMultiplayerPeer"):
+			var peer = ClassDB.instantiate(&"SteamMultiplayerPeer")
+			var error = peer.create_host(0, [])
+			if error == OK:
+				SteamManager.create_lobby(MAX_PLAYERS)
+				LogManager.info("MP", "Steam server created")
+			return [peer, error]
+		LogManager.warn("MP", "SteamMultiplayerPeer not found, falling back to ENet")
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_server(port, MAX_PLAYERS)
 	return [peer, error]
 
 func _create_client_peer(address: String, port: int) -> Array:
-	# Returns [peer, error]. Override for Steam networking when available.
+	# Steam Networking Sockets — conecta via Steam ID do host
 	if backend == NetworkBackend.STEAM and SteamManager.is_available:
-		# Steam Networking Sockets - requires GodotSteam plugin
-		# var peer = SteamMultiplayerPeer.new()
-		# var error = peer.create_client(steam_id, 0, [])
-		# return [peer, error]
-		pass
+		if ClassDB.class_exists(&"SteamMultiplayerPeer"):
+			var host_steam_id = SteamManager.get_lobby_data("host_steam_id").to_int()
+			if host_steam_id > 0:
+				var peer = ClassDB.instantiate(&"SteamMultiplayerPeer")
+				var error = peer.create_client(host_steam_id, 0, [])
+				LogManager.info("MP", "Steam client connecting to host %d" % host_steam_id)
+				return [peer, error]
+		LogManager.warn("MP", "SteamMultiplayerPeer not found, falling back to ENet")
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_client(address, port)
 	return [peer, error]

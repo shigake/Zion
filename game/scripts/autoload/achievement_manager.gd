@@ -104,6 +104,8 @@ func _unlock(id: String) -> void:
 	var ach = achievements.get(id, {})
 	achievement_unlocked.emit(id, ach.get("name", id))
 	LogManager.info("Achievement", "Unlocked: %s" % ach.get("name", id))
+	# Sync with Steam
+	SteamManager.set_achievement(id)
 
 func on_attack() -> void:
 	_run_attacks += 1
