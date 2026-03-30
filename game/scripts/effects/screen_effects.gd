@@ -4,7 +4,7 @@ extends Node
 ## level-up flash, kill streak text, boss entrance effects.
 
 var shake_amount: float = 0.0
-var shake_decay: float = 8.0
+var shake_decay: float = GameConstants.SHAKE_DECAY
 var camera: Camera3D = null
 var _vignette_canvas: CanvasLayer = null
 var _vignette_rect: ColorRect = null
@@ -29,8 +29,8 @@ var _damage_intensity: float = 0.0  # 0-1, decays over time
 var _kill_times: Array[float] = []  # Timestamps of recent kills
 var _kill_streak_label: Label = null
 var _kill_streak_tween: Tween = null
-const KILL_STREAK_WINDOW: float = 2.0  # seconds to count kills
-const KILL_STREAK_MIN: int = 5  # minimum kills for streak text
+const KILL_STREAK_WINDOW: float = GameConstants.KILL_STREAK_WINDOW
+const KILL_STREAK_MIN: int = GameConstants.KILL_STREAK_MIN
 var _streak_messages: Array[String] = ["COMBO x%d!", "MASSACRE!", "UNSTOPPABLE!", "GODLIKE!"]
 
 signal player_took_damage  # Emitted so HUD can react
@@ -68,7 +68,7 @@ func _ready() -> void:
 	_kill_streak_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_kill_streak_label.anchors_preset = Control.PRESET_FULL_RECT
 	_kill_streak_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_kill_streak_label.add_theme_font_size_override("font_size", 48)
+	_kill_streak_label.add_theme_font_size_override("font_size", GameConstants.KILL_STREAK_FONT_SIZE)
 	_kill_streak_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0))
 	_kill_streak_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
 	_kill_streak_label.add_theme_constant_override("outline_size", 4)
@@ -109,7 +109,7 @@ func _process(delta: float) -> void:
 
 	# Damage intensity decay (for any post-process effects)
 	if _damage_intensity > 0.0:
-		_damage_intensity = maxf(0.0, _damage_intensity - delta * 3.0)
+		_damage_intensity = maxf(0.0, _damage_intensity - delta * GameConstants.DAMAGE_INTENSITY_DECAY)
 
 	# Directional damage indicators
 	_update_damage_indicators(delta)
@@ -126,12 +126,12 @@ func _update_vignette() -> void:
 	if max_hp <= 0:
 		return
 	var hp_pct = float(GameManager.player_hp) / float(max_hp)
-	if hp_pct < 0.3:
+	if hp_pct < GameConstants.VIGNETTE_HP_THRESHOLD:
 		# Pulse intensity based on HP% — stronger pulse at lower HP
-		var intensity = (0.3 - hp_pct) / 0.3  # 0 at 30%, 1 at 0%
-		var pulse_speed = lerpf(4.0, 8.0, intensity)  # Faster pulse at lower HP
-		var pulse = (sin(GameManager.game_time * pulse_speed) * 0.5 + 0.5) * 0.2
-		_vignette_rect.color.a = intensity * 0.35 + pulse
+		var intensity = (GameConstants.VIGNETTE_HP_THRESHOLD - hp_pct) / GameConstants.VIGNETTE_HP_THRESHOLD  # 0 at 30%, 1 at 0%
+		var pulse_speed = lerpf(GameConstants.VIGNETTE_PULSE_MIN_SPEED, GameConstants.VIGNETTE_PULSE_MAX_SPEED, intensity)  # Faster pulse at lower HP
+		var pulse = (sin(GameManager.game_time * pulse_speed) * 0.5 + 0.5) * GameConstants.VIGNETTE_PULSE_AMPLITUDE
+		_vignette_rect.color.a = intensity * GameConstants.VIGNETTE_BASE_ALPHA + pulse
 	else:
 		_vignette_rect.color.a = 0.0
 
@@ -157,7 +157,7 @@ func _update_damage_indicators(delta: float) -> void:
 				ind["rect"].queue_free()
 		else:
 			# Fade out
-			var alpha = clampf(ind["timer"] / 0.5, 0.0, 0.8)
+			var alpha = clampf(ind["timer"] / GameConstants.DAMAGE_INDICATOR_DURATION, 0.0, 0.8)
 			if is_instance_valid(ind["rect"]):
 				ind["rect"].modulate.a = alpha
 	# Remove expired (reverse order)
@@ -198,18 +198,18 @@ func damage_feedback(damage_amount: int, damage_source_pos: Vector3 = Vector3.ZE
 	var damage_ratio = float(damage_amount) / float(maxi(max_hp, 1))
 
 	# 1. Screen shake (scales with damage)
-	var shake_str = clampf(0.08 + damage_ratio * 0.3, 0.08, 0.25)
+	var shake_str = clampf(GameConstants.DAMAGE_SHAKE_BASE + damage_ratio * GameConstants.DAMAGE_SHAKE_SCALE, GameConstants.DAMAGE_SHAKE_BASE, GameConstants.DAMAGE_SHAKE_MAX)
 	shake(shake_str)
 
 	# 2. Hit freeze (micro-pause for impact feel)
-	if damage_ratio > 0.15:
-		hit_freeze(0.04)
+	if damage_ratio > GameConstants.DAMAGE_FREEZE_THRESHOLD:
+		hit_freeze(GameConstants.DAMAGE_FREEZE_DURATION)
 
 	# 3. Red screen flash
-	damage_flash(0.15 + damage_ratio * 0.1)
+	damage_flash(GameConstants.DAMAGE_FLASH_BASE + damage_ratio * GameConstants.DAMAGE_FLASH_SCALE)
 
 	# 4. Damage intensity for post-processing
-	_damage_intensity = clampf(damage_ratio * 2.0, 0.3, 1.0)
+	_damage_intensity = clampf(damage_ratio * GameConstants.DAMAGE_INTENSITY_SCALE, GameConstants.DAMAGE_INTENSITY_MIN, 1.0)
 
 	# 5. Directional damage indicator
 	if damage_source_pos != Vector3.ZERO:
@@ -244,25 +244,25 @@ func _spawn_damage_indicator(source_pos: Vector3) -> void:
 	# Create directional arc indicator
 	var indicator = ColorRect.new()
 	indicator.color = Color(1.0, 0.1, 0.05, 0.8)
-	indicator.custom_minimum_size = Vector2(60, 8)
-	indicator.size = Vector2(60, 8)
+	indicator.custom_minimum_size = GameConstants.DAMAGE_INDICATOR_SIZE
+	indicator.size = GameConstants.DAMAGE_INDICATOR_SIZE
 	indicator.pivot_offset = Vector2(30, 4)
 	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Position on screen edge in direction of damage
-	var edge_dist = minf(viewport_size.x, viewport_size.y) * 0.42
+	var edge_dist = minf(viewport_size.x, viewport_size.y) * GameConstants.DAMAGE_INDICATOR_EDGE_DIST
 	var pos = center + Vector2(sin(angle), -cos(angle)) * edge_dist
 	indicator.position = pos - indicator.pivot_offset
 	indicator.rotation = angle
 
 	_damage_indicator_container.add_child(indicator)
-	_damage_indicators.append({"rect": indicator, "timer": 0.6, "angle": angle})
+	_damage_indicators.append({"rect": indicator, "timer": GameConstants.DAMAGE_INDICATOR_DURATION, "angle": angle})
 
 ## Gamepad vibration on damage
 func _vibrate_gamepad(intensity: float) -> void:
-	var strong = clampf(intensity * 0.6, 0.1, 0.5)
-	var weak = clampf(intensity * 0.8, 0.2, 0.7)
-	Input.start_joy_vibration(0, weak, strong, 0.2)
+	var strong = clampf(intensity * GameConstants.VIBRATE_STRONG_SCALE, 0.1, GameConstants.VIBRATE_STRONG_MAX)
+	var weak = clampf(intensity * GameConstants.VIBRATE_WEAK_SCALE, 0.2, GameConstants.VIBRATE_WEAK_MAX)
+	Input.start_joy_vibration(0, weak, strong, GameConstants.VIBRATE_DURATION)
 
 # ---- Level Up Flash ----
 
@@ -273,10 +273,10 @@ func _on_player_leveled_up(_new_level: int) -> void:
 func level_up_flash() -> void:
 	if not _flash_overlay:
 		return
-	_flash_overlay.color = Color(1.0, 1.0, 1.0, 0.4)
+	_flash_overlay.color = Color(1.0, 1.0, 1.0, GameConstants.LEVEL_UP_FLASH_ALPHA)
 	_flash_overlay.visible = true
 	var tween = create_tween()
-	tween.tween_property(_flash_overlay, "color:a", 0.0, 0.3)
+	tween.tween_property(_flash_overlay, "color:a", 0.0, GameConstants.LEVEL_UP_FLASH_DURATION)
 	tween.tween_callback(func(): _flash_overlay.visible = false)
 
 # ---- Kill Streak ----
@@ -293,11 +293,11 @@ func _show_kill_streak(count: int) -> void:
 		return
 	# Pick message based on streak tier
 	var msg: String
-	if count >= 30:
+	if count >= GameConstants.KILL_STREAK_TIER_4:
 		msg = _streak_messages[3]  # GODLIKE!
-	elif count >= 20:
+	elif count >= GameConstants.KILL_STREAK_TIER_3:
 		msg = _streak_messages[2]  # UNSTOPPABLE!
-	elif count >= 10:
+	elif count >= GameConstants.KILL_STREAK_TIER_2:
 		msg = _streak_messages[1]  # MASSACRE!
 	else:
 		msg = _streak_messages[0] % count  # COMBO x5!
@@ -346,18 +346,18 @@ var _boss_display_names: Dictionary = {
 ## Dramatic boss entrance: letterbox + vignette + zoom + title card + shake + slow-mo + roar + particles
 func boss_entrance_effect() -> void:
 	# 0. Cinematic letterbox bars (top and bottom black bars)
-	_show_letterbox(2.5)
+	_show_letterbox(GameConstants.BOSS_ENTRANCE_LETTERBOX_DURATION)
 
 	# 1. Dark vignette overlay (builds tension)
 	if _vignette_rect:
 		var vig_tween = create_tween()
 		_vignette_rect.color = Color(0.0, 0.0, 0.0, 0.0)
-		vig_tween.tween_property(_vignette_rect, "color:a", 0.6, 0.2)
-		vig_tween.tween_interval(1.8)
-		vig_tween.tween_property(_vignette_rect, "color:a", 0.0, 0.5)
+		vig_tween.tween_property(_vignette_rect, "color:a", GameConstants.BOSS_ENTRANCE_VIGNETTE_ALPHA, GameConstants.BOSS_ENTRANCE_VIGNETTE_FADE_IN)
+		vig_tween.tween_interval(GameConstants.BOSS_ENTRANCE_VIGNETTE_HOLD)
+		vig_tween.tween_property(_vignette_rect, "color:a", 0.0, GameConstants.BOSS_ENTRANCE_VIGNETTE_FADE_OUT)
 
 	# 2. Escalating camera shake — starts light, gets intense
-	shake(0.15)
+	shake(GameConstants.BOSS_ENTRANCE_SHAKE_1)
 	_escalate_shake()
 
 	# 3. White flash → deep red flash → fade
@@ -375,27 +375,27 @@ func boss_entrance_effect() -> void:
 	AudioManager.play_sfx("boss_appear")
 
 	# 5. Dramatic slow-motion (middle ground: 0.5s at 0.25 scale)
-	slow_motion(0.5, 0.25)
+	slow_motion(GameConstants.BOSS_ENTRANCE_SLOW_MO_DURATION, GameConstants.BOSS_ENTRANCE_SLOW_MO_SCALE)
 
 	# 6. Camera zoom pulse (deeper zoom, dramatic snap-back)
 	_boss_camera_zoom()
 
 	# 7. Extended gamepad rumble (two waves)
-	Input.start_joy_vibration(0, 0.6, 0.4, 0.3)
+	Input.start_joy_vibration(0, GameConstants.BOSS_ENTRANCE_RUMBLE_1_WEAK, GameConstants.BOSS_ENTRANCE_RUMBLE_1_STRONG, GameConstants.BOSS_ENTRANCE_RUMBLE_1_DURATION)
 	_delayed_rumble()
 
 	# 8. Boss spawn particles (ground shockwave)
 	_boss_spawn_particles()
 
 func _escalate_shake() -> void:
-	await get_tree().create_timer(0.2).timeout
-	shake(0.35)
-	await get_tree().create_timer(0.15).timeout
-	shake(0.6)
+	await get_tree().create_timer(GameConstants.BOSS_ENTRANCE_SHAKE_DELAY_1).timeout
+	shake(GameConstants.BOSS_ENTRANCE_SHAKE_2)
+	await get_tree().create_timer(GameConstants.BOSS_ENTRANCE_SHAKE_DELAY_2).timeout
+	shake(GameConstants.BOSS_ENTRANCE_SHAKE_3)
 
 func _delayed_rumble() -> void:
-	await get_tree().create_timer(0.3).timeout
-	Input.start_joy_vibration(0, 1.0, 0.9, 0.8)
+	await get_tree().create_timer(GameConstants.BOSS_ENTRANCE_RUMBLE_2_DELAY).timeout
+	Input.start_joy_vibration(0, GameConstants.BOSS_ENTRANCE_RUMBLE_2_WEAK, GameConstants.BOSS_ENTRANCE_RUMBLE_2_STRONG, GameConstants.BOSS_ENTRANCE_RUMBLE_2_DURATION)
 
 ## Cinematic letterbox bars
 var _letterbox_top: ColorRect = null
@@ -430,7 +430,7 @@ func _show_letterbox(duration: float) -> void:
 	_letterbox_bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vignette_canvas.add_child(_letterbox_bottom)
 
-	var bar_height = 60.0
+	var bar_height = GameConstants.BOSS_ENTRANCE_LETTERBOX_HEIGHT
 	# Slide in
 	var in_tween = create_tween().set_parallel(true)
 	in_tween.tween_property(_letterbox_top, "offset_bottom", bar_height, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)

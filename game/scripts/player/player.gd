@@ -2,11 +2,11 @@ extends CharacterBody3D
 
 ## Jogador 3D top-down. Movimento, dash, vida. Suporta multiplayer.
 
-@export var base_speed: float = 8.0
+@export var base_speed: float = GameConstants.PLAYER_BASE_SPEED
 @export var player_id: int = 1  # peer_id no multiplayer
-@export var dash_speed: float = 24.0
-@export var dash_duration: float = 0.15
-@export var dash_cooldown: float = 3.0
+@export var dash_speed: float = GameConstants.PLAYER_DASH_SPEED
+@export var dash_duration: float = GameConstants.PLAYER_DASH_DURATION
+@export var dash_cooldown: float = GameConstants.PLAYER_DASH_COOLDOWN
 
 var is_dashing: bool = false
 var dash_timer: float = 0.0
@@ -39,9 +39,6 @@ var _emote_timer: float = 0.0
 
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
-const BARRIER_SHOW_DIST: float = 12.0  # distancia para comecar a mostrar
-const BARRIER_WALL_HEIGHT: float = 6.0
-const BARRIER_WALL_THICKNESS: float = 0.3
 
 func _ready() -> void:
 	# Desativa colisao fisica com inimigos para evitar ser empurrado
@@ -64,11 +61,11 @@ func _ready() -> void:
 		sprite.texture = load(char_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.07
+		sprite.pixel_size = GameConstants.PLAYER_SPRITE_PIXEL_SIZE
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "PlayerSprite"
-		sprite.position.y = 0.65
+		sprite.position.y = GameConstants.PLAYER_SPRITE_Y_OFFSET
 		add_child(sprite)
 		_sprite_base_scale = sprite.scale
 	else:
@@ -178,18 +175,18 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	# Footstep SFX
-	if velocity.length() > 0.5:
+	if velocity.length() > GameConstants.PLAYER_MOVEMENT_THRESHOLD:
 		_footstep_timer += delta
-		if _footstep_timer > 0.3:
+		if _footstep_timer > GameConstants.PLAYER_FOOTSTEP_INTERVAL:
 			_footstep_timer = 0.0
 			AudioManager.play_sfx("footstep")
 	else:
 		_footstep_timer = 0.0
 
 	# Dust particles when walking (only when FPS > 40)
-	if velocity.length() > 1.0 and Engine.get_frames_per_second() > 40:
+	if velocity.length() > 1.0 and Engine.get_frames_per_second() > GameConstants.PLAYER_DUST_MIN_FPS:
 		_dust_timer += delta
-		if _dust_timer > 0.2:
+		if _dust_timer > GameConstants.PLAYER_DUST_INTERVAL:
 			_dust_timer = 0.0
 			_spawn_dust()
 	else:
@@ -210,7 +207,7 @@ func _physics_process(delta: float) -> void:
 	# Update walk animation (AnimatedSprite3D)
 	var _anim_sprite = get_node_or_null("PlayerSprite")
 	if _anim_sprite and _anim_sprite is AnimatedSprite3D:
-		if velocity.length() > 0.5:
+		if velocity.length() > GameConstants.PLAYER_MOVEMENT_THRESHOLD:
 			if _anim_sprite.animation != "walk":
 				_anim_sprite.play("walk")
 		else:
@@ -221,18 +218,18 @@ func _physics_process(delta: float) -> void:
 	var player_sprite = get_node_or_null("PlayerSprite")
 	if player_sprite and player_sprite is Sprite3D:
 		var spd = velocity.length()
-		if spd > 0.5:
+		if spd > GameConstants.PLAYER_MOVEMENT_THRESHOLD:
 			# Advance walk phase based on actual speed for natural rhythm
-			_walk_phase += delta * (8.0 + spd * 0.3)
+			_walk_phase += delta * (GameConstants.WALK_BOB_BASE_FREQ + spd * GameConstants.WALK_BOB_SPEED_FACTOR)
 
 			# Smooth vertical bob using sin (full cycle = 2*PI)
 			var bob_val = abs(sin(_walk_phase))
-			var bob_height = bob_val * 0.06
-			player_sprite.position.y = 0.65 + bob_height
+			var bob_height = bob_val * GameConstants.WALK_BOB_AMPLITUDE
+			player_sprite.position.y = GameConstants.PLAYER_SPRITE_Y_OFFSET + bob_height
 
 			# Detect landing (bob descending past midpoint) for squash-stretch
-			if bob_height < _prev_bob_y and _prev_bob_y > 0.03:
-				_landing_squash = 0.08  # Trigger subtle squash on landing
+			if bob_height < _prev_bob_y and _prev_bob_y > GameConstants.WALK_LANDING_THRESHOLD:
+				_landing_squash = GameConstants.WALK_LANDING_SQUASH  # Trigger subtle squash on landing
 			_prev_bob_y = bob_height
 
 			# Flip sprite to face movement direction (X axis)
@@ -242,8 +239,8 @@ func _physics_process(delta: float) -> void:
 				player_sprite.flip_h = true
 
 			# Horizontal lean: tilt sprite slightly in movement direction
-			var lean_target = -move_direction.x * 0.06  # Lean into movement (radians)
-			player_sprite.rotation.z = lerp(player_sprite.rotation.z, lean_target, delta * 10.0)
+			var lean_target = -move_direction.x * GameConstants.WALK_LEAN_FACTOR  # Lean into movement (radians)
+			player_sprite.rotation.z = lerp(player_sprite.rotation.z, lean_target, delta * GameConstants.WALK_LEAN_LERP_SPEED)
 
 			# Squash-stretch on landing (decay smoothly)
 			if _landing_squash > 0.001:
@@ -253,16 +250,16 @@ func _physics_process(delta: float) -> void:
 					_sprite_base_scale.y * (1.0 - sq),
 					_sprite_base_scale.z
 				)
-				_landing_squash = lerp(_landing_squash, 0.0, delta * 12.0)
+				_landing_squash = lerp(_landing_squash, 0.0, delta * GameConstants.WALK_SQUASH_DECAY_SPEED)
 			else:
 				player_sprite.scale = _sprite_base_scale
 		else:
 			# Idle: gentle breathing / floating effect
-			var breath = sin(GameManager.game_time * 2.5) * 0.015
-			player_sprite.position.y = 0.65 + breath
+			var breath = sin(GameManager.game_time * GameConstants.IDLE_BREATH_FREQ) * GameConstants.IDLE_BREATH_AMPLITUDE
+			player_sprite.position.y = GameConstants.PLAYER_SPRITE_Y_OFFSET + breath
 
 			# Subtle idle scale pulse (breathing)
-			var breath_scale = sin(GameManager.game_time * 2.5) * 0.01
+			var breath_scale = sin(GameManager.game_time * GameConstants.IDLE_BREATH_FREQ) * GameConstants.IDLE_BREATH_SCALE
 			player_sprite.scale = Vector3(
 				_sprite_base_scale.x * (1.0 - breath_scale * 0.5),
 				_sprite_base_scale.y * (1.0 + breath_scale),
@@ -270,7 +267,7 @@ func _physics_process(delta: float) -> void:
 			)
 
 			# Smoothly return lean to neutral
-			player_sprite.rotation.z = lerp(player_sprite.rotation.z, 0.0, delta * 6.0)
+			player_sprite.rotation.z = lerp(player_sprite.rotation.z, 0.0, delta * GameConstants.IDLE_LEAN_RETURN_SPEED)
 
 			# Reset walk state
 			_prev_bob_y = 0.0
@@ -278,7 +275,7 @@ func _physics_process(delta: float) -> void:
 
 	# Update procedural animation
 	if _animator:
-		_animator.set_walking(velocity.length() > 0.5)
+		_animator.set_walking(velocity.length() > GameConstants.PLAYER_MOVEMENT_THRESHOLD)
 		_animator.set_move_direction(move_direction)
 
 	# Emote timer
@@ -310,20 +307,20 @@ func take_damage(amount: int, source_pos: Vector3 = Vector3.ZERO) -> void:
 		_animator.play_hit()
 	GameManager.take_damage(amount)
 	can_be_hurt = false
-	hurt_cooldown = 0.5
+	hurt_cooldown = GameConstants.PLAYER_HURT_COOLDOWN
 	# Flash vermelho no mesh
 	_set_color(Color(1, 0.2, 0.2))
-	hurt_flash_timer = 0.12
+	hurt_flash_timer = GameConstants.PLAYER_HURT_FLASH_DURATION
 	# Red flash + squash-stretch on sprite
 	var sprite = get_node_or_null("PlayerSprite")
 	if sprite:
-		sprite.modulate = Color(3, 0.3, 0.3)  # Bright red flash
+		sprite.modulate = GameConstants.PLAYER_HIT_FLASH_COLOR
 		var orig_scale = sprite.scale
-		sprite.scale = Vector3(orig_scale.x * 1.3, orig_scale.y * 0.7, orig_scale.z)
+		sprite.scale = Vector3(orig_scale.x * GameConstants.PLAYER_HIT_SQUASH_X, orig_scale.y * GameConstants.PLAYER_HIT_SQUASH_Y, orig_scale.z)
 		var hit_tween = create_tween()
 		hit_tween.set_parallel(true)
-		hit_tween.tween_property(sprite, "modulate", Color.WHITE, 0.15)
-		hit_tween.tween_property(sprite, "scale", orig_scale, 0.18).set_trans(Tween.TRANS_ELASTIC)
+		hit_tween.tween_property(sprite, "modulate", Color.WHITE, GameConstants.PLAYER_HIT_FLASH_FADE)
+		hit_tween.tween_property(sprite, "scale", orig_scale, GameConstants.PLAYER_HIT_SQUASH_FADE).set_trans(Tween.TRANS_ELASTIC)
 	# Full damage feedback (shake, flash, freeze, indicator, vibration)
 	ScreenEffects.damage_feedback(amount, source_pos)
 
@@ -395,7 +392,7 @@ func _spawn_dust() -> void:
 	img.fill(Color(0.6, 0.55, 0.5, 0.4))
 	dust.texture = ImageTexture.create_from_image(img)
 	dust.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	dust.pixel_size = 0.02
+	dust.pixel_size = GameConstants.SPRITE_PIXEL_SIZE_SMALL
 	dust.shaded = false
 	dust.transparent = true
 	dust.position = global_position + Vector3(randf_range(-0.2, 0.2), 0.1, randf_range(-0.2, 0.2))
@@ -439,17 +436,17 @@ void fragment() {
 	# 4 paredes: +X, -X, +Z, -Z
 	# QuadMesh default: plano XY (spana eixo X). rot=PI/2 gira para spanar eixo Z.
 	var configs = [
-		{"pos": Vector3(half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": PI * 0.5, "len": wall_length},   # +X (leste) — perpendicular ao X
-		{"pos": Vector3(-half, BARRIER_WALL_HEIGHT * 0.5, 0), "rot": PI * 0.5, "len": wall_length},  # -X (oeste) — perpendicular ao X
-		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, half), "rot": 0.0, "len": wall_length},        # +Z (sul) — perpendicular ao Z
-		{"pos": Vector3(0, BARRIER_WALL_HEIGHT * 0.5, -half), "rot": 0.0, "len": wall_length},       # -Z (norte) — perpendicular ao Z
+		{"pos": Vector3(half, GameConstants.BARRIER_WALL_HEIGHT * 0.5, 0), "rot": PI * 0.5, "len": wall_length},   # +X (leste) — perpendicular ao X
+		{"pos": Vector3(-half, GameConstants.BARRIER_WALL_HEIGHT * 0.5, 0), "rot": PI * 0.5, "len": wall_length},  # -X (oeste) — perpendicular ao X
+		{"pos": Vector3(0, GameConstants.BARRIER_WALL_HEIGHT * 0.5, half), "rot": 0.0, "len": wall_length},        # +Z (sul) — perpendicular ao Z
+		{"pos": Vector3(0, GameConstants.BARRIER_WALL_HEIGHT * 0.5, -half), "rot": 0.0, "len": wall_length},       # -Z (norte) — perpendicular ao Z
 	]
 
 	for i in range(configs.size()):
 		var cfg = configs[i]
 		var wall = MeshInstance3D.new()
 		var quad = QuadMesh.new()
-		quad.size = Vector2(cfg["len"], BARRIER_WALL_HEIGHT)
+		quad.size = Vector2(cfg["len"], GameConstants.BARRIER_WALL_HEIGHT)
 		wall.mesh = quad
 
 		var mat = ShaderMaterial.new()
@@ -482,7 +479,7 @@ func _toggle_emote_wheel() -> void:
 	add_child(canvas)
 
 	var center_screen = get_viewport().get_visible_rect().size / 2.0
-	var radius = 120.0
+	var radius = GameConstants.PLAYER_EMOTE_WHEEL_RADIUS
 
 	for i in range(MultiplayerManager.EMOTE_LIST.size()):
 		var angle = (i / float(MultiplayerManager.EMOTE_LIST.size())) * TAU - PI / 2.0
@@ -523,7 +520,7 @@ func _show_emote(emote_id: int) -> void:
 		return
 	_emote_label.text = MultiplayerManager.EMOTE_LIST[emote_id]
 	_emote_label.visible = true
-	_emote_timer = 3.0
+	_emote_timer = GameConstants.PLAYER_EMOTE_DURATION
 	# Pop animation
 	_emote_label.scale = Vector3(0.5, 0.5, 0.5)
 	var tw = create_tween()
@@ -552,8 +549,8 @@ func _update_barrier_walls() -> void:
 		if not is_instance_valid(wall):
 			continue
 		var dist = dists[i]
-		if dist < BARRIER_SHOW_DIST:
-			var alpha = 1.0 - (dist / BARRIER_SHOW_DIST)
+		if dist < GameConstants.BARRIER_SHOW_DIST:
+			var alpha = 1.0 - (dist / GameConstants.BARRIER_SHOW_DIST)
 			alpha = alpha * alpha  # easing quadratico — mais forte perto da borda
 			wall.visible = true
 			var mat = wall.material_override as ShaderMaterial
