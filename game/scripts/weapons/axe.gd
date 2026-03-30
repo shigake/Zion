@@ -223,33 +223,7 @@ func _on_body_entered(body: Node3D) -> void:
 	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.5, 0.1), 4)
 
 func _spawn_slash_trail(pos: Vector3) -> void:
-	if not is_inside_tree():
-		return
-	if not _slash_tex:
-		return
-	if Engine.get_frames_per_second() < 40:
-		return
-	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
-	if not scene:
-		return
-	var sprite = Sprite3D.new()
-	sprite.texture = _slash_tex
-	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sprite.pixel_size = 0.03
-	sprite.shaded = false
-	sprite.transparent = true
-	sprite.no_depth_test = true
-	scene.add_child(sprite)
-	sprite.global_position = pos
-	sprite.scale = Vector3(0.5, 0.5, 0.5)
-	sprite.modulate = Color(1, 1, 1, 1)
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.18).set_ease(Tween.EASE_IN)
-	tween.set_parallel(false)
-	tween.tween_callback(sprite.queue_free)
+	WeaponVFX.spawn_slash_trail(self, _slash_tex, pos)
 
 func _build_axe_model() -> void:
 	## Procedural axe: metal blade + wood handle with fire glow on blade.
