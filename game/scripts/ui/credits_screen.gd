@@ -31,6 +31,7 @@ const STAR_COLORS := [
 
 var _twinkling_stars: Array = []
 var _name_labels: Array = []
+var _char_roots: Array = []  # {node, base_y, speed, phase}
 var _time: float = 0.0
 
 @onready var viewport_container: SubViewportContainer = $SubViewportContainer
@@ -52,6 +53,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	_animate_twinkling_stars()
 	_animate_name_labels()
+	_animate_characters()
 
 # ==================== SECAO SUPERIOR (nomes dos criadores) ====================
 
@@ -312,9 +314,40 @@ func _create_characters_circle() -> void:
 		# Leve glow da fogueira nos sprites
 		sprite.modulate = Color(1.0, 0.95, 0.85)
 
+		# Escala 2x para sprites maiores (mantém NEAREST)
+		sprite.pixel_size = 0.024
+
 		char_root.add_child(sprite)
 		sub_viewport.add_child(char_root)
 
+		_char_roots.append({
+			"node": char_root,
+			"base_y": char_root.position.y,
+			"speed": randf_range(1.0, 2.0),
+			"phase": randf() * TAU,
+		})
+
+	# Sorteia 1 heroi aleatorio para dancar
+	if _char_roots.size() > 0:
+		var dancer_data = _char_roots[randi() % _char_roots.size()]
+		var dancer = dancer_data["node"]
+		var base_y = dancer_data["base_y"]
+		var tween = create_tween().set_loops()
+		tween.tween_property(dancer, "rotation:y", deg_to_rad(15), 0.3).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(dancer, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_BACK)
+		tween.tween_property(dancer, "position:y", base_y, 0.2).set_trans(Tween.TRANS_BOUNCE)
+		tween.tween_property(dancer, "rotation:y", deg_to_rad(-15), 0.3).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(dancer, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_BACK)
+		tween.tween_property(dancer, "position:y", base_y, 0.2).set_trans(Tween.TRANS_BOUNCE)
+
+
+func _animate_characters() -> void:
+	for data in _char_roots:
+		var node: Node3D = data["node"]
+		var base_y: float = data["base_y"]
+		var speed: float = data["speed"]
+		var phase: float = data["phase"]
+		node.position.y = base_y + sin(_time * speed + phase) * 0.08
 
 # ==================== TWINKLING STARS (decoracao no topo) ====================
 

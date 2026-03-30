@@ -186,6 +186,11 @@ func _style_title() -> void:
 		var idx = title_label.get_index()
 		parent.add_child(logo_tex)
 		parent.move_child(logo_tex, idx)
+		# Spacer entre logo e subtitulo para respiro visual
+		var logo_spacer = Control.new()
+		logo_spacer.custom_minimum_size = Vector2(0, 12)
+		parent.add_child(logo_spacer)
+		parent.move_child(logo_spacer, idx + 1)
 	else:
 		# Fallback: styled text title with gold + glow
 		title_label.text = "ZION"

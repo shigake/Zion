@@ -579,6 +579,10 @@ func _populate_grid() -> void:
 		vbox.add_theme_constant_override("separation", 3)
 		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card_btn.add_child(vbox)
+		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 		# Color swatch
 		var swatch = ColorRect.new()

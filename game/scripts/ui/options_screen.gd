@@ -14,6 +14,17 @@ func _ready() -> void:
 	# Safety: garante que nao esta pausado
 	get_tree().paused = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Registra input actions para bumpers R1/L1
+	if not InputMap.has_action("ui_tab_next"):
+		InputMap.add_action("ui_tab_next")
+		var ev_r1 = InputEventJoypadButton.new()
+		ev_r1.button_index = JOY_BUTTON_RIGHT_SHOULDER
+		InputMap.action_add_event("ui_tab_next", ev_r1)
+	if not InputMap.has_action("ui_tab_prev"):
+		InputMap.add_action("ui_tab_prev")
+		var ev_l1 = InputEventJoypadButton.new()
+		ev_l1.button_index = JOY_BUTTON_LEFT_SHOULDER
+		InputMap.action_add_event("ui_tab_prev", ev_l1)
 	_build_ui()
 	GamepadUI.notify_menu_opened()
 
@@ -186,6 +197,16 @@ func _build_ui() -> void:
 	tab_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tab_container.add_theme_font_size_override("font_size", 14)
 	root_vbox.add_child(tab_container)
+
+	# Hint visual para navegacao com gamepad
+	var tab_hint = Label.new()
+	tab_hint.text = "[L1] ◄  ► [R1]"
+	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tab_hint.add_theme_font_size_override("font_size", 12)
+	tab_hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
+	tab_hint.visible = Input.get_connected_joypads().size() > 0
+	root_vbox.add_child(tab_hint)
+	root_vbox.move_child(tab_hint, tab_container.get_index())
 
 	_build_tab_video()
 	_build_tab_graficos()
@@ -558,7 +579,18 @@ func _start_rebind(action: String, btn: Button) -> void:
 	btn.text = "..."
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Navegacao de abas com R1/L1 (apenas fora de rebind)
 	if waiting_for_key.is_empty():
+		if event.is_action_pressed("ui_tab_next"):
+			tab_container.current_tab = (tab_container.current_tab + 1) % tab_container.get_tab_count()
+			AudioManager.play_sfx("menu_click")
+			if get_viewport(): get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_tab_prev"):
+			tab_container.current_tab = (tab_container.current_tab - 1 + tab_container.get_tab_count()) % tab_container.get_tab_count()
+			AudioManager.play_sfx("menu_click")
+			if get_viewport(): get_viewport().set_input_as_handled()
+			return
 		if event.is_action_pressed("ui_cancel"):
 			_on_back()
 			if get_viewport(): get_viewport().set_input_as_handled()

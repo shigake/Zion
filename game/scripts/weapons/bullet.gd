@@ -21,6 +21,14 @@ func _ready() -> void:
 	_spawn_muzzle_flash()
 
 func _setup_billboard_sprite() -> void:
+	# Guard: nao recria sprite se ja existe (pool reuse)
+	if _sprite and is_instance_valid(_sprite):
+		_update_sprite_rotation()
+		return
+	_sprite = get_node_or_null("ProjectileSprite")
+	if _sprite:
+		_update_sprite_rotation()
+		return
 	var sprite_path = "res://assets/sprites/projectiles/bullet.png"
 	if ResourceLoader.exists(sprite_path):
 		var existing_mesh = get_node_or_null("Mesh")
@@ -55,9 +63,7 @@ func _ensure_bullet_mesh() -> void:
 func _spawn_muzzle_flash() -> void:
 	if not _sprite:
 		return
-	# Reset sprite to base scale first (prevents accumulation from pool reuse)
-	_sprite.scale = Vector3.ONE
-	# Brief scale-up flash effect on spawn
+	# Sempre usa escala base constante (previne acumulo exponencial no pool)
 	_sprite.scale = Vector3.ONE * 1.8
 	var tween = create_tween()
 	tween.tween_property(_sprite, "scale", Vector3.ONE, 0.08).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
@@ -65,9 +71,9 @@ func _spawn_muzzle_flash() -> void:
 func _update_sprite_rotation() -> void:
 	if not _sprite:
 		return
-	# Rotaciona o sprite ao redor de Z local (que aponta pra cima no plano XZ)
-	# para que a bala aponte na direcao de viagem vista de cima
-	var angle = atan2(direction.x, direction.z)
+	# Com rotation.x = -PI/2, o eixo +X da imagem mapeia para +X do mundo.
+	# atan2(-z, x) da o angulo correto a partir do eixo +X no plano XZ.
+	var angle = atan2(-direction.z, direction.x)
 	_sprite.rotation.z = angle
 
 
@@ -120,10 +126,7 @@ func _reset_for_reuse() -> void:
 	# Reconecta referencia do sprite (pode ter sido perdida no pool)
 	if not _sprite:
 		_sprite = get_node_or_null("ProjectileSprite")
-	# Kill any running tweens to prevent scale accumulation
-	for child in get_children():
-		if child is Tween:
-			child.kill()
+	# Forca escala base antes de qualquer efeito (previne acumulo)
 	if _sprite:
 		_sprite.scale = Vector3.ONE
 	_update_sprite_rotation()

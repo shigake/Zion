@@ -231,6 +231,9 @@ func _populate_grid() -> void:
 		vbox.add_theme_constant_override("separation", 3)
 		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		card_btn.add_child(vbox)
+		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 		# Type color swatch
 		var swatch = ColorRect.new()
@@ -263,6 +266,9 @@ func _populate_grid() -> void:
 		name_lbl.add_theme_font_size_override("font_size", 14)
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8) if is_unlocked else Color(0.4, 0.4, 0.4))
 		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_lbl.clip_text = true
+		name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		vbox.add_child(name_lbl)
 
 		if is_unlocked:

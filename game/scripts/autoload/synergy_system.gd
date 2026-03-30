@@ -421,7 +421,7 @@ func _shadow_freeze_tick(pos: Vector3) -> void:
 		var heal_amount = total_damage_dealt * 0.02
 		if heal_amount < 1.0:
 			heal_amount = 1.0
-		GameManager.heal_player(heal_amount)
+		GameManager.heal(int(heal_amount))
 
 # ---- Electric + Poison: Toxic Shock (stun 0.5s + poison DoT) ----
 

@@ -83,6 +83,9 @@ func _on_boss_phase_changed(_boss_name: String, phase: int) -> void:
 
 func _on_boss_died_music(_boss_name: String) -> void:
 	reset_music_intensity()
+	# Volta para a musica da fenda apos boss morrer
+	if GameManager.selected_stage and not GameManager.selected_stage.is_empty():
+		play_music(GameManager.selected_stage)
 
 func _process(delta: float) -> void:
 	if _crossfading:
@@ -95,6 +98,8 @@ func _process(delta: float) -> void:
 			_crossfading = false
 			_music_player_fade.stop()
 			_music_player_fade.stream = null
+	# Intensificacao temporal da musica da fenda
+	_update_stage_music_intensity()
 
 func play_music(stream_name: String) -> void:
 	if stream_name == _current_music:
@@ -279,6 +284,16 @@ func reset_music_intensity() -> void:
 	if _music_player:
 		_music_player.pitch_scale = 1.0
 		_apply_volumes()
+
+## Intensificacao gradual da musica da fenda conforme o tempo avanca
+func _update_stage_music_intensity() -> void:
+	if not _music_player or not _music_player.playing:
+		return
+	# Nao escala tracks de UI/boss/victory
+	if _current_music in ["menu", "lobby", "boss", "victory", "shop", "game_over_music"]:
+		return
+	var time_factor = clampf(GameManager.game_time / 900.0, 0.0, 1.0)
+	_music_player.pitch_scale = 1.0 + time_factor * 0.12
 
 # ---- Integration points ----
 # Call AudioManager.play_sfx("hit") when an enemy is hit
