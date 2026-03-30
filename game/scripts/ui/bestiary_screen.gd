@@ -552,72 +552,14 @@ func _populate_grid() -> void:
 	for entry in entries:
 		var kills = _get_enemy_kills(entry["id"], bestiary)
 
-		var card_btn = Button.new()
-		card_btn.custom_minimum_size = CARD_SIZE
-		card_btn.focus_mode = Control.FOCUS_ALL
-		card_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		var card_btn = UICardBuilder.create_card(CARD_SIZE, entry["color"])
+		var vbox = UICardBuilder.create_card_vbox(card_btn)
 
-		var card_style = StyleBoxFlat.new()
-		card_style.bg_color = Color(0.12, 0.12, 0.18)
-		card_style.set_corner_radius_all(6)
-		card_style.set_border_width_all(2)
-		card_style.border_color = entry["color"]
-		card_btn.add_theme_stylebox_override("normal", card_style)
-
-		var hover_style = card_style.duplicate()
-		hover_style.bg_color = card_style.bg_color.lightened(0.15)
-		hover_style.border_color = entry["color"].lightened(0.3)
-		card_btn.add_theme_stylebox_override("hover", hover_style)
-		card_btn.add_theme_stylebox_override("pressed", hover_style)
-
-		var focus_style = hover_style.duplicate()
-		focus_style.border_color = Color(1.0, 0.85, 0.2)
-		focus_style.set_border_width_all(3)
-		card_btn.add_theme_stylebox_override("focus", focus_style)
-
-		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 3)
-		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card_btn.add_child(vbox)
-		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-
-		# Color swatch
-		var swatch = ColorRect.new()
-		swatch.custom_minimum_size = Vector2(0, 5)
-		swatch.color = entry["color"]
-		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.add_child(swatch)
-
-		# Name
-		var name_lbl = Label.new()
-		name_lbl.text = entry["name"]
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 12)
-		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
-		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UICardBuilder.add_color_swatch(vbox, entry["color"])
+		var name_lbl = UICardBuilder.add_label(vbox, entry["name"], 12, Color(1.0, 0.95, 0.8))
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(name_lbl)
-
-		# Type badge
-		var type_lbl = Label.new()
-		type_lbl.text = entry["type"]
-		type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		type_lbl.add_theme_font_size_override("font_size", 10)
-		type_lbl.add_theme_color_override("font_color", type_colors.get(entry["type"], entry["color"]))
-		type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.add_child(type_lbl)
-
-		# Kills
-		var kills_lbl = Label.new()
-		kills_lbl.text = "Kills: %d" % kills if kills > 0 else ""
-		kills_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		kills_lbl.add_theme_font_size_override("font_size", 11)
-		kills_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		kills_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.add_child(kills_lbl)
+		UICardBuilder.add_label(vbox, entry["type"], 10, type_colors.get(entry["type"], entry["color"]))
+		UICardBuilder.add_label(vbox, "Kills: %d" % kills if kills > 0 else "", 11, Color(0.6, 0.6, 0.6))
 
 		card_btn.pressed.connect(_show_enemy_details.bind(entry, kills))
 		grid.add_child(card_btn)

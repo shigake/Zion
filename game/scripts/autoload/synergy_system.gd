@@ -95,17 +95,27 @@ func apply_on_kill_synergies(kill_position: Vector3) -> void:
 
 # ---- Passive Synergies (called from player/stage every frame) ----
 
-var _dark_aura_timer: float = 0.0
-var _steam_cloud_timer: float = 0.0
-var _conductor_timer: float = 0.0
-var _tidal_wave_timer: float = 0.0
-var _steam_explosion_timer: float = 0.0
-var _absolute_zero_timer: float = 0.0
-var _abyssal_depths_timer: float = 0.0
+# Synergy intervals and damage constants
+const SYNERGY_INTERVALS := {
+	"dark_aura": 1.0, "steam_cloud": 1.5, "conductor": 3.0,
+	"tidal_wave": 4.0, "steam_explosion": 1.5, "absolute_zero": 5.0,
+	"abyssal_depths": 0.5, "toxic_fire": 1.0, "shadow_freeze": 2.0,
+	"toxic_shock": 1.5,
+}
+const SYNERGY_DAMAGE := {
+	"dark_aura": 5, "steam_cloud": 8, "conductor": 25,
+	"tidal_wave": 5, "steam_explosion": 12, "absolute_zero": 8,
+	"toxic_fire": 8, "shadow_freeze": 10, "toxic_shock": 6,
+}
+const SYNERGY_RADIUS := {
+	"dark_aura": 4.0, "steam_cloud": 3.5, "conductor": 6.0,
+	"tidal_wave": 5.0, "steam_explosion": 3.5, "absolute_zero": 4.0,
+	"abyssal_depths": 6.0, "toxic_fire": 4.0, "shadow_freeze": 4.0,
+	"toxic_shock": 4.0,
+}
+
+var _synergy_timers: Dictionary = {}  # synergy_id -> float
 var _electrolysis_active: bool = false
-var _toxic_fire_timer: float = 0.0
-var _shadow_freeze_timer: float = 0.0
-var _toxic_shock_timer: float = 0.0
 
 func apply_passive_synergies(player_pos: Vector3, _delta: float) -> void:
 	if has_synergy("dark_dark"):
@@ -114,26 +124,51 @@ func apply_passive_synergies(player_pos: Vector3, _delta: float) -> void:
 		_steam_cloud_tick(player_pos)
 	if has_synergy("electric_ice"):
 		_conductor_tick(player_pos)
-	# Water synergies
 	if has_synergy("water_water"):
 		_tidal_wave_tick(player_pos)
 	if has_synergy("water_fire"):
 		_steam_explosion_tick(player_pos)
-	if has_synergy("water_electric"):
-		_electrolysis_active = true
-	else:
-		_electrolysis_active = false
+	_electrolysis_active = has_synergy("water_electric")
 	if has_synergy("water_ice"):
 		_absolute_zero_tick(player_pos)
 	if has_synergy("water_dark"):
 		_abyssal_depths_tick(player_pos)
-	# New synergies
 	if has_synergy("fire_poison"):
 		_toxic_fire_tick(player_pos)
 	if has_synergy("ice_dark"):
 		_shadow_freeze_tick(player_pos)
 	if has_synergy("electric_poison"):
 		_toxic_shock_tick(player_pos)
+
+## Returns true when interval elapsed, resets timer. Used by all tick functions.
+func _tick_synergy(synergy_id: String) -> bool:
+	_synergy_timers[synergy_id] = _synergy_timers.get(synergy_id, 0.0) + get_process_delta_time()
+	if _synergy_timers[synergy_id] < SYNERGY_INTERVALS[synergy_id]:
+		return false
+	_synergy_timers[synergy_id] = 0.0
+	return true
+
+## Applies temporary speed debuff to an enemy, restoring after duration.
+func _apply_speed_debuff(enemy: Node3D, multiplier: float, duration: float) -> void:
+	if not enemy is EnemyBase3D:
+		return
+	var original_speed = enemy.speed
+	enemy.speed *= multiplier
+	get_tree().create_timer(duration).timeout.connect(func():
+		if is_instance_valid(enemy):
+			enemy.speed = original_speed
+	)
+
+## Freezes enemy (speed = 0) for duration, then restores.
+func _freeze_enemy(enemy: Node3D, duration: float) -> void:
+	if not enemy is EnemyBase3D:
+		return
+	var original_speed = enemy.speed
+	enemy.speed = 0.0
+	get_tree().create_timer(duration).timeout.connect(func():
+		if is_instance_valid(enemy):
+			enemy.speed = original_speed
+	)
 
 # ---- Fire + Fire: Explosion on kill ----
 
@@ -201,108 +236,77 @@ func _chain_lightning(start_pos: Vector3) -> void:
 # ---- Dark + Dark: Passive aura damage ----
 
 func _dark_aura_tick(pos: Vector3) -> void:
-	_dark_aura_timer += get_process_delta_time()
-	if _dark_aura_timer < 1.0:
+	if not _tick_synergy("dark_aura"):
 		return
-	_dark_aura_timer = 0.0
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+	var radius = SYNERGY_RADIUS["dark_aura"]
+	var dmg = SYNERGY_DAMAGE["dark_aura"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 5, "dark")
+				e.call_deferred("take_damage", dmg, "dark")
 
 # ---- Fire + Ice: Steam Cloud (slow + damage) ----
 
 func _steam_cloud_tick(pos: Vector3) -> void:
-	_steam_cloud_timer += get_process_delta_time()
-	if _steam_cloud_timer < 1.5:
+	if not _tick_synergy("steam_cloud"):
 		return
-	_steam_cloud_timer = 0.0
-
-	# Spawn steam particles
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.8, 0.8, 0.8, 0.6), 8)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
+	var radius = SYNERGY_RADIUS["steam_cloud"]
+	var dmg = SYNERGY_DAMAGE["steam_cloud"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 8, "fire")
-			# Slow
-			if e is EnemyBase3D:
-				var original_speed = e.speed
-				e.speed *= 0.6
-				get_tree().create_timer(1.5).timeout.connect(func():
-					if is_instance_valid(e):
-						e.speed = original_speed
-				)
+				e.call_deferred("take_damage", dmg, "fire")
+			_apply_speed_debuff(e, 0.6, 1.5)
 
 # ---- Electric + Ice: Conductor (massive AoE) ----
 
 func _conductor_tick(pos: Vector3) -> void:
-	_conductor_timer += get_process_delta_time()
-	if _conductor_timer < 3.0:
+	if not _tick_synergy("conductor"):
 		return
-	_conductor_timer = 0.0
-
 	ParticleFactory.spawn_explosion_particles(pos, 5.0)
 	ScreenEffects.shake(0.12)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 6.0:
+	var radius = SYNERGY_RADIUS["conductor"]
+	var dmg = SYNERGY_DAMAGE["conductor"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 25, "electric")
+				e.call_deferred("take_damage", dmg, "electric")
 
 # ---- Water + Water: Tidal Wave (knockback every 4s) ----
 
 func _tidal_wave_tick(pos: Vector3) -> void:
-	_tidal_wave_timer += get_process_delta_time()
-	if _tidal_wave_timer < 4.0:
+	if not _tick_synergy("tidal_wave"):
 		return
-	_tidal_wave_timer = 0.0
-
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.2, 0.5, 1.0, 0.8), 12)
 	ScreenEffects.shake(0.06)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 5.0:
-			# Push enemy away from player
+	var radius = SYNERGY_RADIUS["tidal_wave"]
+	var dmg = SYNERGY_DAMAGE["tidal_wave"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			var push_dir = (e.global_position - pos).normalized()
 			if push_dir.length() < 0.01:
 				push_dir = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
 			push_dir.y = 0.0
 			e.global_position += push_dir * 3.0
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 5, "water")
+				e.call_deferred("take_damage", dmg, "water")
 
 # ---- Water + Fire: Steam Explosion (12 damage AoE, like fire_ice but stronger) ----
 
 func _steam_explosion_tick(pos: Vector3) -> void:
-	_steam_explosion_timer += get_process_delta_time()
-	if _steam_explosion_timer < 1.5:
+	if not _tick_synergy("steam_explosion"):
 		return
-	_steam_explosion_timer = 0.0
-
-	# Steam particles (white-hot)
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(1.0, 0.9, 0.8, 0.7), 10)
 	ParticleFactory.spawn_explosion_particles(pos, 2.0)
 	ScreenEffects.shake(0.08)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
+	var radius = SYNERGY_RADIUS["steam_explosion"]
+	var dmg = SYNERGY_DAMAGE["steam_explosion"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 12, "fire")
-			# Slow from steam
-			if e is EnemyBase3D:
-				var original_speed = e.speed
-				e.speed *= 0.5
-				get_tree().create_timer(1.5).timeout.connect(func():
-					if is_instance_valid(e):
-						e.speed = original_speed
-				)
+				e.call_deferred("take_damage", dmg, "fire")
+			_apply_speed_debuff(e, 0.5, 1.5)
 
 # ---- Water + Electric: Electrolysis (2x electric damage in water zones) ----
 # This synergy is passive — it modifies electric damage via get_electrolysis_multiplier()
@@ -317,106 +321,70 @@ func get_electrolysis_multiplier() -> float:
 # ---- Water + Ice: Absolute Zero (freeze enemies solid for 2s every 5s) ----
 
 func _absolute_zero_tick(pos: Vector3) -> void:
-	_absolute_zero_timer += get_process_delta_time()
-	if _absolute_zero_timer < 5.0:
+	if not _tick_synergy("absolute_zero"):
 		return
-	_absolute_zero_timer = 0.0
-
-	# Ice-blue flash
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0), 15)
 	ParticleFactory.spawn_explosion_particles(pos, 3.0)
 	ScreenEffects.shake(0.1)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+	var radius = SYNERGY_RADIUS["absolute_zero"]
+	var dmg = SYNERGY_DAMAGE["absolute_zero"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 8, "ice")
-			# Freeze solid: stop movement for 2s
-			if e is EnemyBase3D:
-				var original_speed = e.speed
-				e.speed = 0.0
-				get_tree().create_timer(2.0).timeout.connect(func():
-					if is_instance_valid(e):
-						e.speed = original_speed
-				)
+				e.call_deferred("take_damage", dmg, "ice")
+			_freeze_enemy(e, 2.0)
 
 # ---- Water + Dark: Abyssal Depths (40% slow aura, refreshed continuously) ----
 
 var _abyssal_slowed_enemies: Dictionary = {}  # enemy instance_id -> true
 
 func _abyssal_depths_tick(pos: Vector3) -> void:
-	_abyssal_depths_timer += get_process_delta_time()
-	if _abyssal_depths_timer < 0.5:
+	if not _tick_synergy("abyssal_depths"):
 		return
-	_abyssal_depths_timer = 0.0
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
+	var radius = SYNERGY_RADIUS["abyssal_depths"]
+	for e in GameManager.get_enemies():
 		if not is_instance_valid(e):
 			continue
-		var in_range = pos.distance_to(e.global_position) < 6.0
+		var in_range = pos.distance_to(e.global_position) < radius
 		var eid = e.get_instance_id()
 		if in_range and e is EnemyBase3D and eid not in _abyssal_slowed_enemies:
-			# Apply permanent 40% slow while in range
 			_abyssal_slowed_enemies[eid] = e.speed
 			e.speed *= 0.6
 		elif not in_range and eid in _abyssal_slowed_enemies:
-			# Restore speed when out of range
 			if is_instance_valid(e):
 				e.speed = _abyssal_slowed_enemies[eid]
 			_abyssal_slowed_enemies.erase(eid)
-
-	# Subtle dark water particles every tick
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.1, 0), Color(0.1, 0.15, 0.3, 0.4), 3)
 
 # ---- Fire + Poison: Toxic Fire (double fire DoT) ----
 
 func _toxic_fire_tick(pos: Vector3) -> void:
-	_toxic_fire_timer += get_process_delta_time()
-	if _toxic_fire_timer < 1.0:
+	if not _tick_synergy("toxic_fire"):
 		return
-	_toxic_fire_timer = 0.0
-
-	# Double fire DoT — deals fire damage twice as often as normal fire_fire
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.8, 0.5, 0.1, 0.7), 6)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+	var radius = SYNERGY_RADIUS["toxic_fire"]
+	var dmg = SYNERGY_DAMAGE["toxic_fire"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				# 2x DoT: apply fire damage twice
-				e.call_deferred("take_damage", 8, "fire")
-				e.call_deferred("take_damage", 8, "fire")
+				e.call_deferred("take_damage", dmg, "fire")
+				e.call_deferred("take_damage", dmg, "fire")
 
 # ---- Ice + Dark: Shadow Freeze (freeze + life drain to player) ----
 
 func _shadow_freeze_tick(pos: Vector3) -> void:
-	_shadow_freeze_timer += get_process_delta_time()
-	if _shadow_freeze_timer < 2.0:
+	if not _tick_synergy("shadow_freeze"):
 		return
-	_shadow_freeze_timer = 0.0
-
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(0.3, 0.1, 0.5), 10)
-
+	var radius = SYNERGY_RADIUS["shadow_freeze"]
+	var dmg = SYNERGY_DAMAGE["shadow_freeze"]
 	var total_damage_dealt: float = 0.0
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				var dmg = 10
 				e.call_deferred("take_damage", dmg, "ice")
 				total_damage_dealt += dmg
-			# Freeze for 1.5s
-			if e is EnemyBase3D:
-				var original_speed = e.speed
-				e.speed = 0.0
-				get_tree().create_timer(1.5).timeout.connect(func():
-					if is_instance_valid(e):
-						e.speed = original_speed
-				)
-
-	# Heal player 2% of damage dealt
+			_freeze_enemy(e, 1.5)
 	if total_damage_dealt > 0.0:
 		var heal_amount = total_damage_dealt * 0.02
 		if heal_amount < 1.0:
@@ -426,41 +394,21 @@ func _shadow_freeze_tick(pos: Vector3) -> void:
 # ---- Electric + Poison: Toxic Shock (stun 0.5s + poison DoT) ----
 
 func _toxic_shock_tick(pos: Vector3) -> void:
-	_toxic_shock_timer += get_process_delta_time()
-	if _toxic_shock_timer < 1.5:
+	if not _tick_synergy("toxic_shock"):
 		return
-	_toxic_shock_timer = 0.0
-
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.3, 1.0, 0.3, 0.8), 8)
-
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 4.0:
+	var radius = SYNERGY_RADIUS["toxic_shock"]
+	var dmg = SYNERGY_DAMAGE["toxic_shock"]
+	for e in GameManager.get_enemies():
+		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
-				# Poison DoT tick
-				e.call_deferred("take_damage", 6, "poison")
-			# Stun for 0.5s
-			if e is EnemyBase3D:
-				var original_speed = e.speed
-				e.speed = 0.0
-				get_tree().create_timer(0.5).timeout.connect(func():
-					if is_instance_valid(e):
-						e.speed = original_speed
-				)
+				e.call_deferred("take_damage", dmg, "poison")
+			_freeze_enemy(e, 0.5)
 
 func reset() -> void:
 	active_synergies.clear()
-	_dark_aura_timer = 0.0
-	_steam_cloud_timer = 0.0
-	_conductor_timer = 0.0
-	_tidal_wave_timer = 0.0
-	_steam_explosion_timer = 0.0
-	_absolute_zero_timer = 0.0
-	_abyssal_depths_timer = 0.0
+	_synergy_timers.clear()
 	_electrolysis_active = false
-	_toxic_fire_timer = 0.0
-	_shadow_freeze_timer = 0.0
-	_toxic_shock_timer = 0.0
 	# Restore speeds of abyssal-slowed enemies
 	for eid in _abyssal_slowed_enemies:
 		var e = instance_from_id(eid)

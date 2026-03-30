@@ -209,38 +209,12 @@ func _populate_grid() -> void:
 		var type_color: Color = type_colors.get(weapon_type, Color.WHITE)
 		var type_icon: String = type_icons.get(weapon_type, "?")
 
-		var card_btn = Button.new()
-		card_btn.custom_minimum_size = CARD_SIZE
-		card_btn.focus_mode = Control.FOCUS_ALL
-		card_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		var border = type_color if is_unlocked else Color(0.2, 0.2, 0.2)
+		var bg = UITheme.BG_PANEL if is_unlocked else Color(0.08, 0.08, 0.1)
+		var card_btn = UICardBuilder.create_card(CARD_SIZE, border, bg)
+		var vbox = UICardBuilder.create_card_vbox(card_btn)
 
-		var card_style = StyleBoxFlat.new()
-		card_style.bg_color = Color(0.12, 0.12, 0.18) if is_unlocked else Color(0.08, 0.08, 0.1)
-		card_style.set_corner_radius_all(6)
-		card_style.set_border_width_all(2)
-		card_style.border_color = type_color if is_unlocked else Color(0.2, 0.2, 0.2)
-		card_btn.add_theme_stylebox_override("normal", card_style)
-
-		var hover_style = card_style.duplicate()
-		hover_style.bg_color = card_style.bg_color.lightened(0.1)
-		hover_style.border_color = type_color.lightened(0.2) if is_unlocked else Color(0.35, 0.35, 0.35)
-		card_btn.add_theme_stylebox_override("hover", hover_style)
-		card_btn.add_theme_stylebox_override("pressed", hover_style)
-
-		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 3)
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		card_btn.add_child(vbox)
-		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-		# Type color swatch
-		var swatch = ColorRect.new()
-		swatch.custom_minimum_size = Vector2(0, 6)
-		swatch.color = type_color if is_unlocked else Color(0.3, 0.3, 0.3)
-		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vbox.add_child(swatch)
+		UICardBuilder.add_color_swatch(vbox, type_color if is_unlocked else Color(0.3, 0.3, 0.3), 6.0)
 
 		# Pixel art sprite da arma
 		var icon_path := "res://assets/sprites/weapons/%s.png" % weapon_id
@@ -252,50 +226,25 @@ func _populate_grid() -> void:
 				icon_rect.custom_minimum_size = Vector2(40, 40)
 				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				icon_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				if not is_unlocked:
 					icon_rect.modulate = Color(0.3, 0.3, 0.3)
 				vbox.add_child(icon_rect)
 
-		# Icone + nome
-		var name_lbl = Label.new()
-		name_lbl.text = (type_icon + " " + data.get("name", weapon_id)) if is_unlocked else "???"
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 14)
-		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8) if is_unlocked else Color(0.4, 0.4, 0.4))
-		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var name_text = (type_icon + " " + data.get("name", weapon_id)) if is_unlocked else "???"
+		var name_color = Color(1.0, 0.95, 0.8) if is_unlocked else Color(0.4, 0.4, 0.4)
+		var name_lbl = UICardBuilder.add_label(vbox, name_text, 14, name_color)
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.clip_text = true
 		name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		vbox.add_child(name_lbl)
 
 		if is_unlocked:
-			var type_lbl = Label.new()
-			type_lbl.text = "%s | %s" % [weapon_type.capitalize(), data.get("element", "physical").capitalize()]
-			type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			type_lbl.add_theme_font_size_override("font_size", 10)
-			type_lbl.add_theme_color_override("font_color", type_color)
-			type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			vbox.add_child(type_lbl)
-
-			var dmg_lbl = Label.new()
-			dmg_lbl.text = "Dano: %d" % data.get("base_damage", 0)
-			dmg_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			dmg_lbl.add_theme_font_size_override("font_size", 11)
-			dmg_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-			dmg_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			vbox.add_child(dmg_lbl)
+			UICardBuilder.add_label(vbox, "%s | %s" % [weapon_type.capitalize(), data.get("element", "physical").capitalize()], 10, type_color)
+			UICardBuilder.add_label(vbox, "Dano: %d" % data.get("base_damage", 0), 11, Color(0.7, 0.7, 0.7))
 		else:
-			var locked_lbl = Label.new()
-			locked_lbl.text = "Use para desbloquear."
-			locked_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			locked_lbl.add_theme_font_size_override("font_size", 10)
-			locked_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+			var locked_lbl = UICardBuilder.add_label(vbox, "Use para desbloquear.", 10, Color(0.4, 0.4, 0.4))
 			locked_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			locked_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			vbox.add_child(locked_lbl)
 
 		card_btn.pressed.connect(_show_weapon_details.bind(weapon_id, data, is_unlocked, type_color, type_icon))
 		grid.add_child(card_btn)

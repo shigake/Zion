@@ -257,16 +257,7 @@ func _build_tab_video() -> void:
 
 	# Resolution — detect screen and build list
 	var screen_size := DisplayServer.screen_get_size()
-	var all_resolutions: Array[Vector2i] = [
-		Vector2i(854, 480),
-		Vector2i(1024, 576),
-		Vector2i(1280, 720),
-		Vector2i(1366, 768),
-		Vector2i(1600, 900),
-		Vector2i(1920, 1080),
-		Vector2i(2560, 1440),
-		Vector2i(3840, 2160),
-	]
+	var all_resolutions: Array[Vector2i] = GameConstants.RESOLUTIONS
 	var resolutions: Array[Vector2i] = []
 	var res_labels: Array[String] = []
 	for r in all_resolutions:
@@ -302,8 +293,8 @@ func _build_tab_video() -> void:
 		t)
 
 	# FPS Limit
-	var fps_options := ["30", "60", "120", "144", "240", "Ilimitado"]
-	var fps_values := [30, 60, 120, 144, 240, 0]
+	var fps_options := GameConstants.FPS_LABELS
+	var fps_values := GameConstants.FPS_OPTIONS
 	_add_dropdown(vbox, "Limite de FPS", "video_fps_limit",
 		fps_options, 1,
 		func(idx: int) -> void:

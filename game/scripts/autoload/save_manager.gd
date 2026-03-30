@@ -41,11 +41,7 @@ func _restore_settings() -> void:
 	# Restore video: resolution
 	var res_idx = data.get("video_resolution", data.get("resolution", -1))
 	if res_idx >= 0:
-		var resolutions = [
-			Vector2i(854, 480), Vector2i(1024, 576), Vector2i(1280, 720),
-			Vector2i(1366, 768), Vector2i(1600, 900), Vector2i(1920, 1080),
-			Vector2i(2560, 1440), Vector2i(3840, 2160),
-		]
+		var resolutions = GameConstants.RESOLUTIONS
 		if res_idx < resolutions.size():
 			DisplayServer.window_set_size(resolutions[res_idx])
 			var ss = DisplayServer.screen_get_size()
@@ -61,7 +57,7 @@ func _restore_settings() -> void:
 	# Restore video: FPS limit
 	var fps_idx = data.get("video_fps_limit", -1)
 	if fps_idx >= 0:
-		var fps_values = [30, 60, 120, 144, 240, 0]
+		var fps_values = GameConstants.FPS_OPTIONS
 		if fps_idx < fps_values.size():
 			Engine.max_fps = fps_values[fps_idx]
 
@@ -222,7 +218,7 @@ func complete_stage(stage_id: String) -> void:
 			data["completed_stages"] = []
 		data["completed_stages"].append(stage_id)
 		# Desbloqueia proxima fase
-		var stage_order = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+		var stage_order = GameConstants.ALL_STAGES
 		var idx = stage_order.find(stage_id)
 		if idx >= 0 and idx + 1 < stage_order.size():
 			unlock_stage(stage_order[idx + 1])
@@ -258,7 +254,7 @@ func check_unlocks() -> Array[String]:
 					unlocked = true
 			"all_stages":
 				var all_complete = true
-				for stage in ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]:
+				for stage in GameConstants.ALL_STAGES:
 					if stage not in data.get("completed_stages", []):
 						all_complete = false
 						break
