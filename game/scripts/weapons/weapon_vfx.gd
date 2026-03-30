@@ -2,6 +2,51 @@ class_name WeaponVFX
 
 ## Utilitario compartilhado para efeitos visuais de armas melee.
 ## Elimina duplicacao de _spawn_slash_trail() em 10+ scripts de armas.
+## Usa pool interno para evitar alocacoes durante combate.
+
+# Pool de Sprite3D para slash trails — evita Sprite3D.new() por ataque
+static var _slash_pool: Array[Sprite3D] = []
+static var _slash_pool_idx: int = 0
+const SLASH_POOL_SIZE := 24
+
+static func _get_or_create_slash(scene: Node) -> Sprite3D:
+	# Tenta reutilizar sprite existente que ja terminou a animacao
+	for i in range(_slash_pool.size()):
+		var idx = (_slash_pool_idx + i) % _slash_pool.size()
+		var sprite = _slash_pool[idx]
+		if is_instance_valid(sprite) and sprite.modulate.a < 0.01:
+			_slash_pool_idx = (idx + 1) % _slash_pool.size()
+			sprite.visible = true
+			sprite.modulate = Color(1, 1, 1, 1)
+			return sprite
+	# Pool cheio ou vazio — cria novo se ainda tem espaco
+	if _slash_pool.size() < SLASH_POOL_SIZE:
+		var sprite = Sprite3D.new()
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.no_depth_test = true
+		scene.add_child(sprite)
+		_slash_pool.append(sprite)
+		return sprite
+	# Pool esgotado — reutiliza o mais antigo
+	_slash_pool_idx = (_slash_pool_idx + 1) % _slash_pool.size()
+	var oldest = _slash_pool[_slash_pool_idx]
+	if is_instance_valid(oldest):
+		oldest.visible = true
+		oldest.modulate = Color(1, 1, 1, 1)
+		return oldest
+	# Fallback: cria novo (nao deveria acontecer)
+	var sprite = Sprite3D.new()
+	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sprite.shaded = false
+	sprite.transparent = true
+	sprite.no_depth_test = true
+	scene.add_child(sprite)
+	_slash_pool[_slash_pool_idx] = sprite
+	return sprite
 
 static func spawn_slash_trail(
 	caller: Node,
@@ -18,15 +63,9 @@ static func spawn_slash_trail(
 	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 	if not scene:
 		return
-	var sprite = Sprite3D.new()
+	var sprite = _get_or_create_slash(scene)
 	sprite.texture = texture
-	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	sprite.pixel_size = pixel_size
-	sprite.shaded = false
-	sprite.transparent = true
-	sprite.no_depth_test = true
-	scene.add_child(sprite)
 	sprite.global_position = pos
 	sprite.scale = Vector3(0.5, 0.5, 0.5)
 	sprite.modulate = Color(1, 1, 1, 1)
@@ -35,8 +74,6 @@ static func spawn_slash_trail(
 	var s = Vector3(final_scale, final_scale, final_scale)
 	tween.tween_property(sprite, "scale", s, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(sprite, "modulate:a", 0.0, duration).set_ease(Tween.EASE_IN)
-	tween.set_parallel(false)
-	tween.tween_callback(sprite.queue_free)
 
 static func spawn_shockwave_ring(
 	caller: Node,

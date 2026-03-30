@@ -37,9 +37,7 @@ var _cached_players: Array = []
 var _players_cache_frame: int = -1
 
 # Spatial grid for O(1) neighbor lookups (enemy separation, AoE targeting)
-var _spatial_grid: Dictionary = {}  # Vector2i -> Array[Node3D]
-var _spatial_grid_frame: int = -1
-const SPATIAL_CELL_SIZE: float = 3.0  # Matches separation radius
+var _spatial_grid := SpatialEnemyGrid.new()
 
 # Cached nearest player per frame (avoid per-enemy iteration)
 var _cached_nearest_player: Dictionary = {}  # enemy_instance_id -> Node3D
@@ -219,50 +217,14 @@ func get_players() -> Array:
 		_cached_players = get_tree().get_nodes_in_group("players")
 	return _cached_players
 
-## Spatial grid — rebuilt once per frame for O(1) neighbor queries.
-func _rebuild_spatial_grid() -> void:
-	var frame = Engine.get_process_frames()
-	if frame == _spatial_grid_frame:
-		return
-	_spatial_grid_frame = frame
-	_spatial_grid.clear()
-	var enemies = get_enemies()
-	for e in enemies:
-		if not is_instance_valid(e) or e.is_dead:
-			continue
-		var cell = _pos_to_cell(e.global_position)
-		if not _spatial_grid.has(cell):
-			_spatial_grid[cell] = []
-		_spatial_grid[cell].append(e)
-
-func _pos_to_cell(pos: Vector3) -> Vector2i:
-	return Vector2i(int(floor(pos.x / SPATIAL_CELL_SIZE)), int(floor(pos.z / SPATIAL_CELL_SIZE)))
-
-## Get nearby enemies from spatial grid (O(1) instead of O(n)).
+## Facade methods — delegate to SpatialEnemyGrid instance.
 func get_nearby_enemies(pos: Vector3, radius: float) -> Array:
-	_rebuild_spatial_grid()
-	var cell = _pos_to_cell(pos)
-	var cells_to_check = int(ceil(radius / SPATIAL_CELL_SIZE))
-	var result: Array = []
-	for dx in range(-cells_to_check, cells_to_check + 1):
-		for dz in range(-cells_to_check, cells_to_check + 1):
-			var check_cell = Vector2i(cell.x + dx, cell.y + dz)
-			if _spatial_grid.has(check_cell):
-				result.append_array(_spatial_grid[check_cell])
-	return result
+	_spatial_grid.rebuild(get_enemies())
+	return _spatial_grid.get_nearby(pos, radius)
 
-## Get enemies in radius with distance check (for AoE).
 func get_enemies_in_radius(pos: Vector3, radius: float) -> Array:
-	var candidates = get_nearby_enemies(pos, radius)
-	var result: Array = []
-	var radius_sq = radius * radius
-	for e in candidates:
-		if is_instance_valid(e) and not e.is_dead:
-			var diff = pos - e.global_position
-			diff.y = 0
-			if diff.length_squared() <= radius_sq:
-				result.append(e)
-	return result
+	_spatial_grid.rebuild(get_enemies())
+	return _spatial_grid.get_in_radius(pos, radius)
 
 func _register_input_actions() -> void:
 	_add_key_action("move_up", KEY_W)
@@ -502,72 +464,7 @@ func upgrade_item(item_id: String) -> bool:
 	return false
 
 func _recalculate_item_bonuses() -> void:
-	speed_mult = 1.0
-	attack_speed_mult = 1.0
-	max_hp_mult = 1.0
-	area_mult = 1.0
-	magnet_mult = 1.0
-	cooldown_mult = 1.0
-	dodge_chance = 0.0
-	lifesteal = 0.0
-	thorns_mult = 0.0
-	luck_mult = 1.0
-	extra_projectiles = 0
-	summon_damage_mult = 1.0
-	attack_size_mult = 1.0
-	explosion_damage_mult = 1.0
-	fire_ground_active = false
-	master_key_active = false
-	weapon_level_bonus = 0
-	accuracy_mult = 1.0
-
-	for it in player_items:
-		var data = ItemDB.get_item(it["id"])
-		if data.is_empty():
-			continue
-		var level = it["level"]
-		var value = data["value_per_level"] * level
-		match data["stat"]:
-			"speed":
-				speed_mult += value
-			"attack_speed":
-				attack_speed_mult += value
-			"max_hp":
-				max_hp_mult += value
-				var new_max = get_effective_max_hp()
-				player_hp = mini(player_hp + int(player_max_hp * data["value_per_level"]), new_max)
-			"area":
-				area_mult += value
-			"magnet":
-				magnet_mult += value
-			"cooldown":
-				cooldown_mult = maxf(0.3, cooldown_mult - value)
-			"dodge":
-				dodge_chance = minf(0.7, dodge_chance + value)
-			"xp_bonus":
-				xp_mult += value
-			"explosion_damage":
-				explosion_damage_mult += value
-			"lifesteal":
-				lifesteal += value
-			"thorns":
-				thorns_mult += value
-			"luck":
-				luck_mult += value
-			"extra_projectiles":
-				extra_projectiles += int(value)
-			"summon_damage":
-				summon_damage_mult += value
-			"attack_size":
-				attack_size_mult += value
-			"fire_ground":
-				fire_ground_active = level > 0
-			"weapon_level_bonus":
-				weapon_level_bonus = int(value)
-			"accuracy":
-				accuracy_mult += value
-			"electric_damage":
-				electric_damage_mult += value
+	ItemBonusCalculator.recalculate(self, player_items)
 
 func reset() -> void:
 	AchievementManager.reset_run()
