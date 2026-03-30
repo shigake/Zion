@@ -34,7 +34,7 @@ var boss_spawned: bool = false
 var miniboss_spawned: bool = false
 
 # Boss Rush mode
-var _boss_rush_stages: Array = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+var _boss_rush_stages: Array = GameConstants.ALL_STAGES.duplicate()
 var _boss_rush_index: int = 0
 var _boss_rush_cooldown: float = 0.0
 var _boss_rush_active_boss: bool = false

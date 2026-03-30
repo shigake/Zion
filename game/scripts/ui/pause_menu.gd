@@ -377,12 +377,7 @@ func _on_options() -> void:
 	res_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	res_hbox.add_child(res_label)
 	var res_option = OptionButton.new()
-	var resolutions = [
-		Vector2i(1280, 720),
-		Vector2i(1920, 1080),
-		Vector2i(2560, 1440),
-		Vector2i(3840, 2160),
-	]
+	var resolutions = GameConstants.RESOLUTIONS
 	var current_res = DisplayServer.window_get_size()
 	for i in range(resolutions.size()):
 		var r = resolutions[i]

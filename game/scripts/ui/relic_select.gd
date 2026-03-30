@@ -224,19 +224,7 @@ func _on_start() -> void:
 			GameManager.run_time_limit = 900.0
 		_:
 			GameManager.run_time_limit = 900.0
-	var stage_scenes = {
-		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
-		"forest": "res://scenes/stages/stage_forest.tscn",
-		"farm": "res://scenes/stages/stage_farm.tscn",
-		"tokyo": "res://scenes/stages/stage_tokyo.tscn",
-		"volcano": "res://scenes/stages/stage_volcano.tscn",
-		"ocean": "res://scenes/stages/stage_ocean.tscn",
-		"arena": "res://scenes/stages/stage_arena.tscn",
-		"space": "res://scenes/stages/stage_space.tscn",
-		"castle": "res://scenes/stages/stage_castle.tscn",
-		"candy": "res://scenes/stages/stage_candy.tscn",
-	}
-	var scene = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
+	var scene = GameConstants.STAGE_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
 	LoadingScreen.load_stage(scene)
 
 func _unhandled_input(event: InputEvent) -> void:

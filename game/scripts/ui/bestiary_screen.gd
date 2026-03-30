@@ -287,7 +287,7 @@ func _build_all_entries() -> void:
 		})
 
 	# Ordena: por fenda, depois por tipo
-	var stage_order = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy", "generic"]
+	var stage_order = GameConstants.ALL_STAGES + ["generic"]
 	var type_order = {"Tematico": 0, "Generico": 1, "Especial": 2, "Raro": 3, "Sentinela": 4}
 	all_entries.sort_custom(func(a, b):
 		var sa = stage_order.find(a["stage"])

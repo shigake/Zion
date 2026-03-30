@@ -14,16 +14,16 @@ const CAMPAIGN_STAGES: Array[String] = [
 const ANOMALY_STAGES: Array[String] = ["farm", "arena", "candy"]
 
 const STAGE_SCENE_PATHS := {
-	"cemetery": "res://scenes/stages/cemetery.tscn",
-	"forest": "res://scenes/stages/forest.tscn",
-	"farm": "res://scenes/stages/farm.tscn",
-	"tokyo": "res://scenes/stages/tokyo.tscn",
-	"volcano": "res://scenes/stages/volcano.tscn",
-	"ocean": "res://scenes/stages/ocean.tscn",
-	"arena": "res://scenes/stages/arena.tscn",
-	"space": "res://scenes/stages/space.tscn",
-	"castle": "res://scenes/stages/castle.tscn",
-	"candy": "res://scenes/stages/candy.tscn",
+	"cemetery": "res://scenes/stages/stage_cemetery.tscn",
+	"forest": "res://scenes/stages/stage_forest.tscn",
+	"farm": "res://scenes/stages/stage_farm.tscn",
+	"tokyo": "res://scenes/stages/stage_tokyo.tscn",
+	"volcano": "res://scenes/stages/stage_volcano.tscn",
+	"ocean": "res://scenes/stages/stage_ocean.tscn",
+	"arena": "res://scenes/stages/stage_arena.tscn",
+	"space": "res://scenes/stages/stage_space.tscn",
+	"castle": "res://scenes/stages/stage_castle.tscn",
+	"candy": "res://scenes/stages/stage_candy.tscn",
 }
 
 # ---- Display ----

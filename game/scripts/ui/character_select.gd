@@ -680,7 +680,7 @@ func _on_random_start() -> void:
 	GameManager.selected_character = char_id
 
 	# Pick random stage
-	var stages = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+	var stages = GameConstants.ALL_STAGES
 	GameManager.selected_stage = stages[randi() % stages.size()]
 
 	# No mutations, no relic, normal mode, auto-play ON
@@ -691,19 +691,7 @@ func _on_random_start() -> void:
 	GameManager.auto_play = true
 
 	# Go straight to game
-	var stage_scenes = {
-		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
-		"forest": "res://scenes/stages/stage_forest.tscn",
-		"farm": "res://scenes/stages/stage_farm.tscn",
-		"tokyo": "res://scenes/stages/stage_tokyo.tscn",
-		"volcano": "res://scenes/stages/stage_volcano.tscn",
-		"ocean": "res://scenes/stages/stage_ocean.tscn",
-		"arena": "res://scenes/stages/stage_arena.tscn",
-		"space": "res://scenes/stages/stage_space.tscn",
-		"castle": "res://scenes/stages/stage_castle.tscn",
-		"candy": "res://scenes/stages/stage_candy.tscn",
-	}
-	var scene_path = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
+	var scene_path = GameConstants.STAGE_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
 	LoadingScreen.load_stage(scene_path)
 
 func _on_back() -> void:

@@ -11,10 +11,7 @@ signal streak_updated(new_streak: int)
 const SAVE_PATH := "user://daily_challenge.json"
 
 # Stages e personagens disponiveis para sorteio
-const ALL_STAGES: Array[String] = [
-	"cemetery", "forest", "farm", "tokyo", "volcano",
-	"ocean", "arena", "space", "castle", "candy",
-]
+var ALL_STAGES: Array[String] = GameConstants.ALL_STAGES
 
 const ALL_CHARACTERS: Array[String] = [
 	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
@@ -197,19 +194,7 @@ func start_daily_run() -> void:
 	])
 
 	# Navegar para o stage
-	var stage_scenes := {
-		"cemetery": "res://scenes/stages/stage_cemetery.tscn",
-		"forest": "res://scenes/stages/stage_forest.tscn",
-		"farm": "res://scenes/stages/stage_farm.tscn",
-		"tokyo": "res://scenes/stages/stage_tokyo.tscn",
-		"volcano": "res://scenes/stages/stage_volcano.tscn",
-		"ocean": "res://scenes/stages/stage_ocean.tscn",
-		"arena": "res://scenes/stages/stage_arena.tscn",
-		"space": "res://scenes/stages/stage_space.tscn",
-		"castle": "res://scenes/stages/stage_castle.tscn",
-		"candy": "res://scenes/stages/stage_candy.tscn",
-	}
-	var scene_path: String = stage_scenes.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
+	var scene_path: String = GameConstants.STAGE_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
 	GameManager.reset()
 	get_tree().change_scene_to_file(scene_path)
 

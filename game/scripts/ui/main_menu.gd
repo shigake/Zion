@@ -769,12 +769,12 @@ func _on_unlock_all() -> void:
 	for char_id in CharacterDB.get_all_character_ids():
 		SaveManager.unlock_character(char_id)
 	# Unlock all stages
-	for stage in ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]:
+	for stage in GameConstants.ALL_STAGES:
 		SaveManager.unlock_stage(stage)
 	# Give lots of crystals
 	SaveManager.data["crystals"] = 99999
 	# Complete all stages
-	SaveManager.data["completed_stages"] = ["cemetery", "forest", "farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy"]
+	SaveManager.data["completed_stages"] = GameConstants.ALL_STAGES.duplicate()
 	SaveManager.save_game()
 	_update_crystals()
 	LogManager.info("Debug", "ALL UNLOCKED! Characters, stages, 99999 crystals")
