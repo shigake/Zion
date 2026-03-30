@@ -552,7 +552,7 @@ O HUD gerencia: barra de HP do boss, icones de armas, icones de itens, display d
 ### Criterios de aceite
 
 - [x] HUD reduzido para 610 linhas (extraido HUDMultiplayer com 352 linhas)
-- [ ] LevelUpScreen reduzido para ~400 linhas (adiado — menor prioridade)
+- [x] LevelUpScreen reduzido para 753 linhas (extraido UpgradeOptionGenerator 127 linhas)
 - [x] Aparencia e comportamento identicos
 
 ---

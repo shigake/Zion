@@ -206,7 +206,7 @@ func _hide_choosing_label() -> void:
 		_choosing_label = null
 
 func _show_choices() -> void:
-	options = _generate_options()
+	options = UpgradeOptionGenerator.generate_options()
 	if options.is_empty():
 		pending_levels = 0
 		return
@@ -460,7 +460,7 @@ func _build_card(opt: Dictionary, index: int) -> void:
 
 	# --- 3. Name (bold white, 16pt) ---
 	var name_label = Label.new()
-	name_label.text = _get_opt_name(opt)
+	name_label.text = UpgradeOptionGenerator.get_opt_name(opt)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_size_override("font_size", 16)
 	name_label.add_theme_color_override("font_color", Color.WHITE if not is_evolution else Color(1.0, 0.92, 0.5))
@@ -468,7 +468,7 @@ func _build_card(opt: Dictionary, index: int) -> void:
 
 	# --- 4. Level indicator (yellow, or green NEW) ---
 	var level_label = Label.new()
-	level_label.text = _get_level_text(opt)
+	level_label.text = UpgradeOptionGenerator.get_level_text(opt)
 	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	level_label.add_theme_font_size_override("font_size", 12)
 	if is_new:
@@ -481,7 +481,7 @@ func _build_card(opt: Dictionary, index: int) -> void:
 
 	# --- 5. Description (11pt, gray) ---
 	var desc_label = Label.new()
-	desc_label.text = _get_description(opt)
+	desc_label.text = UpgradeOptionGenerator.get_description(opt)
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.add_theme_font_size_override("font_size", 11)
@@ -490,7 +490,7 @@ func _build_card(opt: Dictionary, index: int) -> void:
 	vbox.add_child(desc_label)
 
 	# --- 6. Element icon badge ---
-	var element = _get_element(opt)
+	var element = UpgradeOptionGenerator.get_element(opt)
 	if element != "physical" and element != "":
 		var elem_container = CenterContainer.new()
 		vbox.add_child(elem_container)
@@ -513,7 +513,7 @@ func _build_card(opt: Dictionary, index: int) -> void:
 		elem_panel.add_child(elem_label)
 
 	# --- 7. Stats preview (DPS change) ---
-	var stats_text = _get_stats_preview(opt)
+	var stats_text = UpgradeOptionGenerator.get_stats_preview(opt)
 	if stats_text != "":
 		var stats_label = Label.new()
 		stats_label.text = stats_text
@@ -601,57 +601,7 @@ func _build_card(opt: Dictionary, index: int) -> void:
 	fade_tween.tween_interval(delay)
 	fade_tween.tween_property(card_wrapper, "modulate:a", 1.0, 0.3)
 
-func _get_stats_preview(opt: Dictionary) -> String:
-	if opt["type"] != "weapon":
-		return ""
-	var wdata = WeaponDB.get_weapon(opt["id"])
-	var damage = wdata.get("damage", 0)
-	var cooldown = wdata.get("cooldown", 1.0)
-	if damage <= 0 or cooldown <= 0:
-		return ""
-	var current_dps = damage / cooldown
-	# Estimate next level DPS (roughly +20% damage per level)
-	if GameManager.has_weapon(opt["id"]):
-		var w = GameManager.player_weapons.filter(func(x): return x["id"] == opt["id"])
-		if not w.is_empty():
-			var lvl = w[0]["level"]
-			var cur_dmg = damage * (1.0 + (lvl - 1) * 0.2)
-			var next_dmg = damage * (1.0 + lvl * 0.2)
-			var cur_dps_val = cur_dmg / cooldown
-			var next_dps_val = next_dmg / cooldown
-			return "DPS: %.0f → %.0f" % [cur_dps_val, next_dps_val]
-	return "DPS: %.0f" % current_dps
-
-func _get_opt_name(opt: Dictionary) -> String:
-	if opt["type"] == "weapon":
-		return WeaponDB.get_weapon(opt["id"])["name"]
-	else:
-		return ItemDB.get_item(opt["id"])["name"]
-
-func _get_level_text(opt: Dictionary) -> String:
-	if opt["type"] == "weapon":
-		if GameManager.has_weapon(opt["id"]):
-			var w = GameManager.player_weapons.filter(func(x): return x["id"] == opt["id"])
-			if not w.is_empty():
-				return "Lv. %d → %d" % [w[0]["level"], w[0]["level"] + 1]
-		return "★ " + LocaleManager.tr_key("new").to_upper()
-	else:
-		if GameManager.has_item(opt["id"]):
-			var it = GameManager.player_items.filter(func(x): return x["id"] == opt["id"])
-			if not it.is_empty():
-				return "Lv. %d → %d" % [it[0]["level"], it[0]["level"] + 1]
-		return "★ " + LocaleManager.tr_key("new").to_upper()
-
-func _get_description(opt: Dictionary) -> String:
-	if opt["type"] == "weapon":
-		return WeaponDB.get_weapon(opt["id"]).get("description", "")
-	else:
-		return ItemDB.get_item(opt["id"]).get("description", "")
-
-func _get_element(opt: Dictionary) -> String:
-	if opt["type"] == "weapon":
-		return WeaponDB.get_weapon(opt["id"]).get("element", "physical")
-	return "physical"
+## Data helpers delegated to UpgradeOptionGenerator
 
 func _choose(index: int) -> void:
 	if index >= options.size():
@@ -721,79 +671,7 @@ func _apply_choice(opt: Dictionary) -> void:
 		"item":
 			GameManager.add_item(opt["id"])
 
-func _generate_options() -> Array:
-	var pool: Array = []
-
-	# Armas que o jogador ja tem (upgrade)
-	for w in GameManager.player_weapons:
-		if w["level"] < 8:
-			var data = WeaponDB.get_weapon(w["id"])
-			pool.append({
-				"type": "weapon",
-				"id": w["id"],
-				"label": "%s (Lv.%d → %d)" % [data["name"], w["level"], w["level"] + 1],
-				"weight": 10,
-			})
-
-	# Armas novas (se tem slot, excluindo disabled)
-	if GameManager.player_weapons.size() < GameManager.MAX_WEAPONS:
-		for wid in WeaponDB.get_all_weapon_ids():
-			if not GameManager.has_weapon(wid):
-				var data = WeaponDB.get_weapon(wid)
-				if data.get("disabled", false):
-					continue
-				pool.append({
-					"type": "weapon",
-					"id": wid,
-					"label": "%s (%s)" % [data["name"], LocaleManager.tr_key("new")],
-					"weight": 8,
-				})
-
-	# Itens que o jogador ja tem (upgrade)
-	for it in GameManager.player_items:
-		if it["level"] < 5:
-			var data = ItemDB.get_item(it["id"])
-			pool.append({
-				"type": "item",
-				"id": it["id"],
-				"label": "%s (Lv.%d → %d)" % [data["name"], it["level"], it["level"] + 1],
-				"weight": 10,
-			})
-
-	# Itens novos (se tem slot)
-	if GameManager.player_items.size() < GameManager.MAX_ITEMS:
-		for iid in ItemDB.get_all_item_ids():
-			if not GameManager.has_item(iid):
-				var data = ItemDB.get_item(iid)
-				if data.get("disabled", false):
-					continue
-				pool.append({
-					"type": "item",
-					"id": iid,
-					"label": "%s (%s)" % [data["name"], LocaleManager.tr_key("new")],
-					"weight": 8,
-				})
-
-	# Filter banished options
-	pool = pool.filter(func(opt): return opt["id"] not in GameManager.banished_options)
-
-	# Weighted random selection (luck_mult increases rare weapon chance)
-	var selected: Array = []
-	for _i in range(3):
-		if pool.is_empty():
-			break
-		var total_weight = 0.0
-		for opt in pool:
-			total_weight += opt["weight"] * GameManager.luck_mult
-		var roll = randf() * total_weight
-		var cumulative = 0.0
-		for j in range(pool.size()):
-			cumulative += pool[j]["weight"] * GameManager.luck_mult
-			if roll <= cumulative:
-				selected.append(pool[j])
-				pool.remove_at(j)
-				break
-	return selected
+## Option generation delegated to UpgradeOptionGenerator
 
 func _on_auto_toggled(enabled: bool) -> void:
 	GameManager.auto_play = enabled
