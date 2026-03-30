@@ -2,7 +2,7 @@
 
 > *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
-## Status: BETA — 75% completo, jogavel de ponta a ponta
+## Status: BETA — ~85% completo, jogavel de ponta a ponta
 
 ---
 
@@ -75,9 +75,9 @@
 ## O QUE FALTA (Sprints Priorizados)
 
 ### SPRINT 1 — Fixes Rapidos (1 dia)
-- [ ] Decidir: reabilitar flamethrower e gasoline ou manter desabilitados
-- [ ] Adicionar 4 SFX novas armas ao _valid_sfx (boomerang, tornado, chain_whip, blood_orb)
-- [ ] Garantir victory.wav toca ao matar boss
+- [x] Decidir: flamethrower e gasoline mantidos desabilitados (sem mira manual)
+- [x] Adicionar 4 SFX novas armas ao _valid_sfx (boomerang, tornado, chain_whip, blood_orb)
+- [x] Garantir victory.wav toca ao matar boss (game_over_screen.gd)
 - [ ] Testar export Windows localmente
 
 ### SPRINT 2 — Visual Polish (3-5 dias)
@@ -85,6 +85,8 @@
 - [x] Boss entrance dramatica: letterbox + zoom + escalating shake + spawn particles + slow-mo
 - [x] Efeito visual nas 4 armas novas (boomerang phase burst, tornado debris+shake, chain flash+shake, orb heal pulse)
 - [x] Boss phase music: intensificar trilha ao mudar de fase
+- [x] Creditos: sprites 2x, idle bobbing, heroi dancando
+- [x] Menu principal: spacing logo/subtitulo corrigido
 
 ### SPRINT 3 — QA Completo (3-5 dias)
 - [ ] Teste manual: cada personagem em cada stage (15 x 10 = 150 combinacoes)
@@ -96,20 +98,34 @@
 
 ### SPRINT 4 — Build & Deploy (2-3 dias)
 - [ ] Export Windows funcional (.exe testado em maquina limpa)
-- [ ] Linux export preset
+- [x] Linux export preset (export_presets.cfg + build.yml)
 - [ ] Pagina Itch.io com screenshots e descricao
 - [ ] Trailer de 30s (captura de gameplay)
 - [ ] GitHub Release v1.0.0
 
 ### FUTURO (Pos-lancamento)
-- [ ] Steam Integration (GodotSteam + achievements + cloud save)
-- [ ] Steam Networking Sockets (substituir ENet)
+- [x] Steam Integration base (achievements sync, cloud save, lobby, networking — codigo pronto, falta plugin GodotSteam)
+- [ ] Steam Networking Sockets (codigo pronto, falta GodotSteam binarios)
 - [ ] Matchmaking online
 - [ ] Workshop de mods
 - [ ] DLC tematicos
 - [ ] Localizacao EN/ES/JP
 - [ ] Mac/Linux nativo
 - [ ] Replays
+
+### REFATORACAO (Concluida)
+- [x] GameConstants: stage lists, FPS, resolutions centralizados
+- [x] Synergy timers unificados (10 vars → 1 dict)
+- [x] UICardBuilder compartilhado (bestiary, codex)
+- [x] WeaponVFX compartilhado (6 armas melee) + slash trail pool
+- [x] GameManager splitado: SpatialEnemyGrid + ItemBonusCalculator
+- [x] EnemyStageBehavior data-driven (30 behaviors em dict)
+- [x] Cache sprites inimigos + O(1) weapon level lookup
+- [x] Projectile bugfix (escala, rotacao, sprites duplicados)
+- [x] Ice+Dark crash fix
+- [x] Musica dinamica completa (stage→boss→victory + intensificacao temporal)
+- [x] Options R1/L1 tab navigation
+- [x] Bestiary/Codex card alignment + text overflow
 
 ---
 
