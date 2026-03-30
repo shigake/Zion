@@ -45,9 +45,8 @@ jobs:
         if: github.event.inputs.create_release == 'true'
         run: |
           CURRENT="$( cat game/VERSION | tr -d '[:space:]' )"
-          # Obter a tag anterior (exclui a tag atual)
-          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
-          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -1 || true)
+          # Excluir a tag da versao atual (caso ja exista) ao buscar a anterior
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^v${CURRENT}$" | head -1 || true)
           if [ -n "$PREV_TAG" ]; then
             PREV_VERSION="${PREV_TAG#v}"
             echo "Versao anterior: $PREV_VERSION"
@@ -248,11 +247,24 @@ jobs:
             echo "CHANGELOG_EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Criar tag se nao existe
+        if: github.event.inputs.create_release == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            git tag "v${VERSION}"
+            git push origin "v${VERSION}"
+            echo "Tag v${VERSION} criada."
+          else
+            echo "Tag v${VERSION} ja existe."
+          fi
+
       - name: Criar GitHub Release
         if: github.event.inputs.create_release == 'true'
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: "v${{ steps.version.outputs.version }}"
           name: "Zion v${{ steps.version.outputs.version }}"
           body: |
             ## Zion v${{ steps.version.outputs.version }}
