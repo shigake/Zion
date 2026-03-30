@@ -7,7 +7,7 @@ const SAVE_PATH := "user://save_data.json"
 var data: Dictionary = {
 	"crystals": 0,
 	"upgrades": {},  # upgrade_id -> level
-	"unlocked_characters": ["amazona", "ronin", "soldado", "mago"],
+	"unlocked_characters": ["amazona", "bruxa", "lealith", "ronin", "soldado", "mago"],
 	"unlocked_stages": ["cemetery"],
 	"total_runs": 0,
 	"total_kills": 0,
@@ -105,7 +105,7 @@ func load_game() -> void:
 
 func _ensure_default_unlocks() -> void:
 	## Ensure starter characters are always unlocked (handles existing saves)
-	var defaults = ["amazona", "bruxa", "ronin", "soldado", "mago"]
+	var defaults = ["amazona", "bruxa", "lealith", "ronin", "soldado", "mago"]
 	for char_id in defaults:
 		if char_id not in data["unlocked_characters"]:
 			data["unlocked_characters"].append(char_id)

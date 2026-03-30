@@ -18,7 +18,7 @@
 | **Chef** | Paris, Belle Epoque | Lanca-chamas | Comida cura 2x | Desperte o Mundo Doce (Anomalia γ) |
 | **Lealith** | Mundo Espiritual Felino | Shuriken | +25% velocidade, +15% dodge, -15% HP | Inicio |
 | **Amazona** | Floresta Amazonica primordial | Lanca | +15% velocidade +10% dano | Inicio |
-| **Bruxa** | Salem, 1692 | Necromante | +2 invocacoes +20% dano de invocacao | Inicio |
+| **Moon Witch** | Salem, 1692 | Necromante | +2 invocacoes +20% dano de invocacao | Inicio |
 | **Fragmentado** | Entre dimensoes | Corrente Eletrica | +10% a todos os stats, aparencia glitch | Sobreviva 20 min com 3 mutacoes ativas |
 | **???** | ??? | Todas as armas nivel 1 | Nenhuma | Todos os estilhacos em ressonancia (13 desbloqueados) |
 

@@ -12,7 +12,7 @@ var characters: Dictionary = {
 		"damage_bonus": 0.10,
 	},
 	"bruxa": {
-		"name": "Bruxa",
+		"name": "Moon Witch",
 		"starting_weapon": "necro",
 		"passive": "+2 invocacoes extras, summons 20% mais fortes",
 		"color": Color(0.45, 0.15, 0.55),
@@ -20,6 +20,16 @@ var characters: Dictionary = {
 		"damage_bonus": 0.0,
 		"summon_bonus": 2,
 		"summon_damage_bonus": 0.20,
+	},
+	"lealith": {
+		"name": "Lealith",
+		"starting_weapon": "shuriken",
+		"passive": "+25% velocidade, +15% dodge, -15% HP max",
+		"color": Color(0.15, 0.3, 0.85),
+		"speed_bonus": 0.25,
+		"damage_bonus": 0.0,
+		"dodge_bonus": 0.15,
+		"hp_mult": -0.15,
 	},
 	"ronin": {
 		"name": "Ronin",
@@ -136,16 +146,6 @@ var characters: Dictionary = {
 		"unlock_condition": "all_characters",
 		"unlock_value": "",
 		"unlock_description": "Desbloqueie todos os outros personagens",
-	},
-	"lealith": {
-		"name": "Lealith",
-		"starting_weapon": "shuriken",
-		"passive": "+25% velocidade, +15% dodge, -15% HP max",
-		"color": Color(0.15, 0.3, 0.85),
-		"speed_bonus": 0.25,
-		"damage_bonus": 0.0,
-		"dodge_bonus": 0.15,
-		"hp_mult": -0.15,
 	},
 	"fragmentado": {
 		"name": "Fragmentado",
