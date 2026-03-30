@@ -80,7 +80,7 @@ const THEMES = {
 		"fill_color2": Color(0.1, 0.05, 0.2),
 		"border_color": Color(0.4, 0.2, 0.6, 0.7),
 		"bg_color": Color(0.03, 0.02, 0.06),
-		"icon": "shuriken",
+		"icon": "claw",
 		"shape": "sleek",  # ultra-thin sharp ends
 		"accent": Color(0.5, 0.3, 0.8, 0.3),
 		"particle": "smoke",
@@ -778,14 +778,15 @@ func _draw_icon(pos: Vector2) -> void:
 				Vector2(cx, cy - 5), Vector2(cx + 3, cy + 2),
 				Vector2(cx, cy + 6), Vector2(cx - 3, cy + 2),
 			]), Color(1.0, 0.8, 0.2, 0.8))
-		"shuriken":
-			# 4-pointed star
-			for angle_offset in [0.0, PI * 0.5, PI, PI * 1.5]:
-				var a = angle_offset + _anim_time * 2.0
-				var tip = Vector2(cx + cos(a) * 9, cy + sin(a) * 9)
-				var left = Vector2(cx + cos(a + 0.4) * 3, cy + sin(a + 0.4) * 3)
-				var right = Vector2(cx + cos(a - 0.4) * 3, cy + sin(a - 0.4) * 3)
-				draw_colored_polygon(PackedVector2Array([tip, left, right]), c)
+		"claw":
+			# 3 claw slash marks
+			for i in range(3):
+				var ox = (i - 1) * 5.0
+				var pts = PackedVector2Array([
+					Vector2(cx + ox - 1, cy - 7), Vector2(cx + ox + 1, cy - 7),
+					Vector2(cx + ox + 2, cy + 7), Vector2(cx + ox - 2, cy + 7),
+				])
+				draw_colored_polygon(pts, c)
 		"skull":
 			# Simple skull
 			draw_circle(Vector2(cx, cy - 2), 7, c)

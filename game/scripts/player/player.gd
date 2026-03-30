@@ -347,7 +347,7 @@ var weapon_scenes: Dictionary = {
 	"bazooka": preload("res://scenes/weapons/bazooka.tscn"),
 	"necro": preload("res://scenes/weapons/necro.tscn"),
 	"axe": preload("res://scenes/weapons/axe.tscn"),
-	"shuriken": preload("res://scenes/weapons/shuriken.tscn"),
+	"shadow_claw": preload("res://scenes/weapons/shadow_claw.tscn"),
 	"drone": preload("res://scenes/weapons/drone.tscn"),
 	"totem": preload("res://scenes/weapons/totem.tscn"),
 	"poison_bottle": preload("res://scenes/weapons/poison_bottle.tscn"),

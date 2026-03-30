@@ -44,13 +44,13 @@ var evolutions: Dictionary = {
 		"evolved_damage_mult": 2.5,
 		"special": "fire_trail",
 	},
-	"blizzard_star": {
-		"name": "Estrela do Blizzard",
-		"description": "Shurikens criam nevasca congelante",
-		"weapon_required": "shuriken",
+	"phantom_fang": {
+		"name": "Phantom Fang",
+		"description": "Garras fantasmagoricas que drenam vida dos inimigos",
+		"weapon_required": "shadow_claw",
 		"item_required": "cape",
 		"evolved_damage_mult": 2.0,
-		"special": "blizzard",
+		"special": "lifesteal_claw",
 	},
 	"minigun_infernal": {
 		"name": "Minigun Infernal",

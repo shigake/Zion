@@ -23,7 +23,7 @@ var characters: Dictionary = {
 	},
 	"lealith": {
 		"name": "Lealith",
-		"starting_weapon": "shuriken",
+		"starting_weapon": "shadow_claw",
 		"passive": "+25% velocidade, +15% dodge, -15% HP max",
 		"color": Color(0.15, 0.3, 0.85),
 		"speed_bonus": 0.25,
@@ -71,7 +71,7 @@ var characters: Dictionary = {
 	},
 	"ninja": {
 		"name": "Ninja",
-		"starting_weapon": "shuriken",
+		"starting_weapon": "katana",
 		"passive": "+20% velocidade, +10% dodge",
 		"color": Color(0.1, 0.1, 0.1),
 		"speed_bonus": 0.20,
