@@ -29,19 +29,47 @@ func _ready() -> void:
 	_restore_settings()
 
 func _restore_settings() -> void:
-	# Restore window mode
-	var wm = data.get("window_mode", -1)
+	# Restore video: window mode
+	var wm = data.get("video_window_mode", data.get("window_mode", -1))
 	if wm == 1:
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	elif wm == 2:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
-	# Restore resolution
-	var res_idx = data.get("resolution", -1)
+
+	# Restore video: resolution
+	var res_idx = data.get("video_resolution", data.get("resolution", -1))
 	if res_idx >= 0:
-		var resolutions = [Vector2i(1280, 720), Vector2i(1920, 1080), Vector2i(2560, 1440), Vector2i(3840, 2160)]
+		var resolutions = [
+			Vector2i(854, 480), Vector2i(1024, 576), Vector2i(1280, 720),
+			Vector2i(1366, 768), Vector2i(1600, 900), Vector2i(1920, 1080),
+			Vector2i(2560, 1440), Vector2i(3840, 2160),
+		]
 		if res_idx < resolutions.size():
 			DisplayServer.window_set_size(resolutions[res_idx])
+			var ss = DisplayServer.screen_get_size()
+			DisplayServer.window_set_position((ss - resolutions[res_idx]) / 2)
+
+	# Restore video: V-Sync
+	var vsync = data.get("video_vsync", true)
+	if vsync:
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
+	else:
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+
+	# Restore video: FPS limit
+	var fps_idx = data.get("video_fps_limit", -1)
+	if fps_idx >= 0:
+		var fps_values = [30, 60, 120, 144, 240, 0]
+		if fps_idx < fps_values.size():
+			Engine.max_fps = fps_values[fps_idx]
+
+	# Restore graphics: MSAA
+	var msaa = data.get("gfx_msaa", -1)
+	if msaa >= 0:
+		call_deferred("_restore_msaa", msaa)
+
 	# Restore audio volumes (applied after AudioManager is ready)
 	call_deferred("_restore_audio")
 
@@ -84,12 +112,34 @@ func _ensure_default_unlocks() -> void:
 			save_game()
 
 func _restore_audio() -> void:
-	var master = data.get("volume_master", 1.0)
-	var music = data.get("volume_music", 0.8)
-	var sfx = data.get("volume_sfx", 1.0)
-	AudioManager.set_master_volume(master)
-	AudioManager.set_music_volume(music)
-	AudioManager.set_sfx_volume(sfx)
+	# Keys match options_screen.gd: audio_master, audio_music, audio_sfx, audio_ui (0-100 scale)
+	var master = data.get("audio_master", data.get("volume_master", 100.0))
+	var music = data.get("audio_music", data.get("volume_music", 80.0))
+	var sfx = data.get("audio_sfx", data.get("volume_sfx", 100.0))
+	var ui = data.get("audio_ui", 100.0)
+	# Apply to AudioManager (expects 0.0-1.0)
+	AudioManager.set_master_volume(master / 100.0 if master > 1.0 else master)
+	AudioManager.set_music_volume(music / 100.0 if music > 1.0 else music)
+	AudioManager.set_sfx_volume(sfx / 100.0 if sfx > 1.0 else sfx)
+	# Apply to audio buses directly (for options that use AudioServer)
+	_apply_audio_bus("Master", master / 100.0 if master > 1.0 else master)
+	_apply_audio_bus("Music", music / 100.0 if music > 1.0 else music)
+	_apply_audio_bus("SFX", sfx / 100.0 if sfx > 1.0 else sfx)
+	_apply_audio_bus("UI", ui / 100.0 if ui > 1.0 else ui)
+
+func _apply_audio_bus(bus_name: String, linear: float) -> void:
+	var bus_idx = AudioServer.get_bus_index(bus_name)
+	if bus_idx >= 0:
+		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(maxf(linear, 0.0001)))
+
+func _restore_msaa(msaa_idx: int) -> void:
+	var viewport = get_viewport()
+	if viewport:
+		match msaa_idx:
+			0: viewport.msaa_3d = Viewport.MSAA_DISABLED
+			1: viewport.msaa_3d = Viewport.MSAA_2X
+			2: viewport.msaa_3d = Viewport.MSAA_4X
+			3: viewport.msaa_3d = Viewport.MSAA_8X
 
 func add_crystals(amount: int) -> void:
 	data["crystals"] += amount
