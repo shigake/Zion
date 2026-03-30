@@ -120,23 +120,41 @@ jobs:
             exit 1
           fi
 
-      - name: Verificar tamanho do executavel
+      - name: Exportar Linux
         run: |
-          # Sanity check: .exe deve ter mais de 10MB
-          SIZE_BYTES=$(stat -c%s build/zion.exe)
-          SIZE_MB=$((SIZE_BYTES / 1048576))
-          echo "Tamanho do executavel: ${SIZE_MB}MB (${SIZE_BYTES} bytes)"
-          if [ "$SIZE_BYTES" -lt 10485760 ]; then
-            echo "Erro: Executavel muito pequeno (${SIZE_MB}MB). Build provavelmente esta incompleto."
+          cd game
+          godot --headless --export-release "Linux" ../build/zion.x86_64 2>&1 | tee /tmp/export_linux.log
+          echo ""
+          if [ -f ../build/zion.x86_64 ]; then
+            SIZE=$(du -h ../build/zion.x86_64 | cut -f1)
+            echo "Build Linux gerado com sucesso: zion.x86_64 ($SIZE)"
+          else
+            echo "Falha ao gerar o build Linux"
+            cat /tmp/export_linux.log
             exit 1
           fi
-          echo "Tamanho do executavel OK."
+
+      - name: Verificar tamanho dos executaveis
+        run: |
+          for FILE in build/zion.exe build/zion.x86_64; do
+            if [ -f "$FILE" ]; then
+              SIZE_BYTES=$(stat -c%s "$FILE")
+              SIZE_MB=$((SIZE_BYTES / 1048576))
+              echo "$(basename $FILE): ${SIZE_MB}MB (${SIZE_BYTES} bytes)"
+              if [ "$SIZE_BYTES" -lt 10485760 ]; then
+                echo "Erro: $(basename $FILE) muito pequeno (${SIZE_MB}MB). Build provavelmente esta incompleto."
+                exit 1
+              fi
+            fi
+          done
+          echo "Tamanho dos executaveis OK."
 
       - name: Preparar pacote
         run: |
           VERSION=${{ steps.version.outputs.version }}
           mkdir -p "release/Zion-v${VERSION}"
           cp build/zion.exe "release/Zion-v${VERSION}/"
+          cp build/zion.x86_64 "release/Zion-v${VERSION}/"
           # Copiar README jogavel
           cat > "release/Zion-v${VERSION}/LEIA-ME.txt" << 'READMEEOF'
           ╔══════════════════════════════════════╗
@@ -164,12 +182,13 @@ jobs:
           Bugs? Reporte em: github.com/shigake/Zion/issues
           READMEEOF
           cd release
-          zip -r "../Zion-v${VERSION}-windows.zip" "Zion-v${VERSION}/"
+          zip -r "../Zion-v${VERSION}-windows.zip" "Zion-v${VERSION}/zion.exe" "Zion-v${VERSION}/LEIA-ME.txt"
+          zip -r "../Zion-v${VERSION}-linux.zip" "Zion-v${VERSION}/zion.x86_64" "Zion-v${VERSION}/LEIA-ME.txt"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Zion-v${{ steps.version.outputs.version }}-windows
+          name: Zion-v${{ steps.version.outputs.version }}
           path: release/Zion-v${{ steps.version.outputs.version }}/
           retention-days: 30
 
@@ -273,22 +292,28 @@ jobs:
 
             ---
 
-            ### Como instalar (Windows)
-            1. Baixe o arquivo `Zion-v${{ steps.version.outputs.version }}-windows.zip` abaixo
+            ### Como instalar
+            **Windows:**
+            1. Baixe `Zion-v${{ steps.version.outputs.version }}-windows.zip`
             2. Descompacte em qualquer pasta
             3. Execute `zion.exe`
 
-            > **Windows Defender**: O executavel nao e assinado digitalmente. O Windows pode exibir um alerta.
-            > Clique em **"Mais informacoes"** e depois **"Executar mesmo assim"**.
+            > **Windows Defender**: O executavel nao e assinado digitalmente. Clique em **"Mais informacoes"** > **"Executar mesmo assim"**.
+
+            **Linux:**
+            1. Baixe `Zion-v${{ steps.version.outputs.version }}-linux.zip`
+            2. Descompacte e dê permissão: `chmod +x zion.x86_64`
+            3. Execute `./zion.x86_64`
 
             ### Requisitos
-            - Windows 10/11 (64-bit)
+            - Windows 10/11 ou Linux (64-bit)
             - Placa de video com suporte a Vulkan
 
             ### Problemas?
             Reporte bugs em: [GitHub Issues](https://github.com/shigake/Zion/issues)
           files: |
             Zion-v${{ steps.version.outputs.version }}-windows.zip
+            Zion-v${{ steps.version.outputs.version }}-linux.zip
           draft: false
           prerelease: false
 
