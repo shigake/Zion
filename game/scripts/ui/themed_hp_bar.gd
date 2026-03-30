@@ -101,6 +101,14 @@ const THEMES := {
 		"bg_color": Color(0.02, 0.08, 0.04, 0.92),
 		"label": "???",
 	},
+	"lealith": {
+		"shape": "shadow",
+		"fill_color": Color(0.2, 0.4, 0.95),
+		"fill_low": Color(0.8, 0.15, 0.2),
+		"border_color": Color(0.15, 0.3, 0.8, 0.6),
+		"bg_color": Color(0.03, 0.04, 0.12, 0.92),
+		"label": "NOVE",
+	},
 }
 
 var _theme: Dictionary = {}

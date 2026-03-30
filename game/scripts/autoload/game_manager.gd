@@ -719,6 +719,12 @@ func _apply_character_bonuses() -> void:
 	# Mystery: starts with 3 random weapons (not all)
 	if selected_character == "mystery":
 		MAX_WEAPONS = 8  # Higher cap but not unlimited
+	# Lealith: +25% speed, +15% dodge, -15% max HP (agile cat-boy)
+	if selected_character == "lealith":
+		speed_mult += 0.25
+		dodge_chance += 0.15
+		player_max_hp = int(player_max_hp * 0.85)
+		player_hp = player_max_hp
 	# Fragmentado: +10% all stats, starts at 50% HP
 	if selected_character == "fragmentado":
 		speed_mult += 0.10

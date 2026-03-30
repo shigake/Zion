@@ -2,7 +2,7 @@
 
 > Quando Zion estilhacou, estilhacos microscopicos do cristal atravessaram dimensoes e se alojaram em pessoas comuns. Sao os **Fragmentados** — arrancados de seus mundos, jogados nas fendas. Ver [story.md](story.md) para lore completo.
 
-## Os 15 Fragmentados
+## Os 16 Fragmentados
 
 | Fragmentado | Origem | Arma Inicial | Passiva | Como Desbloquear |
 |---|---|---|---|---|
@@ -17,6 +17,7 @@
 | **Vampiro** | Transilvania, sec. XVIII | Chicote | Lifesteal natural 3% | Liberte Dracula sem dano de morcego (Fenda 7) |
 | **Gladiador** | Roma Antiga | Lanca | +20% armadura | Derrote o eco do Imperador (Anomalia β) |
 | **Chef** | Paris, Belle Epoque | Lanca-chamas | Comida cura 2x | Desperte o Mundo Doce (Anomalia γ) |
+| **Lealith** | Mundo Espiritual Felino | Shuriken | +25% velocidade, +15% dodge, -15% HP | Inicio |
 | **Amazona** | Floresta Amazonica primordial | Lanca | +15% velocidade +10% dano | Inicio |
 | **Bruxa** | Salem, 1692 | Necromante | +2 invocacoes +20% dano de invocacao | Inicio |
 | **Fragmentado** | Entre dimensoes | Corrente Eletrica | +10% a todos os stats, aparencia glitch | Sobreviva 20 min com 3 mutacoes ativas |
@@ -35,6 +36,7 @@
 - **Vampiro:** Mordido por Dracula, mas o estilhaco impediu a transformacao total
 - **Gladiador:** Espirito da Arena que ganhou corpo quando a anomalia foi perturbada
 - **Chef:** Confeiteiro que caiu no Mundo Doce e tentou civilizar os doces com culinaria
+- **Lealith:** Gato espiritual de outra dimensao. Quando Zion estilhacou, um estilhaco atravessou o veu entre mundos e atingiu um felino ancestral, fundindo-o com forma humanoide. Agil, misterioso, com olhos que enxergam entre as fendas. Seu sino dourado ressoava em harmonia com o Coracao de Zion — agora ecoa fragmentado, guiando-o pelas fraturas
 - **Amazona:** Guerreira tribal que defendia sua terra quando as vacas mutantes invadiram
 - **Bruxa:** Fugiu da fogueira de Salem e caiu direto na Floresta Encantada. Adaptou-se rapido
 - **Fragmentado:** Nao e uma pessoa — e um eco dimensional. Quando a corrupcao atinge massa critica, fragmentos de realidades diferentes se fundem num ser instavel. Corpo de dados, mente de caos. Aparece e desaparece como um glitch

@@ -148,6 +148,16 @@ var characters: Dictionary = {
 		"unlock_value": "",
 		"unlock_description": "Desbloqueie todos os outros personagens",
 	},
+	"lealith": {
+		"name": "Lealith",
+		"starting_weapon": "shuriken",
+		"passive": "+25% velocidade, +15% dodge, -15% HP max",
+		"color": Color(0.15, 0.3, 0.85),
+		"speed_bonus": 0.25,
+		"damage_bonus": 0.0,
+		"dodge_bonus": 0.15,
+		"hp_mult": -0.15,
+	},
 	"fragmentado": {
 		"name": "Fragmentado",
 		"starting_weapon": "blood_orb",
