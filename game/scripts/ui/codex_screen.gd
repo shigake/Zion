@@ -97,7 +97,7 @@ func _build_ui() -> void:
 
 	# Instrucao inicial
 	var hint = Label.new()
-	hint.text = "Clique numa arma\npara ver detalhes."
+	hint.text = "Selecione uma arma\npara ver detalhes."
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.add_theme_color_override("font_color", Color(0.45, 0.55, 0.7))
@@ -246,8 +246,52 @@ func _populate_grid() -> void:
 			var locked_lbl = UICardBuilder.add_label(vbox, "Use para desbloquear.", 10, Color(0.4, 0.4, 0.4))
 			locked_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+		card_btn.focus_mode = Control.FOCUS_ALL
 		card_btn.pressed.connect(_show_weapon_details.bind(weapon_id, data, is_unlocked, type_color, type_icon))
 		grid.add_child(card_btn)
+
+	# Bug 2 fix — setup focus_neighbors for grid navigation (4 columns)
+	_setup_grid_focus(grid, COLUMNS)
+	# Connect last row to back_btn
+	var cards = grid.get_children()
+	if not cards.is_empty():
+		var last_row_start = (cards.size() - 1) / COLUMNS * COLUMNS
+		for i in range(last_row_start, cards.size()):
+			cards[i].focus_neighbor_bottom = back_btn.get_path()
+		back_btn.focus_neighbor_top = cards[last_row_start].get_path()
+		# First row wraps to back_btn
+		for i in range(mini(COLUMNS, cards.size())):
+			cards[i].focus_neighbor_top = back_btn.get_path()
+		back_btn.focus_neighbor_bottom = cards[0].get_path()
+		if GamepadUI.is_gamepad_mode:
+			cards[0].call_deferred("grab_focus")
+
+## Setup focus_neighbors for a GridContainer with N columns
+func _setup_grid_focus(g: GridContainer, cols: int) -> void:
+	var children = g.get_children()
+	for i in range(children.size()):
+		var card = children[i]
+		var col = i % cols
+		var row = i / cols
+		if col > 0:
+			card.focus_neighbor_left = children[i - 1].get_path()
+		if col < cols - 1 and i + 1 < children.size():
+			card.focus_neighbor_right = children[i + 1].get_path()
+		if row > 0:
+			card.focus_neighbor_top = children[i - cols].get_path()
+		if i + cols < children.size():
+			card.focus_neighbor_bottom = children[i + cols].get_path()
+		# Auto-scroll when focused
+		card.focus_entered.connect(_on_card_focused.bind(card))
+
+func _on_card_focused(card: Control) -> void:
+	if scroll:
+		var card_pos = card.global_position.y - scroll.global_position.y + scroll.scroll_vertical
+		var card_bottom = card_pos + card.size.y
+		if card_pos < scroll.scroll_vertical:
+			scroll.scroll_vertical = int(card_pos)
+		elif card_bottom > scroll.scroll_vertical + scroll.size.y:
+			scroll.scroll_vertical = int(card_bottom - scroll.size.y)
 
 func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool, type_color: Color, type_icon: String) -> void:
 	AudioManager.play_sfx("menu_click")

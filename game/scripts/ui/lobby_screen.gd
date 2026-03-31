@@ -135,24 +135,28 @@ func _build_ui() -> void:
 	_host_btn = Button.new()
 	_host_btn.text = "Criar sala"
 	_host_btn.custom_minimum_size = Vector2(150, 40)
+	_host_btn.focus_mode = Control.FOCUS_ALL
 	_host_btn.pressed.connect(_on_host)
 	btn_row.add_child(_host_btn)
 
 	_join_btn = Button.new()
 	_join_btn.text = "Entrar"
 	_join_btn.custom_minimum_size = Vector2(150, 40)
+	_join_btn.focus_mode = Control.FOCUS_ALL
 	_join_btn.pressed.connect(_on_join)
 	btn_row.add_child(_join_btn)
 
 	# IP input
 	_ip_input = LineEdit.new()
 	_ip_input.placeholder_text = "IP do host (ex: 192.168.1.10)"
+	_ip_input.focus_mode = Control.FOCUS_ALL
 	_pre_lobby_panel.add_child(_ip_input)
 
 	# Password input
 	_password_input = LineEdit.new()
 	_password_input.placeholder_text = "Senha da sala (opcional)"
 	_password_input.secret = true
+	_password_input.focus_mode = Control.FOCUS_ALL
 	_pre_lobby_panel.add_child(_password_input)
 
 	# Status
@@ -175,6 +179,7 @@ func _build_ui() -> void:
 	var scan_btn = Button.new()
 	scan_btn.text = "Atualizar"
 	scan_btn.custom_minimum_size = Vector2(0, 30)
+	scan_btn.focus_mode = Control.FOCUS_ALL
 	scan_btn.pressed.connect(_refresh_lan)
 	_pre_lobby_panel.add_child(scan_btn)
 
@@ -193,6 +198,7 @@ func _build_ui() -> void:
 	_back_btn = Button.new()
 	_back_btn.text = "Voltar"
 	_back_btn.custom_minimum_size = Vector2(0, 35)
+	_back_btn.focus_mode = Control.FOCUS_ALL
 	_back_btn.pressed.connect(_on_back)
 	_pre_lobby_panel.add_child(_back_btn)
 
@@ -263,6 +269,7 @@ func _build_left_column() -> void:
 	left.add_child(relic_title)
 
 	_relic_option = OptionButton.new()
+	_relic_option.focus_mode = Control.FOCUS_ALL
 	_relic_option.item_selected.connect(_on_relic_selected)
 	left.add_child(_relic_option)
 
@@ -306,13 +313,14 @@ func _build_center_column() -> void:
 	_chat_input.placeholder_text = "Mensagem..."
 	_chat_input.max_length = MAX_CHAT_LENGTH
 	_chat_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_chat_input.focus_mode = Control.FOCUS_ALL
 	_chat_input.text_submitted.connect(_on_chat_submit)
 	chat_row.add_child(_chat_input)
 
 	var send_btn = Button.new()
 	send_btn.text = "Enviar"
 	send_btn.custom_minimum_size = Vector2(70, 0)
-	send_btn.focus_mode = Control.FOCUS_NONE
+	send_btn.focus_mode = Control.FOCUS_ALL
 	send_btn.pressed.connect(func(): _on_chat_submit(_chat_input.text))
 	chat_row.add_child(send_btn)
 
@@ -360,12 +368,14 @@ func _build_bottom_bar() -> void:
 	_ready_btn = Button.new()
 	_ready_btn.text = "Pronto"
 	_ready_btn.custom_minimum_size = Vector2(120, 40)
+	_ready_btn.focus_mode = Control.FOCUS_ALL
 	_ready_btn.pressed.connect(_on_ready_toggled)
 	bottom.add_child(_ready_btn)
 
 	_start_btn = Button.new()
 	_start_btn.text = "Aguardando jogadores..."
 	_start_btn.custom_minimum_size = Vector2(180, 45)
+	_start_btn.focus_mode = Control.FOCUS_ALL
 	_start_btn.pressed.connect(_on_start)
 	_start_btn.visible = false
 	bottom.add_child(_start_btn)
@@ -373,6 +383,7 @@ func _build_bottom_bar() -> void:
 	_lobby_back_btn = Button.new()
 	_lobby_back_btn.text = "Sair"
 	_lobby_back_btn.custom_minimum_size = Vector2(80, 35)
+	_lobby_back_btn.focus_mode = Control.FOCUS_ALL
 	_lobby_back_btn.pressed.connect(_on_back)
 	bottom.add_child(_lobby_back_btn)
 
@@ -413,6 +424,9 @@ func _show_pre_lobby() -> void:
 	_in_lobby = false
 	_populate_recent_servers()
 	_refresh_lan()
+	# Bug 4 fix — grab focus on host button for gamepad
+	if GamepadUI.is_gamepad_mode:
+		_host_btn.call_deferred("grab_focus")
 
 func _show_lobby() -> void:
 	_pre_lobby_panel.visible = false
@@ -423,6 +437,9 @@ func _show_lobby() -> void:
 	_populate_stage_grid()
 	_update_player_list()
 	_update_start_button()
+	# Bug 6 fix — grab focus on ready button for gamepad
+	if GamepadUI.is_gamepad_mode:
+		_ready_btn.call_deferred("grab_focus")
 
 func _refresh_lan() -> void:
 	for child in _lan_list.get_children():
@@ -588,6 +605,7 @@ func _populate_char_grid() -> void:
 	for char_id in all_chars:
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(48, 48)
+		btn.focus_mode = Control.FOCUS_ALL
 		btn.tooltip_text = CharacterDB.get_character(char_id).get("name", char_id)
 
 		# Try to load sprite as icon
@@ -681,6 +699,7 @@ func _populate_stage_grid() -> void:
 	for stage_id in STAGE_ORDER:
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(80, 40)
+		btn.focus_mode = Control.FOCUS_ALL
 		btn.text = STAGE_NAMES.get(stage_id, stage_id)
 
 		var unlocked = SaveManager.is_stage_unlocked(stage_id)

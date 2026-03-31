@@ -39,7 +39,17 @@ func _ready() -> void:
 	_build_ui()
 	_populate_daily_info()
 	_populate_local_leaderboard()
+	_setup_focus_chain()
 	GamepadUI.notify_menu_opened()
+
+func _setup_focus_chain() -> void:
+	# Bug 10 fix — focus chain between play and back buttons
+	_play_btn.focus_neighbor_bottom = _back_btn.get_path()
+	_back_btn.focus_neighbor_top = _play_btn.get_path()
+	_play_btn.focus_neighbor_top = _back_btn.get_path()
+	_back_btn.focus_neighbor_bottom = _play_btn.get_path()
+	if GamepadUI.is_gamepad_mode:
+		_play_btn.call_deferred("grab_focus")
 
 
 func _process(_delta: float) -> void:

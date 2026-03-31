@@ -6,10 +6,10 @@ const SAVE_PATH := "user://keybindings.json"
 
 # Default keybindings: action_name -> {key: KEY_*, gamepad_button: JOY_BUTTON_*, gamepad_axis: {axis, value}}
 var defaults: Dictionary = {
-	"move_up": {"key": KEY_W},
-	"move_down": {"key": KEY_S},
-	"move_left": {"key": KEY_A},
-	"move_right": {"key": KEY_D},
+	"move_up": {"key": KEY_W, "gamepad_axis": {"axis": JOY_AXIS_LEFT_Y, "value": -1.0}},
+	"move_down": {"key": KEY_S, "gamepad_axis": {"axis": JOY_AXIS_LEFT_Y, "value": 1.0}},
+	"move_left": {"key": KEY_A, "gamepad_axis": {"axis": JOY_AXIS_LEFT_X, "value": -1.0}},
+	"move_right": {"key": KEY_D, "gamepad_axis": {"axis": JOY_AXIS_LEFT_X, "value": 1.0}},
 	"dash": {"key": KEY_SPACE, "gamepad_button": JOY_BUTTON_A},
 	"interact": {"key": KEY_E, "gamepad_button": JOY_BUTTON_B},
 	"pause": {"key": KEY_ESCAPE, "gamepad_button": JOY_BUTTON_START},
@@ -79,6 +79,32 @@ func _apply_bindings() -> void:
 			var event = InputEventKey.new()
 			event.physical_keycode = bind["key"]
 			InputMap.action_add_event(action, event)
+
+		# Apply gamepad_button if defined (Bug 13 fix)
+		if "gamepad_button" in bind:
+			var joy_event = InputEventJoypadButton.new()
+			joy_event.button_index = bind["gamepad_button"]
+			var exists = false
+			for ev in InputMap.action_get_events(action):
+				if ev is InputEventJoypadButton and ev.button_index == bind["gamepad_button"]:
+					exists = true
+					break
+			if not exists:
+				InputMap.action_add_event(action, joy_event)
+
+		# Apply gamepad_axis if defined (Bug 14 fix — analog stick)
+		if "gamepad_axis" in bind:
+			var axis_data = bind["gamepad_axis"]
+			var joy_axis = InputEventJoypadMotion.new()
+			joy_axis.axis = axis_data["axis"]
+			joy_axis.axis_value = axis_data["value"]
+			var axis_exists = false
+			for ev in InputMap.action_get_events(action):
+				if ev is InputEventJoypadMotion and ev.axis == axis_data["axis"] and signf(ev.axis_value) == signf(axis_data["value"]):
+					axis_exists = true
+					break
+			if not axis_exists:
+				InputMap.action_add_event(action, joy_axis)
 
 func save_bindings() -> void:
 	var save_data: Dictionary = {}

@@ -42,6 +42,39 @@ func _build_mutation_cards() -> void:
 		var card = _create_card(mutations[mutation_id])
 		mutation_grid.add_child(card)
 
+	# Bug 9 fix — setup focus chain between checkboxes
+	var checkboxes: Array[CheckBox] = []
+	for card_node in mutation_grid.get_children():
+		var vbox_node = card_node.get_child(0) if card_node.get_child_count() > 0 else null
+		if vbox_node:
+			for child_node in vbox_node.get_children():
+				if child_node is CheckBox:
+					checkboxes.append(child_node)
+	for i in range(checkboxes.size()):
+		if i > 0:
+			checkboxes[i].focus_neighbor_top = checkboxes[i - 1].get_path()
+			checkboxes[i].focus_neighbor_left = checkboxes[i - 1].get_path()
+		if i < checkboxes.size() - 1:
+			checkboxes[i].focus_neighbor_bottom = checkboxes[i + 1].get_path()
+			checkboxes[i].focus_neighbor_right = checkboxes[i + 1].get_path()
+	# Connect last checkbox to confirm/back buttons
+	if not checkboxes.is_empty():
+		checkboxes[-1].focus_neighbor_bottom = confirm_button.get_path()
+		confirm_button.focus_neighbor_top = checkboxes[-1].get_path()
+		back_button.focus_neighbor_top = checkboxes[-1].get_path()
+		checkboxes[0].focus_neighbor_top = back_button.get_path()
+	# Connect confirm ↔ back
+	confirm_button.focus_neighbor_left = back_button.get_path()
+	back_button.focus_neighbor_right = confirm_button.get_path()
+	confirm_button.focus_neighbor_right = back_button.get_path()
+	back_button.focus_neighbor_left = confirm_button.get_path()
+	# Grab focus
+	if GamepadUI.is_gamepad_mode:
+		if not checkboxes.is_empty():
+			checkboxes[0].call_deferred("grab_focus")
+		else:
+			confirm_button.call_deferred("grab_focus")
+
 func _create_card(mutation: Dictionary) -> PanelContainer:
 	var card = PanelContainer.new()
 	card.custom_minimum_size = Vector2(280, 120)
@@ -92,6 +125,7 @@ func _create_card(mutation: Dictionary) -> PanelContainer:
 	# Toggle checkbox
 	var checkbox = CheckBox.new()
 	checkbox.text = "Ativar"
+	checkbox.focus_mode = Control.FOCUS_ALL
 	checkbox.button_pressed = MutationManager.is_active(mutation["id"]) if mutation.has("id") else false
 	var mutation_id = mutation.get("id", "")
 	checkbox.toggled.connect(func(is_active: bool): _on_mutation_toggled(mutation_id, is_active))

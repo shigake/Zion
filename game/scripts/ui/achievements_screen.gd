@@ -33,6 +33,16 @@ func _ready() -> void:
 	_build_ui()
 	_populate_grid()
 	GamepadUI.notify_menu_opened()
+	# Bug 12 fix — grab focus on back button for gamepad
+	if GamepadUI.is_gamepad_mode:
+		back_btn.call_deferred("grab_focus")
+
+func _unhandled_input_scroll(event: InputEvent) -> void:
+	# Bug 12 — D-pad scrolls achievement list
+	if scroll and (event.is_action_pressed("ui_down") or event.is_action("ui_down")):
+		scroll.scroll_vertical += 40
+	elif scroll and (event.is_action_pressed("ui_up") or event.is_action("ui_up")):
+		scroll.scroll_vertical -= 40
 
 
 func _build_ui() -> void:
@@ -59,6 +69,7 @@ func _build_ui() -> void:
 	back_btn = Button.new()
 	back_btn.text = "< Voltar"
 	back_btn.custom_minimum_size = Vector2(120, 40)
+	back_btn.focus_mode = Control.FOCUS_ALL
 	back_btn.pressed.connect(_on_back)
 	_style_button(back_btn)
 	header.add_child(back_btn)

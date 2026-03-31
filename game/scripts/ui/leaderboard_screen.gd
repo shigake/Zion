@@ -46,8 +46,33 @@ func _ready() -> void:
 	_build_ui()
 	# Connect to online leaderboard signal
 	Telemetry.leaderboard_received.connect(_on_leaderboard_received)
+	_setup_focus_chain()
 	_show_mode(Mode.DAILY)
 	GamepadUI.notify_menu_opened()
+
+func _setup_focus_chain() -> void:
+	# Bug 11 fix — tab buttons horizontal focus
+	for i in range(_tab_buttons.size()):
+		if i > 0:
+			_tab_buttons[i].focus_neighbor_left = _tab_buttons[i - 1].get_path()
+		if i < _tab_buttons.size() - 1:
+			_tab_buttons[i].focus_neighbor_right = _tab_buttons[i + 1].get_path()
+		# All tabs connect down to refresh/back
+		_tab_buttons[i].focus_neighbor_bottom = _refresh_btn.get_path()
+	# Refresh ↔ Back horizontal
+	_refresh_btn.focus_neighbor_right = _back_btn.get_path()
+	_back_btn.focus_neighbor_left = _refresh_btn.get_path()
+	_refresh_btn.focus_neighbor_left = _back_btn.get_path()
+	_back_btn.focus_neighbor_right = _refresh_btn.get_path()
+	# Refresh/back connect up to first tab
+	if not _tab_buttons.is_empty():
+		_refresh_btn.focus_neighbor_top = _tab_buttons[0].get_path()
+		_back_btn.focus_neighbor_top = _tab_buttons[-1].get_path()
+		# Wrap bottom of buttons to tabs
+		_refresh_btn.focus_neighbor_bottom = _tab_buttons[0].get_path()
+		_back_btn.focus_neighbor_bottom = _tab_buttons[-1].get_path()
+	if GamepadUI.is_gamepad_mode and not _tab_buttons.is_empty():
+		_tab_buttons[0].call_deferred("grab_focus")
 
 
 func _get_player_name() -> String:

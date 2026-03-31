@@ -22,9 +22,14 @@ func _ready() -> void:
 func _register_inventory_action() -> void:
 	if not InputMap.has_action("inventory"):
 		InputMap.add_action("inventory")
+	# Teclado — TAB
 	var event = InputEventKey.new()
 	event.physical_keycode = KEY_TAB
 	InputMap.action_add_event("inventory", event)
+	# Gamepad — Select/Back button (Bug 7 fix)
+	var joy_event = InputEventJoypadButton.new()
+	joy_event.button_index = JOY_BUTTON_BACK
+	InputMap.action_add_event("inventory", joy_event)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("inventory") and not GameManager.is_game_over:
@@ -32,6 +37,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_close()
 		else:
 			_open()
+		if get_viewport():
+			get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel") and _is_open:
+		_close()
 		if get_viewport():
 			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("pause") and _is_open:
@@ -67,6 +76,11 @@ func _open() -> void:
 	get_tree().paused = true
 	_rebuild_content()
 	_show()
+	# Bug 8 fix — grab focus on close button for gamepad
+	if GamepadUI.is_gamepad_mode:
+		var close = panel.get_node_or_null("MarginContainer/ScrollContainer/VBoxContainer/HBoxContainer")
+		if close and close.get_child_count() > 1:
+			close.get_child(close.get_child_count() - 1).call_deferred("grab_focus")
 	AudioManager.play_sfx("menu_click")
 
 func _close() -> void:
@@ -122,6 +136,7 @@ func _rebuild_content() -> void:
 	var close_btn = Button.new()
 	close_btn.text = "X"
 	close_btn.custom_minimum_size = Vector2(32, 32)
+	close_btn.focus_mode = Control.FOCUS_ALL
 	close_btn.pressed.connect(_close)
 	header.add_child(close_btn)
 

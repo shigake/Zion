@@ -2,7 +2,7 @@
 
 > Correção de todos os bugs de navegação e jogabilidade com controle (gamepad) em todas as telas do jogo.
 
-## Status: 🔴 Pendente
+## Status: 🟢 Concluído
 
 ---
 

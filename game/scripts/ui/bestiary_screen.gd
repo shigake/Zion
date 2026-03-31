@@ -373,6 +373,14 @@ func _build_ui() -> void:
 		filter_container.add_child(btn)
 		filter_buttons[filter_key] = btn
 
+	# Setup horizontal focus neighbors for filter buttons
+	var fb_children = filter_container.get_children()
+	for i in range(fb_children.size()):
+		if i > 0:
+			fb_children[i].focus_neighbor_left = fb_children[i - 1].get_path()
+		if i < fb_children.size() - 1:
+			fb_children[i].focus_neighbor_right = fb_children[i + 1].get_path()
+
 	# Conteudo: grid + detalhe
 	var content_hbox = HBoxContainer.new()
 	content_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -561,8 +569,54 @@ func _populate_grid() -> void:
 		UICardBuilder.add_label(vbox, entry["type"], 10, type_colors.get(entry["type"], entry["color"]))
 		UICardBuilder.add_label(vbox, "Kills: %d" % kills if kills > 0 else "", 11, Color(0.6, 0.6, 0.6))
 
+		card_btn.focus_mode = Control.FOCUS_ALL
 		card_btn.pressed.connect(_show_enemy_details.bind(entry, kills))
 		grid.add_child(card_btn)
+
+	# Bug 3 fix — setup focus_neighbors for grid navigation
+	_setup_grid_focus(grid, COLUMNS)
+	# Connect grid to back_btn and filters
+	var cards = grid.get_children()
+	if not cards.is_empty():
+		var last_row_start = (cards.size() - 1) / COLUMNS * COLUMNS
+		for i in range(last_row_start, cards.size()):
+			cards[i].focus_neighbor_bottom = back_btn.get_path()
+		back_btn.focus_neighbor_top = cards[last_row_start].get_path()
+		# First row connects up to filters
+		var filter_children = filter_container.get_children()
+		if not filter_children.is_empty():
+			for i in range(mini(COLUMNS, cards.size())):
+				cards[i].focus_neighbor_top = filter_children[0].get_path()
+			for fb in filter_children:
+				fb.focus_neighbor_bottom = cards[0].get_path()
+		if GamepadUI.is_gamepad_mode:
+			cards[0].call_deferred("grab_focus")
+
+## Setup focus_neighbors for a GridContainer with N columns
+func _setup_grid_focus(g: GridContainer, cols: int) -> void:
+	var children = g.get_children()
+	for i in range(children.size()):
+		var card = children[i]
+		var col = i % cols
+		var row = i / cols
+		if col > 0:
+			card.focus_neighbor_left = children[i - 1].get_path()
+		if col < cols - 1 and i + 1 < children.size():
+			card.focus_neighbor_right = children[i + 1].get_path()
+		if row > 0:
+			card.focus_neighbor_top = children[i - cols].get_path()
+		if i + cols < children.size():
+			card.focus_neighbor_bottom = children[i + cols].get_path()
+		card.focus_entered.connect(_on_card_focused.bind(card))
+
+func _on_card_focused(card: Control) -> void:
+	if scroll:
+		var card_pos = card.global_position.y - scroll.global_position.y + scroll.scroll_vertical
+		var card_bottom = card_pos + card.size.y
+		if card_pos < scroll.scroll_vertical:
+			scroll.scroll_vertical = int(card_pos)
+		elif card_bottom > scroll.scroll_vertical + scroll.size.y:
+			scroll.scroll_vertical = int(card_bottom - scroll.size.y)
 
 func _show_enemy_details(entry: Dictionary, kills: int) -> void:
 	AudioManager.play_sfx("menu_click")

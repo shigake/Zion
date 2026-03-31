@@ -33,6 +33,8 @@ func _build_shop() -> void:
 	_clear_upgrades()
 	_update_crystals()
 
+	var buy_buttons: Array[Button] = []
+
 	for uid in ShopDB.get_all_upgrade_ids():
 		var data = ShopDB.get_upgrade(uid)
 		var current = SaveManager.get_upgrade_level(uid)
@@ -78,6 +80,7 @@ func _build_shop() -> void:
 
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(120, 35)
+		btn.focus_mode = Control.FOCUS_ALL
 		if maxed:
 			btn.text = LocaleManager.tr_key("max_level")
 			btn.disabled = true
@@ -87,8 +90,29 @@ func _build_shop() -> void:
 			var captured_uid = uid
 			btn.pressed.connect(func(): _buy(captured_uid))
 		hbox.add_child(btn)
+		buy_buttons.append(btn)
 
 		upgrade_container.add_child(panel)
+
+	# Bug 1 fix — setup focus chain for shop buttons
+	back_btn.focus_mode = Control.FOCUS_ALL
+	for i in range(buy_buttons.size()):
+		if i > 0:
+			buy_buttons[i].focus_neighbor_top = buy_buttons[i - 1].get_path()
+		if i < buy_buttons.size() - 1:
+			buy_buttons[i].focus_neighbor_bottom = buy_buttons[i + 1].get_path()
+	# Connect last button to back_btn and vice-versa
+	if not buy_buttons.is_empty():
+		buy_buttons[-1].focus_neighbor_bottom = back_btn.get_path()
+		back_btn.focus_neighbor_top = buy_buttons[-1].get_path()
+		buy_buttons[0].focus_neighbor_top = back_btn.get_path()
+		back_btn.focus_neighbor_bottom = buy_buttons[0].get_path()
+		# Grab focus on first button for gamepad
+		if GamepadUI.is_gamepad_mode:
+			buy_buttons[0].call_deferred("grab_focus")
+	else:
+		if GamepadUI.is_gamepad_mode:
+			back_btn.call_deferred("grab_focus")
 
 func _buy(uid: String) -> void:
 	var success = SaveManager.buy_upgrade(uid)
