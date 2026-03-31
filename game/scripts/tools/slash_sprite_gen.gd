@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Generates 16x32 pixel art slash trail sprites for all 10 melee weapons.
+## Generates 16x32 pixel art slash trail sprites for all 11 melee weapons.
 ## Run: godot --headless --script res://scripts/tools/slash_sprite_gen.gd
 
 const W := 16  # Width
@@ -23,6 +23,7 @@ func _generate_all() -> void:
 	_gen_dual_katana_slash()
 	_gen_cloud_sword_wave()
 	_gen_boxing_punch()
+	_gen_shadow_claw_slash()
 
 	print("All slash trail sprites generated!")
 
@@ -320,3 +321,54 @@ func _gen_boxing_punch() -> void:
 		_px(img, tx, ty, yellow_bright)
 
 	_save(img, "boxing_punch")
+
+func _gen_shadow_claw_slash() -> void:
+	## Purple shadow dual claw marks with energy trail
+	var img = _img()
+	var deep_purple = Color(0.5, 0.1, 0.8, 0.9)
+	var purple_glow = Color(0.7, 0.3, 1.0, 0.7)
+	var dark_shadow = Color(0.2, 0.05, 0.4, 0.6)
+	var bright_tips = Color(0.9, 0.5, 1.0, 0.95)
+
+	# First claw mark (top-left to bottom-right) — "\"
+	_draw_thick_line(img, 2, 2, 10, 28, deep_purple, 2)
+	_draw_line(img, 3, 2, 11, 28, purple_glow)
+
+	# Second claw mark (top-right to bottom-left, offset) — forming "\\" pattern
+	_draw_thick_line(img, 6, 3, 14, 27, deep_purple, 2)
+	_draw_line(img, 7, 3, 15, 27, purple_glow)
+
+	# Shadow energy trail behind the claw marks
+	_draw_thick_line(img, 1, 4, 9, 26, dark_shadow, 1)
+	_draw_thick_line(img, 5, 5, 13, 25, dark_shadow, 1)
+
+	# Bright tips at the start of each claw
+	_px(img, 2, 1, bright_tips)
+	_px(img, 3, 1, bright_tips)
+	_px(img, 2, 2, bright_tips)
+	_px(img, 6, 2, bright_tips)
+	_px(img, 7, 2, bright_tips)
+	_px(img, 6, 3, bright_tips)
+
+	# Bright tips at the end of each claw
+	_px(img, 10, 29, bright_tips)
+	_px(img, 11, 28, bright_tips)
+	_px(img, 14, 28, bright_tips)
+	_px(img, 15, 27, bright_tips)
+
+	# Purple energy wisps scattered along the trails
+	_px(img, 0, 8, purple_glow)
+	_px(img, 4, 12, purple_glow)
+	_px(img, 12, 16, purple_glow)
+	_px(img, 8, 20, purple_glow)
+	_px(img, 14, 22, purple_glow)
+	_px(img, 1, 18, dark_shadow)
+	_px(img, 11, 10, dark_shadow)
+	_px(img, 15, 14, dark_shadow)
+
+	# Central glow where claw marks overlap
+	_fill(img, 5, 14, 4, 3, Color(0.6, 0.2, 0.9, 0.5))
+	_px(img, 6, 15, Color(0.8, 0.4, 1.0, 0.8))
+	_px(img, 7, 15, Color(0.8, 0.4, 1.0, 0.8))
+
+	_save(img, "shadow_claw_slash")

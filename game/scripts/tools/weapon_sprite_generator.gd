@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Generates 16x16 pixel art sprites for all 28 weapons and 4 pickups.
+## Generates 16x16 pixel art sprites for all 33 weapons and 4 pickups.
 ## Run: godot --headless --script res://scripts/tools/weapon_sprite_generator.gd
 
 const S := 16  # Sprite size
@@ -13,7 +13,7 @@ func _generate_all() -> void:
 	DirAccess.make_dir_recursive_absolute("res://assets/sprites/weapons")
 	DirAccess.make_dir_recursive_absolute("res://assets/sprites/pickups")
 
-	# Melee (10)
+	# Melee (12)
 	_gen_katana()
 	_gen_scythe()
 	_gen_axe()
@@ -24,8 +24,10 @@ func _generate_all() -> void:
 	_gen_dual_katana()
 	_gen_cloud_sword()
 	_gen_boxing_gloves()
+	_gen_shadow_claw()
+	_gen_chain_whip()
 
-	# Ranged (10)
+	# Ranged (11)
 	_gen_machinegun()
 	_gen_staff()
 	_gen_bazooka()
@@ -36,8 +38,9 @@ func _generate_all() -> void:
 	_gen_crossbow()
 	_gen_plasma_cannon()
 	_gen_elven_bow()
+	_gen_boomerang()
 
-	# Summon/Special (8)
+	# Summon/Special (10)
 	_gen_necro()
 	_gen_drone()
 	_gen_totem()
@@ -46,6 +49,8 @@ func _generate_all() -> void:
 	_gen_magic_book()
 	_gen_time_bomb()
 	_gen_portal_weapon()
+	_gen_tornado()
+	_gen_blood_orb()
 
 	# Pickups (4)
 	_gen_xp_gem()
@@ -53,7 +58,7 @@ func _generate_all() -> void:
 	_gen_health_pickup()
 	_gen_magnet_pickup()
 
-	print("All weapon and pickup sprites generated!")
+	print("All 33 weapon and 4 pickup sprites generated!")
 
 # ==================== HELPERS ====================
 func _img() -> Image:
@@ -90,7 +95,7 @@ func _save(img: Image, path: String) -> void:
 	img.save_png(path)
 	print("Saved: ", path)
 
-# ==================== MELEE (10) ====================
+# ==================== MELEE (12) ====================
 
 func _gen_katana() -> void:
 	var img = _img()
@@ -363,7 +368,84 @@ func _gen_boxing_gloves() -> void:
 	_outline(img, Color(0.2, 0.05, 0.05))
 	_save(img, "res://assets/sprites/weapons/boxing_gloves.png")
 
-# ==================== RANGED (10) ====================
+func _gen_shadow_claw() -> void:
+	var img = _img()
+	var claw = Color(0.5, 0.1, 0.8)
+	var claw_hi = Color(0.7, 0.3, 1.0)
+	var shadow = Color(0.2, 0.05, 0.4)
+	var tip = Color(0.9, 0.5, 1.0)
+
+	# Shadow aura base
+	_fill(img, 3, 4, 10, 8, shadow)
+	# Three claw blades fanning out from bottom-center
+	# Left claw
+	_px(img, 3, 2, tip)
+	_px(img, 4, 3, claw_hi)
+	_px(img, 4, 4, claw)
+	_px(img, 5, 5, claw)
+	_px(img, 5, 6, claw)
+	_px(img, 6, 7, claw)
+	_px(img, 6, 8, claw)
+	_px(img, 7, 9, claw)
+	# Center claw
+	_px(img, 7, 1, tip)
+	_px(img, 8, 1, tip)
+	_px(img, 7, 2, claw_hi)
+	_px(img, 8, 2, claw_hi)
+	_fill(img, 7, 3, 2, 7, claw)
+	# Right claw
+	_px(img, 12, 2, tip)
+	_px(img, 11, 3, claw_hi)
+	_px(img, 11, 4, claw)
+	_px(img, 10, 5, claw)
+	_px(img, 10, 6, claw)
+	_px(img, 9, 7, claw)
+	_px(img, 9, 8, claw)
+	_px(img, 8, 9, claw)
+	# Grip / palm base
+	_fill(img, 5, 10, 6, 3, Color(0.35, 0.1, 0.5))
+	_fill(img, 6, 13, 4, 2, Color(0.3, 0.08, 0.45))
+	# Purple energy glow on claws
+	_px(img, 5, 4, claw_hi)
+	_px(img, 10, 4, claw_hi)
+	_px(img, 7, 2, claw_hi)
+
+	_outline(img, Color(0.1, 0.02, 0.18))
+	_save(img, "res://assets/sprites/weapons/shadow_claw.png")
+
+func _gen_chain_whip() -> void:
+	var img = _img()
+	var chain = Color(0.6, 0.6, 0.65)
+	var chain_hi = Color(0.78, 0.78, 0.84)
+	var handle = Color(0.4, 0.25, 0.15)
+	var spike = Color(0.5, 0.5, 0.55)
+
+	# Handle (bottom-left)
+	_fill(img, 1, 12, 3, 3, handle)
+	_fill(img, 2, 11, 2, 1, handle)
+	# Chain links curving up and right
+	# Each link is a 2x1 block
+	_fill(img, 3, 10, 2, 1, chain)
+	_fill(img, 4, 9, 2, 1, chain_hi)
+	_fill(img, 5, 8, 2, 1, chain)
+	_fill(img, 6, 7, 2, 1, chain_hi)
+	_fill(img, 7, 6, 2, 1, chain)
+	_fill(img, 8, 5, 2, 1, chain_hi)
+	_fill(img, 9, 4, 2, 1, chain)
+	_fill(img, 10, 3, 2, 1, chain_hi)
+	_fill(img, 11, 2, 2, 1, chain)
+	# Spiked tip at end
+	_px(img, 13, 1, spike)
+	_px(img, 14, 0, spike)
+	_px(img, 14, 2, spike)
+	_px(img, 12, 1, spike)
+	# Highlight on handle
+	_px(img, 2, 12, Color(0.55, 0.38, 0.22))
+
+	_outline(img, Color(0.12, 0.12, 0.14))
+	_save(img, "res://assets/sprites/weapons/chain_whip.png")
+
+# ==================== RANGED (11) ====================
 
 func _gen_machinegun() -> void:
 	var img = _img()
@@ -652,7 +734,47 @@ func _gen_elven_bow() -> void:
 	_outline(img, Color(0.08, 0.18, 0.08))
 	_save(img, "res://assets/sprites/weapons/elven_bow.png")
 
-# ==================== SUMMON/SPECIAL (8) ====================
+func _gen_boomerang() -> void:
+	var img = _img()
+	var wood = Color(0.6, 0.45, 0.2)
+	var wood_hi = Color(0.75, 0.58, 0.3)
+	var wood_dk = Color(0.45, 0.32, 0.12)
+	var stripe = Color(0.85, 0.3, 0.15)
+
+	# V-shaped boomerang (angled, opening to top-right)
+	# Left arm (going up-left)
+	_fill(img, 2, 6, 2, 5, wood)
+	_fill(img, 3, 5, 2, 1, wood)
+	_fill(img, 4, 4, 2, 1, wood)
+	_px(img, 5, 3, wood)
+	_px(img, 6, 3, wood)
+	# Right arm (going up-right)
+	_fill(img, 7, 4, 2, 1, wood)
+	_fill(img, 8, 3, 2, 1, wood)
+	_fill(img, 9, 2, 2, 1, wood)
+	_fill(img, 10, 1, 2, 1, wood)
+	_fill(img, 11, 1, 2, 2, wood)
+	# Bend at the V vertex
+	_fill(img, 4, 7, 4, 2, wood)
+	_fill(img, 5, 6, 3, 1, wood)
+	# Wood highlights
+	_px(img, 2, 6, wood_hi)
+	_px(img, 3, 5, wood_hi)
+	_px(img, 10, 1, wood_hi)
+	_px(img, 11, 1, wood_hi)
+	# Painted stripe decoration
+	_px(img, 2, 8, stripe)
+	_px(img, 2, 9, stripe)
+	_px(img, 12, 1, stripe)
+	_px(img, 12, 2, stripe)
+	# Dark edge
+	_px(img, 2, 10, wood_dk)
+	_px(img, 13, 1, wood_dk)
+
+	_outline(img, Color(0.15, 0.12, 0.05))
+	_save(img, "res://assets/sprites/weapons/boomerang.png")
+
+# ==================== SUMMON/SPECIAL (10) ====================
 
 func _gen_necro() -> void:
 	var img = _img()
@@ -942,6 +1064,90 @@ func _gen_portal_weapon() -> void:
 
 	_outline(img, Color(0.18, 0.08, 0.25))
 	_save(img, "res://assets/sprites/weapons/portal_weapon.png")
+
+func _gen_tornado() -> void:
+	var img = _img()
+	var wind = Color(0.6, 0.75, 0.8)
+	var wind_hi = Color(0.8, 0.9, 0.95)
+	var wind_dk = Color(0.4, 0.55, 0.65)
+	var core = Color(0.9, 0.95, 1.0)
+
+	# Funnel shape — wide at top, narrow at bottom
+	# Top (widest)
+	_fill(img, 1, 1, 14, 2, wind)
+	_fill(img, 2, 1, 12, 1, wind_hi)
+	# Upper-mid
+	_fill(img, 3, 3, 10, 2, wind)
+	_fill(img, 4, 3, 8, 1, wind_hi)
+	# Mid
+	_fill(img, 5, 5, 6, 2, wind)
+	_fill(img, 5, 5, 6, 1, wind_hi)
+	# Lower-mid
+	_fill(img, 6, 7, 4, 2, wind)
+	_px(img, 6, 7, wind_hi)
+	_px(img, 7, 7, wind_hi)
+	# Bottom (narrowest)
+	_fill(img, 7, 9, 2, 3, wind_dk)
+	_px(img, 7, 12, wind_dk)
+	_px(img, 8, 12, wind_dk)
+	# Swirl lines
+	_px(img, 2, 2, wind_dk)
+	_px(img, 5, 4, wind_dk)
+	_px(img, 12, 2, wind_dk)
+	_px(img, 10, 4, wind_dk)
+	# Bright core center
+	_px(img, 7, 5, core)
+	_px(img, 8, 5, core)
+	_px(img, 7, 6, core)
+	# Debris particles
+	_px(img, 0, 2, Color(0.5, 0.4, 0.3, 0.6))
+	_px(img, 15, 1, Color(0.5, 0.4, 0.3, 0.6))
+	_px(img, 3, 5, Color(0.5, 0.4, 0.3, 0.5))
+	_px(img, 12, 6, Color(0.5, 0.4, 0.3, 0.5))
+
+	_outline(img, Color(0.15, 0.2, 0.25))
+	_save(img, "res://assets/sprites/weapons/tornado.png")
+
+func _gen_blood_orb() -> void:
+	var img = _img()
+	var blood = Color(0.7, 0.05, 0.1)
+	var blood_hi = Color(0.9, 0.15, 0.2)
+	var blood_dk = Color(0.45, 0.02, 0.05)
+	var core = Color(1.0, 0.3, 0.35)
+	var drip = Color(0.55, 0.03, 0.08)
+
+	# Orb body (circle)
+	_fill(img, 5, 2, 6, 1, blood)
+	_fill(img, 4, 3, 8, 2, blood)
+	_fill(img, 3, 5, 10, 4, blood)
+	_fill(img, 4, 9, 8, 2, blood)
+	_fill(img, 5, 11, 6, 1, blood)
+	# Highlight (upper-left)
+	_fill(img, 5, 3, 3, 2, blood_hi)
+	_px(img, 5, 2, blood_hi)
+	_px(img, 4, 4, blood_hi)
+	# Core glow
+	_px(img, 7, 6, core)
+	_px(img, 8, 6, core)
+	_px(img, 7, 7, core)
+	# Dark shading (lower-right)
+	_fill(img, 9, 7, 3, 2, blood_dk)
+	_fill(img, 8, 9, 3, 2, blood_dk)
+	_fill(img, 7, 11, 2, 1, blood_dk)
+	# Blood drips hanging from bottom
+	_px(img, 6, 12, drip)
+	_px(img, 6, 13, drip)
+	_px(img, 9, 12, drip)
+	_px(img, 9, 13, drip)
+	_px(img, 9, 14, drip)
+	# Pulsing aura pixels
+	_px(img, 2, 6, Color(0.6, 0.05, 0.1, 0.3))
+	_px(img, 13, 6, Color(0.6, 0.05, 0.1, 0.3))
+	_px(img, 7, 0, Color(0.6, 0.05, 0.1, 0.3))
+	_px(img, 8, 14, Color(0.6, 0.05, 0.1, 0.3))
+
+	_outline(img, Color(0.2, 0.02, 0.05))
+	_save(img, "res://assets/sprites/weapons/blood_orb.png")
 
 # ==================== PICKUPS (4) ====================
 
