@@ -288,10 +288,12 @@ func add_xp(amount: int) -> void:
 		player_xp_to_next = int(player_xp_to_next * GameConstants.XP_LEVEL_SCALE) + GameConstants.XP_LEVEL_FLAT
 		player_leveled_up.emit(player_level)
 		AudioManager.play_sfx("level_up")
-		# Level up particles
+		# Level up particles + bloom
 		var players = get_players()
 		if not players.is_empty():
 			ParticleFactory.spawn_level_up_particles(players[0].global_position)
+		if get_tree() and get_tree().current_scene:
+			StageAtmosphere.bloom_spike(get_tree().current_scene, 0.8, 0.5)
 			ScreenEffects.shake(0.1)
 
 func get_difficulty_multiplier() -> float:

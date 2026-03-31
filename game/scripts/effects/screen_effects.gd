@@ -302,8 +302,19 @@ func _show_kill_streak(count: int) -> void:
 	else:
 		msg = _streak_messages[0] % count  # COMBO x5!
 
+	# Cor por tier
+	var streak_color: Color
+	if count >= GameConstants.KILL_STREAK_TIER_4:
+		streak_color = Color(1.0, 0.2, 0.2)  # Vermelho GODLIKE
+	elif count >= GameConstants.KILL_STREAK_TIER_3:
+		streak_color = Color(1.0, 0.5, 0.0)  # Laranja UNSTOPPABLE
+	elif count >= GameConstants.KILL_STREAK_TIER_2:
+		streak_color = Color(1.0, 0.85, 0.0)  # Amarelo MASSACRE
+	else:
+		streak_color = Color(1.0, 1.0, 1.0)  # Branco COMBO
 	_kill_streak_label.text = msg
 	_kill_streak_label.visible = true
+	_kill_streak_label.add_theme_color_override("font_color", streak_color)
 	_kill_streak_label.modulate = Color(1, 1, 1, 1)
 	_kill_streak_label.scale = Vector2(0.5, 0.5)
 	_kill_streak_label.pivot_offset = _kill_streak_label.size / 2.0

@@ -476,10 +476,19 @@ func _process_stage_behavior(delta: float) -> void:
 			_behavior_timer -= delta
 			if _behavior_timer <= 0.0:
 				_behavior_timer = _behavior_cooldown
+				# Flash na posição antiga
+				ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(0.5, 0.2, 0.8), 10)
 				var offset = Vector3(randf_range(-3.0, 3.0), 0, randf_range(-3.0, 3.0))
 				global_position = target.global_position + offset
-				ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(0.5, 0.2, 0.8), 8)
+				# Flash na posição nova
+				ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(0.7, 0.3, 1.0), 10)
 				AudioManager.play_sfx("hit")
+				# Scale-in animation
+				var sprite = _get_cached_sprite()
+				if sprite:
+					sprite.scale = Vector3(0.3, 0.3, 0.3)
+					var tw = create_tween()
+					tw.tween_property(sprite, "scale", _sprite_base_scale if _sprite_base_scale != Vector3.ZERO else Vector3.ONE, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 		"ambush":
 			if not _ambush_triggered and dist_to_target < 8.0:
 				_ambush_triggered = true
@@ -493,6 +502,9 @@ func _process_stage_behavior(delta: float) -> void:
 		"charge":
 			if _is_charging:
 				_behavior_timer -= delta
+				# Trail de velocidade durante charge
+				if Engine.get_frames_per_second() > 40 and _frame_counter % 3 == 0:
+					ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.3, 0), Color(1.0, 0.6, 0.1, 0.5), 2)
 				if _behavior_timer <= 0.0:
 					_is_charging = false
 					_behavior_timer = _behavior_cooldown
@@ -502,8 +514,10 @@ func _process_stage_behavior(delta: float) -> void:
 					_is_charging = true
 					_charge_dir = (target.global_position - global_position).normalized()
 					_charge_dir.y = 0
-					_behavior_timer = 0.8  # Charge duration
-					ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2), 6)
+					_behavior_timer = 0.8
+					# Warning flash antes do charge
+					ParticleFactory.spawn_hit_particles(global_position + Vector3(0, 0.5, 0), Color(1.0, 0.3, 0.1), 8)
+					AudioManager.play_sfx("enemy_growl")
 		"stealth":
 			var alpha = clampf(1.0 - (dist_to_target / _stealth_range), 0.05, 1.0)
 			var sprite = _get_cached_sprite()
@@ -750,6 +764,9 @@ func _die() -> void:
 	if is_in_group("boss"):
 		AudioManager.play_sfx("boss_death")
 		GameManager.boss_died.emit(name)
+		# Bloom spike na morte do boss
+		if get_tree() and get_tree().current_scene:
+			StageAtmosphere.bloom_spike(get_tree().current_scene, 1.0, 1.0)
 		Telemetry.send_event("boss_killed", {
 			"boss_name": name,
 			"stage": GameManager.selected_stage,

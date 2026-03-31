@@ -389,6 +389,14 @@ func _make_elite(enemy: Node3D) -> void:
 		enemy.enemy_color = GameConstants.ELITE_COLOR
 		enemy.scale = GameConstants.ELITE_SCALE
 		AudioManager.play_sfx("enemy_growl")
+		# Aura dourada pulsante para elites
+		var aura = OmniLight3D.new()
+		aura.name = "EliteAura"
+		aura.light_color = Color(1.0, 0.85, 0.2)
+		aura.light_energy = 1.5
+		aura.omni_range = 3.0
+		aura.position.y = 0.5
+		enemy.add_child(aura)
 
 func _spawn_miniboss() -> void:
 	var players = GameManager.get_players()

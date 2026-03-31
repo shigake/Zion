@@ -16,6 +16,9 @@ func _ready() -> void:
 	EvolutionDB.reset()
 	SynergySystem.reset()
 
+	# Aplica iluminação e atmosfera da fenda
+	StageAtmosphere.apply(self, GameManager.selected_stage)
+
 	# Conecta signals para checar sinergias quando armas mudam
 	GameManager.weapon_added.connect(func(_id): SynergySystem.check_synergies())
 	GameManager.weapon_upgraded.connect(func(_id, _lv): SynergySystem.check_synergies())

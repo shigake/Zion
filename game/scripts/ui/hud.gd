@@ -47,6 +47,9 @@ var minimap: Control = null
 
 # XP progress text label (overlaid on XP bar)
 var _xp_text_label: Label = null
+var _prev_boss_hp: float = -1.0
+var _boss_ghost_hp: float = -1.0
+var _boss_shake_timer: float = 0.0
 
 # Chest arrows and quest display
 var _chest_arrows: Dictionary = {}  # chest_instance_id -> Label
@@ -577,15 +580,37 @@ func _update_boss_hp() -> void:
 	else:
 		boss_hp_bar.max_value = 100
 
+	var current_boss_hp: float
 	if "hp" in boss:
-		boss_hp_bar.value = boss.hp
+		current_boss_hp = boss.hp
 	elif "current_hp" in boss:
-		boss_hp_bar.value = boss.current_hp
+		current_boss_hp = boss.current_hp
 	else:
-		boss_hp_bar.value = boss_hp_bar.max_value
+		current_boss_hp = boss_hp_bar.max_value
+	boss_hp_bar.value = current_boss_hp
+
+	# Ghost HP (mostra dano recente como sombra)
+	if _prev_boss_hp < 0:
+		_prev_boss_hp = current_boss_hp
+		_boss_ghost_hp = current_boss_hp
+	if current_boss_hp < _prev_boss_hp:
+		# Boss tomou dano — shake + ghost
+		_boss_shake_timer = 0.15
+		_boss_ghost_hp = _prev_boss_hp
+	_prev_boss_hp = current_boss_hp
+	# Ghost drains slowly
+	if _boss_ghost_hp > current_boss_hp:
+		_boss_ghost_hp = lerpf(_boss_ghost_hp, current_boss_hp, 0.05)
+
+	# Shake horizontal
+	if _boss_shake_timer > 0:
+		_boss_shake_timer -= get_process_delta_time()
+		boss_hp_bar.position.x = sin(Time.get_ticks_msec() * 0.05) * 3.0
+	else:
+		boss_hp_bar.position.x = 0.0
 
 	# Pulse boss HP bar red when below 25%
-	var boss_ratio = boss_hp_bar.value / boss_hp_bar.max_value if boss_hp_bar.max_value > 0 else 1.0
+	var boss_ratio = current_boss_hp / boss_hp_bar.max_value if boss_hp_bar.max_value > 0 else 1.0
 	if boss_ratio < 0.25 and boss_ratio > 0:
 		var pulse = sin(Time.get_ticks_msec() * 0.008) * 0.3 + 0.7
 		boss_hp_bar.modulate = Color(1.0, pulse, pulse)
