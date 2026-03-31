@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 05 — Performance cai drasticamente apos 2-3 minutos
 
 ## Problema

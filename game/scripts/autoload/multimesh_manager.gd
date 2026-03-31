@@ -49,9 +49,6 @@ var _pickup_check_timer: float = 0.0
 const PICKUP_CHECK_INTERVAL := 0.5  # Check pickups every 0.5s instead of every frame
 
 func _process(delta: float) -> void:
-	# MultiMesh disabled — sprites are lightweight enough without it.
-	# The old 3D mesh system needed MultiMesh but billboard sprites don't.
-	return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 

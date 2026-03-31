@@ -89,7 +89,6 @@ func _spawn_wave(mult: float) -> void:
 	if GameManager.enemies_alive >= dynamic_cap:
 		return
 	# Dynamic cap: reduce spawns when FPS is low — aggressive throttling
-	var fps = Engine.get_frames_per_second()
 	if fps < GameConstants.FPS_CRITICAL and GameManager.enemies_alive > GameConstants.ENEMIES_CAP_CRITICAL:
 		return  # Critical: hard stop spawning
 	if fps < GameConstants.FPS_LOW and GameManager.enemies_alive > GameConstants.ENEMIES_CAP_LOW:
