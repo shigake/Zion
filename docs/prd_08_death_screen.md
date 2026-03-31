@@ -1,5 +1,7 @@
 # PRD 08 — Tela de morte muito grande e poluida
 
+## Status: CONCLUIDO
+
 ## Problema
 A tela de Game Over mostra informacao demais, eh muito grande e confusa. Precisa simplificar.
 
@@ -89,8 +91,8 @@ De 540x640 para algo que caiba confortavelmente:
 Se o jogador quiser ver detalhes (DPS, timeline), adicionar um botao "Detalhes" que expande. Mas o padrao eh a versao limpa.
 
 ## Validacao
-- [ ] Tela de morte cabe sem scroll
-- [ ] Mostra apenas: titulo, personagem, tempo, kills, level, cristais, icones de armas/itens, botoes
-- [ ] Desbloqueio de personagem ainda aparece quando aplicavel
-- [ ] Botoes retry, screenshot e menu funcionam
-- [ ] Visual limpo e legivel
+- [x] Tela de morte cabe sem scroll
+- [x] Mostra apenas: titulo, personagem, tempo, kills, level, cristais, icones de armas/itens, botoes
+- [x] Desbloqueio de personagem ainda aparece quando aplicavel
+- [x] Botoes retry, screenshot e menu funcionam
+- [x] Visual limpo e legivel
