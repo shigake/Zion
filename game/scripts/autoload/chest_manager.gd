@@ -48,12 +48,25 @@ func _create_chest_node() -> Area3D:
 	chest.collision_layer = 4  # Pickups layer
 	chest.collision_mask = 1   # Players layer
 
-	# Visual: golden box
-	var mesh_inst = MeshInstance3D.new()
-	mesh_inst.mesh = _chest_mesh
-	mesh_inst.material_override = _chest_mat
-	mesh_inst.position.y = 0.25
-	chest.add_child(mesh_inst)
+	# Visual: sprite do bau
+	var chest_sprite_path = "res://assets/sprites/pickups/chest.png"
+	if ResourceLoader.exists(chest_sprite_path):
+		var sprite = Sprite3D.new()
+		sprite.texture = load(chest_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.04
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.position.y = 0.5
+		sprite.name = "ChestSprite"
+		chest.add_child(sprite)
+	else:
+		var mesh_inst = MeshInstance3D.new()
+		mesh_inst.mesh = _chest_mesh
+		mesh_inst.material_override = _chest_mat
+		mesh_inst.position.y = 0.25
+		chest.add_child(mesh_inst)
 
 	# Glow aura
 	var aura = OmniLight3D.new()

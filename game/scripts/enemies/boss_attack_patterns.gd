@@ -155,17 +155,32 @@ static func projectile_ring(
 	AudioManager.play_sfx("boss_attack")
 
 static func _spawn_boss_projectile(scene: Node, pos: Vector3, dir: Vector3, damage: int, speed: float, color: Color) -> void:
-	var proj = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.2
-	sphere.height = 0.4
-	proj.mesh = sphere
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.emission_enabled = true
-	mat.emission = color
-	mat.emission_energy_multiplier = 2.0
-	proj.material_override = mat
+	var proj: Node3D
+	var proj_sprite_path = "res://assets/sprites/effects/boss_projectile.png"
+	if ResourceLoader.exists(proj_sprite_path):
+		proj = Node3D.new()
+		var sprite = Sprite3D.new()
+		sprite.texture = load(proj_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.04
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.modulate = color
+		proj.add_child(sprite)
+	else:
+		proj = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.2
+		sphere.height = 0.4
+		(proj as MeshInstance3D).mesh = sphere
+	if proj is MeshInstance3D:
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = color
+		mat.emission_enabled = true
+		mat.emission = color
+		mat.emission_energy_multiplier = 2.0
+		proj.material_override = mat
 	proj.global_position = pos
 
 	# Area3D para detecao de colisao com jogador

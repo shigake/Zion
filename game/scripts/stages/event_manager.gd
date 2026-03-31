@@ -967,19 +967,31 @@ func _spawn_single_meteor() -> void:
 	col_shape.shape = sphere_shape
 	meteor.add_child(col_shape)
 
-	# Visual mesh
-	var mesh_instance = MeshInstance3D.new()
-	var sphere_mesh = SphereMesh.new()
-	sphere_mesh.radius = 0.5
-	sphere_mesh.height = 1.0
-	mesh_instance.mesh = sphere_mesh
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.3, 0.0)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.5, 0.0)
-	mat.emission_energy_multiplier = 3.0
-	mesh_instance.material_override = mat
-	meteor.add_child(mesh_instance)
+	# Visual: sprite de meteoro
+	var meteor_sprite_path = "res://assets/sprites/effects/meteor.png"
+	if ResourceLoader.exists(meteor_sprite_path):
+		var sprite = Sprite3D.new()
+		sprite.texture = load(meteor_sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.06
+		sprite.shaded = false
+		sprite.transparent = true
+		meteor.add_child(sprite)
+	else:
+		# Fallback: mesh laranja
+		var mesh_instance = MeshInstance3D.new()
+		var sphere_mesh = SphereMesh.new()
+		sphere_mesh.radius = 0.5
+		sphere_mesh.height = 1.0
+		mesh_instance.mesh = sphere_mesh
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.3, 0.0)
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.5, 0.0)
+		mat.emission_energy_multiplier = 3.0
+		mesh_instance.material_override = mat
+		meteor.add_child(mesh_instance)
 
 	# Start position (above target)
 	get_parent().add_child(meteor)
