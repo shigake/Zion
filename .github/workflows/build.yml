@@ -310,39 +310,3 @@ jobs:
           draft: false
           prerelease: false
 
-  # ======================================================================
-  # JOB 5: Notificar Discord
-  # ======================================================================
-  notify:
-    name: Notificar Discord
-    needs: [validate, release]
-    if: github.event.inputs.create_release == 'true' && always() && needs.release.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enviar notificacao
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          VERSION: ${{ needs.validate.outputs.version }}
-        run: |
-          RELEASE_URL="https://github.com/shigake/Zion/releases/tag/v${VERSION}"
-          DOWNLOAD_URL="https://github.com/shigake/Zion/releases/download/v${VERSION}/Zion-v${VERSION}-windows.zip"
-          if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
-            curl -s -X POST "$DISCORD_WEBHOOK_URL" \
-              -H "Content-Type: application/json" \
-              -d "{
-                \"embeds\": [{
-                  \"title\": \"Zion v${VERSION} - Nova release!\",
-                  \"url\": \"${RELEASE_URL}\",
-                  \"color\": 5814783,
-                  \"fields\": [
-                    {\"name\": \"Download\", \"value\": \"[Windows](${DOWNLOAD_URL})\", \"inline\": true},
-                    {\"name\": \"Versao\", \"value\": \"v${VERSION}\", \"inline\": true}
-                  ],
-                  \"footer\": {\"text\": \"Zion - Survivors Roguelite Co-op\"},
-                  \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
-                }]
-              }"
-            echo "Notificacao enviada."
-          else
-            echo "DISCORD_WEBHOOK_URL nao configurado."
-          fi
