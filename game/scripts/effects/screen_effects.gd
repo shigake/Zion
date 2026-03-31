@@ -10,17 +10,12 @@ var _vignette_canvas: CanvasLayer = null
 var _vignette_rect: ColorRect = null
 var _vignette_visible: bool = false
 
-# Damage flash overlay (separate from vignette)
-var _damage_flash_rect: ColorRect = null
-var _damage_flash_timer: float = 0.0
-var _damage_flash_duration: float = 0.0
+# Damage flash overlay — DISABLED (PRD 09: ugly red flash removed)
 
 # Generic flash overlay (white flash for level-up, boss, etc.)
 var _flash_overlay: ColorRect = null
 
-# Directional damage indicator
-var _damage_indicator_container: Control = null
-var _damage_indicators: Array = []  # Array of {rect: ColorRect, timer: float, angle: float}
+# Directional damage indicator — DISABLED (PRD 09: confusing "random bar" removed)
 
 # Chromatic aberration / damage intensity
 var _damage_intensity: float = 0.0  # 0-1, decays over time
@@ -68,12 +63,6 @@ func _ready() -> void:
 	_kill_streak_label.visible = false
 	_vignette_canvas.add_child(_kill_streak_label)
 
-	# Directional damage indicator container
-	_damage_indicator_container = Control.new()
-	_damage_indicator_container.anchors_preset = Control.PRESET_FULL_RECT
-	_damage_indicator_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_vignette_canvas.add_child(_damage_indicator_container)
-
 	add_child(_vignette_canvas)
 
 	# Connect signals for juice effects
@@ -101,9 +90,6 @@ func _process(delta: float) -> void:
 	if _damage_intensity > 0.0:
 		_damage_intensity = maxf(0.0, _damage_intensity - delta * GameConstants.DAMAGE_INTENSITY_DECAY)
 
-	# Directional damage indicators
-	_update_damage_indicators(delta)
-
 	# Prune expired kill timestamps from streak tracking
 	var now = GameManager.game_time
 	while not _kill_times.is_empty() and _kill_times[0] < now - KILL_STREAK_WINDOW:
@@ -125,34 +111,6 @@ func _update_vignette() -> void:
 	else:
 		_vignette_rect.color.a = 0.0
 
-func _update_damage_flash(delta: float) -> void:
-	if not _damage_flash_rect:
-		return
-	if _damage_flash_timer > 0.0:
-		_damage_flash_timer -= delta
-		# Quick fade: starts bright, fades out
-		var t = clampf(_damage_flash_timer / _damage_flash_duration, 0.0, 1.0)
-		_damage_flash_rect.color.a = t * 0.25
-	else:
-		_damage_flash_rect.color.a = 0.0
-
-func _update_damage_indicators(delta: float) -> void:
-	var to_remove := []
-	for i in range(_damage_indicators.size()):
-		var ind = _damage_indicators[i]
-		ind["timer"] -= delta
-		if ind["timer"] <= 0.0:
-			to_remove.append(i)
-			if is_instance_valid(ind["rect"]):
-				ind["rect"].queue_free()
-		else:
-			# Fade out
-			var alpha = clampf(ind["timer"] / GameConstants.DAMAGE_INDICATOR_DURATION, 0.0, 0.8)
-			if is_instance_valid(ind["rect"]):
-				ind["rect"].modulate.a = alpha
-	# Remove expired (reverse order)
-	for i in range(to_remove.size() - 1, -1, -1):
-		_damage_indicators.remove_at(to_remove[i])
 
 func shake(amount: float = 0.15) -> void:
 	# Respect gfx_screen_shake setting: 0=Off, 1=Light, 2=Normal, 3=Strong
@@ -204,42 +162,9 @@ func damage_feedback(damage_amount: int, damage_source_pos: Vector3 = Vector3.ZE
 	# 5. Signal for HUD
 	player_took_damage.emit()
 
-## Red flash overlay on damage
-func damage_flash(duration: float = 0.15) -> void:
-	_damage_flash_timer = duration
-	_damage_flash_duration = duration
-
-## Directional damage indicator (red arc on screen edge toward damage source)
-func _spawn_damage_indicator(source_pos: Vector3) -> void:
-	if not _damage_indicator_container:
-		return
-	var players = GameManager.get_players()
-	if players.is_empty():
-		return
-	var player_pos = players[0].global_position
-	var dir = (source_pos - player_pos).normalized()
-	# Convert 3D direction to 2D angle (top-down: x,z plane)
-	var angle = atan2(dir.x, -dir.z)  # -z is forward in Godot
-
-	var viewport_size = get_viewport().get_visible_rect().size
-	var center = viewport_size / 2.0
-
-	# Create directional arc indicator
-	var indicator = ColorRect.new()
-	indicator.color = Color(1.0, 0.1, 0.05, 0.8)
-	indicator.custom_minimum_size = GameConstants.DAMAGE_INDICATOR_SIZE
-	indicator.size = GameConstants.DAMAGE_INDICATOR_SIZE
-	indicator.pivot_offset = Vector2(30, 4)
-	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	# Position on screen edge in direction of damage
-	var edge_dist = minf(viewport_size.x, viewport_size.y) * GameConstants.DAMAGE_INDICATOR_EDGE_DIST
-	var pos = center + Vector2(sin(angle), -cos(angle)) * edge_dist
-	indicator.position = pos - indicator.pivot_offset
-	indicator.rotation = angle
-
-	_damage_indicator_container.add_child(indicator)
-	_damage_indicators.append({"rect": indicator, "timer": GameConstants.DAMAGE_INDICATOR_DURATION, "angle": angle})
+## Red flash overlay on damage — DISABLED (PRD 09)
+func damage_flash(_duration: float = 0.15) -> void:
+	pass
 
 ## Gamepad vibration on damage
 func _vibrate_gamepad(intensity: float) -> void:

@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 04 — Diminuir porcentagem de drop de vida
 
 ## Problema

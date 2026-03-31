@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 09 — Barrinha vermelha de dano feia
 
 ## Problema
