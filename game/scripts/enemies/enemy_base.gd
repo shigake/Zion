@@ -766,7 +766,7 @@ func _die() -> void:
 		GameManager.boss_died.emit(name)
 		# Bloom spike na morte do boss
 		if get_tree() and get_tree().current_scene:
-			StageAtmosphere.bloom_spike(get_tree().current_scene, 1.0, 1.0)
+			load("res://scripts/stages/stage_atmosphere.gd").bloom_spike(get_tree().current_scene, 1.0, 1.0)
 		Telemetry.send_event("boss_killed", {
 			"boss_name": name,
 			"stage": GameManager.selected_stage,

@@ -33,7 +33,7 @@ var _cached_players: Array = []
 var _players_cache_frame: int = -1
 
 # Spatial grid for O(1) neighbor lookups (enemy separation, AoE targeting)
-var _spatial_grid := SpatialEnemyGrid.new()
+var _spatial_grid = null  # Inicializado no _ready
 
 # Cached nearest player per frame (avoid per-enemy iteration)
 var _cached_nearest_player: Dictionary = {}  # enemy_instance_id -> Node3D
@@ -129,6 +129,7 @@ var manual_aim: bool = false
 var aim_direction: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
+	_spatial_grid = load("res://scripts/autoload/spatial_enemy_grid.gd").new()
 	_register_input_actions()
 	# Connect signals for run timeline tracking
 	player_leveled_up.connect(_on_timeline_level_up)
@@ -293,7 +294,7 @@ func add_xp(amount: int) -> void:
 		if not players.is_empty():
 			ParticleFactory.spawn_level_up_particles(players[0].global_position)
 		if get_tree() and get_tree().current_scene:
-			StageAtmosphere.bloom_spike(get_tree().current_scene, 0.8, 0.5)
+			load("res://scripts/stages/stage_atmosphere.gd").bloom_spike(get_tree().current_scene, 0.8, 0.5)
 			ScreenEffects.shake(0.1)
 
 func get_difficulty_multiplier() -> float:
@@ -464,7 +465,7 @@ func upgrade_item(item_id: String) -> bool:
 	return false
 
 func _recalculate_item_bonuses() -> void:
-	ItemBonusCalculator.recalculate(self, player_items)
+	load("res://scripts/autoload/item_bonus_calculator.gd").recalculate(self, player_items)
 
 func reset() -> void:
 	AchievementManager.reset_run()

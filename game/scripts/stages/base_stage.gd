@@ -17,7 +17,7 @@ func _ready() -> void:
 	SynergySystem.reset()
 
 	# Aplica iluminação e atmosfera da fenda
-	StageAtmosphere.apply(self, GameManager.selected_stage)
+	load("res://scripts/stages/stage_atmosphere.gd").apply(self, GameManager.selected_stage)
 
 	# Conecta signals para checar sinergias quando armas mudam
 	GameManager.weapon_added.connect(func(_id): SynergySystem.check_synergies())
