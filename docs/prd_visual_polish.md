@@ -27,9 +27,9 @@ No `base_stage.gd` ou em cada stage script, configurar `WorldEnvironment` com:
 
 ### Critérios de aceite
 
-- [ ] 10 fendas com iluminação distinta
-- [ ] Fog visível nas fendas atmosféricas
-- [ ] Sem impacto em FPS (fog volumétrico OFF, usar fog linear)
+- [x] 10 fendas com iluminação distinta
+- [x] Fog visível nas fendas atmosféricas
+- [x] Sem impacto em FPS (fog volumétrico OFF, usar fog linear)
 
 ---
 
@@ -47,9 +47,9 @@ O ScreenEffects já tem infraestrutura de kill streak desabilitada. Reativar com
 
 ### Critérios de aceite
 
-- [ ] Kill streak aparece ao matar 5+ inimigos em 2s
-- [ ] 4 tiers visuais (combo, massacre, unstoppable, godlike)
-- [ ] Não atrapalha gameplay (posição não bloqueia visão)
+- [x] Kill streak aparece ao matar 5+ inimigos em 2s
+- [x] 4 tiers visuais (combo, massacre, unstoppable, godlike)
+- [x] Não atrapalha gameplay (posição não bloqueia visão)
 
 ---
 
@@ -66,9 +66,9 @@ O ScreenEffects já tem infraestrutura de kill streak desabilitada. Reativar com
 
 ### Critérios de aceite
 
-- [ ] HP bar treme ao receber dano
-- [ ] Ghost HP visível por 0.5s após cada hit
-- [ ] Flash na mudança de fase
+- [x] HP bar treme ao receber dano
+- [x] Ghost HP visível por 0.5s após cada hit
+- [x] Flash na mudança de fase
 
 ---
 
@@ -86,10 +86,10 @@ O ScreenEffects já tem infraestrutura de kill streak desabilitada. Reativar com
 
 ### Critérios de aceite
 
-- [ ] Teleport tem efeito visual claro
-- [ ] Charge tem indicação de direção
-- [ ] Stealth inimigos ficam translúcidos
-- [ ] Elites claramente distinguíveis
+- [x] Teleport tem efeito visual claro
+- [x] Charge tem indicação de direção
+- [x] Stealth inimigos ficam translúcidos
+- [x] Elites claramente distinguíveis
 
 ---
 
@@ -107,9 +107,9 @@ Usar `Environment.glow_enabled` com intensidade variável:
 
 ### Critérios de aceite
 
-- [ ] Bloom sutil sempre ativo
-- [ ] Momentos especiais têm bloom intensificado
-- [ ] Sem impacto em FPS (glow é pós-processamento leve)
+- [x] Bloom sutil sempre ativo
+- [x] Momentos especiais têm bloom intensificado
+- [x] Sem impacto em FPS (glow é pós-processamento leve)
 
 ---
 

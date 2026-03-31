@@ -52,11 +52,11 @@ if GamepadUI.is_gamepad_mode and not buttons.is_empty():
 
 ### Critérios de aceite
 
-- [ ] D-pad cima/baixo navega entre upgrades na loja
-- [ ] Botão A/X compra o upgrade em foco
-- [ ] Botão "Voltar" é alcançável com controle
-- [ ] Após comprar, foco volta para o primeiro item
-- [ ] ui_cancel volta ao menu principal
+- [x] D-pad cima/baixo navega entre upgrades na loja
+- [x] Botão A/X compra o upgrade em foco
+- [x] Botão "Voltar" é alcançável com controle
+- [x] Após comprar, foco volta para o primeiro item
+- [x] ui_cancel volta ao menu principal
 
 ---
 
@@ -99,11 +99,11 @@ for i in range(cards.size()):
 
 ### Critérios de aceite
 
-- [ ] D-pad navega entre cards de armas no grid (4 colunas)
-- [ ] Botão A/X seleciona um card e mostra detalhes no painel direito
-- [ ] D-pad desce do grid para o botão Voltar
-- [ ] ui_cancel volta ao menu principal
-- [ ] ScrollContainer acompanha o card focado (scroll automático)
+- [x] D-pad navega entre cards de armas no grid (4 colunas)
+- [x] Botão A/X seleciona um card e mostra detalhes no painel direito
+- [x] D-pad desce do grid para o botão Voltar
+- [x] ui_cancel volta ao menu principal
+- [x] ScrollContainer acompanha o card focado (scroll automático)
 
 ---
 
@@ -121,11 +121,11 @@ Mesma abordagem do Codex: `focus_mode = FOCUS_ALL` em todos os cards, focus_neig
 
 ### Critérios de aceite
 
-- [ ] D-pad navega entre filtros de fenda no topo
-- [ ] D-pad desce dos filtros para o grid de monstros
-- [ ] Navegação no grid funciona em 4 colunas
-- [ ] Botão A/X seleciona monstro e mostra detalhes
-- [ ] ui_cancel volta ao menu principal
+- [x] D-pad navega entre filtros de fenda no topo
+- [x] D-pad desce dos filtros para o grid de monstros
+- [x] Navegação no grid funciona em 4 colunas
+- [x] Botão A/X seleciona monstro e mostra detalhes
+- [x] ui_cancel volta ao menu principal
 
 ---
 
@@ -158,10 +158,10 @@ _back_btn.focus_mode = Control.FOCUS_ALL
 
 ### Critérios de aceite
 
-- [ ] D-pad navega entre todos os elementos do pre-lobby
-- [ ] Botão A/X ativa Host/Join/Scan/Voltar
-- [ ] Campo de IP é focável e editável
-- [ ] ui_cancel volta ao menu principal
+- [x] D-pad navega entre todos os elementos do pre-lobby
+- [x] Botão A/X ativa Host/Join/Scan/Voltar
+- [x] Campo de IP é focável e editável
+- [x] ui_cancel volta ao menu principal
 
 ---
 
@@ -185,9 +185,9 @@ send_btn.focus_mode = Control.FOCUS_ALL
 
 ### Critérios de aceite
 
-- [ ] Botão Enviar é alcançável com D-pad
-- [ ] Botão A/X envia a mensagem do chat
-- [ ] Focus chain: chat_input ↔ send_btn
+- [x] Botão Enviar é alcançável com D-pad
+- [x] Botão A/X envia a mensagem do chat
+- [x] Focus chain: chat_input ↔ send_btn
 
 ---
 
@@ -210,10 +210,10 @@ Adicionar `focus_mode = Control.FOCUS_ALL` em todos os controles interativos. Co
 
 ### Critérios de aceite
 
-- [ ] Navegação completa no lobby com controle
-- [ ] Seleção de personagem, relíquia e fenda via gamepad
-- [ ] Botão Pronto/Iniciar/Sair acessíveis
-- [ ] Chat input focável
+- [x] Navegação completa no lobby com controle
+- [x] Seleção de personagem, relíquia e fenda via gamepad
+- [x] Botão Pronto/Iniciar/Sair acessíveis
+- [x] Chat input focável
 
 ---
 
@@ -250,9 +250,9 @@ func _register_inventory_action() -> void:
 
 ### Critérios de aceite
 
-- [ ] Botão Select/Back do controle abre o inventário
-- [ ] Inventário fecha com o mesmo botão ou ui_cancel
-- [ ] Funciona durante gameplay sem conflito com pause
+- [x] Botão Select/Back do controle abre o inventário
+- [x] Inventário fecha com o mesmo botão ou ui_cancel
+- [x] Funciona durante gameplay sem conflito com pause
 
 ---
 
@@ -277,8 +277,8 @@ if GamepadUI.is_gamepad_mode:
 
 ### Critérios de aceite
 
-- [ ] Ao abrir inventário com controle, botão X recebe foco
-- [ ] ui_cancel fecha o inventário
+- [x] Ao abrir inventário com controle, botão X recebe foco
+- [x] ui_cancel fecha o inventário
 
 ---
 
@@ -304,10 +304,10 @@ checkbox.focus_mode = Control.FOCUS_ALL
 
 ### Critérios de aceite
 
-- [ ] D-pad navega entre checkboxes de mutação
-- [ ] Botão A/X ativa/desativa mutação
-- [ ] D-pad desce para Confirmar/Voltar
-- [ ] ui_cancel volta à seleção de personagem
+- [x] D-pad navega entre checkboxes de mutação
+- [x] Botão A/X ativa/desativa mutação
+- [x] D-pad desce para Confirmar/Voltar
+- [x] ui_cancel volta à seleção de personagem
 
 ---
 
@@ -331,9 +331,9 @@ _back_btn.focus_neighbor_bottom = _play_btn.get_path()
 
 ### Critérios de aceite
 
-- [ ] D-pad navega entre Jogar e Voltar
-- [ ] Focus wrap: último elemento → primeiro
-- [ ] ui_cancel volta ao menu principal
+- [x] D-pad navega entre Jogar e Voltar
+- [x] Focus wrap: último elemento → primeiro
+- [x] ui_cancel volta ao menu principal
 
 ---
 
@@ -353,9 +353,9 @@ Configurar focus_neighbors entre:
 
 ### Critérios de aceite
 
-- [ ] D-pad esquerda/direita navega entre tabs de fendas
-- [ ] D-pad baixo vai para Atualizar/Voltar
-- [ ] ui_cancel volta ao menu principal
+- [x] D-pad esquerda/direita navega entre tabs de fendas
+- [x] D-pad baixo vai para Atualizar/Voltar
+- [x] ui_cancel volta ao menu principal
 
 ---
 
@@ -373,9 +373,9 @@ Garantir que o ScrollContainer responde a D-pad para scroll vertical, e que `bac
 
 ### Critérios de aceite
 
-- [ ] D-pad cima/baixo faz scroll na lista de achievements
-- [ ] Botão Voltar é focável e funcional
-- [ ] ui_cancel volta ao menu principal
+- [x] D-pad cima/baixo faz scroll na lista de achievements
+- [x] Botão Voltar é focável e funcional
+- [x] ui_cancel volta ao menu principal
 
 ---
 
@@ -424,10 +424,10 @@ func _apply_bindings() -> void:
 
 ### Critérios de aceite
 
-- [ ] Dash funciona com botão A do gamepad após rebind de teclado
-- [ ] Interact funciona com botão B
-- [ ] Pause funciona com Start
-- [ ] Reroll no level-up funciona com Y
+- [x] Dash funciona com botão A do gamepad após rebind de teclado
+- [x] Interact funciona com botão B
+- [x] Pause funciona com Start
+- [x] Reroll no level-up funciona com Y
 
 ---
 
@@ -469,10 +469,10 @@ if "gamepad_axis" in bind:
 
 ### Critérios de aceite
 
-- [ ] Analog stick esquerdo move o jogador em todas as direções
-- [ ] Movimento é analógico (não binário) — andar devagar ao inclinar pouco
-- [ ] Funciona mesmo após rebind de teclado
-- [ ] Sem conflito com navegação de menus (ui_* é separado de move_*)
+- [x] Analog stick esquerdo move o jogador em todas as direções
+- [x] Movimento é analógico (não binário) — andar devagar ao inclinar pouco
+- [x] Funciona mesmo após rebind de teclado
+- [x] Sem conflito com navegação de menus (ui_* é separado de move_*)
 
 ---
 
@@ -496,7 +496,7 @@ hint.text = "Selecione uma arma\npara ver detalhes."
 
 ### Critérios de aceite
 
-- [ ] Texto genérico que funciona para mouse e controle
+- [x] Texto genérico que funciona para mouse e controle
 
 ---
 

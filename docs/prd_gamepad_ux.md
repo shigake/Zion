@@ -48,11 +48,11 @@ Resetar `_confirmed_index = -1` sempre que o jogador navegar para outro personag
 
 ### Critérios de aceite
 
-- [ ] Pressionar X uma vez em qualquer personagem apenas o seleciona (sem avançar de tela)
-- [ ] Pressionar X duas vezes no mesmo personagem avança para seleção de fenda
-- [ ] Navegar para outro personagem após a primeira confirmação reseta a lógica
-- [ ] Teste com Amazona: navegar até ela + X não avança de tela imediatamente
-- [ ] Botão "JOGAR" na tela continua funcionando normalmente com mouse/teclado
+- [x] Pressionar X uma vez em qualquer personagem apenas o seleciona (sem avançar de tela)
+- [x] Pressionar X duas vezes no mesmo personagem avança para seleção de fenda
+- [x] Navegar para outro personagem após a primeira confirmação reseta a lógica
+- [x] Teste com Amazona: navegar até ela + X não avança de tela imediatamente
+- [x] Botão "JOGAR" na tela continua funcionando normalmente com mouse/teclado
 
 ---
 
@@ -82,12 +82,12 @@ Em `_on_options()`, após criar o painel:
 
 ### Critérios de aceite
 
-- [ ] Ao abrir opções pelo pause, o foco já está no primeiro slider
-- [ ] D-pad cima/baixo navega entre os controles do painel
-- [ ] D-pad esquerda/direita ajusta o valor do slider em foco
-- [ ] Botão "Fechar" é alcançável e funcional com controle
-- [ ] `ui_cancel` fecha o painel e volta ao pause menu
-- [ ] O volume realmente muda ao ajustar com o controle
+- [x] Ao abrir opções pelo pause, o foco já está no primeiro slider
+- [x] D-pad cima/baixo navega entre os controles do painel
+- [x] D-pad esquerda/direita ajusta o valor do slider em foco
+- [x] Botão "Fechar" é alcançável e funcional com controle
+- [x] `ui_cancel` fecha o painel e volta ao pause menu
+- [x] O volume realmente muda ao ajustar com o controle
 
 ---
 
@@ -128,12 +128,12 @@ func _set_initial_focus() -> void:
 
 ### Critérios de aceite
 
-- [ ] Ao entrar nas opções pelo menu principal, há um elemento em foco imediatamente
-- [ ] D-pad cima/baixo navega entre as configurações da aba ativa
-- [ ] Trocar de aba com L1/R1 move o foco para o primeiro controle da nova aba
-- [ ] Sliders respondem ao D-pad esquerda/direita
-- [ ] Dropdowns abrem com `ui_accept` e fecham com `ui_cancel`
-- [ ] Botão "Voltar" é alcançável e funcional com controle
+- [x] Ao entrar nas opções pelo menu principal, há um elemento em foco imediatamente
+- [x] D-pad cima/baixo navega entre as configurações da aba ativa
+- [x] Trocar de aba com L1/R1 move o foco para o primeiro controle da nova aba
+- [x] Sliders respondem ao D-pad esquerda/direita
+- [x] Dropdowns abrem com `ui_accept` e fecham com `ui_cancel`
+- [x] Botão "Voltar" é alcançável e funcional com controle
 
 ---
 
@@ -185,9 +185,9 @@ _lock_label.text = "🔒 %s" % unlock_desc
 
 ### Critérios de aceite
 
-- [ ] Nenhum erro de `%` no console ao navegar pela tela de seleção
-- [ ] Nenhum erro ao ficar parado por 30+ segundos na tela
-- [ ] Todos os 15 Fragmentados (incluindo bloqueados) exibem informações corretamente
+- [x] Nenhum erro de `%` no console ao navegar pela tela de seleção
+- [x] Nenhum erro ao ficar parado por 30+ segundos na tela
+- [x] Todos os 15 Fragmentados (incluindo bloqueados) exibem informações corretamente
 
 ---
 

@@ -16,8 +16,8 @@ Adicionar lógica no `boss_generic._ready()` para carregar sprite pelo nome do b
 
 ### Critérios de aceite
 
-- [ ] 20 alt bosses mostram sprite pixel art correto
-- [ ] Fallback para mesh procedural se sprite não existir
+- [x] 20 alt bosses mostram sprite pixel art correto
+- [x] Fallback para mesh procedural se sprite não existir
 
 ---
 
@@ -31,9 +31,9 @@ O `BossDialogue` já funciona para os 10 originais. Adicionar entradas para os 2
 
 ### Critérios de aceite
 
-- [ ] 20 novos bosses têm frase de intro
-- [ ] 20 novos bosses têm frase de morte
-- [ ] Dialogos aparecem no typewriter com cor tematica
+- [x] 20 novos bosses têm frase de intro
+- [x] 20 novos bosses têm frase de morte
+- [x] Dialogos aparecem no typewriter com cor tematica
 
 ---
 
@@ -47,8 +47,8 @@ Adicionar guard em TODOS os weapon scripts que fazem `bullet.direction = ...` ou
 
 ### Critérios de aceite
 
-- [ ] Nenhum weapon script crasha se bullet.gd falhar parse
-- [ ] Guard pattern consistente em todos os ranged weapons
+- [x] Nenhum weapon script crasha se bullet.gd falhar parse
+- [x] Guard pattern consistente em todos os ranged weapons
 
 ---
 
@@ -62,7 +62,7 @@ Adicionar guard em TODOS os weapon scripts que fazem `bullet.direction = ...` ou
 
 ### Critérios de aceite
 
-- [ ] Zero erros "!is_inside_tree()" do necro.gd
+- [x] Zero erros "!is_inside_tree()" do necro.gd
 
 ---
 
@@ -76,8 +76,8 @@ O log mostra que `load_stage` é chamado 2x seguidas (do relic_select). Adiciona
 
 ### Critérios de aceite
 
-- [ ] Sem chamada duplicada de load_stage
-- [ ] Cena carrega na primeira tentativa
+- [x] Sem chamada duplicada de load_stage
+- [x] Cena carrega na primeira tentativa
 
 ---
 
@@ -98,9 +98,9 @@ Achievements novos:
 
 ### Critérios de aceite
 
-- [ ] 7 novos achievements registrados
-- [ ] Cada um desbloqueia corretamente
-- [ ] Sync com Steam via SteamManager
+- [x] 7 novos achievements registrados
+- [x] Cada um desbloqueia corretamente
+- [x] Sync com Steam via SteamManager
 
 ---
 
@@ -123,9 +123,9 @@ Eventos atuais estão distribuídos em 22 min. Com runs de 10 min, muitos evento
 
 ### Critérios de aceite
 
-- [ ] Todos os 9 tipos de evento podem ocorrer em 10 min
-- [ ] Eventos não sobrepõem boss spawns
-- [ ] Pacing mais intenso e dinâmico
+- [x] Todos os 9 tipos de evento podem ocorrer em 10 min
+- [x] Eventos não sobrepõem boss spawns
+- [x] Pacing mais intenso e dinâmico
 
 ---
 
@@ -135,8 +135,8 @@ Eventos atuais estão distribuídos em 22 min. Com runs de 10 min, muitos evento
 
 ### Critérios de aceite
 
-- [ ] CLAUDE.md atualizado com contadores corretos
-- [ ] prd.md atualizado com features novas listadas
+- [x] CLAUDE.md atualizado com contadores corretos
+- [x] prd.md atualizado com features novas listadas
 
 ---
 
@@ -146,8 +146,8 @@ Eventos atuais estão distribuídos em 22 min. Com runs de 10 min, muitos evento
 
 ### Critérios de aceite
 
-- [ ] .uid no .gitignore
-- [ ] Working tree limpo (git status sem untracked)
+- [x] .uid no .gitignore
+- [x] Working tree limpo (git status sem untracked)
 
 ---
 
