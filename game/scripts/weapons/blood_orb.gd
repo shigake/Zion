@@ -232,45 +232,40 @@ class BloodOrbInstance extends Area3D:
 			return
 		if Engine.get_frames_per_second() < 35:
 			return
+		# Spawn 3-5 blood droplets flying from enemy to orb
+		var start = from_pos + Vector3(0, 0.5, 0)
+		var target = global_position
 		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 		if not scene:
 			return
-
-		var line_mesh = MeshInstance3D.new()
-		var im = ImmediateMesh.new()
-		var start = from_pos + Vector3(0, 0.5, 0)
-		var end = global_position
-
-		# Slightly wavy line with 4 segments
-		im.surface_begin(Mesh.PRIMITIVE_LINES)
-		im.surface_set_color(Color(0.9, 0.1, 0.15, 0.6))
-		var seg_count := 4
-		for i in range(seg_count):
-			var t0 = float(i) / float(seg_count)
-			var t1 = float(i + 1) / float(seg_count)
-			var p0 = start.lerp(end, t0)
-			var p1 = start.lerp(end, t1)
-			if i > 0 and i < seg_count:
-				p0 += Vector3(randf_range(-0.1, 0.1), randf_range(-0.05, 0.05), randf_range(-0.1, 0.1))
-			im.surface_add_vertex(p0)
-			im.surface_add_vertex(p1)
-		im.surface_end()
-		line_mesh.mesh = im
-
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.9, 0.1, 0.15, 0.6)
-		mat.emission_enabled = true
-		mat.emission = Color(0.8, 0.05, 0.1)
-		mat.emission_energy_multiplier = 5.0
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.no_depth_test = true
-		line_mesh.material_override = mat
-
-		scene.add_child(line_mesh)
-		var line_tween = line_mesh.create_tween()
-		line_tween.tween_property(line_mesh, "transparency", 1.0, 0.25)
-		line_tween.tween_callback(line_mesh.queue_free)
+		var count = randi_range(3, 5)
+		for i in range(count):
+			var droplet = MeshInstance3D.new()
+			var sphere = SphereMesh.new()
+			sphere.radius = 0.08
+			sphere.height = 0.16
+			droplet.mesh = sphere
+			var mat = StandardMaterial3D.new()
+			mat.albedo_color = Color(0.8, 0.05, 0.1, 0.9)
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.1, 0.15)
+			mat.emission_energy_multiplier = 4.0
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.no_depth_test = true
+			droplet.material_override = mat
+			scene.add_child(droplet)
+			# Posicao inicial com offset aleatorio
+			var offset = Vector3(randf_range(-0.3, 0.3), randf_range(-0.2, 0.2), randf_range(-0.3, 0.3))
+			droplet.global_position = start + offset
+			# Anima voando pro orbe + fade
+			var dur = randf_range(0.15, 0.3)
+			var tw = droplet.create_tween()
+			tw.set_parallel(true)
+			tw.tween_property(droplet, "global_position", target, dur).set_ease(Tween.EASE_IN)
+			tw.tween_property(droplet, "scale", Vector3(0.3, 0.3, 0.3), dur)
+			tw.set_parallel(false)
+			tw.tween_callback(droplet.queue_free)
 
 	func _spawn_heal_pulse() -> void:
 		if not is_inside_tree():

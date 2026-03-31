@@ -41,14 +41,13 @@ func _spawn_chest() -> void:
 	AudioManager.play_sfx("chest_open")
 	LogManager.info("Chest", "Reward chest spawned at %.0f, %.0f" % [spawn_pos.x, spawn_pos.z])
 
-func _create_chest_node() -> Area3D:
-	var chest = Area3D.new()
+func _create_chest_node() -> Node3D:
+	# Usa Node3D puro — coleta por distância no _process (sem Area3D)
+	var chest = Node3D.new()
 	chest.name = "RewardChest"
 	chest.add_to_group("reward_chests")
-	chest.collision_layer = 4  # Pickups layer
-	chest.collision_mask = 1   # Players layer
 
-	# Visual: sprite do bau
+	# Visual: sprite do baú
 	var chest_sprite_path = "res://assets/sprites/pickups/chest.png"
 	if ResourceLoader.exists(chest_sprite_path):
 		var sprite = Sprite3D.new()
@@ -76,21 +75,6 @@ func _create_chest_node() -> Area3D:
 	aura.position.y = 0.5
 	chest.add_child(aura)
 
-	# Collision shape
-	var col = CollisionShape3D.new()
-	var shape = SphereShape3D.new()
-	shape.radius = 1.5  # Raio de coleta generoso
-	col.shape = shape
-	chest.add_child(col)
-
-	# Coleta por proximidade — mais robusto que body_entered
-	chest.monitoring = true
-	chest.monitorable = false
-	chest.collision_layer = 0   # Nao precisa estar em nenhuma layer
-	chest.collision_mask = 1    # Detecta players (layer 1)
-	chest.body_entered.connect(_on_chest_body_entered.bind(chest))
-
-	# Metadata para despawn timer (sem trocar script)
 	chest.set_meta("despawn_timer", GameConstants.CHEST_DESPAWN_TIME)
 	chest.set_meta("time", 0.0)
 	return chest
@@ -106,14 +90,14 @@ func _process(delta: float) -> void:
 		_chest_timer = 0.0
 		_spawn_chest()
 
-	# Fallback: distance-based collection (caso body_entered nao dispare)
+	# Coleta por distância (método principal — sem Area3D)
 	var players = GameManager.get_players()
 	if not players.is_empty():
 		var player_pos = players[0].global_position
 		for chest in _active_chests.duplicate():
 			if is_instance_valid(chest) and chest.is_inside_tree():
 				if player_pos.distance_to(chest.global_position) < 2.0:
-					_on_chest_body_entered(players[0], chest)
+					_collect_chest(chest)
 					break
 
 	# Update chest animations + despawn
@@ -126,11 +110,14 @@ func _process(delta: float) -> void:
 		chest.set_meta("time", t)
 		var dt = chest.get_meta("despawn_timer", 20.0) - delta
 		chest.set_meta("despawn_timer", dt)
-		# Bobbing + rotation
-		var mesh = chest.get_child(0) if chest.get_child_count() > 0 else null
-		if mesh and mesh is MeshInstance3D:
-			mesh.position.y = 0.25 + sin(t * 2.0) * 0.1
-			mesh.rotation.y += delta * 1.5
+		# Bobbing + rotation (funciona com Sprite3D ou MeshInstance3D)
+		var visual = chest.get_child(0) if chest.get_child_count() > 0 else null
+		if visual:
+			if visual is Sprite3D:
+				visual.position.y = 0.5 + sin(t * 2.0) * 0.1
+			elif visual is MeshInstance3D:
+				visual.position.y = 0.25 + sin(t * 2.0) * 0.1
+				visual.rotation.y += delta * 1.5
 		# Blink when about to despawn
 		if dt < 5.0:
 			chest.visible = int(t * 6.0) % 2 == 0
@@ -138,9 +125,7 @@ func _process(delta: float) -> void:
 			_active_chests.remove_at(i)
 			chest.queue_free()
 
-func _on_chest_body_entered(body: Node3D, chest: Node3D) -> void:
-	if not body.is_in_group("players"):
-		return
+func _collect_chest(chest: Node3D) -> void:
 	if not is_instance_valid(chest):
 		return
 

@@ -78,41 +78,32 @@ func _update_quest_progress(delta: float) -> void:
 	match current_quest["type"]:
 		"kill":
 			_quest_progress = GameManager.total_kills - _kill_count_at_start
-			if _quest_progress >= current_quest["target"]:
-				completed = true
+			completed = _quest_progress >= current_quest["target"]
 		"survive":
 			current_quest["_no_damage_timer"] += delta
-			_quest_progress = int(current_quest["_no_damage_timer"])
-			if _quest_progress >= current_quest["target"]:
-				completed = true
+			var survive_time: float = current_quest["_no_damage_timer"]
+			_quest_progress = mini(ceili(survive_time), current_quest["target"])
+			completed = survive_time >= float(current_quest["target"])
 		"collect_xp":
-			# XP gems sao contados via xp total que muda
 			_quest_progress = mini(_quest_progress, current_quest["target"])
-			if _quest_progress >= current_quest["target"]:
-				completed = true
+			completed = _quest_progress >= current_quest["target"]
 		"kill_fast":
 			current_quest["_fast_timer"] -= delta
-			_quest_progress = current_quest["_fast_kills"]
-			if _quest_progress >= current_quest["target"]:
-				completed = true
-			elif current_quest["_fast_timer"] <= 0:
-				# Falhou — reseta
+			_quest_progress = current_quest.get("_fast_kills", 0)
+			completed = _quest_progress >= current_quest["target"]
+			if not completed and current_quest["_fast_timer"] <= 0:
 				current_quest["_fast_kills"] = 0
 				current_quest["_fast_timer"] = 10.0
 		"find_chest":
-			if ChestManager.get_active_chests().is_empty() and _quest_progress == 0:
-				# Bau foi coletado
-				_quest_progress = 1
-				completed = true
+			completed = _quest_progress >= 1
 		"reach_level":
 			_quest_progress = GameManager.player_level
-			if _quest_progress >= current_quest["target"]:
-				completed = true
+			completed = _quest_progress >= current_quest["target"]
 
-	if not completed:
-		quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
-	else:
+	if completed:
 		_complete_quest()
+	else:
+		quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
 
 func _complete_quest() -> void:
 	_quest_active = false
