@@ -644,6 +644,10 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	GameManager.total_damage_dealt += final_damage
 	GameManager.record_weapon_damage(GameManager._last_attacking_weapon, final_damage)
 	AchievementManager.on_attack()
+	# Global lifesteal (Vampire passive + item bonuses)
+	if GameManager.lifesteal > 0.0 and final_damage > 0:
+		var heal_amount = maxi(1, ceili(final_damage * GameManager.lifesteal))
+		GameManager.heal(heal_amount)
 	# Cross-combo check (multiplayer)
 	if MultiplayerManager.is_online and damage_type != "physical":
 		var peer = MultiplayerManager.local_player_id

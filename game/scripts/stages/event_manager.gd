@@ -468,6 +468,20 @@ func _spawn_merchant() -> void:
 
 	# Show merchant UI when player enters area
 	area.body_entered.connect(_on_merchant_body_entered)
+	# Check if player is already inside the area (spawned on top of player)
+	call_deferred("_check_merchant_overlap")
+
+func _check_merchant_overlap() -> void:
+	if not is_instance_valid(_merchant_node):
+		return
+	var area = _merchant_node.get_node_or_null("InteractArea")
+	if not area or not is_instance_valid(area):
+		return
+	var bodies = area.get_overlapping_bodies()
+	for body in bodies:
+		if body.is_in_group("players"):
+			_show_merchant_ui()
+			return
 
 func _on_merchant_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("players"):

@@ -188,7 +188,7 @@ class BloodOrbInstance extends Area3D:
 
 		# Lifesteal heal with visual feedback
 		if total_damage_dealt > 0:
-			var heal_amount = int(total_damage_dealt * lifesteal)
+			var heal_amount = maxi(1, ceili(total_damage_dealt * lifesteal)) if lifesteal > 0.0 else 0
 			if heal_amount > 0:
 				GameManager.heal(heal_amount)
 				# Green heal flash on significant heal

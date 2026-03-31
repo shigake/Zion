@@ -100,7 +100,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 	# Lifesteal
 	var lifesteal = 0.02 * level
-	var heal_amount = int(dmg * lifesteal)
+	var heal_amount = maxi(1, ceili(dmg * lifesteal)) if lifesteal > 0.0 else 0
 	if heal_amount > 0:
 		GameManager.heal(heal_amount)
 		# Soul wisps: green dots travel from enemy to player

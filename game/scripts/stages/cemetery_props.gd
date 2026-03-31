@@ -153,7 +153,7 @@ func _create_stage_mechanics() -> void:
 		)
 
 		# Visual: glowing tombstone marker on ground
-		var visual = _create_zone_visual(Color(0.6, 0.5, 0.8, 0.35), TOMBSTONE_ZONE_SIZE)
+		var visual = _create_zone_visual(Color(0.35, 0.3, 0.25, 0.3), TOMBSTONE_ZONE_SIZE)
 		zone.add_child(visual)
 
 		# Tombstone prop on top

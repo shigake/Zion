@@ -123,11 +123,18 @@ func _reset_for_reuse() -> void:
 	monitoring = true
 	timer = 0.0
 	_trail_counter = 0
+	visible = true
 	# Reconecta referencia do sprite (pode ter sido perdida no pool)
-	if not _sprite:
+	if not _sprite or not is_instance_valid(_sprite):
 		_sprite = get_node_or_null("ProjectileSprite")
-	# Forca escala base antes de qualquer efeito (previne acumulo)
+	# Se sprite nao existe (primeira vez via pool), cria via setup
+	if not _sprite:
+		_setup_billboard_sprite()
+	# Forca escala base e visibilidade antes de qualquer efeito (previne acumulo)
 	if _sprite:
+		_sprite.visible = true
 		_sprite.scale = Vector3.ONE
+	# Esconde mesh 3D (pode ter voltado visivel no pool)
+	_ensure_bullet_mesh()
 	_update_sprite_rotation()
 	_spawn_muzzle_flash()
