@@ -112,3 +112,4 @@ func _on_body_entered(body: Node3D) -> void:
 		hit_enemies.append(body)
 		# Impact sparks at hit position
 		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 5)
+		ScreenEffects.shake(0.03)

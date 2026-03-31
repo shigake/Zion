@@ -221,6 +221,7 @@ func _on_body_entered(body: Node3D) -> void:
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
 	# Impact fire sparks
 	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.5, 0.1), 4)
+	ScreenEffects.shake(0.03)
 
 func _spawn_slash_trail(pos: Vector3) -> void:
 	WeaponVFX.spawn_slash_trail(self, _slash_tex, pos)

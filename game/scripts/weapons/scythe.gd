@@ -94,6 +94,7 @@ func _on_body_entered(body: Node3D) -> void:
 	AudioManager.play_sfx("scythe_swoosh")
 	# Dark impact sparks
 	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.1, 0.7), 3)
+	ScreenEffects.shake(0.03)
 
 	# Slash trail visual at hit position
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))

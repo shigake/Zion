@@ -109,3 +109,4 @@ func _on_body_entered(body: Node3D) -> void:
 		body.call_deferred("take_damage", dmg, "physical")
 		# Golden thrust sparks
 		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.9, 0.8, 0.3), 4)
+		ScreenEffects.shake(0.03)

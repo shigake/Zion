@@ -176,3 +176,4 @@ func _on_body_entered(body: Node3D) -> void:
 		body.call_deferred("take_damage", dmg, "shadow")
 		hit_enemies.append(body)
 		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 4)
+		ScreenEffects.shake(0.03)
