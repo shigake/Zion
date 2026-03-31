@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 10 — Loja: Reset All e Max All nao funcionam
 
 ## Problema

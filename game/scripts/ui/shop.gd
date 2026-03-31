@@ -4,6 +4,8 @@ extends Control
 ## Layout grid com cards detalhados, descrições e botões de reset/fill.
 
 @onready var back_btn: Button = $VBox/BackButton
+@onready var reset_all_btn: Button = $VBox/ActionBar/ResetAllButton
+@onready var max_all_btn: Button = $VBox/ActionBar/MaxAllButton
 
 var _crystals_label: Label
 var _grid: GridContainer
@@ -17,9 +19,37 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_texture_background()
 	back_btn.pressed.connect(_on_back)
+	reset_all_btn.pressed.connect(_on_reset_all)
+	max_all_btn.pressed.connect(_on_fill_all)
+	_style_action_buttons()
 	_build_shop_ui()
 	GamepadUI.notify_menu_opened()
 	AudioManager.play_music("shop")
+
+func _style_action_buttons() -> void:
+	# Style Reset All button
+	var reset_style = StyleBoxFlat.new()
+	reset_style.bg_color = Color(0.4, 0.12, 0.12)
+	reset_style.set_corner_radius_all(8)
+	reset_style.set_border_width_all(1)
+	reset_style.border_color = Color(0.8, 0.2, 0.2)
+	reset_all_btn.add_theme_stylebox_override("normal", reset_style)
+	var reset_hover = reset_style.duplicate()
+	reset_hover.bg_color = Color(0.55, 0.15, 0.15)
+	reset_all_btn.add_theme_stylebox_override("hover", reset_hover)
+	reset_all_btn.focus_mode = Control.FOCUS_ALL
+
+	# Style Max All button
+	var fill_style = StyleBoxFlat.new()
+	fill_style.bg_color = Color(0.12, 0.3, 0.12)
+	fill_style.set_corner_radius_all(8)
+	fill_style.set_border_width_all(1)
+	fill_style.border_color = Color(0.2, 0.8, 0.3)
+	max_all_btn.add_theme_stylebox_override("normal", fill_style)
+	var fill_hover = fill_style.duplicate()
+	fill_hover.bg_color = Color(0.15, 0.4, 0.15)
+	max_all_btn.add_theme_stylebox_override("hover", fill_hover)
+	max_all_btn.focus_mode = Control.FOCUS_ALL
 
 func _setup_texture_background() -> void:
 	var bg_tex_path := "res://assets/sprites/ui/shop_bg.png"
@@ -36,8 +66,6 @@ func _setup_texture_background() -> void:
 
 func _build_shop_ui() -> void:
 	# Limpa conteudo anterior
-	var vbox = $VBox
-	var scroll = $VBox/ScrollContainer
 	var upgrades_container = $VBox/ScrollContainer/Upgrades
 	for child in upgrades_container.get_children():
 		child.queue_free()
@@ -53,48 +81,6 @@ func _build_shop_ui() -> void:
 	_update_crystals()
 	_crystals_label.add_theme_font_size_override("font_size", 18)
 	_crystals_label.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
-
-	# Botões de ação (ANTES do scroll, sempre visiveis)
-	# Remove action_bar antigo se existir
-	var old_action = vbox.get_node_or_null("ActionBar")
-	if old_action:
-		old_action.queue_free()
-
-	var action_bar = HBoxContainer.new()
-	action_bar.name = "ActionBar"
-	action_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	action_bar.add_theme_constant_override("separation", 16)
-	# Inserir entre CrystalsLabel e ScrollContainer
-	vbox.add_child(action_bar)
-	vbox.move_child(action_bar, _crystals_label.get_index() + 1)
-
-	# Botão Reset All
-	var reset_btn = Button.new()
-	reset_btn.text = "Reset all"
-	reset_btn.custom_minimum_size = Vector2(140, 36)
-	reset_btn.focus_mode = Control.FOCUS_ALL
-	reset_btn.pressed.connect(_on_reset_all)
-	var reset_style = StyleBoxFlat.new()
-	reset_style.bg_color = Color(0.4, 0.12, 0.12)
-	reset_style.set_corner_radius_all(8)
-	reset_style.set_border_width_all(1)
-	reset_style.border_color = Color(0.8, 0.2, 0.2)
-	reset_btn.add_theme_stylebox_override("normal", reset_style)
-	action_bar.add_child(reset_btn)
-
-	# Botão Max All
-	var fill_btn = Button.new()
-	fill_btn.text = "Max all"
-	fill_btn.custom_minimum_size = Vector2(140, 36)
-	fill_btn.focus_mode = Control.FOCUS_ALL
-	fill_btn.pressed.connect(_on_fill_all)
-	var fill_style = StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.12, 0.3, 0.12)
-	fill_style.set_corner_radius_all(8)
-	fill_style.set_border_width_all(1)
-	fill_style.border_color = Color(0.2, 0.8, 0.3)
-	fill_btn.add_theme_stylebox_override("normal", fill_style)
-	action_bar.add_child(fill_btn)
 
 	# Grid de cards
 	_grid = GridContainer.new()
@@ -284,6 +270,7 @@ func _on_reset_all() -> void:
 		SaveManager.data["upgrade_" + uid] = 0
 	SaveManager.data["crystals"] = SaveManager.data.get("crystals", 0) + total_refund
 	SaveManager.save_game()
+	_flash_button(reset_all_btn, Color(1.0, 0.3, 0.3))
 	_build_shop_ui()
 
 func _on_fill_all() -> void:
@@ -297,7 +284,14 @@ func _on_fill_all() -> void:
 				break
 			SaveManager.buy_upgrade(uid)
 			current += 1
+	_flash_button(max_all_btn, Color(0.3, 1.0, 0.4))
 	_build_shop_ui()
+
+func _flash_button(btn: Button, flash_color: Color) -> void:
+	var original_self_modulate = btn.self_modulate
+	btn.self_modulate = flash_color
+	var tw = create_tween()
+	tw.tween_property(btn, "self_modulate", original_self_modulate, 0.3)
 
 func _update_crystals() -> void:
 	if _crystals_label:
