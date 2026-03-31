@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (18 arquivos)          # Game design documents
+├── docs/ (19 arquivos)          # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── prd.md                   # Product Requirements (roadmap fases A-E)
 │   ├── story.md                 # Historia, lore, narrativa completa
@@ -58,7 +58,8 @@ Zion/
 │   ├── prd_projectile_bugfix.md # PRD de bugfix de projeteis
 │   ├── prd_annulus_spawning.md  # PRD de spawn annular
 │   ├── prd_qa_stress_test.md    # PRD de QA e stress test
-│   └── prd_build_distribution.md # PRD de build e distribuicao
+│   ├── prd_build_distribution.md # PRD de build e distribuicao
+│   └── prd_weapon_audit.md      # PRD de auditoria de armas (icones + efeitos)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
 │   ├── package.json             # Dependencias (express, better-sqlite3)
