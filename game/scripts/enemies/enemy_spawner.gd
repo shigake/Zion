@@ -29,8 +29,9 @@ var ghost_green_scene: PackedScene = preload("res://scenes/enemies/ghost_green.t
 var ghost_blue_scene: PackedScene = preload("res://scenes/enemies/ghost_blue.tscn")
 var ghost_red_scene: PackedScene = preload("res://scenes/enemies/ghost_red.tscn")
 
-# Boss
-var boss_spawned: bool = false
+# Boss (suporta multiplos bosses por partida)
+var _bosses_spawned: int = 0
+var _next_boss_time: float = GameConstants.BOSS_SPAWN_TIME
 var miniboss_spawned: bool = false
 
 # Boss Rush mode
@@ -70,11 +71,10 @@ func _process(delta: float) -> void:
 		spawn_timer = 0.0
 		_spawn_wave(mult)
 
-	# Mini-boss agora é gerenciado pelo EventManager (min 10 e min 20)
-
-	# Boss no minuto 12
-	if not boss_spawned and GameManager.game_time >= GameConstants.BOSS_SPAWN_TIME:
-		boss_spawned = true
+	# Boss a cada BOSS_SPAWN_INTERVAL (5 min)
+	if GameManager.game_time >= _next_boss_time:
+		_next_boss_time += GameConstants.BOSS_SPAWN_INTERVAL
+		_bosses_spawned += 1
 		_spawn_boss()
 
 func _spawn_wave(mult: float) -> void:

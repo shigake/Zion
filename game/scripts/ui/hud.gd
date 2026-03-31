@@ -48,6 +48,11 @@ var minimap: Control = null
 # XP progress text label (overlaid on XP bar)
 var _xp_text_label: Label = null
 
+# Chest arrows and quest display
+var _chest_arrows: Dictionary = {}  # chest_instance_id -> Label
+var _quest_label: Label = null
+var _quest_progress_bar: ProgressBar = null
+
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
 	GameManager.game_over.connect(_on_game_over)
@@ -208,6 +213,45 @@ func _ready() -> void:
 		_mp_hud = HUDMultiplayer.new()
 		_mp_hud.setup(self)
 
+	# Quest display (top-center)
+	_quest_label = Label.new()
+	_quest_label.name = "QuestLabel"
+	_quest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quest_label.add_theme_font_size_override("font_size", 14)
+	_quest_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
+	_quest_label.add_theme_constant_override("outline_size", 2)
+	_quest_label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	_quest_label.anchor_left = 0.25
+	_quest_label.anchor_right = 0.75
+	_quest_label.offset_top = 55.0
+	_quest_label.offset_bottom = 75.0
+	_quest_label.visible = false
+	add_child(_quest_label)
+
+	_quest_progress_bar = ProgressBar.new()
+	_quest_progress_bar.name = "QuestProgressBar"
+	_quest_progress_bar.anchor_left = 0.35
+	_quest_progress_bar.anchor_right = 0.65
+	_quest_progress_bar.offset_top = 76.0
+	_quest_progress_bar.offset_bottom = 82.0
+	_quest_progress_bar.show_percentage = false
+	_quest_progress_bar.custom_minimum_size = Vector2(0, 6)
+	var qp_fill = StyleBoxFlat.new()
+	qp_fill.bg_color = Color(0.9, 0.8, 0.2)
+	qp_fill.set_corner_radius_all(3)
+	_quest_progress_bar.add_theme_stylebox_override("fill", qp_fill)
+	var qp_bg = StyleBoxFlat.new()
+	qp_bg.bg_color = Color(0.1, 0.1, 0.12, 0.7)
+	qp_bg.set_corner_radius_all(3)
+	_quest_progress_bar.add_theme_stylebox_override("background", qp_bg)
+	_quest_progress_bar.visible = false
+	add_child(_quest_progress_bar)
+
+	# Quest signals
+	QuestManager.quest_started.connect(_on_quest_started)
+	QuestManager.quest_completed.connect(_on_quest_completed)
+	QuestManager.quest_progress.connect(_on_quest_progress)
+
 var _slow_update_timer: float = 0.0
 const SLOW_UPDATE_INTERVAL: float = 0.2  # 5x per second for non-critical UI
 
@@ -232,6 +276,7 @@ func _process(delta: float) -> void:
 			_mp_hud.update_ally_arrows()
 
 	_update_synergies(delta)
+	_update_chest_arrows()
 	# Check achievements every 10s
 	achievement_check_timer += delta
 	if achievement_check_timer >= 10.0:
@@ -606,5 +651,112 @@ func _update_synergies(delta: float) -> void:
 		lbl.add_theme_font_size_override("font_size", 14)
 		lbl.add_theme_color_override("font_color", info["color"])
 		synergy_container.add_child(lbl)
+
+# --------------- Chest Arrows ---------------
+
+func _update_chest_arrows() -> void:
+	var chests = ChestManager.get_active_chests()
+	var camera = get_viewport().get_camera_3d()
+	if not camera:
+		# Cleanup all arrows
+		for arrow in _chest_arrows.values():
+			if is_instance_valid(arrow):
+				arrow.queue_free()
+		_chest_arrows.clear()
+		return
+	var viewport_size = get_viewport().get_visible_rect().size
+	var local_player = get_tree().get_first_node_in_group("players")
+	if not local_player or not is_instance_valid(local_player):
+		return
+
+	# Remove arrows for chests that no longer exist
+	var valid_ids := []
+	for chest in chests:
+		if is_instance_valid(chest):
+			valid_ids.append(chest.get_instance_id())
+	for cid in _chest_arrows.keys():
+		if cid not in valid_ids:
+			if is_instance_valid(_chest_arrows[cid]):
+				_chest_arrows[cid].queue_free()
+			_chest_arrows.erase(cid)
+
+	for chest in chests:
+		if not is_instance_valid(chest):
+			continue
+		var cid = chest.get_instance_id()
+		var dist = local_player.global_position.distance_to(chest.global_position)
+		var behind = camera.global_transform.basis.z.dot(chest.global_position - camera.global_position) > 0
+		var screen_pos = camera.unproject_position(chest.global_position + Vector3(0, 1, 0))
+		if behind:
+			screen_pos = viewport_size - screen_pos
+		var margin = 50.0
+		var offscreen = behind or screen_pos.x < margin or screen_pos.x > viewport_size.x - margin or screen_pos.y < margin or screen_pos.y > viewport_size.y - margin
+
+		# Create or reuse arrow
+		if cid not in _chest_arrows or not is_instance_valid(_chest_arrows[cid]):
+			var arrow = Label.new()
+			arrow.add_theme_font_size_override("font_size", 20)
+			arrow.add_theme_color_override("font_color", GameConstants.CHEST_ARROW_COLOR)
+			arrow.add_theme_constant_override("outline_size", 2)
+			arrow.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
+			add_child(arrow)
+			_chest_arrows[cid] = arrow
+
+		var arrow: Label = _chest_arrows[cid]
+		if not offscreen and dist < 5.0:
+			arrow.visible = false
+			continue
+		arrow.visible = true
+		var clamped = Vector2(
+			clampf(screen_pos.x, margin, viewport_size.x - margin),
+			clampf(screen_pos.y, margin, viewport_size.y - margin)
+		)
+		arrow.position = clamped - Vector2(20, 10)
+		var dir = (screen_pos - viewport_size / 2).normalized()
+		var arrow_char: String
+		if absf(dir.x) > absf(dir.y):
+			arrow_char = "►" if dir.x > 0 else "◄"
+		else:
+			arrow_char = "▼" if dir.y > 0 else "▲"
+		arrow.text = "%s 📦 %dm" % [arrow_char, int(dist)]
+		arrow.modulate.a = clampf(remap(dist, 3.0, 30.0, 0.6, 1.0), 0.6, 1.0)
+
+# --------------- Quest UI ---------------
+
+func _on_quest_started(quest: Dictionary) -> void:
+	if _quest_label:
+		_quest_label.text = quest.get("display_name", "Quest")
+		_quest_label.visible = true
+		_quest_label.scale = Vector2(1.3, 1.3)
+		var tween = create_tween()
+		tween.tween_property(_quest_label, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	if _quest_progress_bar:
+		_quest_progress_bar.value = 0
+		_quest_progress_bar.visible = true
+
+func _on_quest_completed(_quest: Dictionary) -> void:
+	if _quest_label:
+		_quest_label.text = "Quest completa!"
+		_quest_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+		var tween = create_tween()
+		tween.tween_property(_quest_label, "scale", Vector2(1.4, 1.4), 0.2)
+		tween.tween_property(_quest_label, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_OUT)
+		tween.tween_interval(2.0)
+		tween.tween_callback(func():
+			_quest_label.visible = false
+			_quest_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
+		)
+	if _quest_progress_bar:
+		_quest_progress_bar.value = _quest_progress_bar.max_value
+		var tween2 = create_tween()
+		tween2.tween_interval(2.0)
+		tween2.tween_callback(func(): _quest_progress_bar.visible = false)
+
+func _on_quest_progress(quest: Dictionary, current: int, target: int) -> void:
+	if _quest_progress_bar:
+		_quest_progress_bar.max_value = target
+		_quest_progress_bar.value = current
+	if _quest_label and quest.has("display_name"):
+		_quest_label.text = "%s (%d/%d)" % [quest["display_name"], current, target]
 
 ## Multiplayer setup/migration/reconnection — delegated to HUDMultiplayer

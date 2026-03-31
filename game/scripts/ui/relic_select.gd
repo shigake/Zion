@@ -221,9 +221,9 @@ func _on_start() -> void:
 		"boss_rush":
 			GameManager.run_time_limit = 999999.0
 		"hyper":
-			GameManager.run_time_limit = 900.0
+			GameManager.run_time_limit = GameConstants.RUN_TIME_NORMAL
 		_:
-			GameManager.run_time_limit = 900.0
+			GameManager.run_time_limit = GameConstants.RUN_TIME_NORMAL
 	var scene = GameConstants.STAGE_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
 	LoadingScreen.load_stage(scene)
 

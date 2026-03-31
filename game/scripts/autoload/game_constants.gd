@@ -65,7 +65,22 @@ const RESOLUTIONS: Array[Vector2i] = [
 const XP_SCALE_FACTOR := 1.15
 const XP_FLAT_BONUS := 3
 const DIFFICULTY_TIME_SCALE := 0.35
-const BOSS_SPAWN_TIME := 720.0  # 12 minutos
+const BOSS_SPAWN_TIME := 300.0  # 5 minutos (1o boss)
+const BOSS_SPAWN_INTERVAL := 300.0  # Boss a cada 5 min
+const RUN_TIME_NORMAL := 600.0  # 10 minutos por partida
+
+# ---- Reward Chests ----
+const CHEST_SPAWN_INTERVAL := 45.0  # Bau a cada 45 segundos
+const CHEST_REWARD_CRYSTALS_MIN := 5
+const CHEST_REWARD_CRYSTALS_MAX := 15
+const CHEST_REWARD_XP := 20
+const CHEST_ARROW_COLOR := Color(1.0, 0.85, 0.2)  # Dourado
+const CHEST_DESPAWN_TIME := 20.0  # Desaparece em 20s se nao coletar
+
+# ---- Quest System ----
+const QUEST_INTERVAL := 60.0  # Nova quest a cada 60s
+const QUEST_REWARD_CRYSTALS := 10
+const QUEST_REWARD_XP := 30
 const PICKUP_CAP := 200
 const MAX_ENEMIES := 500
 

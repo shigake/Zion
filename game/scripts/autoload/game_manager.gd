@@ -344,6 +344,8 @@ func take_damage(amount: int) -> void:
 	player_hp -= reduced
 	# Sync HP com aliados no multiplayer
 	MultiplayerManager.notify_damage(player_hp, get_effective_max_hp())
+	# Notifica quest de sobrevivencia
+	QuestManager.on_player_damaged()
 	# Lifesteal tracking (applied by weapons on hit, not here)
 	if player_hp <= 0:
 		# One-shot kill detection (possible balance issue or bug)
@@ -464,6 +466,8 @@ func _recalculate_item_bonuses() -> void:
 
 func reset() -> void:
 	AchievementManager.reset_run()
+	ChestManager.reset()
+	QuestManager.reset()
 	game_time = 0.0
 	enemies_alive = 0
 	total_kills = 0

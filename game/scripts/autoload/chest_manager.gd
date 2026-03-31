@@ -1,0 +1,173 @@
+extends Node
+
+## Gerencia baus de recompensa que spawnam durante a run.
+## Baus aparecem periodicamente, com setas no HUD apontando para eles.
+
+signal chest_spawned(chest: Node3D)
+signal chest_collected(reward: Dictionary)
+
+var _chest_timer: float = 0.0
+var _active_chests: Array[Node3D] = []
+var _chest_mesh: BoxMesh = null
+var _chest_mat: StandardMaterial3D = null
+
+func _ready() -> void:
+	# Pre-create shared mesh/material
+	_chest_mesh = BoxMesh.new()
+	_chest_mesh.size = Vector3(0.6, 0.5, 0.4)
+	_chest_mat = StandardMaterial3D.new()
+	_chest_mat.albedo_color = Color(0.7, 0.5, 0.15)
+	_chest_mat.emission_enabled = true
+	_chest_mat.emission = Color(1.0, 0.85, 0.2)
+	_chest_mat.emission_energy_multiplier = 1.5
+	_chest_mat.roughness = 0.4
+
+func _process(delta: float) -> void:
+	if GameManager.paused or GameManager.is_game_over:
+		return
+	if GameManager.game_time < 10.0:
+		return  # Nao spawna nos primeiros 10s
+
+	_chest_timer += delta
+	if _chest_timer >= GameConstants.CHEST_SPAWN_INTERVAL:
+		_chest_timer = 0.0
+		_spawn_chest()
+
+	# Cleanup expired chests
+	for i in range(_active_chests.size() - 1, -1, -1):
+		var chest = _active_chests[i]
+		if not is_instance_valid(chest) or not chest.is_inside_tree():
+			_active_chests.remove_at(i)
+
+func _spawn_chest() -> void:
+	var players = GameManager.get_players()
+	if players.is_empty():
+		return
+	var player_pos = players[0].global_position
+	# Spawna em posicao aleatoria entre 15-25 unidades do jogador
+	var angle = randf() * TAU
+	var dist = randf_range(15.0, 25.0)
+	var spawn_pos = player_pos + Vector3(cos(angle), 0, sin(angle)) * dist
+	spawn_pos.y = 0.3
+
+	var chest = _create_chest_node()
+	chest.global_position = spawn_pos
+	get_tree().current_scene.add_child(chest)
+	_active_chests.append(chest)
+	chest_spawned.emit(chest)
+	AudioManager.play_sfx("chest_open")
+	LogManager.info("Chest", "Reward chest spawned at %.0f, %.0f" % [spawn_pos.x, spawn_pos.z])
+
+func _create_chest_node() -> Area3D:
+	var chest = Area3D.new()
+	chest.name = "RewardChest"
+	chest.add_to_group("reward_chests")
+	chest.collision_layer = 4  # Pickups layer
+	chest.collision_mask = 1   # Players layer
+
+	# Visual: golden box
+	var mesh_inst = MeshInstance3D.new()
+	mesh_inst.mesh = _chest_mesh
+	mesh_inst.material_override = _chest_mat
+	mesh_inst.position.y = 0.25
+	chest.add_child(mesh_inst)
+
+	# Glow aura
+	var aura = OmniLight3D.new()
+	aura.light_color = Color(1.0, 0.85, 0.2)
+	aura.light_energy = 2.0
+	aura.omni_range = 3.0
+	aura.position.y = 0.5
+	chest.add_child(aura)
+
+	# Collision shape
+	var col = CollisionShape3D.new()
+	var shape = SphereShape3D.new()
+	shape.radius = 1.5  # Raio de coleta generoso
+	col.shape = shape
+	chest.add_child(col)
+
+	# Float animation + rotation
+	var script = GDScript.new()
+	script.source_code = """extends Area3D
+
+var _time: float = 0.0
+var _despawn_timer: float = %s
+
+func _process(delta: float) -> void:
+	_time += delta
+	_despawn_timer -= delta
+	# Bobbing
+	var mesh = get_child(0)
+	if mesh:
+		mesh.position.y = 0.25 + sin(_time * 2.0) * 0.1
+		mesh.rotation.y += delta * 1.5
+	# Pisca quando prestes a despawnar
+	if _despawn_timer < 5.0:
+		modulate.a = 0.5 + sin(_time * 8.0) * 0.5
+	if _despawn_timer <= 0:
+		queue_free()
+""" % str(GameConstants.CHEST_DESPAWN_TIME)
+	script.reload()
+	chest.set_script(script)
+
+	# Conectar coleta
+	chest.body_entered.connect(_on_chest_body_entered.bind(chest))
+	return chest
+
+func _on_chest_body_entered(body: Node3D, chest: Node3D) -> void:
+	if not body.is_in_group("players"):
+		return
+	if not is_instance_valid(chest):
+		return
+
+	# Gera recompensa
+	var reward := {}
+	var roll = randf()
+	if roll < 0.3:
+		# Cristais
+		var crystals = randi_range(GameConstants.CHEST_REWARD_CRYSTALS_MIN, GameConstants.CHEST_REWARD_CRYSTALS_MAX)
+		GameManager.crystals_this_run += crystals
+		SaveManager.data["crystals"] = SaveManager.data.get("crystals", 0) + crystals
+		reward = {"type": "crystals", "amount": crystals}
+	elif roll < 0.6:
+		# XP
+		GameManager.add_xp(GameConstants.CHEST_REWARD_XP)
+		reward = {"type": "xp", "amount": GameConstants.CHEST_REWARD_XP}
+	elif roll < 0.85:
+		# Cura
+		var heal = int(GameManager.get_effective_max_hp() * 0.25)
+		GameManager.heal(heal)
+		reward = {"type": "heal", "amount": heal}
+	else:
+		# Reroll gratis
+		GameManager.rerolls += 1
+		reward = {"type": "reroll", "amount": 1}
+
+	# VFX
+	ParticleFactory.spawn_collect_particles(chest.global_position, Color(1.0, 0.85, 0.2))
+	AudioManager.play_sfx("collect_crystal")
+	ScreenEffects.shake(0.05)
+
+	# Damage number mostrando recompensa
+	var text = ""
+	match reward["type"]:
+		"crystals": text = "+%d cristais" % reward["amount"]
+		"xp": text = "+%d XP" % reward["amount"]
+		"heal": text = "+%d HP" % reward["amount"]
+		"reroll": text = "+1 Reroll"
+	ParticleFactory.spawn_damage_number(chest.global_position + Vector3(0, 1, 0), text, Color(1.0, 0.85, 0.2))
+
+	chest_collected.emit(reward)
+	_active_chests.erase(chest)
+	chest.queue_free()
+
+func get_active_chests() -> Array[Node3D]:
+	return _active_chests
+
+func reset() -> void:
+	_chest_timer = 0.0
+	for chest in _active_chests:
+		if is_instance_valid(chest):
+			chest.queue_free()
+	_active_chests.clear()
