@@ -17,14 +17,19 @@ permissions:
 env:
   GODOT_VERSION: "4.6.1"
 
+# ======================================================================
+# JOB 1: Validacao — verifica versao e importa projeto
+# ======================================================================
 jobs:
-  build-windows:
-    name: Build Windows
+  validate:
+    name: Validar projeto
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Historico completo para changelog
+          fetch-depth: 0
 
       - name: Ler versao
         id: version
@@ -32,32 +37,27 @@ jobs:
           if [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
           elif [ -f game/VERSION ]; then
-            VERSION=$(cat game/VERSION)
+            VERSION=$(cat game/VERSION | tr -d '[:space:]')
           else
             VERSION="0.0.0"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Versao: $VERSION"
 
-      # ========== Task 3: Validacao pre-release ==========
-
       - name: Verificar incremento de versao
         if: github.event.inputs.create_release == 'true'
         run: |
-          CURRENT="$( cat game/VERSION | tr -d '[:space:]' )"
-          # Excluir a tag da versao atual (caso ja exista) ao buscar a anterior
+          CURRENT="${{ steps.version.outputs.version }}"
           PREV_TAG=$(git tag --sort=-v:refname | grep -v "^v${CURRENT}$" | head -1 || true)
           if [ -n "$PREV_TAG" ]; then
             PREV_VERSION="${PREV_TAG#v}"
-            echo "Versao anterior: $PREV_VERSION"
-            echo "Versao atual:    $CURRENT"
+            echo "Versao anterior: $PREV_VERSION → atual: $CURRENT"
             if [ "$CURRENT" = "$PREV_VERSION" ]; then
-              echo "Erro: game/VERSION ($CURRENT) nao foi incrementado em relacao a tag anterior ($PREV_TAG)."
+              echo "::error::game/VERSION ($CURRENT) nao foi incrementado em relacao a tag anterior ($PREV_TAG)."
               exit 1
             fi
-            echo "Versao incrementada corretamente."
           else
-            echo "Nenhuma tag anterior encontrada. Pulando verificacao de incremento."
+            echo "Nenhuma tag anterior. Pulando verificacao."
           fi
 
       - name: Cache Godot
@@ -70,7 +70,6 @@ jobs:
 
       - name: Instalar Godot + Export Templates
         run: |
-          # Godot editor
           if [ ! -f ~/godot/godot ]; then
             mkdir -p ~/godot
             wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip
@@ -79,8 +78,6 @@ jobs:
             chmod +x ~/godot/godot
           fi
           echo "$HOME/godot" >> $GITHUB_PATH
-
-          # Export templates
           TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           if [ ! -d "$TEMPLATES_DIR" ]; then
             mkdir -p "$TEMPLATES_DIR"
@@ -93,274 +90,259 @@ jobs:
         run: |
           cd game
           godot --headless --import project.godot 2>&1 | tee /tmp/import.log
-          # Verifica APENAS erros de parse em scripts GDScript (ignora warnings, rendering, e resource errors)
-          PARSE_ERRORS=$(grep -c "Parse Error:" /tmp/import.log 2>/dev/null || echo "0")
           SCRIPT_ERRORS=$(grep "SCRIPT ERROR:" /tmp/import.log | grep -c "Parse Error" 2>/dev/null || echo "0")
-          echo "Parse errors: $PARSE_ERRORS, Script parse errors: $SCRIPT_ERRORS"
           if [ "$SCRIPT_ERRORS" -gt 0 ]; then
-            echo "Erros de parse encontrados:"
             grep "SCRIPT ERROR:" /tmp/import.log | grep "Parse Error" | head -10
-            echo "Erro: Projeto contem erros de parse em scripts. Corrigir antes de fazer release."
+            echo "::error::Projeto contem $SCRIPT_ERRORS erros de parse."
             exit 1
           fi
           echo "Projeto validado com sucesso."
 
-      - name: Exportar Windows
+  # ======================================================================
+  # JOB 2: Build — exporta Windows e Linux em paralelo
+  # ======================================================================
+  build:
+    name: Build (${{ matrix.platform }})
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: windows
+            preset: "Windows Desktop"
+            output: zion.exe
+          - platform: linux
+            preset: "Linux"
+            output: zion.x86_64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/godot
+            ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux-export
+
+      - name: Instalar Godot + Export Templates
+        run: |
+          if [ ! -f ~/godot/godot ]; then
+            mkdir -p ~/godot
+            wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O /tmp/godot.zip
+            unzip -o /tmp/godot.zip -d ~/godot
+            mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+            chmod +x ~/godot/godot
+          fi
+          echo "$HOME/godot" >> $GITHUB_PATH
+          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          if [ ! -d "$TEMPLATES_DIR" ]; then
+            mkdir -p "$TEMPLATES_DIR"
+            wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -O /tmp/templates.tpz
+            unzip -o /tmp/templates.tpz -d /tmp/templates
+            cp /tmp/templates/templates/* "$TEMPLATES_DIR/"
+          fi
+
+      - name: Exportar ${{ matrix.platform }}
         run: |
           mkdir -p build
           cd game
-          godot --headless --export-release "Windows Desktop" ../build/zion.exe 2>&1 | tee /tmp/export.log
-          echo ""
-          if [ -f ../build/zion.exe ]; then
-            SIZE=$(du -h ../build/zion.exe | cut -f1)
-            echo "Build gerado com sucesso: zion.exe ($SIZE)"
-          else
-            echo "Falha ao gerar o build"
+          godot --headless --export-release "${{ matrix.preset }}" ../build/${{ matrix.output }} 2>&1 | tee /tmp/export.log
+          if [ ! -f ../build/${{ matrix.output }} ]; then
+            echo "::error::Falha ao exportar ${{ matrix.platform }}"
             cat /tmp/export.log
             exit 1
           fi
+          SIZE=$(du -h ../build/${{ matrix.output }} | cut -f1)
+          echo "Build ${{ matrix.platform }}: ${{ matrix.output }} ($SIZE)"
 
-      - name: Exportar Linux
+      - name: Verificar tamanho
         run: |
-          cd game
-          godot --headless --export-release "Linux" ../build/zion.x86_64 2>&1 | tee /tmp/export_linux.log
-          echo ""
-          if [ -f ../build/zion.x86_64 ]; then
-            SIZE=$(du -h ../build/zion.x86_64 | cut -f1)
-            echo "Build Linux gerado com sucesso: zion.x86_64 ($SIZE)"
-          else
-            echo "Falha ao gerar o build Linux"
-            cat /tmp/export_linux.log
+          SIZE_BYTES=$(stat -c%s build/${{ matrix.output }})
+          SIZE_MB=$((SIZE_BYTES / 1048576))
+          echo "${{ matrix.output }}: ${SIZE_MB}MB"
+          if [ "$SIZE_BYTES" -lt 10485760 ]; then
+            echo "::error::Build muito pequeno (${SIZE_MB}MB). Provavelmente incompleto."
             exit 1
           fi
 
-      - name: Verificar tamanho dos executaveis
-        run: |
-          for FILE in build/zion.exe build/zion.x86_64; do
-            if [ -f "$FILE" ]; then
-              SIZE_BYTES=$(stat -c%s "$FILE")
-              SIZE_MB=$((SIZE_BYTES / 1048576))
-              echo "$(basename $FILE): ${SIZE_MB}MB (${SIZE_BYTES} bytes)"
-              if [ "$SIZE_BYTES" -lt 10485760 ]; then
-                echo "Erro: $(basename $FILE) muito pequeno (${SIZE_MB}MB). Build provavelmente esta incompleto."
-                exit 1
-              fi
-            fi
-          done
-          echo "Tamanho dos executaveis OK."
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.platform }}
+          path: build/${{ matrix.output }}
+          retention-days: 30
 
-      - name: Preparar pacote
+  # ======================================================================
+  # JOB 3: Empacotar — junta builds + README em zips
+  # ======================================================================
+  package:
+    name: Empacotar releases
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-windows
+          path: build/
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-linux
+          path: build/
+
+      - name: Criar pacotes
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
-          VERSION=${{ steps.version.outputs.version }}
-          mkdir -p "release/Zion-v${VERSION}"
-          cp build/zion.exe "release/Zion-v${VERSION}/"
-          cp build/zion.x86_64 "release/Zion-v${VERSION}/"
-          # Copiar README jogavel
-          cat > "release/Zion-v${VERSION}/LEIA-ME.txt" << 'READMEEOF'
+          mkdir -p "pkg/Zion-v${VERSION}"
+          cp build/zion.exe "pkg/Zion-v${VERSION}/"
+          cp build/zion.x86_64 "pkg/Zion-v${VERSION}/"
+          cat > "pkg/Zion-v${VERSION}/LEIA-ME.txt" << 'EOF'
           ╔══════════════════════════════════════╗
           ║          ZION - Survivors            ║
           ║      Roguelite Co-op Online          ║
           ╚══════════════════════════════════════╝
 
           Como jogar:
-          1. Execute zion.exe
+          1. Execute zion.exe (Windows) ou ./zion.x86_64 (Linux)
           2. Se o Windows Defender alertar, clique em
              "Mais informacoes" > "Executar mesmo assim"
-          3. Divirta-se!
 
-          Multiplayer:
-          - Host cria sala no menu
-          - Outros jogadores entram pelo IP do host
+          Controles: WASD mover, armas auto-aim, TAB inventario, ESC pausa
+          Multiplayer: Host cria sala, outros entram pelo IP
 
-          Controles:
-          - WASD: Mover
-          - Mouse: Mirar
-          - Armas atiram automaticamente
-          - TAB: Inventario
-          - ESC: Pausa
-
-          Bugs? Reporte em: github.com/shigake/Zion/issues
-          READMEEOF
-          cd release
+          Bugs? github.com/shigake/Zion/issues
+          EOF
+          cd pkg
           zip -r "../Zion-v${VERSION}-windows.zip" "Zion-v${VERSION}/zion.exe" "Zion-v${VERSION}/LEIA-ME.txt"
           zip -r "../Zion-v${VERSION}-linux.zip" "Zion-v${VERSION}/zion.x86_64" "Zion-v${VERSION}/LEIA-ME.txt"
 
-      - name: Upload artifact
+      - name: Upload pacotes
         uses: actions/upload-artifact@v4
         with:
-          name: Zion-v${{ steps.version.outputs.version }}
-          path: release/Zion-v${{ steps.version.outputs.version }}/
+          name: release-packages
+          path: |
+            Zion-v${{ needs.validate.outputs.version }}-windows.zip
+            Zion-v${{ needs.validate.outputs.version }}-linux.zip
           retention-days: 30
 
-      # ========== Task 2: Changelog automatico ==========
+  # ======================================================================
+  # JOB 4: Release — cria tag, changelog e GitHub Release
+  # ======================================================================
+  release:
+    name: GitHub Release
+    needs: [validate, package]
+    if: github.event.inputs.create_release == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download pacotes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-packages
 
       - name: Gerar changelog
-        if: github.event.inputs.create_release == 'true'
         id: changelog
         run: |
-          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
-          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${CURRENT_TAG}$" | head -1 || true)
-
+          PREV_TAG=$(git tag --sort=-v:refname | head -1 || true)
           if [ -n "$PREV_TAG" ]; then
-            RANGE="${PREV_TAG}..${CURRENT_TAG}"
-            echo "Gerando changelog de ${PREV_TAG} ate ${CURRENT_TAG}"
+            RANGE="${PREV_TAG}..HEAD"
           else
-            RANGE="${CURRENT_TAG}"
-            echo "Primeira release — incluindo todos os commits"
+            RANGE="HEAD"
           fi
-
-          # Gerar changelog agrupado por tipo de commit
           {
             echo "CHANGELOG<<CHANGELOG_EOF"
-
-            # Features
             FEATS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^feat" 2>/dev/null || true)
-            if [ -n "$FEATS" ]; then
-              echo "### Novidades"
-              echo "$FEATS"
-              echo ""
-            fi
-
-            # Fixes
+            [ -n "$FEATS" ] && echo "### Novidades" && echo "$FEATS" && echo ""
             FIXES=$(git log "$RANGE" --pretty=format:"- %s" --grep="^fix" 2>/dev/null || true)
-            if [ -n "$FIXES" ]; then
-              echo "### Correcoes"
-              echo "$FIXES"
-              echo ""
-            fi
-
-            # Performance
+            [ -n "$FIXES" ] && echo "### Correcoes" && echo "$FIXES" && echo ""
             PERFS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^perf" 2>/dev/null || true)
-            if [ -n "$PERFS" ]; then
-              echo "### Performance"
-              echo "$PERFS"
-              echo ""
-            fi
-
-            # Docs
-            DOCS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^docs" 2>/dev/null || true)
-            if [ -n "$DOCS" ]; then
-              echo "### Documentacao"
-              echo "$DOCS"
-              echo ""
-            fi
-
-            # Chore e outros
-            OTHERS=$(git log "$RANGE" --pretty=format:"- %s" --grep="^chore\|^refactor\|^style\|^ci\|^build\|^test" 2>/dev/null || true)
-            if [ -n "$OTHERS" ]; then
-              echo "### Outros"
-              echo "$OTHERS"
-              echo ""
-            fi
-
-            # Se nenhum commit convencional, listar todos
+            [ -n "$PERFS" ] && echo "### Performance" && echo "$PERFS" && echo ""
             ALL=$(git log "$RANGE" --pretty=format:"- %s" 2>/dev/null || true)
-            CONVENTIONAL=$(echo -e "${FEATS}\n${FIXES}\n${PERFS}\n${DOCS}\n${OTHERS}" | grep -v "^$" | wc -l)
+            CONVENTIONAL=$(echo -e "${FEATS}\n${FIXES}\n${PERFS}" | grep -v "^$" | wc -l)
             TOTAL=$(echo "$ALL" | grep -v "^$" | wc -l)
             if [ "$CONVENTIONAL" -eq 0 ] && [ "$TOTAL" -gt 0 ]; then
-              echo "### Mudancas"
-              echo "$ALL"
-              echo ""
+              echo "### Mudancas" && echo "$ALL" && echo ""
             fi
-
             echo "CHANGELOG_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Criar tag se nao existe
-        if: github.event.inputs.create_release == 'true'
+      - name: Criar tag
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
           if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
             git tag "v${VERSION}"
             git push origin "v${VERSION}"
-            echo "Tag v${VERSION} criada."
-          else
-            echo "Tag v${VERSION} ja existe."
           fi
 
       - name: Criar GitHub Release
-        if: github.event.inputs.create_release == 'true'
-        id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ steps.version.outputs.version }}"
-          name: "Zion v${{ steps.version.outputs.version }}"
+          tag_name: "v${{ env.VERSION }}"
+          name: "Zion v${{ env.VERSION }}"
           body: |
-            ## Zion v${{ steps.version.outputs.version }}
+            ## Zion v${{ env.VERSION }}
 
             ${{ steps.changelog.outputs.CHANGELOG }}
 
             ---
 
             ### Como instalar
-            **Windows:**
-            1. Baixe `Zion-v${{ steps.version.outputs.version }}-windows.zip`
-            2. Descompacte em qualquer pasta
-            3. Execute `zion.exe`
+            **Windows:** Baixe o .zip, descompacte, execute `zion.exe`
+            **Linux:** Baixe o .zip, `chmod +x zion.x86_64`, execute `./zion.x86_64`
 
-            > **Windows Defender**: O executavel nao e assinado digitalmente. Clique em **"Mais informacoes"** > **"Executar mesmo assim"**.
-
-            **Linux:**
-            1. Baixe `Zion-v${{ steps.version.outputs.version }}-linux.zip`
-            2. Descompacte e dê permissão: `chmod +x zion.x86_64`
-            3. Execute `./zion.x86_64`
+            > Windows Defender pode alertar (executavel nao assinado). Clique "Mais informacoes" > "Executar mesmo assim".
 
             ### Requisitos
-            - Windows 10/11 ou Linux (64-bit)
-            - Placa de video com suporte a Vulkan
+            - Windows 10/11 ou Linux (64-bit) com suporte Vulkan
 
-            ### Problemas?
-            Reporte bugs em: [GitHub Issues](https://github.com/shigake/Zion/issues)
+            [Reportar bugs](https://github.com/shigake/Zion/issues)
           files: |
-            Zion-v${{ steps.version.outputs.version }}-windows.zip
-            Zion-v${{ steps.version.outputs.version }}-linux.zip
+            Zion-v${{ env.VERSION }}-windows.zip
+            Zion-v${{ env.VERSION }}-linux.zip
           draft: false
           prerelease: false
 
-      # ========== Task 6: Notificacao Discord ==========
-
-      - name: Notificar Discord
-        if: github.event.inputs.create_release == 'true' && success()
+  # ======================================================================
+  # JOB 5: Notificar Discord
+  # ======================================================================
+  notify:
+    name: Notificar Discord
+    needs: [validate, release]
+    if: github.event.inputs.create_release == 'true' && always() && needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar notificacao
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
           RELEASE_URL="https://github.com/shigake/Zion/releases/tag/v${VERSION}"
           DOWNLOAD_URL="https://github.com/shigake/Zion/releases/download/v${VERSION}/Zion-v${VERSION}-windows.zip"
-
-          # Resumo do changelog (primeiras 10 linhas)
-          CHANGELOG_SUMMARY=$(echo "${{ steps.changelog.outputs.CHANGELOG }}" | head -15 | sed 's/"/\\"/g')
-
-          # Enviar embed para o Discord via webhook
           if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
             curl -s -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{
                 \"embeds\": [{
-                  \"title\": \"Zion v${VERSION} - Nova release disponivel!\",
+                  \"title\": \"Zion v${VERSION} - Nova release!\",
                   \"url\": \"${RELEASE_URL}\",
                   \"color\": 5814783,
-                  \"description\": \"Uma nova versao do Zion foi publicada.\\n\\n${CHANGELOG_SUMMARY}\",
                   \"fields\": [
-                    {
-                      \"name\": \"Download\",
-                      \"value\": \"[Zion-v${VERSION}-windows.zip](${DOWNLOAD_URL})\",
-                      \"inline\": true
-                    },
-                    {
-                      \"name\": \"Versao\",
-                      \"value\": \"v${VERSION}\",
-                      \"inline\": true
-                    }
+                    {\"name\": \"Download\", \"value\": \"[Windows](${DOWNLOAD_URL})\", \"inline\": true},
+                    {\"name\": \"Versao\", \"value\": \"v${VERSION}\", \"inline\": true}
                   ],
-                  \"footer\": {
-                    \"text\": \"Zion - Survivors Roguelite Co-op\"
-                  },
+                  \"footer\": {\"text\": \"Zion - Survivors Roguelite Co-op\"},
                   \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
                 }]
               }"
-            echo ""
-            echo "Notificacao Discord enviada."
+            echo "Notificacao enviada."
           else
-            echo "DISCORD_WEBHOOK_URL nao configurado. Pulando notificacao."
+            echo "DISCORD_WEBHOOK_URL nao configurado."
           fi
