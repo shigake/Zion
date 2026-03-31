@@ -17,8 +17,20 @@ var hit_enemies: Array = []
 var _slash_tex: Texture2D = null
 
 func _ready() -> void:
+	# Cria mesh visual para o ataque (arco roxo brilhante)
+	var arc_mesh = BoxMesh.new()
+	arc_mesh.size = Vector3(1.5, 0.1, 0.4)
+	slash_mesh.mesh = arc_mesh
+	var arc_mat = StandardMaterial3D.new()
+	arc_mat.albedo_color = Color(0.5, 0.15, 0.9, 0.7)
+	arc_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	arc_mat.emission_enabled = true
+	arc_mat.emission = Color(0.6, 0.2, 1.0)
+	arc_mat.emission_energy_multiplier = 2.0
+	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	arc_mat.no_depth_test = true
+	slash_mesh.material_override = arc_mat
 	slash_mesh.visible = false
-	slash_mesh.mesh = null
 	slash_area.body_entered.connect(_on_body_entered)
 	var _slash_path = "res://assets/sprites/effects/slashes/shadow_claw_slash.png"
 	if not ResourceLoader.exists(_slash_path):
