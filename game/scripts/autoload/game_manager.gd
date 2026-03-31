@@ -17,7 +17,7 @@ signal boss_phase_changed(boss_name: String, phase: int)
 
 ## Gera posição de spawn em anel (annulus) ao redor de um centro.
 ## Coordenadas polares → XZ, garantindo que inimigos nunca "pipoquem" na tela.
-static func get_annulus_position(center: Vector3, min_r: float = GameConstants.ANNULUS_MIN_RADIUS, max_r: float = GameConstants.ANNULUS_MAX_RADIUS) -> Vector3:
+static func get_annulus_position(center: Vector3, min_r: float = 15.0, max_r: float = 20.0) -> Vector3:
 	var angle = randf() * TAU
 	var distance = randf_range(min_r, max_r)
 	return center + Vector3(cos(angle), 0, sin(angle)) * distance
@@ -25,7 +25,7 @@ static func get_annulus_position(center: Vector3, min_r: float = GameConstants.A
 # Tempo e dificuldade
 var game_time: float = 0.0
 var enemies_alive: int = 0
-var max_enemies: int = GameConstants.PICKUP_CAP  # Nota: usa PICKUP_CAP como default, ajustado por spawner
+var max_enemies: int = 200  # Default, ajustado por spawner
 # Cached enemy list (updated once per frame to avoid 45+ get_nodes_in_group calls)
 var _cached_enemies: Array = []
 var _enemies_cache_frame: int = -1

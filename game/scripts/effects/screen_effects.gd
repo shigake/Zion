@@ -29,8 +29,8 @@ var _damage_intensity: float = 0.0  # 0-1, decays over time
 var _kill_times: Array[float] = []  # Timestamps of recent kills
 var _kill_streak_label: Label = null
 var _kill_streak_tween: Tween = null
-const KILL_STREAK_WINDOW: float = GameConstants.KILL_STREAK_WINDOW
-const KILL_STREAK_MIN: int = GameConstants.KILL_STREAK_MIN
+var KILL_STREAK_WINDOW: float = 2.0
+var KILL_STREAK_MIN: int = 5
 var _streak_messages: Array[String] = ["COMBO x%d!", "MASSACRE!", "UNSTOPPABLE!", "GODLIKE!"]
 
 signal player_took_damage  # Emitted so HUD can react

@@ -50,7 +50,7 @@ var _portal_active: bool = false
 
 # Warning state
 var _warned_events: Array = []  # events already warned about
-const WARNING_TIME: float = GameConstants.EVENT_WARNING_TIME
+var WARNING_TIME: float = 10.0  # Aviso N segundos antes do evento
 
 # Eventos fixos por tempo — compactados para runs de 10 min
 var timed_events: Dictionary = {
@@ -310,7 +310,12 @@ func _spawn_event_miniboss(strong: bool) -> void:
 	var spawn_pos = GameManager.get_annulus_position(pos)
 
 	# Sorteia mini-boss aleatorio do pool da fenda
-	var mb_config: Dictionary = GameConstants.get_random_miniboss(GameManager.selected_stage)
+	var mb_pool = GameConstants.MINIBOSS_POOL.get(GameManager.selected_stage, GameConstants.MINIBOSS_POOL.get("cemetery", []))
+	var mb_config: Dictionary
+	if mb_pool.is_empty():
+		mb_config = {"name": "Giant Zombie", "hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)}
+	else:
+		mb_config = mb_pool[rng.randi() % mb_pool.size()]
 
 	# Mini-boss forte (min 20): mais HP, damage, rapido e maior
 	var hp_mult := GameConstants.MINIBOSS_STRONG_HP_MULT if strong else 1.0

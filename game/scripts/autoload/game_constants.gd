@@ -84,26 +84,8 @@ const BOSS_POOLS := {
 	],
 }
 
-## Fallback para acesso direto (primeira opcao do pool)
-static func get_boss_path(stage: String) -> String:
-	var pool = BOSS_POOLS.get(stage, [])
-	if pool.is_empty():
-		return "res://scenes/enemies/boss_necromancer.tscn"
-	return pool[0]
-
-## Sorteia boss aleatorio do pool da fenda
-static func get_random_boss_path(stage: String) -> String:
-	var pool = BOSS_POOLS.get(stage, [])
-	if pool.is_empty():
-		return "res://scenes/enemies/boss_necromancer.tscn"
-	# Tenta cenas que existem, fallback para o primeiro
-	var valid := []
-	for path in pool:
-		if ResourceLoader.exists(path):
-			valid.append(path)
-	if valid.is_empty():
-		return pool[0]
-	return valid[randi() % valid.size()]
+## Nota: funcoes utilitarias movidas para evitar dependencia circular.
+## Use _get_random_boss_path() inline no enemy_spawner.gd.
 
 # Legacy compatibility
 const BOSS_SCENE_PATHS := {
@@ -173,11 +155,7 @@ const MINIBOSS_POOL := {
 	],
 }
 
-static func get_random_miniboss(stage: String) -> Dictionary:
-	var pool = MINIBOSS_POOL.get(stage, MINIBOSS_POOL.get("cemetery", []))
-	if pool.is_empty():
-		return {"name": "Giant Zombie", "hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)}
-	return pool[randi() % pool.size()]
+## Nota: get_random_miniboss() movida para event_manager.gd.
 
 # ==================================================================
 # DISPLAY

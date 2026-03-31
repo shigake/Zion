@@ -361,7 +361,7 @@ func _process_boss_rush(delta: float) -> void:
 
 	AudioManager.play_music("boss")
 
-	var path = GameConstants.get_random_boss_path(_boss_rush_stages[_boss_rush_index])
+	var path = _get_random_boss_path(_boss_rush_stages[_boss_rush_index])
 	var boss = load(path).instantiate()
 	add_child(boss)
 	boss.global_position = spawn_pos
@@ -446,6 +446,18 @@ func _spawn_miniboss() -> void:
 	GameManager.enemies_alive += 1
 	GameManager.miniboss_spawned.emit(mb_config["name"])
 
+func _get_random_boss_path(stage: String) -> String:
+	var pool = GameConstants.BOSS_POOLS.get(stage, [])
+	if pool.is_empty():
+		return "res://scenes/enemies/boss_necromancer.tscn"
+	var valid := []
+	for path in pool:
+		if ResourceLoader.exists(path):
+			valid.append(path)
+	if valid.is_empty():
+		return pool[0]
+	return valid[rng.randi() % valid.size()]
+
 func _spawn_boss() -> void:
 	# No endless mode, no boss
 	if GameManager.game_mode == "endless":
@@ -460,7 +472,7 @@ func _spawn_boss() -> void:
 	AudioManager.play_music("boss")
 
 	# Boss aleatorio do pool da fenda
-	var boss_scene_path: String = GameConstants.get_random_boss_path(GameManager.selected_stage)
+	var boss_scene_path: String = _get_random_boss_path(GameManager.selected_stage)
 	var boss_scene_res = load(boss_scene_path)
 	var boss = boss_scene_res.instantiate()
 	add_child(boss)
