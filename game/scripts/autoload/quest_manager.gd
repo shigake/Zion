@@ -142,10 +142,18 @@ func _complete_quest() -> void:
 func _on_enemy_killed(_pos: Vector3, _xp: int) -> void:
 	if not _quest_active:
 		return
-	if current_quest["type"] == "kill_fast":
-		current_quest["_fast_kills"] = current_quest.get("_fast_kills", 0) + 1
-	if current_quest["type"] == "collect_xp":
-		_quest_progress += 1
+	match current_quest["type"]:
+		"kill":
+			# Checa imediatamente no signal para nao perder o ultimo kill
+			_quest_progress = GameManager.total_kills - _kill_count_at_start
+			if _quest_progress >= current_quest["target"]:
+				_complete_quest()
+			else:
+				quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
+		"kill_fast":
+			current_quest["_fast_kills"] = current_quest.get("_fast_kills", 0) + 1
+		"collect_xp":
+			_quest_progress += 1
 
 func _on_level_up(_level: int) -> void:
 	pass  # reach_level checked in _update_quest_progress
