@@ -1,3 +1,5 @@
+## Status: ✅ CONCLUIDO
+
 # PRD 03 — Barra de HP nao aparece
 
 ## Problema
@@ -73,9 +75,9 @@ Verificar que a barra fica correta com todos os 15 Fragmentados, ja que sprites 
 O `character_hp_bar.gd` tem 280+ linhas de codigo com visual unico por personagem. Pode ser habilitado futuramente no HUD se desejado (`hud.gd` linha 103 → `visible = true` + chamar `set_character()`). Por ora, foco na barra world-space abaixo do personagem.
 
 ## Validacao
-- [ ] Barra de HP visivel embaixo do personagem
-- [ ] Tamanho proporcional e legivel
-- [ ] Cor muda verde → amarelo → vermelho conforme HP
-- [ ] Funciona com todos os 15 personagens
-- [ ] Nao obstrui a visao do personagem ou gameplay
-- [ ] Visivel em todas as fendas (fundos claros e escuros)
+- [x] Barra de HP visivel embaixo do personagem
+- [x] Tamanho proporcional e legivel
+- [x] Cor muda verde → amarelo → vermelho conforme HP
+- [x] Funciona com todos os 15 personagens
+- [x] Nao obstrui a visao do personagem ou gameplay
+- [x] Visivel em todas as fendas (fundos claros e escuros)
