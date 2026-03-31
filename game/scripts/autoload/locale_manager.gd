@@ -7,87 +7,93 @@ extends Node
 signal locale_changed(new_locale: String)
 
 var current_locale: String = "pt"
+const AVAILABLE_LOCALES := ["pt", "en", "es", "fr", "de", "ja", "zh", "ko", "it", "ru"]
+const LOCALE_NAMES := {
+	"pt": "Português", "en": "English", "es": "Español", "fr": "Français",
+	"de": "Deutsch", "ja": "日本語", "zh": "中文", "ko": "한국어",
+	"it": "Italiano", "ru": "Русский",
+}
 
 var translations: Dictionary = {
 	# ---- Menu principal ----
-	"menu_play": {"pt": "Jogar", "en": "Play"},
-	"menu_multiplayer": {"pt": "Multiplayer", "en": "Multiplayer"},
-	"menu_shop": {"pt": "Loja", "en": "Shop"},
-	"menu_leaderboard": {"pt": "Leaderboard", "en": "Leaderboard"},
-	"menu_options": {"pt": "Opções", "en": "Options"},
-	"menu_quit": {"pt": "Sair", "en": "Quit"},
-	"bestiary": {"pt": "Bestiario", "en": "Bestiary"},
-	"codex": {"pt": "Codex de armas", "en": "Weapon codex"},
-	"new_game_plus": {"pt": "New game+", "en": "New game+"},
-	"crystals": {"pt": "Cristais: %d", "en": "Crystals: %d"},
-	"menu_play_solo": {"pt": "Jogar solo", "en": "Play solo"},
+	"menu_play": {"pt": "Jogar", "en": "Play", "es": "Jugar", "fr": "Jouer", "de": "Spielen", "ja": "プレイ", "zh": "开始游戏", "ko": "플레이", "it": "Gioca", "ru": "Играть"},
+	"menu_multiplayer": {"pt": "Multiplayer", "en": "Multiplayer", "es": "Multijugador", "fr": "Multijoueur", "de": "Mehrspieler", "ja": "マルチプレイ", "zh": "多人游戏", "ko": "멀티플레이", "it": "Multigiocatore", "ru": "Мультиплеер"},
+	"menu_shop": {"pt": "Loja", "en": "Shop", "es": "Tienda", "fr": "Boutique", "de": "Laden", "ja": "ショップ", "zh": "商店", "ko": "상점", "it": "Negozio", "ru": "Магазин"},
+	"menu_leaderboard": {"pt": "Leaderboard", "en": "Leaderboard", "es": "Clasificación", "fr": "Classement", "de": "Rangliste", "ja": "ランキング", "zh": "排行榜", "ko": "리더보드", "it": "Classifica", "ru": "Рейтинг"},
+	"menu_options": {"pt": "Opções", "en": "Options", "es": "Opciones", "fr": "Options", "de": "Optionen", "ja": "設定", "zh": "选项", "ko": "설정", "it": "Opzioni", "ru": "Настройки"},
+	"menu_quit": {"pt": "Sair", "en": "Quit", "es": "Salir", "fr": "Quitter", "de": "Beenden", "ja": "終了", "zh": "退出", "ko": "종료", "it": "Esci", "ru": "Выход"},
+	"bestiary": {"pt": "Bestiario", "en": "Bestiary", "es": "Bestiario", "fr": "Bestiaire", "de": "Bestiarium", "ja": "図鑑", "zh": "怪物图鉴", "ko": "도감", "it": "Bestiario", "ru": "Бестиарий"},
+	"codex": {"pt": "Codex de armas", "en": "Weapon codex", "es": "Códice de armas", "fr": "Codex d'armes", "de": "Waffenkodex", "ja": "武器図鑑", "zh": "武器图鉴", "ko": "무기 도감", "it": "Codice armi", "ru": "Кодекс оружия"},
+	"new_game_plus": {"pt": "New game+", "en": "New game+", "es": "Nueva partida+", "fr": "Nouvelle partie+", "de": "Neues Spiel+", "ja": "ニューゲーム+", "zh": "新游戏+", "ko": "뉴 게임+", "it": "Nuova partita+", "ru": "Новая игра+"},
+	"crystals": {"pt": "Cristais: %d", "en": "Crystals: %d", "es": "Cristales: %d", "fr": "Cristaux: %d", "de": "Kristalle: %d", "ja": "クリスタル: %d", "zh": "水晶: %d", "ko": "크리스탈: %d", "it": "Cristalli: %d", "ru": "Кристаллы: %d"},
+	"menu_play_solo": {"pt": "Jogar solo", "en": "Play solo", "es": "Jugar solo", "fr": "Jouer solo", "de": "Solo spielen", "ja": "ソロプレイ", "zh": "单人游戏", "ko": "솔로 플레이", "it": "Gioca solo", "ru": "Одиночная"},
 
 	# ---- HUD ----
-	"kills": {"pt": "Kills: %d | Cristais: %d", "en": "Kills: %d | Crystals: %d"},
-	"level": {"pt": "Lv. %d", "en": "Lv. %d"},
-	"dash_label": {"pt": "[SPACE] Dash", "en": "[SPACE] Dash"},
-	"achievement_label": {"pt": "Conquista: %s", "en": "Achievement: %s"},
+	"kills": {"pt": "Kills: %d | Cristais: %d", "en": "Kills: %d | Crystals: %d", "es": "Muertes: %d | Cristales: %d", "fr": "Kills: %d | Cristaux: %d", "de": "Kills: %d | Kristalle: %d", "ja": "キル: %d | クリスタル: %d", "zh": "击杀: %d | 水晶: %d", "ko": "킬: %d | 크리스탈: %d", "it": "Uccisioni: %d | Cristalli: %d", "ru": "Убийства: %d | Кристаллы: %d"},
+	"level": {"pt": "Lv. %d", "en": "Lv. %d", "es": "Nv. %d", "fr": "Nv. %d", "de": "Lv. %d", "ja": "Lv. %d", "zh": "等级 %d", "ko": "Lv. %d", "it": "Lv. %d", "ru": "Ур. %d"},
+	"dash_label": {"pt": "[SPACE] Dash", "en": "[SPACE] Dash", "es": "[SPACE] Dash", "fr": "[ESPACE] Dash", "de": "[LEERTASTE] Dash", "ja": "[SPACE] ダッシュ", "zh": "[空格] 冲刺", "ko": "[SPACE] 대시", "it": "[SPAZIO] Scatto", "ru": "[ПРОБЕЛ] Рывок"},
+	"achievement_label": {"pt": "Conquista: %s", "en": "Achievement: %s", "es": "Logro: %s", "fr": "Succès: %s", "de": "Erfolg: %s", "ja": "実績: %s", "zh": "成就: %s", "ko": "업적: %s", "it": "Obiettivo: %s", "ru": "Достижение: %s"},
 
 	# ---- Level up ----
-	"level_up_title": {"pt": "Level up! (Lv. %d)", "en": "Level up! (Lv. %d)"},
-	"reroll": {"pt": "Reroll (%d)", "en": "Reroll (%d)"},
-	"banish": {"pt": "Banish (%d)", "en": "Banish (%d)"},
-	"banish_select": {"pt": "Banish: escolha uma opção para remover", "en": "Banish: choose an option to remove"},
-	"new": {"pt": "Novo!", "en": "New!"},
+	"level_up_title": {"pt": "Level up! (Lv. %d)", "en": "Level up! (Lv. %d)", "es": "¡Subida de nivel! (Nv. %d)", "fr": "Niveau supérieur! (Nv. %d)", "de": "Level Up! (Lv. %d)", "ja": "レベルアップ！(Lv. %d)", "zh": "升级！(等级 %d)", "ko": "레벨 업! (Lv. %d)", "it": "Livello su! (Lv. %d)", "ru": "Уровень повышен! (Ур. %d)"},
+	"reroll": {"pt": "Reroll (%d)", "en": "Reroll (%d)", "es": "Relanzar (%d)", "fr": "Relancer (%d)", "de": "Neu würfeln (%d)", "ja": "リロール (%d)", "zh": "重投 (%d)", "ko": "리롤 (%d)", "it": "Rilancia (%d)", "ru": "Перебросить (%d)"},
+	"banish": {"pt": "Banish (%d)", "en": "Banish (%d)", "es": "Desterrar (%d)", "fr": "Bannir (%d)", "de": "Verbannen (%d)", "ja": "除外 (%d)", "zh": "放逐 (%d)", "ko": "추방 (%d)", "it": "Esilia (%d)", "ru": "Изгнать (%d)"},
+	"banish_select": {"pt": "Banish: escolha uma opção para remover", "en": "Banish: choose an option to remove", "es": "Desterrar: elige una opción para eliminar", "fr": "Bannir: choisissez une option à supprimer", "de": "Verbannen: wähle eine Option zum Entfernen", "ja": "除外: 削除するオプションを選択", "zh": "放逐: 选择一个选项移除", "ko": "추방: 제거할 옵션을 선택하세요", "it": "Esilia: scegli un'opzione da rimuovere", "ru": "Изгнание: выберите вариант для удаления"},
+	"new": {"pt": "Novo!", "en": "New!", "es": "¡Nuevo!", "fr": "Nouveau!", "de": "Neu!", "ja": "新規!", "zh": "新!", "ko": "신규!", "it": "Nuovo!", "ru": "Новый!"},
 
 	# ---- Pause ----
-	"paused": {"pt": "Pausado", "en": "Paused"},
-	"resume": {"pt": "Continuar", "en": "Resume"},
-	"quit_to_menu": {"pt": "Sair pro menu", "en": "Quit to menu"},
-	"quit_game": {"pt": "Sair do jogo", "en": "Quit game"},
-	"options": {"pt": "Opções", "en": "Options"},
-	"close": {"pt": "Fechar", "en": "Close"},
-	"keybindings": {"pt": "Controles", "en": "Controls"},
+	"paused": {"pt": "Pausado", "en": "Paused", "es": "Pausado", "fr": "Pause", "de": "Pausiert", "ja": "一時停止", "zh": "暂停", "ko": "일시정지", "it": "In pausa", "ru": "Пауза"},
+	"resume": {"pt": "Continuar", "en": "Resume", "es": "Continuar", "fr": "Reprendre", "de": "Fortsetzen", "ja": "再開", "zh": "继续", "ko": "계속", "it": "Riprendi", "ru": "Продолжить"},
+	"quit_to_menu": {"pt": "Sair pro menu", "en": "Quit to menu", "es": "Volver al menú", "fr": "Retour au menu", "de": "Zum Menü", "ja": "メニューに戻る", "zh": "返回菜单", "ko": "메뉴로", "it": "Torna al menu", "ru": "В меню"},
+	"quit_game": {"pt": "Sair do jogo", "en": "Quit game", "es": "Salir del juego", "fr": "Quitter le jeu", "de": "Spiel beenden", "ja": "ゲーム終了", "zh": "退出游戏", "ko": "게임 종료", "it": "Esci dal gioco", "ru": "Выйти из игры"},
+	"options": {"pt": "Opções", "en": "Options", "es": "Opciones", "fr": "Options", "de": "Optionen", "ja": "設定", "zh": "选项", "ko": "설정", "it": "Opzioni", "ru": "Настройки"},
+	"close": {"pt": "Fechar", "en": "Close", "es": "Cerrar", "fr": "Fermer", "de": "Schließen", "ja": "閉じる", "zh": "关闭", "ko": "닫기", "it": "Chiudi", "ru": "Закрыть"},
+	"keybindings": {"pt": "Controles", "en": "Controls", "es": "Controles", "fr": "Contrôles", "de": "Steuerung", "ja": "操作設定", "zh": "按键设置", "ko": "조작", "it": "Comandi", "ru": "Управление"},
 
 	# ---- Game over ----
-	"game_over": {"pt": "Fim de jogo", "en": "Game over"},
-	"victory_time": {"pt": "Vitória! Tempo: %s", "en": "Victory! Time: %s"},
-	"time": {"pt": "Tempo: %s", "en": "Time: %s"},
-	"kills_stat": {"pt": "Kills: %d", "en": "Kills: %d"},
-	"level_stat": {"pt": "Level: %d", "en": "Level: %d"},
-	"crystals_earned": {"pt": "Cristais ganhos: +%d", "en": "Crystals earned: +%d"},
-	"retry": {"pt": "Tentar de novo", "en": "Retry"},
-	"back_to_menu": {"pt": "Voltar ao menu", "en": "Back to menu"},
-	"stage_complete": {"pt": "Fase %s completa!", "en": "Stage %s complete!"},
-	"total_damage": {"pt": "Dano total: %d", "en": "Total damage: %d"},
-	"unlocked": {"pt": "Desbloqueado: %s!", "en": "Unlocked: %s!"},
-	"leaderboard_rank": {"pt": "Leaderboard: #%d!", "en": "Leaderboard: #%d!"},
+	"game_over": {"pt": "Fim de jogo", "en": "Game over", "es": "Fin del juego", "fr": "Fin de partie", "de": "Spielende", "ja": "ゲームオーバー", "zh": "游戏结束", "ko": "게임 오버", "it": "Fine partita", "ru": "Конец игры"},
+	"victory_time": {"pt": "Vitória! Tempo: %s", "en": "Victory! Time: %s", "es": "¡Victoria! Tiempo: %s", "fr": "Victoire! Temps: %s", "de": "Sieg! Zeit: %s", "ja": "勝利！時間: %s", "zh": "胜利！时间: %s", "ko": "승리! 시간: %s", "it": "Vittoria! Tempo: %s", "ru": "Победа! Время: %s"},
+	"time": {"pt": "Tempo: %s", "en": "Time: %s", "es": "Tiempo: %s", "fr": "Temps: %s", "de": "Zeit: %s", "ja": "時間: %s", "zh": "时间: %s", "ko": "시간: %s", "it": "Tempo: %s", "ru": "Время: %s"},
+	"kills_stat": {"pt": "Kills: %d", "en": "Kills: %d", "es": "Muertes: %d", "fr": "Kills: %d", "de": "Kills: %d", "ja": "キル: %d", "zh": "击杀: %d", "ko": "킬: %d", "it": "Uccisioni: %d", "ru": "Убийств: %d"},
+	"level_stat": {"pt": "Level: %d", "en": "Level: %d", "es": "Nivel: %d", "fr": "Niveau: %d", "de": "Level: %d", "ja": "レベル: %d", "zh": "等级: %d", "ko": "레벨: %d", "it": "Livello: %d", "ru": "Уровень: %d"},
+	"crystals_earned": {"pt": "Cristais ganhos: +%d", "en": "Crystals earned: +%d", "es": "Cristales ganados: +%d", "fr": "Cristaux gagnés: +%d", "de": "Kristalle verdient: +%d", "ja": "獲得クリスタル: +%d", "zh": "获得水晶: +%d", "ko": "획득 크리스탈: +%d", "it": "Cristalli guadagnati: +%d", "ru": "Кристаллов получено: +%d"},
+	"retry": {"pt": "Tentar de novo", "en": "Retry", "es": "Reintentar", "fr": "Réessayer", "de": "Erneut versuchen", "ja": "リトライ", "zh": "重试", "ko": "재시도", "it": "Riprova", "ru": "Повторить"},
+	"back_to_menu": {"pt": "Voltar ao menu", "en": "Back to menu", "es": "Volver al menú", "fr": "Retour au menu", "de": "Zurück zum Menü", "ja": "メニューに戻る", "zh": "返回菜单", "ko": "메뉴로 돌아가기", "it": "Torna al menu", "ru": "В главное меню"},
+	"stage_complete": {"pt": "Fase %s completa!", "en": "Stage %s complete!", "es": "¡Fase %s completada!", "fr": "Étape %s terminée!", "de": "Stufe %s abgeschlossen!", "ja": "ステージ %s クリア!", "zh": "%s 关卡完成!", "ko": "스테이지 %s 클리어!", "it": "Fase %s completata!", "ru": "Этап %s пройден!"},
+	"total_damage": {"pt": "Dano total: %d", "en": "Total damage: %d", "es": "Daño total: %d", "fr": "Dégâts totaux: %d", "de": "Gesamtschaden: %d", "ja": "総ダメージ: %d", "zh": "总伤害: %d", "ko": "총 피해: %d", "it": "Danno totale: %d", "ru": "Общий урон: %d"},
+	"unlocked": {"pt": "Desbloqueado: %s!", "en": "Unlocked: %s!", "es": "¡Desbloqueado: %s!", "fr": "Débloqué: %s!", "de": "Freigeschaltet: %s!", "ja": "解放: %s!", "zh": "解锁: %s!", "ko": "해금: %s!", "it": "Sbloccato: %s!", "ru": "Разблокировано: %s!"},
+	"leaderboard_rank": {"pt": "Leaderboard: #%d!", "en": "Leaderboard: #%d!", "es": "Clasificación: #%d!", "fr": "Classement: #%d!", "de": "Rangliste: #%d!", "ja": "ランキング: #%d!", "zh": "排行榜: #%d!", "ko": "리더보드: #%d!", "it": "Classifica: #%d!", "ru": "Рейтинг: #%d!"},
 
 	# ---- Character select ----
-	"select_character": {"pt": "Selecione o personagem", "en": "Select character"},
-	"locked": {"pt": "Bloqueado", "en": "Locked"},
-	"start": {"pt": "Iniciar", "en": "Start"},
-	"back": {"pt": "Voltar", "en": "Back"},
+	"select_character": {"pt": "Selecione o personagem", "en": "Select character", "es": "Elige personaje", "fr": "Choisir personnage", "de": "Charakter wählen", "ja": "キャラクター選択", "zh": "选择角色", "ko": "캐릭터 선택", "it": "Scegli personaggio", "ru": "Выбор персонажа"},
+	"locked": {"pt": "Bloqueado", "en": "Locked", "es": "Bloqueado", "fr": "Verrouillé", "de": "Gesperrt", "ja": "ロック", "zh": "未解锁", "ko": "잠김", "it": "Bloccato", "ru": "Заблокировано"},
+	"start": {"pt": "Iniciar", "en": "Start", "es": "Empezar", "fr": "Commencer", "de": "Starten", "ja": "開始", "zh": "开始", "ko": "시작", "it": "Inizia", "ru": "Начать"},
+	"back": {"pt": "Voltar", "en": "Back", "es": "Volver", "fr": "Retour", "de": "Zurück", "ja": "戻る", "zh": "返回", "ko": "뒤로", "it": "Indietro", "ru": "Назад"},
 
 	# ---- Stage select ----
-	"select_stage": {"pt": "Selecione a fase", "en": "Select stage"},
-	"next": {"pt": "Próximo", "en": "Next"},
+	"select_stage": {"pt": "Selecione a fase", "en": "Select stage", "es": "Elige fase", "fr": "Choisir étape", "de": "Stufe wählen", "ja": "ステージ選択", "zh": "选择关卡", "ko": "스테이지 선택", "it": "Scegli fase", "ru": "Выбор этапа"},
+	"next": {"pt": "Próximo", "en": "Next", "es": "Siguiente", "fr": "Suivant", "de": "Weiter", "ja": "次へ", "zh": "下一个", "ko": "다음", "it": "Avanti", "ru": "Далее"},
 
 	# ---- Relic select ----
-	"select_relic": {"pt": "Escolha uma relíquia", "en": "Choose a relic"},
-	"skip_relic": {"pt": "Pular", "en": "Skip"},
+	"select_relic": {"pt": "Escolha uma relíquia", "en": "Choose a relic", "es": "Elige una reliquia", "fr": "Choisir une relique", "de": "Relikt wählen", "ja": "レリック選択", "zh": "选择遗物", "ko": "유물 선택", "it": "Scegli una reliquia", "ru": "Выберите реликвию"},
+	"skip_relic": {"pt": "Pular", "en": "Skip", "es": "Omitir", "fr": "Passer", "de": "Überspringen", "ja": "スキップ", "zh": "跳过", "ko": "건너뛰기", "it": "Salta", "ru": "Пропустить"},
 
 	# ---- Shop ----
-	"shop_title": {"pt": "Loja", "en": "Shop"},
-	"buy": {"pt": "Comprar (%d)", "en": "Buy (%d)"},
-	"max_level": {"pt": "Max", "en": "Max"},
+	"shop_title": {"pt": "Loja", "en": "Shop", "es": "Tienda", "fr": "Boutique", "de": "Laden", "ja": "ショップ", "zh": "商店", "ko": "상점", "it": "Negozio", "ru": "Магазин"},
+	"buy": {"pt": "Comprar (%d)", "en": "Buy (%d)", "es": "Comprar (%d)", "fr": "Acheter (%d)", "de": "Kaufen (%d)", "ja": "購入 (%d)", "zh": "购买 (%d)", "ko": "구매 (%d)", "it": "Compra (%d)", "ru": "Купить (%d)"},
+	"max_level": {"pt": "Max", "en": "Max", "es": "Máx", "fr": "Max", "de": "Max", "ja": "最大", "zh": "满级", "ko": "최대", "it": "Max", "ru": "Макс"},
 
 	# ---- Events (gameplay) ----
-	"event_golden_horde": {"pt": "Horda dourada!", "en": "Golden horde!"},
-	"event_treasure_goblin": {"pt": "Treasure goblin!", "en": "Treasure goblin!"},
-	"event_merchant": {"pt": "Mercador apareceu!", "en": "Merchant appeared!"},
-	"event_roulette": {"pt": "Roda da fortuna!", "en": "Wheel of fortune!"},
-	"event_eclipse": {"pt": "Eclipse!", "en": "Eclipse!"},
-	"event_meteor_shower": {"pt": "Chuva de meteoros!", "en": "Meteor shower!"},
-	"event_angel_challenge": {"pt": "Desafio do anjo!", "en": "Angel challenge!"},
-	"event_portal_dimensional": {"pt": "Portal dimensional!", "en": "Dimensional portal!"},
-	"event_chest_mimic": {"pt": "Baú mimic!", "en": "Mimic chest!"},
-	"event_fever_mode": {"pt": "Fever mode!", "en": "Fever mode!"},
+	"event_golden_horde": {"pt": "Horda dourada!", "en": "Golden horde!", "es": "¡Horda dorada!", "fr": "Horde dorée!", "de": "Goldene Horde!", "ja": "黄金の群れ!", "zh": "黄金部落!", "ko": "황금 무리!", "it": "Orda dorata!", "ru": "Золотая орда!"},
+	"event_treasure_goblin": {"pt": "Treasure goblin!", "en": "Treasure goblin!", "es": "¡Duende del tesoro!", "fr": "Gobelin au trésor!", "de": "Schatzgoblin!", "ja": "トレジャーゴブリン!", "zh": "宝藏哥布林!", "ko": "보물 고블린!", "it": "Goblin del tesoro!", "ru": "Гоблин-сокровище!"},
+	"event_merchant": {"pt": "Mercador apareceu!", "en": "Merchant appeared!", "es": "¡Mercader apareció!", "fr": "Marchand apparu!", "de": "Händler erschienen!", "ja": "商人出現!", "zh": "商人出现了!", "ko": "상인 등장!", "it": "Mercante apparso!", "ru": "Торговец появился!"},
+	"event_roulette": {"pt": "Roda da fortuna!", "en": "Wheel of fortune!", "es": "¡Rueda de la fortuna!", "fr": "Roue de la fortune!", "de": "Glücksrad!", "ja": "運命の輪!", "zh": "幸运转盘!", "ko": "행운의 룰렛!", "it": "Ruota della fortuna!", "ru": "Колесо фортуны!"},
+	"event_eclipse": {"pt": "Eclipse!", "en": "Eclipse!", "es": "¡Eclipse!", "fr": "Éclipse!", "de": "Finsternis!", "ja": "日食!", "zh": "日食!", "ko": "일식!", "it": "Eclissi!", "ru": "Затмение!"},
+	"event_meteor_shower": {"pt": "Chuva de meteoros!", "en": "Meteor shower!", "es": "¡Lluvia de meteoros!", "fr": "Pluie de météores!", "de": "Meteorregen!", "ja": "流星群!", "zh": "流星雨!", "ko": "유성우!", "it": "Pioggia di meteore!", "ru": "Метеоритный дождь!"},
+	"event_angel_challenge": {"pt": "Desafio do anjo!", "en": "Angel challenge!", "es": "¡Desafío del ángel!", "fr": "Défi de l'ange!", "de": "Engelsprüfung!", "ja": "天使の試練!", "zh": "天使挑战!", "ko": "천사의 시련!", "it": "Sfida dell'angelo!", "ru": "Испытание ангела!"},
+	"event_portal_dimensional": {"pt": "Portal dimensional!", "en": "Dimensional portal!", "es": "¡Portal dimensional!", "fr": "Portail dimensionnel!", "de": "Dimensionsportal!", "ja": "次元の門!", "zh": "次元传送门!", "ko": "차원의 문!", "it": "Portale dimensionale!", "ru": "Портал измерений!"},
+	"event_chest_mimic": {"pt": "Baú mimic!", "en": "Mimic chest!", "es": "¡Cofre imitador!", "fr": "Coffre mimique!", "de": "Mimiktruhe!", "ja": "ミミックの宝箱!", "zh": "宝箱怪!", "ko": "미믹 상자!", "it": "Forziere mimetico!", "ru": "Сундук-мимик!"},
+	"event_fever_mode": {"pt": "Fever mode!", "en": "Fever mode!", "es": "¡Modo fiebre!", "fr": "Mode fièvre!", "de": "Fiebermodus!", "ja": "フィーバーモード!", "zh": "狂热模式!", "ko": "피버 모드!", "it": "Modalità febbre!", "ru": "Режим лихорадки!"},
 
 	# ---- Tutorial ----
 	"tutorial_move": {"pt": "WASD para mover, SPACE para dash", "en": "WASD to move, SPACE to dash"},
@@ -412,10 +418,7 @@ func get_locale() -> String:
 	return current_locale
 
 func get_available_locales() -> Array:
-	return ["pt", "en"]
+	return AVAILABLE_LOCALES
 
 func get_locale_name(locale: String) -> String:
-	match locale:
-		"pt": return "Português (BR)"
-		"en": return "English"
-	return locale
+	return LOCALE_NAMES.get(locale, locale)
