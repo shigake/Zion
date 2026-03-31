@@ -56,10 +56,13 @@ func _summon(level: int) -> void:
 func _spawn_summon_circle(pos: Vector3) -> void:
 	if not is_inside_tree():
 		return
+	var scene_root = get_tree().current_scene
+	if not is_instance_valid(scene_root):
+		return
 	# Container node for circle + particles
 	var container = Node3D.new()
+	scene_root.add_child(container)
 	container.global_position = pos
-	get_tree().current_scene.add_child(container)
 
 	# Dark summoning circle disc
 	var circle = MeshInstance3D.new()

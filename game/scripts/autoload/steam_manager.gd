@@ -29,6 +29,10 @@ const ACHIEVEMENT_MAP := {
 	"genocide": "ACH_GENOCIDE",
 	"sweet_revenge": "ACH_SWEET_REVENGE",
 	"storm": "ACH_STORM",
+	"treasure_hunter": "ACH_TREASURE_HUNTER",
+	"quest_master": "ACH_QUEST_MASTER",
+	"boss_slayer": "ACH_BOSS_SLAYER",
+	"completionist": "ACH_COMPLETIONIST",
 }
 
 func _ready() -> void:

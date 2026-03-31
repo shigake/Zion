@@ -18,6 +18,56 @@ func _ready() -> void:
 	super._ready()
 	add_to_group("boss")
 	enemy_color = boss_color
+	_load_boss_sprite()
+
+func _load_boss_sprite() -> void:
+	# Tenta carregar sprite especifico do boss (ex: cemetery_lich.png)
+	var snake_name = boss_name.to_snake_case().replace(" ", "_")
+	var paths_to_try = [
+		"res://assets/sprites/bosses/%s.png" % snake_name,
+		"res://assets/sprites/bosses/%s.png" % name.to_snake_case(),
+	]
+	for path in paths_to_try:
+		if ResourceLoader.exists(path):
+			var tex = load(path) as Texture2D
+			if tex:
+				# Remove sprite existente do enemy_base e cria novo
+				var old_sprite = get_node_or_null("EnemySprite")
+				if old_sprite:
+					old_sprite.queue_free()
+				var sprite = Sprite3D.new()
+				sprite.texture = tex
+				sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				sprite.pixel_size = 0.07
+				sprite.shaded = false
+				sprite.transparent = true
+				sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+				sprite.name = "EnemySprite"
+				sprite.position.y = 0.65
+				add_child(sprite)
+				# Boss aura
+				var aura = Sprite3D.new()
+				aura.texture = tex
+				aura.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				aura.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				aura.pixel_size = 0.09
+				aura.shaded = false
+				aura.transparent = true
+				aura.modulate = Color(boss_color.r, boss_color.g, boss_color.b, 0.3)
+				aura.name = "BossAura"
+				aura.position.y = 0.65
+				add_child(aura)
+				# Name label
+				var label = Label3D.new()
+				label.text = boss_name.to_upper()
+				label.font_size = 24
+				label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				label.position = Vector3(0, 1.85, 0)
+				label.name = "BossLabel"
+				label.modulate = Color(boss_color.r, boss_color.g, boss_color.b, 0.9)
+				add_child(label)
+				return
 
 func _process(delta: float) -> void:
 	super._process(delta)

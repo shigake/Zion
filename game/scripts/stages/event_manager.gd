@@ -52,18 +52,19 @@ var _portal_active: bool = false
 var _warned_events: Array = []  # events already warned about
 const WARNING_TIME: float = GameConstants.EVENT_WARNING_TIME
 
-# Eventos fixos por tempo — estilo Vampire Survivors (a cada ~3-5 min)
+# Eventos fixos por tempo — compactados para runs de 10 min
 var timed_events: Dictionary = {
-	180.0: "golden_horde",       # Min 3 — warmup horde
-	300.0: "elite_horde",        # Min 5 — elite rush
-	480.0: "eclipse",            # Min 8 — darkness
-	600.0: "miniboss",           # Min 10 — mini-boss
-	720.0: "meteor_shower",      # Min 12 — chaos
-	900.0: "massive_horde",      # Min 15 — massive horde + elites
-	1080.0: "roulette",          # Min 18 — roda da fortuna
-	1200.0: "miniboss_strong",   # Min 20 — mini-boss forte
-	1320.0: "portal_dimensional", # Min 22 — portal
-	# Min 25 (1500s) — Boss final (handled by enemy_spawner)
+	90.0: "golden_horde",        # Min 1:30 — warmup horde
+	150.0: "elite_horde",        # Min 2:30 — elite rush
+	210.0: "roulette",           # Min 3:30 — roda da fortuna
+	# Min 5:00 (300s) — Boss 1 (handled by enemy_spawner)
+	330.0: "miniboss",           # Min 5:30 — mini-boss apos boss
+	390.0: "eclipse",            # Min 6:30 — darkness
+	450.0: "meteor_shower",      # Min 7:30 — chaos
+	510.0: "massive_horde",      # Min 8:30 — massive horde
+	540.0: "miniboss_strong",    # Min 9:00 — mini-boss forte
+	570.0: "portal_dimensional", # Min 9:30 — portal
+	# Min 10:00 (600s) — Boss 2 final (handled by enemy_spawner)
 }
 var triggered_timed: Array = []
 

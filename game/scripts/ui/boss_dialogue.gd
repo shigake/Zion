@@ -15,6 +15,27 @@ const BOSS_KEY_MAP := {
 	"BossSingularity": "singularity",
 	"BossDracula": "dracula",
 	"BossSugarKing": "sugar_king",
+	# Alt bosses
+	"BossCemeteryLich": "cemetery_lich",
+	"BossCemeteryReaper": "cemetery_reaper",
+	"BossForestElder": "forest_elder",
+	"BossForestSpider": "forest_spider",
+	"BossFarmScarecrow": "farm_scarecrow",
+	"BossFarmHarvester": "farm_harvester",
+	"BossTokyoShogun": "tokyo_shogun",
+	"BossTokyoKaiju": "tokyo_kaiju",
+	"BossVolcanoPhoenix": "volcano_phoenix",
+	"BossVolcanoTitan": "volcano_titan",
+	"BossOceanSiren": "ocean_siren",
+	"BossOceanHydra": "ocean_hydra",
+	"BossArenaMinotaur": "arena_minotaur",
+	"BossArenaChimera": "arena_chimera",
+	"BossSpaceHivemind": "space_hivemind",
+	"BossSpaceWarden": "space_warden",
+	"BossCastleWerewolf": "castle_werewolf",
+	"BossCastleBanshee": "castle_banshee",
+	"BossCandyWitch": "candy_witch",
+	"BossCandyDragon": "candy_dragon",
 }
 
 ## Border color per boss — matches their elemental identity
@@ -29,6 +50,27 @@ const BOSS_COLORS := {
 	"singularity": Color(0.6, 0.2, 1.0, 0.8),     # Violet (space)
 	"dracula": Color(0.7, 0.0, 0.1, 0.8),         # Dark red (blood)
 	"sugar_king": Color(1.0, 0.5, 0.7, 0.8),      # Pink (candy)
+	# Alt bosses
+	"cemetery_lich": Color(0.3, 0.8, 0.3, 0.8),
+	"cemetery_reaper": Color(0.3, 0.1, 0.15, 0.8),
+	"forest_elder": Color(0.3, 0.6, 0.15, 0.8),
+	"forest_spider": Color(0.5, 0.15, 0.6, 0.8),
+	"farm_scarecrow": Color(0.7, 0.5, 0.15, 0.8),
+	"farm_harvester": Color(0.4, 0.4, 0.4, 0.8),
+	"tokyo_shogun": Color(0.8, 0.15, 0.3, 0.8),
+	"tokyo_kaiju": Color(0.2, 0.7, 0.3, 0.8),
+	"volcano_phoenix": Color(1.0, 0.6, 0.1, 0.8),
+	"volcano_titan": Color(0.5, 0.15, 0.05, 0.8),
+	"ocean_siren": Color(0.3, 0.7, 0.9, 0.8),
+	"ocean_hydra": Color(0.15, 0.25, 0.5, 0.8),
+	"arena_minotaur": Color(0.6, 0.35, 0.15, 0.8),
+	"arena_chimera": Color(0.5, 0.25, 0.6, 0.8),
+	"space_hivemind": Color(0.2, 0.8, 0.2, 0.8),
+	"space_warden": Color(0.4, 0.25, 0.8, 0.8),
+	"castle_werewolf": Color(0.4, 0.3, 0.2, 0.8),
+	"castle_banshee": Color(0.5, 0.7, 0.9, 0.8),
+	"candy_witch": Color(0.9, 0.35, 0.7, 0.8),
+	"candy_dragon": Color(0.25, 0.8, 0.45, 0.8),
 }
 
 ## Stage-to-boss key for LocaleManager title lookup

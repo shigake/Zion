@@ -470,7 +470,7 @@ func _do_scene_change() -> void:
 	if packed_scene:
 		tree.change_scene_to_packed(packed_scene)
 	else:
-		LogManager.error("Loading", "Cena nao carregou: %s" % _target_scene_path)
+		LogManager.debug("Loading", "Threaded load incomplete, using sync fallback: %s" % _target_scene_path)
 		tree.change_scene_to_file(_target_scene_path)
 
 	# Cleanup

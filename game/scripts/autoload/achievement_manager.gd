@@ -18,10 +18,17 @@ var achievements: Dictionary = {
 	"matrix": {"name": "Matrix", "description": "Dodge 100 projeteis numa run"},
 	"one_punch": {"name": "One Punch", "description": "Mate um boss com 1 hit"},
 	"lucky_day": {"name": "Lucky Day", "description": "Pegue 5 itens lendarios numa run"},
+	"treasure_hunter": {"name": "Treasure Hunter", "description": "Colete 10 baus numa run"},
+	"quest_master": {"name": "Quest Master", "description": "Complete 5 quests numa run"},
+	"boss_slayer": {"name": "Boss Slayer", "description": "Derrote 2 bosses numa run"},
+	"completionist": {"name": "Completionist", "description": "Complete todas as 10 fendas"},
 }
 
 # Run-specific tracking
 var _run_dodges: int = 0
+var _run_chests_collected: int = 0
+var _run_quests_completed: int = 0
+var _run_bosses_killed: int = 0
 var _run_no_cow_damage: bool = true
 var _run_attacks: int = 0
 var _run_legendary_items: int = 0
@@ -81,6 +88,29 @@ func check_achievements() -> void:
 	if "lucky_day" not in unlocked and _run_legendary_items >= 5:
 		_unlock("lucky_day")
 
+	# Treasure Hunter: collect 10 chests in one run
+	if "treasure_hunter" not in unlocked and _run_chests_collected >= 10:
+		_unlock("treasure_hunter")
+
+	# Quest Master: complete 5 quests in one run
+	if "quest_master" not in unlocked and _run_quests_completed >= 5:
+		_unlock("quest_master")
+
+	# Boss Slayer: defeat 2 bosses in one run
+	if "boss_slayer" not in unlocked and _run_bosses_killed >= 2:
+		_unlock("boss_slayer")
+
+	# Completionist: complete all 10 stages
+	if "completionist" not in unlocked:
+		var completed = SaveManager.data.get("completed_stages", [])
+		var all_done = true
+		for stage in GameConstants.ALL_STAGES:
+			if stage not in completed:
+				all_done = false
+				break
+		if all_done:
+			_unlock("completionist")
+
 	# I Am The Storm: 3 electric-type evolved weapons
 	if "storm" not in unlocked:
 		var electric_evos = 0
@@ -115,11 +145,19 @@ func on_boss_killed_one_hit() -> void:
 	if "one_punch" not in unlocked:
 		_unlock("one_punch")
 
+func _ready() -> void:
+	ChestManager.chest_collected.connect(func(_r): _run_chests_collected += 1)
+	QuestManager.quest_completed.connect(func(_q): _run_quests_completed += 1)
+	GameManager.boss_died.connect(func(_n): _run_bosses_killed += 1)
+
 func reset_run() -> void:
 	_run_dodges = 0
 	_run_no_cow_damage = true
 	_run_attacks = 0
 	_run_legendary_items = 0
+	_run_chests_collected = 0
+	_run_quests_completed = 0
+	_run_bosses_killed = 0
 
 func on_cow_damage() -> void:
 	_run_no_cow_damage = false
