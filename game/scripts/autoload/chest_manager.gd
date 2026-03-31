@@ -22,23 +22,6 @@ func _ready() -> void:
 	_chest_mat.emission_energy_multiplier = 1.5
 	_chest_mat.roughness = 0.4
 
-func _process(delta: float) -> void:
-	if GameManager.paused or GameManager.is_game_over:
-		return
-	if GameManager.game_time < 10.0:
-		return  # Nao spawna nos primeiros 10s
-
-	_chest_timer += delta
-	if _chest_timer >= GameConstants.CHEST_SPAWN_INTERVAL:
-		_chest_timer = 0.0
-		_spawn_chest()
-
-	# Cleanup expired chests
-	for i in range(_active_chests.size() - 1, -1, -1):
-		var chest = _active_chests[i]
-		if not is_instance_valid(chest) or not chest.is_inside_tree():
-			_active_chests.remove_at(i)
-
 func _spawn_chest() -> void:
 	var players = GameManager.get_players()
 	if players.is_empty():
@@ -87,33 +70,48 @@ func _create_chest_node() -> Area3D:
 	col.shape = shape
 	chest.add_child(col)
 
-	# Float animation + rotation
-	var script = GDScript.new()
-	script.source_code = """extends Area3D
+	# Conectar coleta ANTES de qualquer script change
+	chest.monitoring = true
+	chest.monitorable = false
+	chest.body_entered.connect(_on_chest_body_entered.bind(chest))
 
-var _time: float = 0.0
-var _despawn_timer: float = %s
+	# Metadata para despawn timer (sem trocar script)
+	chest.set_meta("despawn_timer", GameConstants.CHEST_DESPAWN_TIME)
+	chest.set_meta("time", 0.0)
+	return chest
 
 func _process(delta: float) -> void:
-	_time += delta
-	_despawn_timer -= delta
-	# Bobbing
-	var mesh = get_child(0)
-	if mesh:
-		mesh.position.y = 0.25 + sin(_time * 2.0) * 0.1
-		mesh.rotation.y += delta * 1.5
-	# Pisca quando prestes a despawnar
-	if _despawn_timer < 5.0:
-		modulate.a = 0.5 + sin(_time * 8.0) * 0.5
-	if _despawn_timer <= 0:
-		queue_free()
-""" % str(GameConstants.CHEST_DESPAWN_TIME)
-	script.reload()
-	chest.set_script(script)
+	if GameManager.paused or GameManager.is_game_over:
+		return
+	if GameManager.game_time < 10.0:
+		return
 
-	# Conectar coleta
-	chest.body_entered.connect(_on_chest_body_entered.bind(chest))
-	return chest
+	_chest_timer += delta
+	if _chest_timer >= GameConstants.CHEST_SPAWN_INTERVAL:
+		_chest_timer = 0.0
+		_spawn_chest()
+
+	# Update chest animations + despawn
+	for i in range(_active_chests.size() - 1, -1, -1):
+		var chest = _active_chests[i]
+		if not is_instance_valid(chest) or not chest.is_inside_tree():
+			_active_chests.remove_at(i)
+			continue
+		var t = chest.get_meta("time", 0.0) + delta
+		chest.set_meta("time", t)
+		var dt = chest.get_meta("despawn_timer", 20.0) - delta
+		chest.set_meta("despawn_timer", dt)
+		# Bobbing + rotation
+		var mesh = chest.get_child(0) if chest.get_child_count() > 0 else null
+		if mesh and mesh is MeshInstance3D:
+			mesh.position.y = 0.25 + sin(t * 2.0) * 0.1
+			mesh.rotation.y += delta * 1.5
+		# Blink when about to despawn
+		if dt < 5.0:
+			chest.visible = int(t * 6.0) % 2 == 0
+		if dt <= 0:
+			_active_chests.remove_at(i)
+			chest.queue_free()
 
 func _on_chest_body_entered(body: Node3D, chest: Node3D) -> void:
 	if not body.is_in_group("players"):
