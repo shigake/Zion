@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Blood Orb - Dark crimson sphere with drips -->
+  <defs>
+    <radialGradient id="bo_g" cx="0.4" cy="0.35" r="0.5">
+      <stop offset="0%" stop-color="#DD4444"/>
+      <stop offset="60%" stop-color="#991122"/>
+      <stop offset="100%" stop-color="#550A0A"/>
+    </radialGradient>
+    <radialGradient id="bo_h" cx="0.3" cy="0.3" r="0.3">
+      <stop offset="0%" stop-color="#FF8888" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FF8888" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Main orb -->
+  <circle cx="16" cy="14" r="10" fill="url(#bo_g)" stroke="#440808" stroke-width="0.8"/>
+  <!-- Highlight -->
+  <circle cx="12" cy="10" r="4" fill="url(#bo_h)"/>
+  <!-- Inner swirl detail -->
+  <path d="M12 12 Q16 8 20 12 Q18 16 14 14Z" fill="none" stroke="#BB3333" stroke-width="0.5" opacity="0.4"/>
+  <path d="M14 16 Q18 14 18 18" fill="none" stroke="#882222" stroke-width="0.5" opacity="0.3"/>
+  <!-- Blood drips -->
+  <path d="M10 23 Q10 27 11 30 Q10.5 31 10 30 Q9 27 10 23Z" fill="#881122" stroke="#550A0A" stroke-width="0.3"/>
+  <path d="M16 24 Q16 28 16.5 31 Q16 32 15.5 31 Q15 28 16 24Z" fill="#991122" stroke="#550A0A" stroke-width="0.3"/>
+  <path d="M21 22 Q21.5 25 22 28 Q21.5 29 21 28 Q20.5 25 21 22Z" fill="#881122" stroke="#550A0A" stroke-width="0.3"/>
+  <!-- Small floating droplets -->
+  <circle cx="6" cy="18" r="1" fill="#991122" opacity="0.7"/>
+  <circle cx="26" cy="16" r="0.8" fill="#991122" opacity="0.6"/>
+  <circle cx="24" cy="22" r="1.2" fill="#771018" opacity="0.5"/>
+  <!-- Dark aura -->
+  <circle cx="16" cy="14" r="12" fill="none" stroke="#550A0A" stroke-width="0.4" opacity="0.3"/>
+</svg>

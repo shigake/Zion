@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Tornado - Ice blue spiral vortex -->
+  <defs>
+    <linearGradient id="tn_g" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#B8E8FF"/>
+      <stop offset="50%" stop-color="#5CAADD"/>
+      <stop offset="100%" stop-color="#2868A0"/>
+    </linearGradient>
+  </defs>
+  <!-- Tornado body - wider at top, narrow at bottom -->
+  <path d="M4 4 Q16 6 28 4 Q26 8 22 10 Q16 12 10 10 Q6 8 4 4Z" fill="#A0DCFF" stroke="#4088BB" stroke-width="0.6" opacity="0.9"/>
+  <path d="M7 10 Q16 13 25 10 Q23 14 20 15 Q16 16 12 15 Q8 14 7 10Z" fill="url(#tn_g)" stroke="#4088BB" stroke-width="0.6" opacity="0.85"/>
+  <path d="M9 15 Q16 18 23 15 Q21 18 19 19 Q16 20 13 19 Q10 18 9 15Z" fill="url(#tn_g)" stroke="#3878AA" stroke-width="0.6" opacity="0.8"/>
+  <path d="M11 19 Q16 22 21 19 Q19 22 18 23 Q16 24 14 23 Q12 22 11 19Z" fill="#5CAADD" stroke="#3878AA" stroke-width="0.6" opacity="0.75"/>
+  <path d="M13 23 Q16 25 19 23 Q18 26 17 27 Q16 28 15 27 Q14 26 13 23Z" fill="#4898CC" stroke="#2868A0" stroke-width="0.6" opacity="0.7"/>
+  <!-- Ice sparkles -->
+  <circle cx="8" cy="6" r="0.8" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="22" cy="8" r="0.6" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="14" cy="13" r="0.7" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="19" cy="17" r="0.5" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="16" cy="25" r="0.5" fill="#E0F4FF" opacity="0.6"/>
+  <!-- Swirl lines -->
+  <path d="M6 5 Q10 7 14 6" fill="none" stroke="#DDEEFF" stroke-width="0.5" opacity="0.5"/>
+  <path d="M18 12 Q15 14 12 13" fill="none" stroke="#DDEEFF" stroke-width="0.5" opacity="0.4"/>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Chain Whip - Electric blue chain links with whip curve -->
+  <defs>
+    <linearGradient id="cw_g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#88CCFF"/>
+      <stop offset="100%" stop-color="#3366CC"/>
+    </linearGradient>
+  </defs>
+  <!-- Handle -->
+  <rect x="3" y="2" width="4" height="8" rx="1" fill="#666680" stroke="#444458" stroke-width="0.6"/>
+  <rect x="3.5" y="2.5" width="3" height="2" rx="0.5" fill="#8888AA" opacity="0.5"/>
+  <!-- Chain links curving down -->
+  <ellipse cx="7" cy="12" rx="2.5" ry="1.8" fill="none" stroke="url(#cw_g)" stroke-width="1.2"/>
+  <ellipse cx="10" cy="15" rx="2.5" ry="1.8" fill="none" stroke="url(#cw_g)" stroke-width="1.2" transform="rotate(20 10 15)"/>
+  <ellipse cx="14" cy="18" rx="2.5" ry="1.8" fill="none" stroke="url(#cw_g)" stroke-width="1.2" transform="rotate(35 14 18)"/>
+  <ellipse cx="18" cy="21" rx="2.5" ry="1.8" fill="none" stroke="url(#cw_g)" stroke-width="1.2" transform="rotate(45 18 21)"/>
+  <ellipse cx="23" cy="23" rx="2.5" ry="1.8" fill="none" stroke="url(#cw_g)" stroke-width="1.2" transform="rotate(55 23 23)"/>
+  <!-- Whip tip -->
+  <path d="M25 24 L29 28 L27 29 L24 25Z" fill="#5599EE" stroke="#3366CC" stroke-width="0.5"/>
+  <!-- Electric sparks -->
+  <path d="M8 11 L6 9 L9 10" fill="none" stroke="#AADDFF" stroke-width="0.6" opacity="0.8"/>
+  <path d="M15 17 L13 15 L16 16" fill="none" stroke="#AADDFF" stroke-width="0.6" opacity="0.7"/>
+  <path d="M26 25 L28 23 L27 26" fill="none" stroke="#AADDFF" stroke-width="0.6" opacity="0.9"/>
+  <path d="M21 22 L23 20" fill="none" stroke="#BBDDFF" stroke-width="0.4" opacity="0.6"/>
+  <!-- Electric glow dots -->
+  <circle cx="7" cy="12" r="0.6" fill="#DDEEFF" opacity="0.7"/>
+  <circle cx="18" cy="21" r="0.6" fill="#DDEEFF" opacity="0.7"/>
+  <circle cx="28" cy="28" r="0.8" fill="#AADDFF" opacity="0.8"/>
+</svg>
