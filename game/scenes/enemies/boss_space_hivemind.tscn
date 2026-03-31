@@ -1,0 +1,44 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/boss_generic.gd" id="1"]
+
+[sub_resource type="CapsuleMesh" id="1"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="CapsuleShape3D" id="2"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="SphereShape3D" id="3"]
+radius = 0.8
+
+[node name="BossSpaceHivemind" type="CharacterBody3D" groups=["enemies", "boss"]]
+collision_layer = 2
+collision_mask = 1
+transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 0, 0, 0)
+script = ExtResource("1")
+speed = 2.0
+max_hp = 3000
+damage = 30
+xp_drop = 200
+enemy_color = Color(0.2, 0.8, 0.2, 1)
+boss_name = "Hive Mind"
+boss_color = Color(0.2, 0.8, 0.2, 1)
+attack_style = "summoner"
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+mesh = SubResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("2")
+
+[node name="Hitbox" type="Area3D" parent="."]
+collision_layer = 2
+collision_mask = 1
+
+[node name="HitboxShape" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("3")
