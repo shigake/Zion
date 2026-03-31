@@ -10,7 +10,7 @@ var _grid: GridContainer
 var _buy_buttons: Array[Button] = []
 
 const GRID_COLS := 4
-const CARD_SIZE := Vector2(280, 180)
+const CARD_SIZE := Vector2(240, 150)
 
 func _ready() -> void:
 	get_tree().paused = false
@@ -54,6 +54,48 @@ func _build_shop_ui() -> void:
 	_crystals_label.add_theme_font_size_override("font_size", 18)
 	_crystals_label.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
 
+	# Botões de ação (ANTES do scroll, sempre visiveis)
+	# Remove action_bar antigo se existir
+	var old_action = vbox.get_node_or_null("ActionBar")
+	if old_action:
+		old_action.queue_free()
+
+	var action_bar = HBoxContainer.new()
+	action_bar.name = "ActionBar"
+	action_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	action_bar.add_theme_constant_override("separation", 16)
+	# Inserir entre CrystalsLabel e ScrollContainer
+	vbox.add_child(action_bar)
+	vbox.move_child(action_bar, _crystals_label.get_index() + 1)
+
+	# Botão Reset All
+	var reset_btn = Button.new()
+	reset_btn.text = "Reset all"
+	reset_btn.custom_minimum_size = Vector2(140, 36)
+	reset_btn.focus_mode = Control.FOCUS_ALL
+	reset_btn.pressed.connect(_on_reset_all)
+	var reset_style = StyleBoxFlat.new()
+	reset_style.bg_color = Color(0.4, 0.12, 0.12)
+	reset_style.set_corner_radius_all(8)
+	reset_style.set_border_width_all(1)
+	reset_style.border_color = Color(0.8, 0.2, 0.2)
+	reset_btn.add_theme_stylebox_override("normal", reset_style)
+	action_bar.add_child(reset_btn)
+
+	# Botão Max All
+	var fill_btn = Button.new()
+	fill_btn.text = "Max all"
+	fill_btn.custom_minimum_size = Vector2(140, 36)
+	fill_btn.focus_mode = Control.FOCUS_ALL
+	fill_btn.pressed.connect(_on_fill_all)
+	var fill_style = StyleBoxFlat.new()
+	fill_style.bg_color = Color(0.12, 0.3, 0.12)
+	fill_style.set_corner_radius_all(8)
+	fill_style.set_border_width_all(1)
+	fill_style.border_color = Color(0.2, 0.8, 0.3)
+	fill_btn.add_theme_stylebox_override("normal", fill_style)
+	action_bar.add_child(fill_btn)
+
 	# Grid de cards
 	_grid = GridContainer.new()
 	_grid.columns = GRID_COLS
@@ -66,40 +108,6 @@ func _build_shop_ui() -> void:
 
 	for uid in ShopDB.get_all_upgrade_ids():
 		_create_upgrade_card(uid)
-
-	# Botões de ação (abaixo do grid)
-	var action_bar = HBoxContainer.new()
-	action_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	action_bar.add_theme_constant_override("separation", 16)
-	upgrades_container.add_child(action_bar)
-
-	# Botão Reset All
-	var reset_btn = Button.new()
-	reset_btn.text = "🔄 Reset All"
-	reset_btn.custom_minimum_size = Vector2(160, 40)
-	reset_btn.focus_mode = Control.FOCUS_ALL
-	reset_btn.pressed.connect(_on_reset_all)
-	var reset_style = StyleBoxFlat.new()
-	reset_style.bg_color = Color(0.4, 0.12, 0.12)
-	reset_style.set_corner_radius_all(8)
-	reset_style.set_border_width_all(1)
-	reset_style.border_color = Color(0.8, 0.2, 0.2)
-	reset_btn.add_theme_stylebox_override("normal", reset_style)
-	action_bar.add_child(reset_btn)
-
-	# Botão Fill All
-	var fill_btn = Button.new()
-	fill_btn.text = "⬆ Max All"
-	fill_btn.custom_minimum_size = Vector2(160, 40)
-	fill_btn.focus_mode = Control.FOCUS_ALL
-	fill_btn.pressed.connect(_on_fill_all)
-	var fill_style = StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.12, 0.3, 0.12)
-	fill_style.set_corner_radius_all(8)
-	fill_style.set_border_width_all(1)
-	fill_style.border_color = Color(0.2, 0.8, 0.3)
-	fill_btn.add_theme_stylebox_override("normal", fill_style)
-	action_bar.add_child(fill_btn)
 
 	# Focus chain
 	_setup_focus()
