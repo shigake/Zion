@@ -7,7 +7,7 @@ class_name EnemyStageBehavior
 const BEHAVIORS := {
 	# Cemetery
 	"cemetery_wraith": {"behavior": "teleport", "timer": 5.0, "cooldown": 5.0},
-	"cemetery_banshee": {"behavior": "teleport", "timer": 4.0, "cooldown": 4.0},
+	"cemetery_banshee": {"behavior": ""},  # Banshees normais nao teleportam (so visual)
 	"cemetery_bone_knight": {"behavior": "charge", "timer": 5.0, "cooldown": 5.0},
 	# Forest
 	"forest_treant": {"behavior": "ambush", "ambush_speed_mult": 3.0, "walk_speed": 1.0},
