@@ -47,7 +47,8 @@ const STAGE_SCENES: Dictionary = {
 # All characters
 const ALL_CHARACTERS: Array = [
 	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
-	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery"
+	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery",
+	"amazona", "bruxa", "fragmentado"
 ]
 
 func build_suite(suite_name: String) -> Array:
@@ -70,6 +71,8 @@ func build_suite(suite_name: String) -> Array:
 			tests = _build_achievement_tests()
 		"events":
 			tests = _build_event_tests()
+		"combo":
+			tests = _build_combo_tests()
 		"all":
 			tests.append_array(_build_smoke_tests())
 			tests.append_array(_build_weapon_tests())
@@ -82,6 +85,25 @@ func build_suite(suite_name: String) -> Array:
 		_:
 			print("[TestRunner] Unknown suite: %s" % suite_name)
 
+	return tests
+
+func _build_combo_tests() -> Array:
+	## Full 150-combo matrix: 15 characters × 10 stages
+	## Each combo runs for 60s with auto_play to verify no crashes.
+	## Usage: godot --path game --run -- --test=combo
+	var tests: Array = []
+	for char_id in ALL_CHARACTERS:
+		for stage_id in STAGE_SCENES.keys():
+			tests.append({
+				"name": "combo_%s_%s" % [char_id, stage_id],
+				"suite": "combo",
+				"character": char_id,
+				"stage": stage_id,
+				"duration": 60.0,  # 1 min per combo (total ~2.5h for 150)
+				"choose_mode": "random",
+				"forced_weapon": "",
+				"game_mode": "normal",
+			})
 	return tests
 
 func _build_smoke_tests() -> Array:

@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 428+ sprites, 47 SFX, 16 musicas.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 428+ sprites, 51 SFX, 16 musicas.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -40,9 +40,9 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (19 arquivos)          # Game design documents
+├── docs/ (12 arquivos)          # Game design documents
 │   ├── gdd.md                   # Game Design Document
-│   ├── prd.md                   # Product Requirements (roadmap fases A-E)
+│   ├── prd.md                   # Product Requirements (roadmap, status real)
 │   ├── story.md                 # Historia, lore, narrativa completa
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
 │   ├── itens.md                 # Itens, evolucoes, reliquias
@@ -50,16 +50,9 @@ Zion/
 │   ├── personagens.md           # 15 Fragmentados + backstories
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
-│   ├── prd_refactoring.md       # PRD de refatoracao DRY/performance
-│   ├── prd_bruxa_visual_update.md # PRD de visual update da bruxa
-│   ├── prd_dynamic_music.md     # PRD de musica dinamica
-│   ├── prd_ui_polish_bugfixes.md # PRD de polish e bugfixes de UI
-│   ├── prd_steam_integration.md # PRD de integracao Steam
-│   ├── prd_projectile_bugfix.md # PRD de bugfix de projeteis
-│   ├── prd_annulus_spawning.md  # PRD de spawn annular
-│   ├── prd_qa_stress_test.md    # PRD de QA e stress test
-│   ├── prd_build_distribution.md # PRD de build e distribuicao
-│   └── prd_weapon_audit.md      # PRD de auditoria de armas (icones + efeitos)
+│   ├── prd_qa_stress_test.md    # PRD de QA e stress test (~80% automatizado)
+│   ├── prd_build_distribution.md # PRD de build e distribuicao (~60% pronto)
+│   └── prd_steam_integration.md # PRD de integracao Steam (codigo pronto, falta plugin)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
 │   ├── package.json             # Dependencias (express, better-sqlite3)
@@ -77,7 +70,7 @@ Zion/
     │   ├── weapons/             # 40 cenas (32 armas + projeteis)
     │   ├── ui/                  # 20 telas (HUD, menus, shop, leaderboard, etc)
     │   └── player/              # Cena do jogador
-    ├── scripts/ (212 .gd)       # GDScript
+    ├── scripts/ (216 .gd)       # GDScript
     │   ├── autoload/            # Singletons (ver lista abaixo)
     │   ├── player/              # Player controller
     │   ├── enemies/             # Base + spawner + 10 bosses + especiais
@@ -191,15 +184,34 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 428+ sprites, 47 SFX, 16 musicas. FASE A (visual) ~95% — sprites billboard, efeitos de tela, feedback de dano, bullet trails, slash trails melee com pool, creditos animados. FASE B (gameplay) ~95% — 10 mecanicas de fenda, 40 monstros tematicos, sinergias refatoradas (data-driven), boss patterns, musica dinamica completa. FASE C (polish) ~98% — achievements popup, leaderboard global, dialogos, tutorial, inventario, mapa, bestiary, codex, R1/L1 tab navigation, card alignment, text overflow. FASE D (audio) ~95% — 47 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~75% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 561 linhas, WeaponVFX, UICardBuilder, SpatialGrid, ItemBonusCalc, EnemyStageBehavior, HUDMultiplayer split, magic numbers extraidos).
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 428+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~95%. FASE C (polish) ~98%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~80% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 561 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 7 PRDs concluidos e arquivados, 3 PRDs ativos (QA, build, Steam).
 
 Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
+## Automated Testing
+
+9 suites de teste via CLI:
+
+```bash
+godot --path game --run -- --test=smoke          # 26 testes rapidos
+godot --path game --run -- --test=combo           # 150 combos (15 chars × 10 stages)
+godot --path game --run -- --test=weapons         # Todas as armas
+godot --path game --run -- --test=evolution        # 12 evolucoes
+godot --path game --run -- --test=events           # Timeline completa de eventos
+godot --path game --run -- --test=stress           # Hyper, max enemies, endless
+godot --path game --run -- --test=achievements     # 7 cenarios
+godot --path game --run -- --test=balance          # XP, DPS, economia
+godot --path game --run -- --test=menu_smoke       # Navegacao de menus
+godot --path game --run -- --test=all              # Todos os acima
+```
+
+Resultados salvos em `user://test_results/`. Notificacao automatica no Discord.
+
 ## Remaining Work
 
-- **QA**: teste manual 15x10 combinacoes, multiplayer LAN, stress test 300+ inimigos
-- **Steam**: plugin GodotSteam necessario para multiplayer P2P (codigo pronto)
-- **Distribuicao**: testar export Windows em maquina limpa, pagina no itch.io, trailer 30s
+- **QA**: rodar suite `combo` (150 combos, ~2.5h), teste multiplayer LAN manual
+- **Steam**: instalar plugin GodotSteam GDExtension (codigo 100% pronto)
+- **Distribuicao**: testar .exe em maquina limpa, pagina Itch.io, trailer 30s, GitHub Release
 - **Narrativa**: cutscene do ??? (Zion despertando), cinematica de intro
 - **Pos-lancamento**: matchmaking online, workshop de mods, localizacao EN/ES/JP, replays
 

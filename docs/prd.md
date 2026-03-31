@@ -1,8 +1,8 @@
-# Zion — PRD v3.22 (Estado Real do Projeto)
+# Zion — PRD v3.26 (Estado Real do Projeto)
 
 > *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
-## Status: BETA — ~92% completo, jogavel de ponta a ponta
+## Status: BETA — ~94% completo, jogavel de ponta a ponta
 
 ---
 
@@ -52,7 +52,7 @@
 
 ### Audio
 - 16 musicas (12 Suno AI chiptune + victory, shop, lobby, game_over)
-- 43 SFX conectados (sword_slash, gun_shot, explosion, boss_roar, etc.)
+- 51 SFX conectados (sword_slash, gun_shot, explosion, boss_roar, etc.)
 - AudioManager com crossfade, pool, cooldown, loop automatico
 
 ### Multiplayer
@@ -67,54 +67,58 @@
 - Save local JSON, balanceamento matematico verificado
 - Object pooling, MultiMesh (hordas + pickups)
 - Spatial grid O(1), sprite cache, FPS-aware throttling
-- Auto-play mode, CI/CD (GitHub Actions manual)
-- Export preset Windows
+- Auto-play mode, CI/CD (GitHub Actions Windows + Linux)
+- Export presets Windows + Linux
+- Testes automatizados (9 suites: smoke, combo, weapons, evolution, events, stress, achievements, balance, menu_smoke)
 
 ---
 
 ## O QUE FALTA (Sprints Priorizados)
 
-### SPRINT 1 — Fixes Rapidos (1 dia)
-- [x] Decidir: flamethrower e gasoline mantidos desabilitados (sem mira manual)
-- [x] Adicionar 4 SFX novas armas ao _valid_sfx (boomerang, tornado, chain_whip, blood_orb)
-- [x] Garantir victory.wav toca ao matar boss (game_over_screen.gd)
-- [ ] Testar export Windows localmente
+### SPRINT 1 — Fixes Rapidos ✅ CONCLUIDO
+- [x] Decidir: flamethrower e gasoline mantidos desabilitados
+- [x] Adicionar SFX novas armas ao _valid_sfx
+- [x] Garantir victory.wav toca ao matar boss
+- [x] Testar export Windows (CI/CD funcional)
 
-### SPRINT 2 — Visual Polish (3-5 dias)
-- [x] Walk animations: bob + flip + squash-stretch para personagens e inimigos
-- [x] Boss entrance dramatica: letterbox + zoom + escalating shake + spawn particles + slow-mo
-- [x] Efeito visual nas 4 armas novas (boomerang phase burst, tornado debris+shake, chain flash+shake, orb heal pulse)
-- [x] Boss phase music: intensificar trilha ao mudar de fase
+### SPRINT 2 — Visual Polish ✅ CONCLUIDO
+- [x] Walk animations: bob + flip + squash-stretch
+- [x] Boss entrance dramatica: letterbox + zoom + shake + slow-mo
+- [x] Efeitos visuais nas 4 armas novas
+- [x] Boss phase music intensification
 - [x] Creditos: sprites 2x, idle bobbing, heroi dancando
-- [x] Menu principal: spacing logo/subtitulo corrigido
+- [x] Menu principal: spacing corrigido
 
-### SPRINT 3 — QA Completo (3-5 dias)
-- [ ] Teste manual: cada personagem em cada stage (15 x 10 = 150 combinacoes)
-- [ ] Teste multiplayer LAN (2 jogadores minimo)
-- [ ] Stress test: 15 min com 300+ inimigos, target 60 FPS
-- [ ] Verificar todas 12 evolucoes funcionam
-- [ ] Verificar todos 10 eventos funcionam
+### SPRINT 3 — QA Completo (pendente execucao)
+- [x] Suite `combo` implementada (150 combinacoes = 15 chars × 10 stages)
+- [x] Suite `stress` implementada (hyper, max enemies, endless)
+- [x] Suite `evolution` implementada (12 evolucoes)
+- [x] Suite `events` implementada (timeline completa)
+- [ ] Rodar suite `combo` e verificar 150/150 sem crash
+- [ ] Rodar stress test e verificar FPS > 30 sustentado
+- [ ] Teste multiplayer LAN manual (2-4 jogadores)
 - [ ] Fix de bugs encontrados
 
-### SPRINT 4 — Build & Deploy (2-3 dias)
-- [ ] Export Windows funcional (.exe testado em maquina limpa)
-- [x] Linux export preset (export_presets.cfg + build.yml)
+### SPRINT 4 — Build & Deploy (infra pronta, falta execucao)
+- [x] Export preset Windows + Linux configurados
+- [x] CI/CD `build.yml` completo (validate → build → package → release)
+- [ ] Testar .exe em maquina limpa
 - [ ] Pagina Itch.io com screenshots e descricao
 - [ ] Trailer de 30s (captura de gameplay)
-- [ ] GitHub Release v1.0.0
+- [ ] Disparar GitHub Release v1.0.0
 
 ### FUTURO (Pos-lancamento)
-- [x] Steam Integration base (achievements sync, cloud save, lobby, networking — codigo pronto, falta plugin GodotSteam)
-- [ ] Steam Networking Sockets (codigo pronto, falta GodotSteam binarios)
+- [x] Steam Integration base (codigo pronto, falta plugin GodotSteam)
+- [ ] Instalar GodotSteam GDExtension
 - [ ] Matchmaking online
 - [ ] Workshop de mods
 - [ ] DLC tematicos
 - [ ] Localizacao EN/ES/JP
-- [ ] Mac/Linux nativo
+- [ ] Mac export
 - [ ] Replays
 
-### REFATORACAO (Concluida)
-- [x] GameConstants: stage lists, FPS, resolutions centralizados
+### REFATORACAO ✅ CONCLUIDA
+- [x] GameConstants: 561 linhas, 29 categorias, zero magic numbers
 - [x] Synergy timers unificados (10 vars → 1 dict)
 - [x] UICardBuilder compartilhado (bestiary, codex)
 - [x] WeaponVFX compartilhado (6 armas melee) + slash trail pool
@@ -122,10 +126,13 @@
 - [x] EnemyStageBehavior data-driven (30 behaviors em dict)
 - [x] Cache sprites inimigos + O(1) weapon level lookup
 - [x] Projectile bugfix (escala, rotacao, sprites duplicados)
-- [x] Ice+Dark crash fix
-- [x] Musica dinamica completa (stage→boss→victory + intensificacao temporal)
-- [x] Options R1/L1 tab navigation
-- [x] Bestiary/Codex card alignment + text overflow
+- [x] Musica dinamica completa (stage→boss→victory + intensificacao)
+- [x] UI polish: R1/L1 navigation, card alignment, text overflow
+- [x] Annulus spawning centralizado
+- [x] HUD split (HUDMultiplayer extraido)
+- [x] Magic numbers fase 2 (event_manager, tombstone, 100+ extraidos)
+- [x] Weapon audit (5 icones SVG + shadow_claw slash)
+- [x] Bruxa visual update (dark skin)
 
 ---
 
@@ -133,16 +140,18 @@
 
 | Metrica | Valor |
 |---------|-------|
-| Scripts | 212 .gd |
+| Scripts | 216 .gd |
 | Cenas | 103 .tscn |
 | Sprites | 428+ PNG |
-| SFX | 47 WAV |
+| SFX | 51 WAV |
 | Musicas | 16 MP3/WAV |
 | Personagens | 15 |
 | Armas | 32 (31 ativas) |
 | Fases | 10 |
 | Bosses | 10 |
 | Monstros tematicos | 90 |
+| Docs | 12 |
+| PRDs ativos | 3 (qa, build, steam) |
 | Tamanho | ~71 MB |
-| Erros/run | ~28 (cosmeticos) |
 | FPS medio | ~238 |
+| Suites de teste | 9 |

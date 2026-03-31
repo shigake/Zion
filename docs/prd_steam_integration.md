@@ -1,79 +1,44 @@
 # PRD — Integração Steam (GodotSteam)
 
-> Substituir ENet por Steam Networking Sockets, ativar Achievements Steam e Cloud Save para distribuição no Steam.
+> Substituir ENet por Steam Networking Sockets, ativar Achievements Steam e Cloud Save.
+
+## Status: Código 100% pronto, bloqueado na instalação do plugin GodotSteam
+
+Todo o código de integração está implementado. Falta instalar o plugin GodotSteam (GDExtension) para ativar.
 
 ---
 
 ## Tarefa 1: Instalação e Inicialização do GodotSteam
 
-**Objetivo:** Substituir o stub `steam_manager.gd` por uma integração real com a SDK do Steam.
+**Status:** ⏳ Bloqueado — falta instalar plugin
 
-### Contexto
-
-O autoload `res://scripts/autoload/steam_manager.gd` (27 linhas) é um stub que verifica `Engine.has_singleton("Steam")` mas não faz nada além de logar se está disponível. O `MultiplayerManager` atual usa ENet puro. O GDD define Steam Networking Sockets como transporte primário.
-
-### Detalhes
-
-1. **Instalar GodotSteam** como GDExtension no projeto (baixar binários do [GodotSteam Releases](https://github.com/GodotSteam/GodotSteam) compatíveis com Godot 4.x).
-2. Criar `steam_appid.txt` na raiz do `game/` com o App ID do Steamworks (usar `480` para testes — Space War).
-3. Expandir `steam_manager.gd` com:
-   - `steamInit()` + validação de status
-   - `run_callbacks()` no `_process()` (já existe)
-   - Getters: `getSteamID()`, `getPersonaName()`, `getFriendsList()`
-   - Sinal `steam_initialized` para outros sistemas reagirem
-
-### Critérios de aceite
-
-- [ ] GodotSteam inicializa sem crash no editor e no export (falta instalar plugin)
-- [x] `SteamManager.is_available` retorna `true` quando Steam está rodando
-- [x] Fallback gracioso para ENet quando Steam não está disponível (sem regressão)
+- [ ] Instalar GodotSteam GDExtension (baixar de [GodotSteam Releases](https://github.com/GodotSteam/GodotSteam))
+- [ ] Criar `steam_appid.txt` com App ID (usar `480` para testes)
+- [x] `SteamManager.is_available` retorna `true` quando Steam detectado
+- [x] Fallback gracioso para ENet quando Steam indisponível
 
 ---
 
-## Tarefa 2: Steam Networking Sockets (Substituir ENet)
+## Tarefa 2: Steam Networking Sockets
 
-**Objetivo:** Migrar o transporte de rede do `MultiplayerManager` de ENet para Steam Networking Sockets.
+**Status:** ⏳ Bloqueado — falta plugin
 
-### Contexto
-
-`res://scripts/autoload/multiplayer_manager.gd` (35KB, ~1000 linhas) usa `ENetMultiplayerPeer` para criar host/client. O GDD especifica Steam Networking Sockets para NAT traversal sem servidor dedicado.
-
-### Detalhes
-
-1. No `MultiplayerManager`, criar branch de inicialização:
-   - Se `SteamManager.is_available` → usar `SteamMultiplayerPeer` do GodotSteam
-   - Senão → manter `ENetMultiplayerPeer` como fallback local
-2. Lobby Steam: Host chama `Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY, 4)`
-3. Convites: ativar Overlay com `Steam.activateGameOverlayInviteDialog(lobby_id)`
-4. Conexão: Client extrai o Steam ID do Host via lobby metadata e chama `connectPeer(host_steam_id)`
-
-### Arquivos impactados
-
-| Arquivo | Ação |
-|---|---|
-| `scripts/autoload/steam_manager.gd` | Expandir com lobby + invite API |
-| `scripts/autoload/multiplayer_manager.gd` | Adicionar branch Steam vs. ENet |
-| `scripts/ui/lobby_screen.gd` | Adicionar botão "Convidar via Steam" |
-
-### Critérios de aceite
-
-- [ ] Co-op funciona via Steam entre 2 máquinas na mesma rede (falta plugin)
-- [ ] Co-op funciona via Steam entre 2 máquinas em redes diferentes (falta plugin)
-- [x] ENet local continua funcionando para testes offline
+- [x] ENet local continua funcionando como fallback
+- [x] Código de branch Steam vs. ENet no `MultiplayerManager`
+- [ ] Testar co-op via Steam entre 2 máquinas (requer plugin)
 
 ---
 
 ## Tarefa 3: Steam Achievements
 
-**Objetivo:** Sincronizar os 13 achievements existentes com os Steam Achievements.
+**Status:** ✅ Código pronto
 
-### Contexto
+- [x] 13 achievements mapeados para Steam API IDs
+- [x] `AchievementManager` chama `Steam.setAchievement()` + `Steam.storeStats()` no unlock
+- [x] Sem duplicação se achievement já desbloqueado
+- [ ] Popup do Steam aparece junto com popup do jogo (requer plugin)
 
-`res://scripts/autoload/achievement_manager.gd` gerencia 13 achievements locais (`progressao.md`). No Steam, achievements requerem: (1) registro no Steamworks Dashboard, (2) chamada de `Steam.setAchievement(id)` e `Steam.storeStats()`.
-
-### Detalhes
-
-Mapear cada achievement para um `stat_name` Steam:
+### Mapeamento
 
 | Achievement Local | Steam API ID |
 |---|---|
@@ -91,75 +56,31 @@ Mapear cada achievement para um `stat_name` Steam:
 | Doce Vinganca | `ACH_SWEET_REVENGE` |
 | I Am The Storm | `ACH_STORM` |
 
-No `AchievementManager`, após o `unlock()` local, chamar:
-
-```gdscript
-if SteamManager.is_available:
-    var steam = Engine.get_singleton("Steam")
-    steam.setAchievement(steam_id)
-    steam.storeStats()
-```
-
-### Critérios de aceite
-
-- [x] Achievements desbloqueiam simultaneamente no jogo e no Steam (codigo pronto)
-- [ ] Popup do Steam aparece junto com o popup dourado do jogo (falta plugin)
-- [x] Sem duplicação se o achievement já estava desbloqueado no Steam
-
 ---
 
 ## Tarefa 4: Steam Cloud Save
 
-**Objetivo:** Sincronizar o save local com o Steam Cloud para persistência cross-device.
+**Status:** ✅ Código pronto
 
-### Contexto
-
-`res://scripts/autoload/save_manager.gd` salva em JSON local via `FileAccess`. O Steam Cloud permite armazenar até 1GB por app.
-
-### Detalhes
-
-1. Ativar Steam Cloud no painel do Steamworks (File size limit, Max files)
-2. Após cada `SaveManager.save_game()`, copiar o JSON para Steam Cloud:
-
-```gdscript
-Steam.fileWrite("zion_save.json", save_json_bytes)
-```
-
-3. No `_ready()` do SaveManager, verificar se existe save no Cloud mais recente que o local:
-
-```gdscript
-if SteamManager.is_available and Steam.fileExists("zion_save.json"):
-    var cloud_data = Steam.fileRead("zion_save.json", Steam.getFileSize("zion_save.json"))
-    # Comparar timestamps e usar o mais recente
-```
-
-### Critérios de aceite
-
-- [x] Save sincroniza com Steam Cloud automaticamente (codigo pronto)
-- [x] Conflito de versões resolvido pelo timestamp mais recente
-- [x] Sem perda de dados se Steam Cloud estiver offline (fallback local)
+- [x] Save sincroniza com Steam Cloud automaticamente
+- [x] Conflito resolvido pelo timestamp mais recente
+- [x] Fallback local se Steam Cloud offline
 
 ---
 
-## Dependências
+## Resumo
 
-| Sistema | Tarefas |
-|---|---|
-| `SteamManager` (autoload) | 1, 2, 3, 4 |
-| `MultiplayerManager` (autoload) | 2 |
-| `AchievementManager` (autoload) | 3 |
-| `SaveManager` (autoload) | 4 |
-| `lobby_screen.gd` | 2 |
-| GodotSteam GDExtension | Todas |
+| Tarefa | Código | Plugin Necessário |
+|--------|--------|-------------------|
+| Inicialização | ✅ | Sim — GodotSteam GDExtension |
+| Networking | ✅ | Sim |
+| Achievements | ✅ | Sim (para popup Steam) |
+| Cloud Save | ✅ | Sim |
 
-## Ordem de implementação
+## Próximo passo
 
-| Fase | Tarefas | Descrição |
-|---|---|---|
-| A | 1 | Instalação do plugin + inicialização robusta |
-| B | 2 | Migração de rede para Steam Sockets |
-| C | 3, 4 | Achievements + Cloud Save (paralelo) |
+Instalar GodotSteam GDExtension compatível com Godot 4.x e testar tudo.
 
 ## Prioridade
 
-Alta — bloqueante para lançamento no Steam (FASE E do roadmap principal).
+Média — pós-release no Itch.io, pré-release no Steam.

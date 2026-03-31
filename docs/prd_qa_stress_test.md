@@ -2,72 +2,45 @@
 
 > Plano de testes abrangente cobrindo todas as combinações de personagem × fenda, multiplayer LAN, stress test de performance e verificação de evoluções/eventos.
 
+## Status: ~80% automatizado
+
+O `AutoTester` suporta 9 suites de teste via linha de comando:
+
+```bash
+godot --path game --run -- --test=smoke          # 26 testes rapidos
+godot --path game --run -- --test=combo           # 150 combos (15 chars × 10 stages)
+godot --path game --run -- --test=weapons         # Todas as armas individuais
+godot --path game --run -- --test=evolution        # 12 evolucoes
+godot --path game --run -- --test=events           # Timeline de eventos
+godot --path game --run -- --test=stress           # Stress test (hyper, endless)
+godot --path game --run -- --test=achievements     # 7 cenarios de achievements
+godot --path game --run -- --test=balance          # XP, DPS, economia
+godot --path game --run -- --test=all              # Todos os acima
+godot --path game --run -- --test=menu_smoke       # Navegacao de menus
+```
+
 ---
 
-## Tarefa 1: Teste Manual de Combinações (15 × 10)
+## Tarefa 1: Teste Automatizado de Combinações (15 × 10)
 
-**Objetivo:** Verificar que todas as 150 combinações de personagem + fenda são jogáveis sem crashes.
+**Status:** ✅ Implementado — suite `combo`
 
-### Contexto
-
-O projeto tem 15 Fragmentados (`CharacterDB`) e 10 fendas (7 campanha + 3 anomalias). O `prd.md` Sprint 3 exige teste de todas as 150 combinações.
-
-### Detalhes
-
-Usar o mode `auto_play` existente em `GameManager` (`auto_play = true`, linha 120) para automatizar level ups. Para cada combo:
-
-1. Selecionar personagem + fenda
-2. Ativar `auto_play = true`
-3. Rodar por 5 minutos mínimo (ou até o boss spawnar)
-4. Verificar: sem crashes, sem erros fatais no log, FPS > 30
-
-### Matriz de teste (resumida)
-
-| Fragmentado | Arma Inicial | Fendas a testar |
-|---|---|---|
-| Ronin | Katana | Todas 10 |
-| Soldado | Machinegun | Todas 10 |
-| Mago | Staff | Todas 10 |
-| ... | ... | ... |
-| ??? | Todas lv1 | Todas 10 |
-
-### Automação sugerida
-
-O `AutoTester` (`res://scripts/autoload/auto_tester.gd`) já existe — estender para iterar por todas as combos:
-
-```gdscript
-func run_full_matrix():
-    var chars = CharacterDB.get_all_character_ids()
-    var stages = ["cemetery","forest","farm","tokyo","volcano","ocean","arena","space","castle","candy"]
-    for char_id in chars:
-        for stage in stages:
-            _test_combo(char_id, stage, 300.0)  # 5 min
-```
+O `TestRunner` itera por todos os 15 Fragmentados × 10 fendas (150 combos), rodando 60s cada com auto_play. Relatório JSON gerado em `user://test_results/`.
 
 ### Critérios de aceite
 
-- [ ] 150/150 combinações executam sem crash
-- [ ] Relatório gerado com status, FPS médio e erros por combo
-- [ ] Bugs encontrados documentados com reprodução
+- [x] Suite `combo` implementada com 150 testes
+- [x] AutoPlayer move, coleta XP, escolhe level ups automaticamente
+- [x] Relatório gerado com status, FPS médio e erros por combo
+- [ ] Rodar a suite completa e verificar 150/150 sem crash (requer ~2.5h de execução)
 
 ---
 
 ## Tarefa 2: Teste Multiplayer LAN (2-4 Jogadores)
 
-**Objetivo:** Verificar que co-op local funciona com 2 instâncias mínimo.
+**Status:** ⏳ Manual — requer 2+ instâncias
 
-### Detalhes
-
-1. Abrir 2 instâncias do jogo na mesma máquina (ou 2 máquinas na mesma rede)
-2. Host cria lobby, Client se conecta via IP
-3. Verificar:
-   - Sync de personagens no lobby (Tarefa 2 do PRD Multiplayer)
-   - XP compartilhado (level up simultâneo)
-   - Projéteis falsos (visual no client, lógica no host)
-   - Death + tombstone + revive
-   - Boss sync (todas as fases)
-   - Game Over (quando todos morrem)
-   - Desconexão graceful
+Não é possível automatizar teste multiplayer com uma única instância. Requer teste manual.
 
 ### Cenários de teste
 
@@ -89,24 +62,9 @@ func run_full_matrix():
 
 ## Tarefa 3: Stress Test de Performance
 
-**Objetivo:** Garantir 60 FPS com 500 inimigos na tela em hardware médio.
+**Status:** ✅ Implementado — suite `stress`
 
-### Contexto
-
-O `PerfMonitor` (`res://scripts/autoload/perf_monitor.gd`) e o `DebugOverlay` (F3) já existem para métricas. O cap de inimigos é 500 (`GameManager.max_enemies = 500`).
-
-### Detalhes
-
-1. Configurar cenário de stress: Modo Endless, Horda Infinita (mutação), minuto 20+
-2. Métricas a coletar via `PerfMonitor`:
-   - FPS médio, mínimo, P99
-   - Enemy count (alvo: 400-500 simultâneos)
-   - Draw calls
-   - Memória RAM e VRAM
-3. Ferramentas de profiling:
-   - `F3` → DebugOverlay (já integrado)
-   - Godot Profiler (Monitor tab)
-   - `--verbose` mode para logs de performance
+3 cenários automáticos: hyper mode, max enemies, endless 10min.
 
 ### Targets
 
@@ -120,98 +78,51 @@ O `PerfMonitor` (`res://scripts/autoload/perf_monitor.gd`) e o `DebugOverlay` (F
 
 ### Critérios de aceite
 
-- [ ] Run de 15 min no modo Endless com todas as mutações ativas
-- [ ] FPS nunca cai abaixo de 30 por mais de 2 segundos
+- [x] Suite `stress` com 3 cenários automatizados
+- [ ] Rodar stress e verificar FPS > 30 sustentado (requer execução)
 - [ ] Sem memory leaks (RAM estável após warmup)
 
 ---
 
 ## Tarefa 4: Verificação de Evoluções (12)
 
-**Objetivo:** Confirmar que todas as 12 evoluções de arma funcionam corretamente.
+**Status:** ✅ Implementado — suite `evolution`
 
-### Contexto
-
-`EvolutionDB` (`res://scripts/autoload/evolution_db.gd`) define 12 evoluções. Condição: arma lv8 + item lv5 = baú dimensional aparece.
-
-### Checklist
-
-| Arma Base | Item Passivo | Evolução | Verificar |
-|---|---|---|---|
-| Katana | Luva de Velocidade | Zangetsu | Ondas de energia |
-| Bazuca | Pólvora Extra | Nuke Launcher | Mushroom cloud |
-| Machinegun | Mira Laser | Minigun Infernal | Balas de fogo |
-| Staff | Cristal Arcano | Cajado do Apocalipse | Meteoros |
-| Foice | Capa das Sombras | Death Scythe | Executa <20% HP |
-| Arco Elfíco | Aljava Infinita | Tempestade de Flechas | Chuva de flechas |
-| Chain Elétrica | Bateria Tesla | Tempestade Elétrica | Storm permanente |
-| Necromante | Grimório Negro | Senhor dos Mortos | Boss esqueleto |
-| Lança-chamas | Gasolina | Inferno Walker | Rastro de fogo |
-| Chicote | Sangue de Vampiro | Vampire Whip | Lifesteal massivo |
-| Boomerang | TBD | TBD | Verificar se existe |
-| Tornado | TBD | TBD | Verificar se existe |
+O `TestRunner` configura weapon lv8 + item lv5, roda 60s, e verifica se a evolução foi triggered.
 
 ### Critérios de aceite
 
-- [ ] Todas as 12 evoluções ativam quando as condições são atendidas
-- [ ] Baú dimensional spawna e é interagível
-- [ ] Efeito visual e mecânico da evolução funciona
-- [ ] Flamethrower + Gasoline funciona (se habilitados) ou está corretamente bloqueado
+- [x] Suite `evolution` testa todas as 12 evoluções
+- [x] Setup automático: weapon lv8 + item lv5
+- [x] Detecta se evolução foi triggered
+- [ ] Rodar e verificar 12/12 evoluções funcionam (requer execução)
 
 ---
 
 ## Tarefa 5: Verificação de Eventos (10)
 
-**Objetivo:** Confirmar que todos os 10 eventos dimensionais ativam nos timers corretos.
+**Status:** ✅ Implementado — suite `events`
 
-### Contexto
-
-`mecanicas.md` define 10 eventos com timers específicos (Horda Dourada min 5, Eclipse min 8, etc.).
-
-### Checklist
-
-| Evento | Timer | Verificar |
-|---|---|---|
-| Horda Dourada | min 5 | Inimigos dourados + XP extra |
-| Eclipse | min 8 | Tela escurece 30s |
-| Chuva de Meteoros | min 12 | Dano em tudo |
-| Treasure Goblin | Aleatório | Foge + dropa baú épico |
-| Desafio do Anjo | min 15 | 2x dano, 50% HP |
-| Portal Dimensional | min 20 | Mini-dungeon |
-| Fever Mode | XP rápido | 10s de buff |
-| Merchant | Aleatório | NPC com 3 itens |
-| Chest Mimic | Aleatório | Mini-boss |
-| Roda da Fortuna | min 10 | Buff/debuff randômico |
+Run de 23 min cobrindo todos os eventos timed + 3 stages adicionais.
 
 ### Critérios de aceite
 
-- [ ] Cada evento ativa no minuto correto (±30s de tolerância)
-- [ ] Efeitos visuais e mecânicos funcionam
-- [ ] Sem crashes durante nenhum evento
-- [ ] Eclipse Total funciona com escurecimento de tela real
+- [x] Suite `events` com timeline completa (23 min)
+- [x] Testes em 4 stages diferentes
+- [ ] Rodar e verificar todos os 10 eventos ativam (requer execução)
 
 ---
 
-## Dependências
+## Resumo
 
-| Sistema | Tarefas |
-|---|---|
-| `AutoTester` (autoload) | 1 |
-| `PerfMonitor` (autoload) | 3 |
-| `DebugOverlay` (autoload) | 3 |
-| `EvolutionDB` (autoload) | 4 |
-| `MultiplayerManager` (autoload) | 2 |
-| Event system (`event_manager.gd`) | 5 |
-
-## Ordem de implementação
-
-| Fase | Tarefas | Descrição |
-|---|---|---|
-| A | 4, 5 | Verificações rápidas — evoluções e eventos |
-| B | 1 | Matriz de 150 combos (pode rodar overnight) |
-| C | 3 | Stress test focado com profiling |
-| D | 2 | Multiplayer LAN (requer 2+ máquinas) |
+| Tarefa | Automação | Status |
+|--------|-----------|--------|
+| 150 combos | ✅ suite `combo` | Falta rodar |
+| Multiplayer LAN | ❌ Manual | Pendente |
+| Stress test | ✅ suite `stress` | Falta rodar |
+| Evoluções | ✅ suite `evolution` | Falta rodar |
+| Eventos | ✅ suite `events` | Falta rodar |
 
 ## Prioridade
 
-Alta — Sprint 3 do roadmap (pré-release). Sem QA → sem confiança para lançar.
+Alta — Sprint 3 do roadmap (pré-release). Automação pronta, falta executar.

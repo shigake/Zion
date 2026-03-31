@@ -12,6 +12,7 @@ extends Node
 ##   godot --path game --run -- --test=stress
 ##   godot --path game --run -- --test=achievements
 ##   godot --path game --run -- --test=events
+##   godot --path game --run -- --test=combo     (150 combos: 15 chars × 10 stages)
 ##   godot --path game --run -- --test=all
 ##   godot --path game --run -- --test=menu_smoke
 ##   godot --path game --run -- --test=smoke --test-headless
