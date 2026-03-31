@@ -182,6 +182,10 @@ Se for fix/ajuste pequeno, incrementar o **patch** (ex: 1.1.0 → 1.1.1).
 
 All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Proper nouns keep their capitalization.
 
+## UI Layout Rule
+
+**Regra de UI**: Toda tela deve caber em 1280x720 sem scroll. Se o conteudo nao cabe, simplificar ou usar tabs/paginas. ScrollContainer so eh aceito dentro de tabs individuais (ex: opcoes).
+
 ## Current Phase
 
 Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 428+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~95%. FASE C (polish) ~98%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~80% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 561 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 7 PRDs concluidos e arquivados, 3 PRDs ativos (QA, build, Steam).
