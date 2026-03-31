@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 02 — Bau nao desaparece e nao da feedback
 
 ## Problema

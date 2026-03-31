@@ -158,14 +158,23 @@ func _collect_chest(chest: Node3D) -> void:
 	AudioManager.play_sfx("collect_crystal")
 	ScreenEffects.shake(0.05)
 
-	# Damage number mostrando recompensa
+	# Texto flutuante mostrando recompensa com cor por tipo
 	var text = ""
+	var reward_color := Color(1.0, 0.85, 0.2)  # Default: gold
 	match reward["type"]:
-		"crystals": text = "+%d cristais" % reward["amount"]
-		"xp": text = "+%d XP" % reward["amount"]
-		"heal": text = "+%d HP" % reward["amount"]
-		"reroll": text = "+1 Reroll"
-	ParticleFactory.spawn_damage_number(chest.global_position + Vector3(0, 1, 0), text, Color(1.0, 0.85, 0.2))
+		"crystals":
+			text = "+%d cristais" % reward["amount"]
+			reward_color = Color(1.0, 0.85, 0.2)   # Gold
+		"xp":
+			text = "+%d XP" % reward["amount"]
+			reward_color = Color(0.4, 0.8, 1.0)    # Light blue
+		"heal":
+			text = "+%d HP" % reward["amount"]
+			reward_color = Color(0.3, 1.0, 0.4)    # Green
+		"reroll":
+			text = "+1 Reroll"
+			reward_color = Color(0.8, 0.5, 1.0)    # Purple
+	ParticleFactory.spawn_chest_reward_text(chest.global_position, text, reward_color)
 
 	chest_collected.emit(reward)
 	_active_chests.erase(chest)

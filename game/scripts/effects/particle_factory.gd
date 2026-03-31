@@ -484,6 +484,28 @@ func spawn_whip_spark(pos: Vector3) -> void:
 
 	_setup_and_emit(particles, pos, 0.5)
 
+## Spawn a reward text for chest collection with type-specific color.
+## Colors: Gold for crystals, Light blue for XP, Green for HP, Purple for reroll.
+func spawn_chest_reward_text(position: Vector3, text: String, color: Color) -> void:
+	var label = get_damage_number()
+	if not label:
+		return
+	var elevated_pos = Vector3(position.x, position.y + 1.5, position.z)
+	label.setup_text(text, color)
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return_damage_number(label)
+		return
+	if not label.is_inside_tree():
+		scene.add_child(label)
+	label.global_position = elevated_pos
+	label.set_process(true)
+	# Extra upward float + fade for chest rewards (0.8s)
+	var tw = create_tween()
+	tw.tween_property(label, "global_position:y", elevated_pos.y + 1.0, 0.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.parallel().tween_property(label, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func(): return_damage_number(label))
+
 func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	var color = Color(1.0, 0.5, 0.1)
 	var particles = _get_particle()
