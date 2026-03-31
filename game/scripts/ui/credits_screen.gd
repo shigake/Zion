@@ -1,7 +1,7 @@
 extends Control
 
-## Tela de creditos: herois sentados em volta de uma fogueira,
-## nomes dos criadores no topo, personagens do jogo na parte inferior.
+## Tela de creditos: herois dando volta na fogueira em carrossel,
+## baloes de fala com frases engraçadas por personagem (um de cada vez).
 
 const CREDITS := [
 	"Erick Higaki",
@@ -29,10 +29,109 @@ const STAR_COLORS := [
 	Color(1.0, 1.0, 1.0),    # Branco
 ]
 
+## Frases engraçadas por personagem — devem ser curtas e em carater com o heroi
+const CHARACTER_QUOTES := {
+	"amazona": [
+		"Minha lança não erra.\nAs piadas do Ronin é que deixam a desejar.",
+		"Filha de Zion não recua.\nSó dá um passo estratégico pra trás.",
+		"Atirei o pau no gato...\nNo sentido figurado. Ou não.",
+	],
+	"bruxa": [
+		"Transformei o último inimigo em sapo.\nEle nem reclamou.",
+		"Feitiço de amor? Não, obrigada.\nPrefiro feitiço de dano em área.",
+		"A lua me dá poderes.\nE insônia. Principalmente insônia.",
+	],
+	"lealith": [
+		"Velocidade é tudo.\nInclusive pra fugir do chef.",
+		"Dodge 15%? Na teoria.\nNa prática é 100% estilo.",
+		"Passei tão rápido que\nnem me vi passar.",
+	],
+	"ronin": [
+		"Minha espada tem nome.\nNão vou dizer qual. É constrangedor.",
+		"Bushido: o caminho do guerreiro.\nHoje o caminho vai ali no armazém.",
+		"Silêncio é sabedoria.\nPelo menos é o que digo quando não sei a resposta.",
+	],
+	"soldado": [
+		"TATATATATA!\nOpa. Desculpa. Reflexo.",
+		"Protocolo de combate ativo.\nCafé também. Principalmente o café.",
+		"Munição infinita seria ótimo.\nAlguém anota pra mim?",
+	],
+	"mago": [
+		"Área de efeito?\nEu chamo de 'zona de respeito'.",
+		"Estudei 40 anos de magia pra isso.\nValeu a pena. Acho.",
+		"Meu cajado é decorativo.\nO dano não é.",
+	],
+	"berserker": [
+		"O médico mandou relaxar.\nEle não trabalha mais aqui.",
+		"Com 30% de HP fico mais forte.\nÉ motivação às avessas.",
+		"Raiva? Isso se chama foco.\nIntenso. Muito intenso.",
+	],
+	"ninja": [
+		"Você não me viu chegar?\nPerfeito. Funcionou.",
+		"A sombra que te protege.\nOu assusta. Tanto faz.",
+		"Invisível não é superpoder,\né modo de vida.",
+	],
+	"pirata": [
+		"Cristais valem mais que ouro.\nNão conta pra ninguém.",
+		"Tive um barco. Longa história.\nAlguém tem cristal sobrando?",
+		"Mapa do tesouro? Esse aqui.\nGuarda segredo.",
+	],
+	"engenheiro": [
+		"Meu drone faz tudo.\nInclusive me envergonhar em público.",
+		"Cooldown 15% menor.\nBurocracia não tem cooldown infelizmente.",
+		"Tecnologia resolve tudo.\nExceto esse bug. E aquele outro.",
+	],
+	"vampiro": [
+		"Lifesteal não é vampirismo.\nÉ nutrição alternativa.",
+		"Durmo de dia, acordo de noite.\nSou do turno da tarde, ok?",
+		"Não mordo ninguém.\nHá décadas. Quase.",
+	],
+	"gladiador": [
+		"Armadura +20%?\nÉ porque combina com os olhos.",
+		"No arena, ou você vence ou...\ntambém vence, se for eu.",
+		"Escudo não é pra se esconder.\nÉ pra bater na cabeça do inimigo.",
+	],
+	"chef": [
+		"Avó tinha razão:\ncomida cura tudo.",
+		"Receita secreta de cura: amor,\ncarinho e fungos dimensionais.",
+		"Faca de cozinha também é arma.\nPergunta pro último Sentinela.",
+	],
+	"mystery": [
+		"...",
+		"Eu sei coisas.\nNão, não vou contar.",
+		"???",
+	],
+	"fragmentado": [
+		"Estou bem.\nSão só 10 fendas por dia.",
+		"Tenho um estilhaço de Zion dentro de mim.\nArde um pouco.",
+		"Comecei com 50% de HP.\nAinda assim cheguei aqui.",
+	],
+}
+
+## Velocidade de rotação do carrossel (radianos por segundo)
+const CAROUSEL_SPEED := 0.10
+## Quanto tempo cada balão fica visível
+const BUBBLE_SHOW_DURATION := 3.8
+## Pausa entre um balão e outro
+const BUBBLE_COOLDOWN := 0.7
+
 var _twinkling_stars: Array = []
 var _name_labels: Array = []
-var _char_roots: Array = []  # {node, base_y, speed, phase}
+## Cada entrada: {node, base_y, speed, phase, base_angle, radius, char_id, is_dancer}
+var _char_roots: Array = []
 var _time: float = 0.0
+var _carousel_angle: float = 0.0
+var _camera: Camera3D = null
+
+# --- Sistema de balões de fala ---
+var _bubble_timer: float = 1.5   # começa logo
+var _in_cooldown: bool = false
+var _bubble_overlay: Control = null
+var _bubble_panel: PanelContainer = null
+var _bubble_name_lbl: Label = null
+var _bubble_text_lbl: Label = null
+var _current_speaker_idx: int = -1
+var _last_speaker_idx: int = -1
 
 @onready var viewport_container: SubViewportContainer = $SubViewportContainer
 @onready var sub_viewport: SubViewport = $SubViewportContainer/SubViewport
@@ -48,20 +147,18 @@ func _ready() -> void:
 	_setup_top_section()
 	_setup_3d_scene()
 	_setup_twinkling_stars()
+	_setup_bubble_overlay()
 
 func _process(delta: float) -> void:
 	_time += delta
 	_animate_twinkling_stars()
 	_animate_name_labels()
-	_animate_characters()
+	_animate_characters(delta)
+	_animate_speech_bubbles(delta)
 
 # ==================== SECAO SUPERIOR (nomes dos criadores) ====================
 
 func _setup_top_section() -> void:
-	var screen_size = get_viewport_rect().size
-	var top_h = screen_size.y * 0.35
-
-	# Painel escuro semi-transparente no topo
 	var top_bg = PanelContainer.new()
 	top_bg.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	top_bg.anchor_bottom = 0.35
@@ -85,7 +182,6 @@ func _setup_top_section() -> void:
 	vbox.add_theme_constant_override("separation", 8)
 	margin.add_child(vbox)
 
-	# Titulo
 	var title = Label.new()
 	title.text = "Creditos"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -97,7 +193,6 @@ func _setup_top_section() -> void:
 	sep.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.4))
 	vbox.add_child(sep)
 
-	# Nomes dos desenvolvedores em linha horizontal
 	var names_hbox = HBoxContainer.new()
 	names_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	names_hbox.add_theme_constant_override("separation", 40)
@@ -130,7 +225,6 @@ func _setup_top_section() -> void:
 	sep2.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.3))
 	vbox.add_child(sep2)
 
-	# Extra credits (engine, musica, assets)
 	var extras_hbox = HBoxContainer.new()
 	extras_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	extras_hbox.add_theme_constant_override("separation", 24)
@@ -160,7 +254,6 @@ func _setup_top_section() -> void:
 	sep3.add_theme_color_override("color", Color(1.0, 0.85, 0.2, 0.2))
 	vbox.add_child(sep3)
 
-	# Subtitulo dos herois
 	var heroes_lbl = Label.new()
 	heroes_lbl.text = "Herois do jogo"
 	heroes_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -171,14 +264,13 @@ func _setup_top_section() -> void:
 # ==================== 3D CAMPFIRE SCENE ====================
 
 func _setup_3d_scene() -> void:
-	# Camera mais alta para ver todos os personagens em circulo
 	var camera = Camera3D.new()
 	camera.position = Vector3(0, 5.5, 7.0)
 	camera.rotation.x = deg_to_rad(-32)
 	camera.fov = 55
 	sub_viewport.add_child(camera)
+	_camera = camera  # guarda referência para projeção 3D→2D
 
-	# Environment: noite estrelada
 	var env = Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.02, 0.02, 0.06)
@@ -193,7 +285,6 @@ func _setup_3d_scene() -> void:
 	world_env.environment = env
 	sub_viewport.add_child(world_env)
 
-	# Luz da fogueira (aumentada)
 	var fire_light = OmniLight3D.new()
 	fire_light.position = Vector3(0, 1.0, 0)
 	fire_light.light_color = Color(1.0, 0.6, 0.15)
@@ -202,7 +293,6 @@ func _setup_3d_scene() -> void:
 	fire_light.omni_attenuation = 1.5
 	sub_viewport.add_child(fire_light)
 
-	# Moonlight (lua cheia iluminando o ambiente)
 	var moon_light = DirectionalLight3D.new()
 	moon_light.rotation.x = deg_to_rad(-45)
 	moon_light.rotation.y = deg_to_rad(30)
@@ -229,7 +319,6 @@ func _create_campfire() -> void:
 	var fire_root = Node3D.new()
 	fire_root.name = "Campfire"
 
-	# Troncos cruzados
 	for i in range(4):
 		var log_mesh = MeshInstance3D.new()
 		var cyl = CylinderMesh.new()
@@ -246,7 +335,6 @@ func _create_campfire() -> void:
 		log_mesh.material_override = mat
 		fire_root.add_child(log_mesh)
 
-	# Pedras ao redor
 	for i in range(8):
 		var stone = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
@@ -261,7 +349,6 @@ func _create_campfire() -> void:
 		stone.material_override = mat
 		fire_root.add_child(stone)
 
-	# Chamas
 	for i in range(3):
 		var flame = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
@@ -287,18 +374,21 @@ func _create_characters_circle() -> void:
 	var count = char_ids.size()
 	var radius = 2.8
 
+	# Sorteia 1 índice para o dançarino
+	var dancer_idx = randi() % max(count, 1)
+
 	for i in range(count):
 		var char_id = char_ids[i]
 		var angle = (float(i) / count) * TAU - PI / 2.0
+		var is_dancer = (i == dancer_idx)
 
 		var char_root = Node3D.new()
-		char_root.position = Vector3(cos(angle) * radius, 0, sin(angle) * radius)
+		char_root.position = Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 
-		# Sprite pixel art do heroi
 		var sprite = Sprite3D.new()
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.012
+		sprite.pixel_size = 0.024
 		sprite.position.y = 0.8
 
 		var tex_path = "res://assets/sprites/characters/%s.png" % char_id
@@ -306,53 +396,196 @@ func _create_characters_circle() -> void:
 		if tex:
 			sprite.texture = tex
 		else:
-			# Fallback: tenta nomes alternativos comuns
 			var fallback = load("res://assets/sprites/characters/mystery.png")
 			if fallback:
 				sprite.texture = fallback
 
-		# Leve glow da fogueira nos sprites
 		sprite.modulate = Color(1.0, 0.95, 0.85)
-
-		# Escala 2x para sprites maiores (mantém NEAREST)
-		sprite.pixel_size = 0.024
-
 		char_root.add_child(sprite)
 		sub_viewport.add_child(char_root)
 
-		_char_roots.append({
-			"node": char_root,
-			"base_y": char_root.position.y,
-			"speed": randf_range(1.0, 2.0),
-			"phase": randf() * TAU,
-		})
+		var entry = {
+			"node":       char_root,
+			"base_y":     0.0,
+			"speed":      randf_range(1.0, 2.0),
+			"phase":      randf() * TAU,
+			"base_angle": angle,
+			"radius":     radius,
+			"char_id":    char_id,
+			"is_dancer":  is_dancer,
+		}
+		_char_roots.append(entry)
 
-	# Sorteia 1 heroi aleatorio para dancar
-	if _char_roots.size() > 0:
-		var dancer_data = _char_roots[randi() % _char_roots.size()]
-		var dancer = dancer_data["node"]
-		var base_y = dancer_data["base_y"]
-		var tween = create_tween().set_loops()
-		tween.tween_property(dancer, "rotation:y", deg_to_rad(15), 0.3).set_trans(Tween.TRANS_SINE)
-		tween.tween_property(dancer, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_BACK)
-		tween.tween_property(dancer, "position:y", base_y, 0.2).set_trans(Tween.TRANS_BOUNCE)
-		tween.tween_property(dancer, "rotation:y", deg_to_rad(-15), 0.3).set_trans(Tween.TRANS_SINE)
-		tween.tween_property(dancer, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_BACK)
-		tween.tween_property(dancer, "position:y", base_y, 0.2).set_trans(Tween.TRANS_BOUNCE)
+		# Dançarino tem tween próprio de animação vertical
+		if is_dancer:
+			var dancer_tween = create_tween().set_loops()
+			dancer_tween.tween_property(char_root, "rotation:y", deg_to_rad(15), 0.3).set_trans(Tween.TRANS_SINE)
+			dancer_tween.tween_property(char_root, "position:y", 0.3, 0.2).set_trans(Tween.TRANS_BACK)
+			dancer_tween.tween_property(char_root, "position:y", 0.0, 0.2).set_trans(Tween.TRANS_BOUNCE)
+			dancer_tween.tween_property(char_root, "rotation:y", deg_to_rad(-15), 0.3).set_trans(Tween.TRANS_SINE)
+			dancer_tween.tween_property(char_root, "position:y", 0.3, 0.2).set_trans(Tween.TRANS_BACK)
+			dancer_tween.tween_property(char_root, "position:y", 0.0, 0.2).set_trans(Tween.TRANS_BOUNCE)
 
-
-func _animate_characters() -> void:
+func _animate_characters(delta: float) -> void:
+	_carousel_angle += delta * CAROUSEL_SPEED
 	for data in _char_roots:
-		var node: Node3D = data["node"]
-		var base_y: float = data["base_y"]
-		var speed: float = data["speed"]
-		var phase: float = data["phase"]
-		node.position.y = base_y + sin(_time * speed + phase) * 0.08
+		var node: Node3D      = data["node"]
+		var speed: float      = data["speed"]
+		var phase: float      = data["phase"]
+		var base_angle: float = data["base_angle"]
+		var radius: float     = data["radius"]
+		var is_dancer: bool   = data["is_dancer"]
+
+		var current_angle = base_angle + _carousel_angle
+		node.position.x = cos(current_angle) * radius
+		node.position.z = sin(current_angle) * radius
+
+		# Vertical bob — dançarino tem seu próprio tween, não mexemos no y dele
+		if not is_dancer:
+			node.position.y = data["base_y"] + sin(_time * speed + phase) * 0.08
+
+# ==================== BALOES DE FALA ====================
+
+func _setup_bubble_overlay() -> void:
+	_bubble_overlay = Control.new()
+	_bubble_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bubble_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bubble_overlay)
+	# Garante que o overlay fica acima de tudo
+	move_child(_bubble_overlay, get_child_count() - 1)
+
+	_bubble_panel = PanelContainer.new()
+	_bubble_panel.visible = false
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.06, 0.18, 0.93)
+	style.border_color = Color(1.0, 0.85, 0.3, 0.9)
+	style.set_border_width_all(2)
+	style.corner_radius_top_left    = 10
+	style.corner_radius_top_right   = 10
+	style.corner_radius_bottom_right = 10
+	style.corner_radius_bottom_left  = 4
+	style.set_content_margin_all(10)
+	_bubble_panel.add_theme_stylebox_override("panel", style)
+	_bubble_overlay.add_child(_bubble_panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+	_bubble_panel.add_child(vbox)
+
+	_bubble_name_lbl = Label.new()
+	_bubble_name_lbl.add_theme_font_size_override("font_size", 11)
+	_bubble_name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	vbox.add_child(_bubble_name_lbl)
+
+	_bubble_text_lbl = Label.new()
+	_bubble_text_lbl.add_theme_font_size_override("font_size", 13)
+	_bubble_text_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	_bubble_text_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bubble_text_lbl.custom_minimum_size = Vector2(200, 0)
+	vbox.add_child(_bubble_text_lbl)
+
+func _animate_speech_bubbles(delta: float) -> void:
+	if _char_roots.is_empty() or _camera == null:
+		return
+
+	_bubble_timer -= delta
+
+	if _bubble_timer <= 0.0:
+		if _in_cooldown:
+			_in_cooldown = false
+			_pick_next_speaker()
+		else:
+			_hide_bubble()
+			_in_cooldown = true
+			_bubble_timer = BUBBLE_COOLDOWN
+
+	# Atualiza posição do balão enquanto o carrossel gira
+	if _bubble_panel != null and _bubble_panel.visible and _current_speaker_idx >= 0:
+		_reposition_bubble(_current_speaker_idx)
+
+func _pick_next_speaker() -> void:
+	if _char_roots.is_empty():
+		return
+	var idx = _last_speaker_idx
+	var attempts = 0
+	while idx == _last_speaker_idx and attempts < 15:
+		idx = randi() % _char_roots.size()
+		attempts += 1
+	_current_speaker_idx = idx
+	_last_speaker_idx = idx
+	_show_bubble(idx)
+	_bubble_timer = BUBBLE_SHOW_DURATION
+
+func _show_bubble(idx: int) -> void:
+	if idx < 0 or idx >= _char_roots.size():
+		return
+	if _camera == null or _bubble_panel == null:
+		return
+
+	var data    = _char_roots[idx]
+	var char_id: String = data["char_id"]
+
+	# Frase aleatória do personagem
+	var quotes: Array = CHARACTER_QUOTES.get(char_id, ["..."])
+	var quote: String = quotes[randi() % quotes.size()]
+
+	# Nome display
+	var display_name: String = char_id.capitalize()
+	if CharacterDB.has_method("get_character"):
+		var cdata = CharacterDB.get_character(char_id)
+		if cdata is Dictionary and cdata.has("name"):
+			display_name = cdata["name"]
+
+	_bubble_name_lbl.text = "— " + display_name
+	_bubble_text_lbl.text = quote
+
+	_bubble_panel.visible = true
+	_bubble_panel.modulate.a = 0.0
+	_reposition_bubble(idx)
+
+	var tw = create_tween()
+	tw.tween_property(_bubble_panel, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE)
+
+func _reposition_bubble(idx: int) -> void:
+	if idx < 0 or idx >= _char_roots.size():
+		return
+	var data     = _char_roots[idx]
+	var char_node: Node3D = data["node"]
+
+	# Ponto acima da cabeça do personagem (no mundo 3D)
+	var world_pos = char_node.global_position + Vector3(0, 2.2, 0)
+
+	# Projeta para coordenadas do SubViewport
+	var vp_pos = _camera.unproject_position(world_pos)
+
+	# Escala do SubViewport para o espaço do container na tela
+	var vp_size       = Vector2(sub_viewport.size)
+	var container_pos  = viewport_container.global_position
+	var container_size = viewport_container.size
+	if vp_size.x > 0.0 and vp_size.y > 0.0:
+		vp_pos.x = vp_pos.x * (container_size.x / vp_size.x) + container_pos.x
+		vp_pos.y = vp_pos.y * (container_size.y / vp_size.y) + container_pos.y
+
+	# Centraliza o balão horizontalmente sobre o herói e evita sair da tela
+	var screen      = get_viewport_rect().size
+	var panel_size  = _bubble_panel.size if _bubble_panel.size.x > 0 else Vector2(230, 80)
+	vp_pos.x = clamp(vp_pos.x - panel_size.x * 0.5, 10.0, screen.x - panel_size.x - 10.0)
+	vp_pos.y = clamp(vp_pos.y - panel_size.y - 8.0,  10.0, screen.y - panel_size.y - 10.0)
+
+	_bubble_panel.position = vp_pos
+
+func _hide_bubble() -> void:
+	if _bubble_panel == null or not _bubble_panel.visible:
+		return
+	var tw = create_tween()
+	tw.tween_property(_bubble_panel, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(func(): _bubble_panel.visible = false)
 
 # ==================== TWINKLING STARS (decoracao no topo) ====================
 
 func _setup_twinkling_stars() -> void:
-	var screen_w = get_viewport_rect().size.x
+	var screen_w  = get_viewport_rect().size.x
 	var sky_height = get_viewport_rect().size.y * 0.35
 
 	for i in range(40):
@@ -372,9 +605,9 @@ func _setup_twinkling_stars() -> void:
 		star_overlay.add_child(star_label)
 
 		_twinkling_stars.append({
-			"label": star_label,
-			"phase": randf() * TAU,
-			"speed": randf_range(0.4, 1.2),
+			"label":     star_label,
+			"phase":     randf() * TAU,
+			"speed":     randf_range(0.4, 1.2),
 			"min_alpha": randf_range(0.1, 0.3),
 			"max_alpha": randf_range(0.7, 1.0),
 		})
@@ -388,8 +621,7 @@ func _animate_name_labels() -> void:
 	for data in _name_labels:
 		var glow = sin(_time * 1.2 + data.phase) * 0.15 + 0.85
 		data.label.modulate = Color(1.0, 1.0, 1.0, glow)
-		# Estrela pisca com cor variada
-		var t = sin(_time * 0.9 + data.phase) * 0.5 + 0.5
+		var t  = sin(_time * 0.9 + data.phase) * 0.5 + 0.5
 		var ci = int(data.phase) % STAR_COLORS.size()
 		data.star.modulate = STAR_COLORS[ci].lerp(Color.WHITE, t * 0.3)
 
