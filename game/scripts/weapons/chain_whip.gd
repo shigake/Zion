@@ -4,6 +4,12 @@ extends Node3D
 
 var attack_timer: float = 0.0
 var chain_visuals: Array = []
+var _slash_tex: Texture2D = null
+
+func _ready() -> void:
+	var path = "res://assets/sprites/effects/slashes/chain_whip_slash.png"
+	if ResourceLoader.exists(path):
+		_slash_tex = load(path)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():
@@ -98,7 +104,9 @@ func _attack(level: int) -> void:
 		current_target.call_deferred("take_damage", current_damage, "electric")
 		hit_targets.append(current_target)
 		ParticleFactory.spawn_hit_particles(current_target.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.9, 1.0))
-		# Impact flash/glow at hit point
+		# Slash trail + impact flash
+		if _slash_tex:
+			WeaponVFX.spawn_slash_trail(self, _slash_tex, current_target.global_position + Vector3(0, 0.5, 0), 0.03, 1.0, 0.15)
 		_spawn_impact_flash(current_target.global_position + Vector3(0, 0.5, 0))
 
 		# Draw chain line from previous to current
