@@ -29,6 +29,83 @@ const STAGE_SCENE_PATHS := {
 	"candy": "res://scenes/stages/stage_candy.tscn",
 }
 
+## Boss pool por fenda — sorteio aleatorio a cada spawn.
+## Primeiro da lista e o Sentinela original, os outros sao alternativos.
+const BOSS_POOLS := {
+	"cemetery": [
+		"res://scenes/enemies/boss_necromancer.tscn",     # Sentinela original
+		"res://scenes/enemies/boss_cemetery_lich.tscn",    # Lich King
+		"res://scenes/enemies/boss_cemetery_reaper.tscn",  # Death Reaper
+	],
+	"forest": [
+		"res://scenes/enemies/boss_fairy_queen.tscn",
+		"res://scenes/enemies/boss_forest_elder.tscn",     # Elder Treant
+		"res://scenes/enemies/boss_forest_spider.tscn",    # Spider Queen
+	],
+	"farm": [
+		"res://scenes/enemies/boss_alien_cow.tscn",
+		"res://scenes/enemies/boss_farm_scarecrow.tscn",   # Scarecrow King
+		"res://scenes/enemies/boss_farm_harvester.tscn",   # The Harvester
+	],
+	"tokyo": [
+		"res://scenes/enemies/boss_ai_overlord.tscn",
+		"res://scenes/enemies/boss_tokyo_shogun.tscn",     # Cyber Shogun
+		"res://scenes/enemies/boss_tokyo_kaiju.tscn",      # Mini Kaiju
+	],
+	"volcano": [
+		"res://scenes/enemies/boss_demon_lord.tscn",
+		"res://scenes/enemies/boss_volcano_phoenix.tscn",  # Ash Phoenix
+		"res://scenes/enemies/boss_volcano_titan.tscn",    # Magma Titan
+	],
+	"ocean": [
+		"res://scenes/enemies/boss_leviathan.tscn",
+		"res://scenes/enemies/boss_ocean_siren.tscn",      # Siren Queen
+		"res://scenes/enemies/boss_ocean_hydra.tscn",      # Deep Hydra
+	],
+	"arena": [
+		"res://scenes/enemies/boss_emperor.tscn",
+		"res://scenes/enemies/boss_arena_minotaur.tscn",   # Minotaur Champion
+		"res://scenes/enemies/boss_arena_chimera.tscn",    # Chimera
+	],
+	"space": [
+		"res://scenes/enemies/boss_singularity.tscn",
+		"res://scenes/enemies/boss_space_hivemind.tscn",   # Hive Mind
+		"res://scenes/enemies/boss_space_warden.tscn",     # Void Warden
+	],
+	"castle": [
+		"res://scenes/enemies/boss_dracula.tscn",
+		"res://scenes/enemies/boss_castle_werewolf.tscn",  # Alpha Werewolf
+		"res://scenes/enemies/boss_castle_banshee.tscn",   # Banshee Queen
+	],
+	"candy": [
+		"res://scenes/enemies/boss_sugar_king.tscn",
+		"res://scenes/enemies/boss_candy_witch.tscn",      # Candy Witch
+		"res://scenes/enemies/boss_candy_dragon.tscn",     # Gummy Dragon
+	],
+}
+
+## Fallback para acesso direto (primeira opcao do pool)
+static func get_boss_path(stage: String) -> String:
+	var pool = BOSS_POOLS.get(stage, [])
+	if pool.is_empty():
+		return "res://scenes/enemies/boss_necromancer.tscn"
+	return pool[0]
+
+## Sorteia boss aleatorio do pool da fenda
+static func get_random_boss_path(stage: String) -> String:
+	var pool = BOSS_POOLS.get(stage, [])
+	if pool.is_empty():
+		return "res://scenes/enemies/boss_necromancer.tscn"
+	# Tenta cenas que existem, fallback para o primeiro
+	var valid := []
+	for path in pool:
+		if ResourceLoader.exists(path):
+			valid.append(path)
+	if valid.is_empty():
+		return pool[0]
+	return valid[randi() % valid.size()]
+
+# Legacy compatibility
 const BOSS_SCENE_PATHS := {
 	"cemetery": "res://scenes/enemies/boss_necromancer.tscn",
 	"forest": "res://scenes/enemies/boss_fairy_queen.tscn",
@@ -41,6 +118,66 @@ const BOSS_SCENE_PATHS := {
 	"castle": "res://scenes/enemies/boss_dracula.tscn",
 	"candy": "res://scenes/enemies/boss_sugar_king.tscn",
 }
+
+## Mini-boss pool por fenda — 3 opcoes aleatorias cada.
+const MINIBOSS_POOL := {
+	"cemetery": [
+		{"name": "Giant Zombie", "hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)},
+		{"name": "Bone Colossus", "hp": 700, "dmg": 20, "spd": 2.0, "color": Color(0.8, 0.8, 0.7)},
+		{"name": "Phantom Knight", "hp": 550, "dmg": 30, "spd": 4.0, "color": Color(0.3, 0.3, 0.6)},
+	],
+	"forest": [
+		{"name": "Shadow Treant", "hp": 600, "dmg": 25, "spd": 5.0, "color": Color(0.1, 0.0, 0.2)},
+		{"name": "Poison Hydra", "hp": 500, "dmg": 35, "spd": 3.0, "color": Color(0.2, 0.7, 0.1)},
+		{"name": "Dire Wolf Alpha", "hp": 450, "dmg": 28, "spd": 7.0, "color": Color(0.5, 0.4, 0.3)},
+	],
+	"farm": [
+		{"name": "Mad Bull", "hp": 700, "dmg": 28, "spd": 5.5, "color": Color(0.5, 0.5, 0.5)},
+		{"name": "Mutant Rooster", "hp": 500, "dmg": 35, "spd": 6.0, "color": Color(0.8, 0.2, 0.1)},
+		{"name": "Corn Golem", "hp": 900, "dmg": 20, "spd": 2.0, "color": Color(0.9, 0.8, 0.2)},
+	],
+	"tokyo": [
+		{"name": "Mecha Ninja", "hp": 750, "dmg": 30, "spd": 5.0, "color": Color(0.2, 0.2, 0.3)},
+		{"name": "Yakuza Boss", "hp": 600, "dmg": 40, "spd": 4.0, "color": Color(0.1, 0.1, 0.1)},
+		{"name": "Rogue Drone Swarm", "hp": 400, "dmg": 20, "spd": 8.0, "color": Color(0.5, 0.5, 0.8)},
+	],
+	"volcano": [
+		{"name": "Cerberus", "hp": 850, "dmg": 32, "spd": 4.0, "color": Color(0.6, 0.1, 0.0)},
+		{"name": "Lava Serpent", "hp": 700, "dmg": 28, "spd": 5.0, "color": Color(1.0, 0.4, 0.0)},
+		{"name": "Obsidian Golem", "hp": 1200, "dmg": 20, "spd": 1.5, "color": Color(0.2, 0.2, 0.25)},
+	],
+	"ocean": [
+		{"name": "Baby Kraken", "hp": 800, "dmg": 30, "spd": 4.5, "color": Color(0.1, 0.3, 0.5)},
+		{"name": "Shark King", "hp": 650, "dmg": 40, "spd": 6.0, "color": Color(0.3, 0.4, 0.5)},
+		{"name": "Giant Crab", "hp": 1000, "dmg": 22, "spd": 2.0, "color": Color(0.8, 0.3, 0.1)},
+	],
+	"arena": [
+		{"name": "Champion Gladiator", "hp": 900, "dmg": 35, "spd": 4.5, "color": Color(0.7, 0.5, 0.1)},
+		{"name": "War Rhino", "hp": 1100, "dmg": 25, "spd": 6.0, "color": Color(0.5, 0.5, 0.5)},
+		{"name": "Dual Blade Assassin", "hp": 500, "dmg": 50, "spd": 7.0, "color": Color(0.2, 0.0, 0.3)},
+	],
+	"space": [
+		{"name": "Alien Queen", "hp": 950, "dmg": 32, "spd": 4.0, "color": Color(0.3, 0.6, 0.2)},
+		{"name": "Cosmic Jellyfish", "hp": 700, "dmg": 25, "spd": 3.0, "color": Color(0.6, 0.3, 0.9)},
+		{"name": "Mech Sentinel", "hp": 800, "dmg": 38, "spd": 5.0, "color": Color(0.4, 0.4, 0.6)},
+	],
+	"castle": [
+		{"name": "Vampiress", "hp": 1000, "dmg": 35, "spd": 5.0, "color": Color(0.5, 0.0, 0.2)},
+		{"name": "Armored Gargoyle", "hp": 1200, "dmg": 28, "spd": 3.0, "color": Color(0.4, 0.4, 0.45)},
+		{"name": "Ghost Samurai", "hp": 600, "dmg": 45, "spd": 6.5, "color": Color(0.2, 0.5, 0.7)},
+	],
+	"candy": [
+		{"name": "Triple Layer Cake", "hp": 1100, "dmg": 30, "spd": 3.5, "color": Color(0.9, 0.6, 0.7)},
+		{"name": "Chocolate Golem", "hp": 1300, "dmg": 22, "spd": 2.0, "color": Color(0.4, 0.2, 0.1)},
+		{"name": "Sugar Rush Pixie", "hp": 400, "dmg": 35, "spd": 9.0, "color": Color(1.0, 0.8, 0.3)},
+	],
+}
+
+static func get_random_miniboss(stage: String) -> Dictionary:
+	var pool = MINIBOSS_POOL.get(stage, MINIBOSS_POOL.get("cemetery", []))
+	if pool.is_empty():
+		return {"name": "Giant Zombie", "hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)}
+	return pool[randi() % pool.size()]
 
 # ==================================================================
 # DISPLAY

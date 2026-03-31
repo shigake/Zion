@@ -361,7 +361,7 @@ func _process_boss_rush(delta: float) -> void:
 
 	AudioManager.play_music("boss")
 
-	var path = GameConstants.BOSS_SCENE_PATHS.get(_boss_rush_stages[_boss_rush_index], "res://scenes/enemies/boss_necromancer.tscn")
+	var path = GameConstants.get_random_boss_path(_boss_rush_stages[_boss_rush_index])
 	var boss = load(path).instantiate()
 	add_child(boss)
 	boss.global_position = spawn_pos
@@ -451,8 +451,8 @@ func _spawn_boss() -> void:
 
 	AudioManager.play_music("boss")
 
-	# Boss por stage
-	var boss_scene_path: String = GameConstants.BOSS_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/enemies/boss_necromancer.tscn")
+	# Boss aleatorio do pool da fenda
+	var boss_scene_path: String = GameConstants.get_random_boss_path(GameManager.selected_stage)
 	var boss_scene_res = load(boss_scene_path)
 	var boss = boss_scene_res.instantiate()
 	add_child(boss)
