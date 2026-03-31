@@ -69,27 +69,21 @@ func _build_ui() -> void:
 	bg.anchor_bottom = 1.0
 	add_child(bg)
 
-	# Main scroll container
-	var scroll := ScrollContainer.new()
-	scroll.anchors_preset = Control.PRESET_FULL_RECT
-	scroll.anchor_right = 1.0
-	scroll.anchor_bottom = 1.0
-	scroll.offset_left = 40
-	scroll.offset_top = 20
-	scroll.offset_right = -40
-	scroll.offset_bottom = -20
-	add_child(scroll)
-
+	# Main layout (no outer scroll — fits 1280x720)
 	var main_vbox := VBoxContainer.new()
-	main_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_vbox.add_theme_constant_override("separation", 16)
-	scroll.add_child(main_vbox)
+	main_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	main_vbox.offset_left = 40
+	main_vbox.offset_top = 20
+	main_vbox.offset_right = -40
+	main_vbox.offset_bottom = -20
+	main_vbox.add_theme_constant_override("separation", 10)
+	add_child(main_vbox)
 
 	# Title
 	_title_label = Label.new()
 	_title_label.text = "Desafio diario"
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override("font_size", 36)
+	_title_label.add_theme_font_size_override("font_size", 26)
 	_title_label.add_theme_color_override("font_color", COLOR_GOLD)
 	main_vbox.add_child(_title_label)
 
@@ -147,10 +141,10 @@ func _build_ui() -> void:
 	# --- Play button ---
 	_play_btn = Button.new()
 	_play_btn.text = "Jogar desafio diario"
-	_play_btn.custom_minimum_size = Vector2(300, 52)
+	_play_btn.custom_minimum_size = Vector2(280, 44)
 	_play_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_play_btn.focus_mode = Control.FOCUS_ALL
-	_play_btn.add_theme_font_size_override("font_size", 20)
+	_play_btn.add_theme_font_size_override("font_size", 18)
 	_style_play_button(_play_btn)
 	_play_btn.pressed.connect(_on_play)
 	main_vbox.add_child(_play_btn)
@@ -159,16 +153,24 @@ func _build_ui() -> void:
 	_leaderboard_title = Label.new()
 	_leaderboard_title.text = "Top 10 de hoje"
 	_leaderboard_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_leaderboard_title.add_theme_font_size_override("font_size", 22)
+	_leaderboard_title.add_theme_font_size_override("font_size", 18)
 	_leaderboard_title.add_theme_color_override("font_color", COLOR_GOLD)
 	main_vbox.add_child(_leaderboard_title)
 
 	var lb_panel := _create_panel()
+	lb_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main_vbox.add_child(lb_panel)
+
+	var lb_scroll := ScrollContainer.new()
+	lb_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lb_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lb_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	lb_panel.add_child(lb_scroll)
 
 	_leaderboard_container = VBoxContainer.new()
 	_leaderboard_container.add_theme_constant_override("separation", 4)
-	lb_panel.add_child(_leaderboard_container)
+	_leaderboard_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lb_scroll.add_child(_leaderboard_container)
 
 	# --- Back button ---
 	_back_btn = Button.new()

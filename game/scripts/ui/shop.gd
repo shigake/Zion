@@ -12,7 +12,7 @@ var _grid: GridContainer
 var _buy_buttons: Array[Button] = []
 
 const GRID_COLS := 4
-const CARD_SIZE := Vector2(240, 150)
+const CARD_SIZE := Vector2(200, 130)
 
 func _ready() -> void:
 	get_tree().paused = false
@@ -112,11 +112,11 @@ func _create_upgrade_card(uid: String) -> void:
 	style.set_corner_radius_all(8)
 	style.set_border_width_all(2)
 	style.border_color = Color(0.25, 0.25, 0.35) if not maxed else Color(0.2, 0.5, 0.2)
-	style.set_content_margin_all(10)
+	style.set_content_margin_all(6)
 	card.add_theme_stylebox_override("panel", style)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.add_theme_constant_override("separation", 2)
 	card.add_child(vbox)
 
 	# Header: icon + name + level
@@ -128,7 +128,7 @@ func _create_upgrade_card(uid: String) -> void:
 	if ResourceLoader.exists(icon_path):
 		var icon = TextureRect.new()
 		icon.texture = load(icon_path)
-		icon.custom_minimum_size = Vector2(32, 32)
+		icon.custom_minimum_size = Vector2(24, 24)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		header.add_child(icon)
@@ -140,7 +140,7 @@ func _create_upgrade_card(uid: String) -> void:
 
 	var name_lbl = Label.new()
 	name_lbl.text = data["name"]
-	name_lbl.add_theme_font_size_override("font_size", 16)
+	name_lbl.add_theme_font_size_override("font_size", 13)
 	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8) if not maxed else Color(0.3, 0.9, 0.4))
 	name_vbox.add_child(name_lbl)
 
@@ -169,10 +169,10 @@ func _create_upgrade_card(uid: String) -> void:
 	# Description
 	var desc_lbl = Label.new()
 	desc_lbl.text = data["description"]
-	desc_lbl.add_theme_font_size_override("font_size", 12)
+	desc_lbl.add_theme_font_size_override("font_size", 10)
 	desc_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.65))
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_lbl.custom_minimum_size = Vector2(0, 30)
+	desc_lbl.custom_minimum_size = Vector2(0, 20)
 	vbox.add_child(desc_lbl)
 
 	# Current bonus display
@@ -208,7 +208,7 @@ func _create_upgrade_card(uid: String) -> void:
 
 	# Buy button
 	var btn = Button.new()
-	btn.custom_minimum_size = Vector2(0, 32)
+	btn.custom_minimum_size = Vector2(0, 26)
 	btn.focus_mode = Control.FOCUS_ALL
 	if maxed:
 		btn.text = "✓ MAX"

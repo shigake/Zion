@@ -183,27 +183,21 @@ func _build_ui() -> void:
 	bg.anchor_bottom = 1.0
 	add_child(bg)
 
-	# Main scroll
-	var scroll := ScrollContainer.new()
-	scroll.anchors_preset = Control.PRESET_FULL_RECT
-	scroll.anchor_right = 1.0
-	scroll.anchor_bottom = 1.0
-	scroll.offset_left = 40
-	scroll.offset_top = 20
-	scroll.offset_right = -40
-	scroll.offset_bottom = -20
-	add_child(scroll)
-
+	# Main layout (no outer scroll — fits 1280x720)
 	var main_vbox := VBoxContainer.new()
-	main_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_vbox.add_theme_constant_override("separation", 12)
-	scroll.add_child(main_vbox)
+	main_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	main_vbox.offset_left = 40
+	main_vbox.offset_top = 20
+	main_vbox.offset_right = -40
+	main_vbox.offset_bottom = -20
+	main_vbox.add_theme_constant_override("separation", 8)
+	add_child(main_vbox)
 
 	# Title
 	_title_label = Label.new()
 	_title_label.text = "Ranking global"
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override("font_size", 32)
+	_title_label.add_theme_font_size_override("font_size", 26)
 	_title_label.add_theme_color_override("font_color", COLOR_GOLD)
 	main_vbox.add_child(_title_label)
 
@@ -238,13 +232,21 @@ func _build_ui() -> void:
 		tab_hbox.add_child(btn)
 		_tab_buttons.append(btn)
 
-	# --- Entries panel ---
+	# --- Entries panel (scrollable internally for long lists) ---
 	var entries_panel := _create_panel()
+	entries_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main_vbox.add_child(entries_panel)
+
+	var entries_scroll := ScrollContainer.new()
+	entries_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	entries_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	entries_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	entries_panel.add_child(entries_scroll)
 
 	_entries_container = VBoxContainer.new()
 	_entries_container.add_theme_constant_override("separation", 2)
-	entries_panel.add_child(_entries_container)
+	_entries_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	entries_scroll.add_child(_entries_container)
 
 	# --- Player rank summary ---
 	_player_rank_label = Label.new()

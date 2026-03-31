@@ -3,8 +3,8 @@ extends Control
 ## Codex de armas — catalogo de todas as armas com stats e info de evolucao.
 ## Ao clicar numa arma, exibe detalhes e visual no painel direito.
 
-const COLUMNS := 4
-const CARD_SIZE := Vector2(175, 130)
+const COLUMNS := 5
+const CARD_SIZE := Vector2(145, 100)
 
 var grid: GridContainer
 var back_btn: Button
@@ -47,7 +47,7 @@ func _build_ui() -> void:
 	var title = Label.new()
 	title.text = "Codex de armas"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0))
 	main_vbox.add_child(title)
 
@@ -250,7 +250,7 @@ func _populate_grid() -> void:
 		card_btn.pressed.connect(_show_weapon_details.bind(weapon_id, data, is_unlocked, type_color, type_icon))
 		grid.add_child(card_btn)
 
-	# Bug 2 fix — setup focus_neighbors for grid navigation (4 columns)
+	# Bug 2 fix — setup focus_neighbors for grid navigation
 	_setup_grid_focus(grid, COLUMNS)
 	# Connect last row to back_btn
 	var cards = grid.get_children()

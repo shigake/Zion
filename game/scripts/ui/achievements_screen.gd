@@ -6,7 +6,7 @@ extends Control
 ## Counter "X/13 conquistas" at top.
 
 const COLUMNS := 3
-const CARD_SIZE := Vector2(380, 100)
+const CARD_SIZE := Vector2(380, 78)
 const COLOR_BG := Color(0.08, 0.08, 0.12, 1.0)
 const COLOR_GOLD := Color(1.0, 0.85, 0.2)
 const COLOR_GOLD_DIM := Color(0.7, 0.6, 0.2)
@@ -177,19 +177,19 @@ func _create_card(id: String, ach: Dictionary, is_unlocked: bool) -> PanelContai
 	sb.border_color = COLOR_CARD_BORDER_UNLOCKED if is_unlocked else COLOR_CARD_BORDER
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(6)
-	sb.content_margin_left = 12
-	sb.content_margin_right = 12
-	sb.content_margin_top = 10
-	sb.content_margin_bottom = 10
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 6
+	sb.content_margin_bottom = 6
 	card.add_theme_stylebox_override("panel", sb)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 12)
+	hbox.add_theme_constant_override("separation", 10)
 	card.add_child(hbox)
 
 	# Icon
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(48, 48)
+	icon.custom_minimum_size = Vector2(40, 40)
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

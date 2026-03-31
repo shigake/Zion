@@ -4,8 +4,8 @@ extends Control
 ## Auto-popula inimigos tematicos lendo STAGE_ENEMY_SPRITES de enemy_base.gd.
 ## Sempre que um novo inimigo for adicionado em enemy_base, aparece aqui automaticamente.
 
-const COLUMNS := 4
-const CARD_SIZE := Vector2(155, 115)
+const COLUMNS := 5
+const CARD_SIZE := Vector2(130, 95)
 
 # Referencia ao script base de inimigos para ler dados tematicos
 const EnemyBase = preload("res://scripts/enemies/enemy_base.gd")
@@ -322,7 +322,7 @@ func _build_ui() -> void:
 	var title = Label.new()
 	title.text = "Bestiario"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_bar.add_child(title)

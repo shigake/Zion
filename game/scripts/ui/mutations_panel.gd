@@ -77,7 +77,7 @@ func _build_mutation_cards() -> void:
 
 func _create_card(mutation: Dictionary) -> PanelContainer:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(280, 120)
+	card.custom_minimum_size = Vector2(260, 100)
 
 	# Card style
 	var card_style = StyleBoxFlat.new()
