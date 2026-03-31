@@ -79,6 +79,9 @@ func _fire(level: int) -> void:
 
 	for i in range(num_arrows):
 		var arrow = ObjectPool.get_instance(arrow_scene)
+		if not "direction" in arrow:
+			arrow.queue_free()
+			continue
 		var pos = player_pos + Vector3(0, 0.5, 0)
 		var spread = (randf() - 0.5) * 0.2 * i
 		var spread_dir = direction.rotated(Vector3.UP, spread)

@@ -79,6 +79,9 @@ func _fire(level: int) -> void:
 
 	# Create piercing bolt — does NOT destroy on hit
 	var bolt = ObjectPool.get_instance(projectile_scene)
+	if not "direction" in bolt:
+		bolt.queue_free()
+		return
 	var pos = player_pos + Vector3(0, 0.5, 0)
 	bolt.direction = direction.normalized()
 	bolt.damage = dmg

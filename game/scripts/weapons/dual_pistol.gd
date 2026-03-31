@@ -85,6 +85,9 @@ func _fire(level: int) -> void:
 		return
 
 	var bullet = ObjectPool.get_instance(projectile_scene)
+	if not "direction" in bullet:
+		bullet.queue_free()
+		return
 	# Small spread
 	var spread = (randf() - 0.5) * 0.15
 	var spread_dir = direction.rotated(Vector3.UP, spread)

@@ -70,6 +70,9 @@ func _fire(level: int) -> void:
 		return
 
 	var bullet = ObjectPool.get_instance(projectile_scene)
+	if not "direction" in bullet:
+		bullet.queue_free()
+		return
 	var pos = player_pos + Vector3(0, 0.5, 0)
 	bullet.direction = aim_dir.normalized()
 	bullet.damage = dmg

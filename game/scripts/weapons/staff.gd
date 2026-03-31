@@ -75,6 +75,9 @@ func _fire(level: int) -> void:
 		# Manual aim: fire straight projectiles (no homing)
 		for i in range(num_projectiles):
 			var proj = ObjectPool.get_instance(projectile_scene)
+			if not "direction" in proj:
+				proj.queue_free()
+				continue
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = null  # No homing target
 			proj.direction = GameManager.aim_direction
@@ -90,6 +93,9 @@ func _fire(level: int) -> void:
 			if not is_instance_valid(t):
 				continue
 			var proj = ObjectPool.get_instance(projectile_scene)
+			if not "direction" in proj:
+				proj.queue_free()
+				continue
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = int(WeaponDB.get_damage("staff", level))
@@ -121,6 +127,9 @@ func _fire_visual_only(level: int) -> void:
 	if GameManager.manual_aim:
 		for i in range(num_projectiles):
 			var proj = ObjectPool.get_instance(projectile_scene)
+			if not "direction" in proj:
+				proj.queue_free()
+				continue
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = null
 			proj.direction = GameManager.aim_direction
@@ -139,6 +148,9 @@ func _fire_visual_only(level: int) -> void:
 			if not is_instance_valid(t):
 				continue
 			var proj = ObjectPool.get_instance(projectile_scene)
+			if not "direction" in proj:
+				proj.queue_free()
+				continue
 			var pos = player_pos + Vector3(0, 0.5, 0)
 			proj.target = t
 			proj.damage = 0

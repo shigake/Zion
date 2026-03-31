@@ -79,6 +79,9 @@ func _fire(level: int) -> void:
 
 	# Create ice crystal projectile
 	var bullet = ObjectPool.get_instance(projectile_scene)
+	if not "direction" in bullet:
+		bullet.queue_free()
+		return
 	var pos = player_pos + Vector3(0, 0.5, 0)
 	bullet.direction = direction.normalized()
 	bullet.damage = dmg
@@ -139,6 +142,9 @@ func _fire_visual_only(level: int) -> void:
 		return
 
 	var proj = ObjectPool.get_instance(projectile_scene)
+	if not "direction" in proj:
+		proj.queue_free()
+		return
 	var pos = player_pos + Vector3(0, 0.5, 0)
 	proj.direction = direction.normalized()
 	proj.damage = 0

@@ -101,6 +101,9 @@ func _fire(level: int) -> void:
 		return
 	for i in range(num_bullets):
 		var bullet = ObjectPool.get_instance(projectile_scene)
+		if not "direction" in bullet:
+			bullet.queue_free()
+			continue
 		var spread = (randf() - 0.5) * 0.15
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		bullet.direction = spread_dir.normalized()

@@ -145,6 +145,9 @@ func _fire_page(level: int) -> void:
 		return
 	for i in range(num_pages):
 		var page = ObjectPool.get_instance(projectile_scene)
+		if not "direction" in page:
+			page.queue_free()
+			continue
 		var spread = (randf() - 0.5) * 0.2
 		var spread_dir = direction.rotated(Vector3.UP, spread)
 		page.direction = spread_dir.normalized()
