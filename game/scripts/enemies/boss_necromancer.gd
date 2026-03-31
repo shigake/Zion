@@ -92,6 +92,7 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 2.0
 				_telegraph_attack(global_position, 3.0)
 				_fire_projectiles(4)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 3.5, int(damage * 0.3), 1.0, Color(0.5, 0.2, 0.8, 0.3))
 		3:
 			if summon_timer <= 0:
 				summon_timer = 2.0
@@ -101,6 +102,7 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 1.0
 				_telegraph_attack(global_position, 3.0)
 				_fire_projectiles(8)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 5.0, int(damage * 0.4), 0.8, Color(0.6, 0.1, 0.9, 0.4))
 
 func _summon_skeletons(count: int) -> void:
 	AudioManager.play_sfx("boss_attack")

@@ -119,6 +119,7 @@ func _physics_process(delta: float) -> void:
 				slam_timer = 5.0
 				_telegraph_attack(global_position, 4.0)
 				_ground_slam(4.0)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 4.0, int(damage * 0.5), 1.0, Color(1.0, 0.3, 0.0, 0.4))
 			if attack_timer <= 0:
 				attack_timer = 3.5
 				_telegraph_attack(global_position, 3.0)
@@ -133,6 +134,9 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 1.5
 				_telegraph_attack(global_position, 4.0)
 				_fire_flame_spiral(12)
+				if target and is_instance_valid(target):
+					var dir_to_player = (target.global_position - global_position).normalized()
+					BossAttackPatterns.cone_aoe(get_tree().current_scene, global_position, dir_to_player, 6.0, 60.0, int(damage * 0.4), 0.8, Color(1.0, 0.4, 0.0, 0.3))
 			if summon_timer <= 0:
 				summon_timer = 5.0
 				_telegraph_attack(global_position, 4.0)

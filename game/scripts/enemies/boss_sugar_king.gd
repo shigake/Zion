@@ -110,11 +110,15 @@ func _physics_process(delta: float) -> void:
 				star_timer = 2.5
 				_telegraph_attack(global_position, 3.0)
 				_star_burst(8)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 3.5, int(damage * 0.25), 1.0, Color(1.0, 0.5, 0.8, 0.3))
 			# Candy projectiles
 			if attack_timer <= 0:
 				attack_timer = 3.5
 				_telegraph_attack(global_position, 3.0)
 				_candy_projectiles(6)
+				if target and is_instance_valid(target):
+					var dir = (target.global_position - global_position).normalized()
+					BossAttackPatterns.cone_aoe(get_tree().current_scene, global_position, dir, 5.0, 50.0, int(damage * 0.2), 0.8, Color(1.0, 0.4, 0.6, 0.3))
 			# Summon cupcake bombers
 			if summon_timer <= 0:
 				summon_timer = 5.0

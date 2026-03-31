@@ -89,6 +89,7 @@ func _physics_process(delta: float) -> void:
 				ring_timer = 3.5
 				_telegraph_attack(global_position, 3.0)
 				_fire_projectile_ring(6)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 3.5, int(damage * 0.25), 1.2, Color(0.5, 0.2, 1.0, 0.3))
 			# Spawn alien parasites (slimes)
 			if summon_timer <= 0:
 				summon_timer = 5.0

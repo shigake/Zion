@@ -115,6 +115,9 @@ func _physics_process(delta: float) -> void:
 				sweep_timer = 3.0
 				_telegraph_attack(global_position, 4.0)
 				_sword_sweep()
+				if target and is_instance_valid(target):
+					var dir = (target.global_position - global_position).normalized()
+					BossAttackPatterns.cone_aoe(get_tree().current_scene, global_position, dir, 4.0, 90.0, int(damage * 0.5), 0.8, Color(0.9, 0.7, 0.2, 0.3))
 			if summon_timer <= 0:
 				summon_timer = 6.0
 				_telegraph_attack(global_position, 3.0)

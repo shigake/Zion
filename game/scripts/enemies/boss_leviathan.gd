@@ -127,6 +127,7 @@ func _physics_process(delta: float) -> void:
 				slam_timer = 3.0
 				_telegraph_attack(global_position, 5.0)
 				_tentacle_slam(5.0)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 5.0, int(damage * 0.5), 1.2, Color(0.1, 0.3, 0.8, 0.3))
 			if summon_timer <= 0:
 				summon_timer = 4.0
 				_telegraph_attack(global_position, 3.0)

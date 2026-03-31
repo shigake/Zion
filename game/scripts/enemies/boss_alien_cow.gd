@@ -84,6 +84,7 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 3.0
 				_telegraph_attack(global_position, 3.0)
 				_fire_projectile_ring(6, 5.0)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 3.0, int(damage * 0.3), 1.0, Color(0.3, 1.0, 0.3, 0.3))
 		2:
 			# Abduction beam + projectiles
 			if abduct_timer <= 0:

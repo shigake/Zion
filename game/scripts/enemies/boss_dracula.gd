@@ -104,6 +104,9 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 3.0
 				_telegraph_attack(global_position, 3.0)
 				_blood_fan(5)
+				if target and is_instance_valid(target):
+					var dir_to_player = (target.global_position - global_position).normalized()
+					BossAttackPatterns.cone_aoe(get_tree().current_scene, global_position, dir_to_player, 5.0, 45.0, int(damage * 0.3), 0.8, Color(0.8, 0.1, 0.1, 0.3))
 			# Summon vampire minions (skeletons)
 			if summon_timer <= 0:
 				summon_timer = 5.0
@@ -129,6 +132,7 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 2.0
 				if target and is_instance_valid(target):
 					_telegraph_attack(target.global_position, 7.0)
+					BossAttackPatterns.circle_aoe(get_tree().current_scene, target.global_position, 4.0, int(damage * 0.35), 1.2, Color(0.7, 0.0, 0.0, 0.3))
 				_blood_rain(8)
 			# Rapid teleport
 			if teleport_timer <= 0:

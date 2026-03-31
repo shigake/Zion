@@ -98,6 +98,7 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 3.0
 				if target and is_instance_valid(target):
 					_telegraph_attack(target.global_position, 6.0)
+					BossAttackPatterns.circle_aoe(get_tree().current_scene, target.global_position, 3.5, int(damage * 0.3), 1.0, Color(0.2, 0.8, 0.3, 0.3))
 				_thorn_rain(6)
 			if summon_timer <= 0:
 				summon_timer = 5.0

@@ -89,6 +89,7 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 3.0
 				_telegraph_attack(global_position, 3.0)
 				_fire_laser_grid(8)
+				BossAttackPatterns.circle_aoe(get_tree().current_scene, global_position, 4.0, int(damage * 0.3), 1.0, Color(0.2, 0.5, 1.0, 0.3))
 		2:
 			# Glitch: teleport, virus minions, more lasers
 			if teleport_timer <= 0:
