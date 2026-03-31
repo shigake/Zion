@@ -1,4 +1,5 @@
 class_name SpatialEnemyGrid
+extends RefCounted
 
 ## Grid espacial para queries eficientes de inimigos por posicao.
 ## Usado internamente pelo GameManager — nao e autoload separado.

@@ -1,4 +1,4 @@
-class_name GameConstants
+extends Node
 
 ## Constantes centralizadas do projeto. Fonte unica de verdade para
 ## listas, valores de balance e configuracoes de display.

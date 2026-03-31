@@ -21,6 +21,7 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 
 [autoload]
 
+GameConstants="*res://scripts/autoload/game_constants.gd"
 LogManager="*res://scripts/autoload/log_manager.gd"
 PlatformHelper="*res://scripts/autoload/platform_helper.gd"
 GameManager="*res://scripts/autoload/game_manager.gd"
