@@ -1,3 +1,5 @@
+## Status: ✅ CONCLUIDO
+
 # PRD 01 — Quest trava no 29/30
 
 ## Problema

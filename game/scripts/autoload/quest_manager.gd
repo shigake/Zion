@@ -102,6 +102,8 @@ func _update_quest_progress(delta: float) -> void:
 
 	quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
 	if completed:
+		# Delay para HUD mostrar X/X antes de completar
+		await get_tree().create_timer(0.3).timeout
 		_complete_quest()
 
 func _complete_quest() -> void:
