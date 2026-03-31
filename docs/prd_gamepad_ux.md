@@ -2,7 +2,7 @@
 
 > Correção de bugs e melhorias na navegação por controle (gamepad/joystick) nas telas de seleção de personagem, menu de opções e pause menu.
 
-## Status: ⏳ Pendente
+## Status: ✅ Concluído
 
 ---
 

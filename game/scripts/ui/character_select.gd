@@ -5,6 +5,7 @@ extends Control
 
 var all_character_ids: Array[String] = []
 var current_index: int = 0
+var _confirmed_index: int = -1
 var _bob_tween: Tween = null
 
 # -- UI refs --
@@ -543,7 +544,10 @@ func _update_selection() -> void:
 
 	# Lock
 	if is_locked:
-		_lock_label.text = "🔒 %s" % data.get("unlock_description", "???")
+		var unlock_desc = data.get("unlock_description", "???")
+		if typeof(unlock_desc) != TYPE_STRING:
+			unlock_desc = str(unlock_desc) if unlock_desc != null else "???"
+		_lock_label.text = "🔒 %s" % unlock_desc
 		_lock_label.visible = true
 		_start_btn.disabled = true
 		_start_btn.text = "BLOQUEADO"
@@ -620,6 +624,8 @@ func _start_bob_animation() -> void:
 #  INPUT & NAVIGATION
 # ===========================================================================
 func _select_character(idx: int) -> void:
+	if idx != current_index:
+		_confirmed_index = -1
 	current_index = idx
 	_update_selection()
 
@@ -628,26 +634,37 @@ func _unhandled_input(event: InputEvent) -> void:
 		current_index = (current_index - 1) % all_character_ids.size()
 		if current_index < 0:
 			current_index = all_character_ids.size() - 1
+		_confirmed_index = -1
 		_update_selection()
 		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
 		current_index = (current_index + 1) % all_character_ids.size()
+		_confirmed_index = -1
 		_update_selection()
 		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
 		var new_idx := current_index - GRID_COLS
 		if new_idx >= 0:
 			current_index = new_idx
+			_confirmed_index = -1
 			_update_selection()
 		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
 		var new_idx := current_index + GRID_COLS
 		if new_idx < all_character_ids.size():
 			current_index = new_idx
+			_confirmed_index = -1
 			_update_selection()
 		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		_on_start()
+		if current_index == _confirmed_index:
+			# Segunda confirmacao no mesmo personagem → jogar
+			_on_start()
+		else:
+			# Primeira confirmacao → apenas seleciona
+			_confirmed_index = current_index
+			_update_selection()
+			AudioManager.play_sfx("menu_click")
 		if get_viewport(): get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		_on_back()

@@ -27,6 +27,12 @@ func _ready() -> void:
 		InputMap.action_add_event("ui_tab_prev", ev_l1)
 	_build_ui()
 	GamepadUI.notify_menu_opened()
+	# Foco inicial no primeiro controle da aba ativa
+	call_deferred("_set_tab_focus")
+	# Quando trocar de aba, mover foco para o primeiro controle
+	tab_container.tab_changed.connect(func(_tab: int) -> void:
+		call_deferred("_set_tab_focus")
+	)
 
 # ---------------------------------------------------------------------------
 # Helpers — save / load
@@ -67,6 +73,7 @@ func _add_toggle(parent: Control, label_text: String, key: String, default_val: 
 	hbox.add_child(label)
 
 	var btn := CheckButton.new()
+	btn.focus_mode = Control.FOCUS_ALL
 	btn.button_pressed = _load_setting(key, default_val)
 	btn.toggled.connect(func(pressed: bool) -> void:
 		_save(key, pressed)
@@ -93,6 +100,7 @@ func _add_slider(parent: Control, label_text: String, key: String, min_val: floa
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	var slider := HSlider.new()
+	slider.focus_mode = Control.FOCUS_ALL
 	slider.custom_minimum_size = Vector2(200, 0)
 	slider.min_value = min_val
 	slider.max_value = max_val
@@ -121,6 +129,7 @@ func _add_dropdown(parent: Control, label_text: String, key: String, options: Ar
 	hbox.add_child(label)
 
 	var option_btn := OptionButton.new()
+	option_btn.focus_mode = Control.FOCUS_ALL
 	option_btn.custom_minimum_size = Vector2(160, 0)
 	for i in range(options.size()):
 		option_btn.add_item(str(options[i]), i)
@@ -223,11 +232,13 @@ func _build_ui() -> void:
 
 	var reset_btn := Button.new()
 	reset_btn.text = "Restaurar padrao"
+	reset_btn.focus_mode = Control.FOCUS_ALL
 	reset_btn.pressed.connect(_on_reset_tab)
 	footer.add_child(reset_btn)
 
 	var back_btn := Button.new()
 	back_btn.text = "Voltar"
+	back_btn.focus_mode = Control.FOCUS_ALL
 	back_btn.pressed.connect(_on_back)
 	footer.add_child(back_btn)
 
@@ -563,6 +574,26 @@ func _build_tab_idioma() -> void:
 		t)
 
 # ---------------------------------------------------------------------------
+# Gamepad focus helpers
+# ---------------------------------------------------------------------------
+func _set_tab_focus() -> void:
+	var tab_content := tab_container.get_current_tab_control()
+	if tab_content:
+		var focusable := _find_first_focusable(tab_content)
+		if focusable:
+			focusable.grab_focus()
+
+func _find_first_focusable(node: Node) -> Control:
+	if node is HSlider or node is CheckButton or node is OptionButton or (node is Button and not node is CheckButton):
+		if (node as Control).focus_mode != Control.FOCUS_NONE:
+			return node as Control
+	for child in node.get_children():
+		var result := _find_first_focusable(child)
+		if result:
+			return result
+	return null
+
+# ---------------------------------------------------------------------------
 # Keybinding rebind
 # ---------------------------------------------------------------------------
 func _start_rebind(action: String, btn: Button) -> void:
@@ -575,11 +606,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("ui_tab_next"):
 			tab_container.current_tab = (tab_container.current_tab + 1) % tab_container.get_tab_count()
 			AudioManager.play_sfx("menu_click")
+			call_deferred("_set_tab_focus")
 			if get_viewport(): get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("ui_tab_prev"):
 			tab_container.current_tab = (tab_container.current_tab - 1 + tab_container.get_tab_count()) % tab_container.get_tab_count()
 			AudioManager.play_sfx("menu_click")
+			call_deferred("_set_tab_focus")
 			if get_viewport(): get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("ui_cancel"):

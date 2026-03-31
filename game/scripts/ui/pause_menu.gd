@@ -61,6 +61,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			if get_viewport(): get_viewport().set_input_as_handled()
 		return
 
+	# ui_cancel fecha opcoes se estiverem abertas
+	if event.is_action_pressed("ui_cancel") and options_panel and is_instance_valid(options_panel):
+		options_panel.queue_free()
+		options_panel = null
+		# Restaurar foco no pause menu
+		_setup_pause_focus()
+		if $Panel/VBox.get_child_count() > 0:
+			for child in $Panel/VBox.get_children():
+				if child is Button:
+					child.grab_focus()
+					break
+		if get_viewport(): get_viewport().set_input_as_handled()
+		return
+
 	if event.is_action_pressed("pause") and not GameManager.is_game_over:
 		if options_panel and is_instance_valid(options_panel):
 			options_panel.queue_free()
@@ -460,6 +474,38 @@ func _on_options() -> void:
 	vbox.add_child(close_btn)
 
 	add_child(options_panel)
+
+	# Gamepad focus: setar FOCUS_ALL em todos controles interativos e grab_focus no primeiro
+	_setup_options_focus(vbox)
+
+func _setup_options_focus(container: Control) -> void:
+	var focusable_controls: Array[Control] = []
+	_collect_focusable(container, focusable_controls)
+
+	for ctrl in focusable_controls:
+		ctrl.focus_mode = Control.FOCUS_ALL
+
+	# Conectar vizinhos de foco (cima/baixo)
+	for i in range(focusable_controls.size()):
+		var ctrl := focusable_controls[i]
+		if i > 0:
+			ctrl.focus_neighbor_top = focusable_controls[i - 1].get_path()
+		else:
+			ctrl.focus_neighbor_top = focusable_controls[focusable_controls.size() - 1].get_path()
+		if i < focusable_controls.size() - 1:
+			ctrl.focus_neighbor_bottom = focusable_controls[i + 1].get_path()
+		else:
+			ctrl.focus_neighbor_bottom = focusable_controls[0].get_path()
+
+	# Foco inicial no primeiro controle
+	if focusable_controls.size() > 0:
+		focusable_controls[0].call_deferred("grab_focus")
+
+func _collect_focusable(node: Node, result: Array[Control]) -> void:
+	if node is HSlider or node is CheckButton or node is OptionButton or (node is Button and not node is CheckButton):
+		result.append(node as Control)
+	for child in node.get_children():
+		_collect_focusable(child, result)
 
 func _add_slider(parent: Control, label_text: String, bus_name: String, default_val: float) -> void:
 	var hbox = HBoxContainer.new()
