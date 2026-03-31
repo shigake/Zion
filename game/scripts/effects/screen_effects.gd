@@ -47,13 +47,6 @@ func _ready() -> void:
 	_vignette_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_vignette_canvas.add_child(_vignette_rect)
 
-	# Damage flash overlay (bright red, separate layer)
-	_damage_flash_rect = ColorRect.new()
-	_damage_flash_rect.anchors_preset = Control.PRESET_FULL_RECT
-	_damage_flash_rect.color = Color(0.8, 0.0, 0.0, 0.0)
-	_damage_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_vignette_canvas.add_child(_damage_flash_rect)
-
 	# Generic flash overlay (white, for level-up / boss entrance)
 	_flash_overlay = ColorRect.new()
 	_flash_overlay.anchors_preset = Control.PRESET_FULL_RECT
@@ -103,9 +96,6 @@ func _process(delta: float) -> void:
 
 	# Low-HP vignette
 	_update_vignette()
-
-	# Damage flash decay
-	_update_damage_flash(delta)
 
 	# Damage intensity decay (for any post-process effects)
 	if _damage_intensity > 0.0:
@@ -205,20 +195,13 @@ func damage_feedback(damage_amount: int, damage_source_pos: Vector3 = Vector3.ZE
 	if damage_ratio > GameConstants.DAMAGE_FREEZE_THRESHOLD:
 		hit_freeze(GameConstants.DAMAGE_FREEZE_DURATION)
 
-	# 3. Red screen flash
-	damage_flash(GameConstants.DAMAGE_FLASH_BASE + damage_ratio * GameConstants.DAMAGE_FLASH_SCALE)
-
-	# 4. Damage intensity for post-processing
+	# 3. Damage intensity for post-processing
 	_damage_intensity = clampf(damage_ratio * GameConstants.DAMAGE_INTENSITY_SCALE, GameConstants.DAMAGE_INTENSITY_MIN, 1.0)
 
-	# 5. Directional damage indicator
-	if damage_source_pos != Vector3.ZERO:
-		_spawn_damage_indicator(damage_source_pos)
-
-	# 6. Gamepad vibration
+	# 4. Gamepad vibration
 	_vibrate_gamepad(damage_ratio)
 
-	# 7. Signal for HUD
+	# 5. Signal for HUD
 	player_took_damage.emit()
 
 ## Red flash overlay on damage

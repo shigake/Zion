@@ -42,6 +42,7 @@ var _fever_shake_timer: float = 0.0
 # Merchant state
 var _merchant_node: Node3D = null
 var _merchant_items: Array = []
+var _merchant_ui_cooldown: float = 0.0
 
 # Portal Dimensional state
 var _portal_enemies_remaining: int = 0
@@ -101,21 +102,16 @@ func _process(delta: float) -> void:
 			_fever_shake_timer = 0.0
 			ScreenEffects.shake(GameConstants.FEVER_SHAKE_INTENSITY)
 
+	# Merchant UI cooldown
+	if _merchant_ui_cooldown > 0.0:
+		_merchant_ui_cooldown -= delta
+
 	# Evento ativo
 	if active_event != "":
 		event_timer -= delta
 		if event_timer <= 0:
 			_end_event()
 			return
-		# Merchant proximity check — fallback for when body_entered signal misses
-		if active_event == "merchant" and is_instance_valid(_merchant_node) and not get_node_or_null("MerchantUI"):
-			var merchant_players = GameManager.get_players()
-			if not merchant_players.is_empty():
-				var merchant_pos = _merchant_node.global_position
-				for mp in merchant_players:
-					if is_instance_valid(mp) and merchant_pos.distance_to(mp.global_position) < 3.0:
-						_show_merchant_ui()
-						break
 		return
 
 	# Check warnings for upcoming timed events (10s before)
@@ -397,7 +393,9 @@ func _spawn_merchant() -> void:
 	if players.is_empty():
 		return
 	var center = players[0].global_position
-	var offset = Vector3(rng.randf_range(-3, 3), 0, rng.randf_range(-3, 3))
+	var angle = rng.randf() * TAU
+	var dist = rng.randf_range(10.0, 15.0)
+	var offset = Vector3(cos(angle) * dist, 0, sin(angle) * dist)
 
 	# Cria NPC merchant visual — sprite pixel art
 	_merchant_node = Node3D.new()
@@ -511,6 +509,8 @@ func _check_merchant_overlap() -> void:
 func _on_merchant_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("players"):
 		return
+	if _merchant_ui_cooldown > 0.0:
+		return
 	_show_merchant_ui()
 
 func _show_merchant_ui() -> void:
@@ -530,7 +530,7 @@ func _show_merchant_ui() -> void:
 	var overlay = ColorRect.new()
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0, 0, 0, 0)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(overlay)
 
 	# Fade in overlay
@@ -801,6 +801,7 @@ func _show_merchant_ui() -> void:
 		canvas.queue_free()
 		GameManager.paused = false
 		get_tree().paused = false
+		_merchant_ui_cooldown = 2.0  # Impede reabertura por 2s
 	)
 	close_center.add_child(close_btn)
 
@@ -857,6 +858,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			ui.queue_free()
 			GameManager.paused = false
 			get_tree().paused = false
+			_merchant_ui_cooldown = 2.0
 
 func _cleanup_merchant() -> void:
 	if is_instance_valid(_merchant_node):

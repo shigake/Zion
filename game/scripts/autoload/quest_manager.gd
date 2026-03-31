@@ -100,10 +100,9 @@ func _update_quest_progress(delta: float) -> void:
 			_quest_progress = GameManager.player_level
 			completed = _quest_progress >= current_quest["target"]
 
+	quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
 	if completed:
 		_complete_quest()
-	else:
-		quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
 
 func _complete_quest() -> void:
 	_quest_active = false
@@ -137,10 +136,11 @@ func _on_enemy_killed(_pos: Vector3, _xp: int) -> void:
 		"kill":
 			# Checa imediatamente no signal para nao perder o ultimo kill
 			_quest_progress = GameManager.total_kills - _kill_count_at_start
+			quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
 			if _quest_progress >= current_quest["target"]:
+				# Delay para HUD mostrar X/X antes de completar
+				await get_tree().create_timer(0.4).timeout
 				_complete_quest()
-			else:
-				quest_progress.emit(current_quest, _quest_progress, current_quest["target"])
 		"kill_fast":
 			current_quest["_fast_kills"] = current_quest.get("_fast_kills", 0) + 1
 		"collect_xp":

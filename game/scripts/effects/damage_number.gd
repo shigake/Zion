@@ -19,6 +19,16 @@ func setup(value: int, color: Color = Color.WHITE, is_crit: bool = false) -> voi
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	visible = true
 
+func setup_text(msg: String, color: Color = Color.WHITE, size: int = 28) -> void:
+	text = msg
+	modulate = color
+	font_size = size
+	outline_size = 8
+	billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	velocity = Vector3(0, 2, 0)  # Sobe mais devagar que dano
+	lifetime = 1.2  # Dura mais para dar tempo de ler
+	visible = true
+
 func _reset_for_reuse() -> void:
 	timer = 0.0
 	velocity = Vector3(0, 3, 0)

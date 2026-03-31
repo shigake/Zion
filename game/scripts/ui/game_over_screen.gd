@@ -88,14 +88,9 @@ func _show() -> void:
 	if crystal_mult > 1.0:
 		crystals_label.text += " (x%.1f mutacoes)" % crystal_mult
 
-	# DPS
-	var dps: float = 0.0
-	if GameManager.game_time > 0:
-		dps = GameManager.total_damage_dealt / GameManager.game_time
-	dps_label.text = "DPS: %d" % int(dps)
-
-	# Peak enemies
-	peak_enemies_label.text = "Peak Enemies: %d" % GameManager.peak_enemies
+	# DPS e Peak enemies ocultos — info desnecessaria
+	dps_label.visible = false
+	peak_enemies_label.visible = false
 
 	# Character sprite at top of summary
 	var char_path = "res://assets/sprites/characters/%s.png" % GameManager.selected_character
@@ -114,39 +109,51 @@ func _show() -> void:
 	_clear_container(best_run_container)
 	_clear_container(timeline_container)
 
-	# Weapons obtained with levels + icons (sorted by DPS ranking)
+	# Weapons — grid compacto de icones
 	if GameManager.player_weapons.is_empty():
 		weapons_title.text = "Armas: -"
 	else:
 		weapons_title.text = "Armas:"
-		# Sort weapons by damage dealt (DPS ranking)
-		var sorted_weapons: Array = []
+		var grid = GridContainer.new()
+		grid.columns = 6
+		grid.add_theme_constant_override("h_separation", 8)
+		grid.add_theme_constant_override("v_separation", 4)
 		for w in GameManager.player_weapons:
-			var dmg_dealt = GameManager.weapon_damage_dealt.get(w["id"], 0)
-			sorted_weapons.append({"id": w["id"], "level": w["level"], "damage": dmg_dealt})
-		sorted_weapons.sort_custom(func(a, b): return a["damage"] > b["damage"])
-		for w in sorted_weapons:
 			var w_data = WeaponDB.weapons.get(w["id"], {})
 			var wname = w_data.get("name", w["id"])
-			var row = _create_icon_row(
-				"res://assets/sprites/weapons/%s.png" % w["id"],
-				"%s Lv.%d (%d dmg)" % [wname, w["level"], w["damage"]]
-			)
-			weapons_container.add_child(row)
+			var icon_path = "res://assets/sprites/weapons/%s.png" % w["id"]
+			var tex = TextureRect.new()
+			tex.custom_minimum_size = Vector2(32, 32)
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			if ResourceLoader.exists(icon_path):
+				tex.texture = load(icon_path)
+			tex.tooltip_text = "%s Lv.%d" % [wname, w["level"]]
+			grid.add_child(tex)
+		weapons_container.add_child(grid)
 
-	# Items obtained with levels + icons
+	# Items — grid compacto de icones
 	if GameManager.player_items.is_empty():
 		items_title.text = "Itens: -"
 	else:
 		items_title.text = "Itens:"
+		var items_grid = GridContainer.new()
+		items_grid.columns = 6
+		items_grid.add_theme_constant_override("h_separation", 8)
+		items_grid.add_theme_constant_override("v_separation", 4)
 		for it in GameManager.player_items:
 			var data = ItemDB.get_item(it["id"])
 			var iname = data.get("name", it["id"])
-			var row = _create_icon_row(
-				"res://assets/sprites/items/%s.png" % it["id"],
-				"%s Lv.%d" % [iname, it["level"]]
-			)
-			items_container.add_child(row)
+			var icon_path = "res://assets/sprites/items/%s.png" % it["id"]
+			var tex = TextureRect.new()
+			tex.custom_minimum_size = Vector2(32, 32)
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			if ResourceLoader.exists(icon_path):
+				tex.texture = load(icon_path)
+			tex.tooltip_text = "%s Lv.%d" % [iname, it["level"]]
+			items_grid.add_child(tex)
+		items_container.add_child(items_grid)
 
 	# Evolutions triggered + icons
 	if EvolutionDB.evolved_weapons.is_empty():
@@ -166,28 +173,16 @@ func _show() -> void:
 			)
 			evolutions_container.add_child(row)
 
-	# Events that happened
-	if GameManager.events_triggered.is_empty():
-		events_label.text = ""
-		events_label.visible = false
-	else:
-		# Deduplicate and capitalize event names
-		var unique_events: Array[String] = []
-		for ev in GameManager.events_triggered:
-			var display = ev.replace("_", " ").capitalize()
-			if display not in unique_events:
-				unique_events.append(display)
-		events_label.text = "Eventos: " + ", ".join(unique_events)
-		events_label.visible = true
+	# Events ocultos — info desnecessaria
+	events_label.visible = false
 
-	# --- Weapon DPS ranking with bars ---
-	_populate_dps_ranking()
-
-	# --- Best run comparison ---
-	_populate_best_run_comparison()
-
-	# --- Run timeline ---
-	_populate_timeline()
+	# Secoes detalhadas ocultas para manter a tela limpa
+	dps_ranking_title.visible = false
+	dps_ranking_container.visible = false
+	best_run_title.visible = false
+	best_run_container.visible = false
+	timeline_title.visible = false
+	timeline_scroll.visible = false
 
 	# Leaderboard rank para endless mode
 	if GameManager.game_mode == "endless":

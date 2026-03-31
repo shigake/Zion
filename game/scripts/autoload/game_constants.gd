@@ -365,9 +365,9 @@ const BOSS_FURIOUS_MUTATION_HP := 0.75  # Bosses furiosos comecam com 75% HP
 # ==================================================================
 const CRYSTAL_DROP_CHANCE := 0.3         # 30% base
 const CRYSTAL_DROP_CHANCE_KEY := 0.5     # 50% com master key
-const HEALTH_DROP_CHANCE := 0.05         # 5% base
-const HEALTH_DROP_BONUS_THRESHOLD := 0.4 # 40% HP threshold
-const HEALTH_DROP_BONUS_CHANCE := 0.03   # 3% extra quando HP baixo
+const HEALTH_DROP_CHANCE := 0.02         # 2% base (era 5%)
+const HEALTH_DROP_BONUS_THRESHOLD := 0.3 # 30% HP threshold (era 40%)
+const HEALTH_DROP_BONUS_CHANCE := 0.02   # 2% extra quando HP baixo (era 3%)
 const HEALTH_HEAL_FRACTION := 0.08       # 8% do max HP
 const MAGNET_DROP_CHANCE := 0.01         # 1% base
 const MAGNET_DROP_CHANCE_KEY := 0.02     # 2% com master key

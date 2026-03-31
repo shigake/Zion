@@ -132,34 +132,37 @@ func _ready() -> void:
 
 func _create_world_hp_bar() -> void:
 	# Barra verde de HP embaixo do sprite do jogador (world-space)
-	var bar_width = 1.0
-	var bar_height = 0.06
+	var bar_width = 1.8
+	var bar_height = 0.14
+	var bar_y = 0.05  # Bem rente ao chao, abaixo do sprite
 
-	# Background (cinza escuro)
+	# Background (cinza escuro com borda)
 	_world_hp_bg = MeshInstance3D.new()
-	var bg_mesh = BoxMesh.new()
-	bg_mesh.size = Vector3(bar_width + 0.04, bar_height, 0.01)
+	var bg_mesh = QuadMesh.new()
+	bg_mesh.size = Vector2(bar_width + 0.08, bar_height + 0.04)
 	_world_hp_bg.mesh = bg_mesh
 	var bg_mat = StandardMaterial3D.new()
-	bg_mat.albedo_color = Color(0.1, 0.1, 0.12, 0.8)
+	bg_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.85)
 	bg_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	bg_mat.no_depth_test = true
+	bg_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	_world_hp_bg.material_override = bg_mat
-	_world_hp_bg.position = Vector3(0, 0.15, 0)
+	_world_hp_bg.position = Vector3(0, bar_y, 0)
 	add_child(_world_hp_bg)
 
 	# Fill (verde)
 	_world_hp_bar = MeshInstance3D.new()
-	var fill_mesh = BoxMesh.new()
-	fill_mesh.size = Vector3(bar_width, bar_height - 0.02, 0.01)
+	var fill_mesh = QuadMesh.new()
+	fill_mesh.size = Vector2(bar_width, bar_height)
 	_world_hp_bar.mesh = fill_mesh
 	var fill_mat = StandardMaterial3D.new()
 	fill_mat.albedo_color = Color(0.2, 0.85, 0.2)
 	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	fill_mat.no_depth_test = true
+	fill_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	_world_hp_bar.material_override = fill_mat
-	_world_hp_bar.position = Vector3(0, 0.15, 0.001)
+	_world_hp_bar.position = Vector3(0, bar_y, 0.001)
 	add_child(_world_hp_bar)
 
 func _update_world_hp_bar() -> void:
@@ -168,7 +171,7 @@ func _update_world_hp_bar() -> void:
 	var max_hp = GameManager.get_effective_max_hp()
 	var ratio = clampf(float(GameManager.player_hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 1.0
 	_world_hp_bar.scale.x = ratio
-	_world_hp_bar.position.x = -(1.0 - ratio) * 0.5
+	_world_hp_bar.position.x = -(1.0 - ratio) * 0.9  # Metade da bar_width
 	# Cor muda com HP: verde → amarelo → vermelho
 	var mat = _world_hp_bar.material_override
 	if mat:

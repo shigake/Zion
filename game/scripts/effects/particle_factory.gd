@@ -168,6 +168,21 @@ func return_damage_number(label: Label3D) -> void:
 		label.get_parent().remove_child(label)
 	_dmg_pool.append(label)
 
+## Spawn a floating text label at a 3D position (for rewards, quest completion, etc.)
+func spawn_damage_number(pos: Vector3, text: String, color: Color = Color.WHITE) -> void:
+	var label = get_damage_number()
+	if not label:
+		return
+	label.setup_text(text, color)
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return_damage_number(label)
+		return
+	if not label.is_inside_tree():
+		scene.add_child(label)
+	label.global_position = pos
+	label.set_process(true)
+
 # --- Particle spawn methods ---
 
 ## Cached FPS value — updated every 15 frames to avoid per-call overhead

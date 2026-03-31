@@ -169,6 +169,7 @@ func _collect_chest(chest: Node3D) -> void:
 
 	chest_collected.emit(reward)
 	_active_chests.erase(chest)
+	chest.visible = false  # Feedback visual imediato
 	chest.queue_free()
 
 func get_active_chests() -> Array[Node3D]:
