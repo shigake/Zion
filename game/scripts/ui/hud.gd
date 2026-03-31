@@ -98,10 +98,9 @@ func _ready() -> void:
 
 	# Achievement popup handled by AchievementPopup autoload
 
-	# Character-themed HP bar — inicializa com personagem selecionado
+	# HP bar do HUD escondida — player tem barra world-space agora
 	hp_bar.visible = false
-	character_hp_bar.set_character(GameManager.selected_character)
-	character_hp_bar.set_hp(float(GameManager.player_hp), float(GameManager.player_max_hp * GameManager.max_hp_mult))
+	character_hp_bar.visible = false
 	_prev_hp = GameManager.player_hp
 
 	# Connect damage feedback signal
