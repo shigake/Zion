@@ -115,15 +115,15 @@ godot --headless --path game --export-release "Windows Desktop" ../build/zion.ex
 Zion/
 ├── CLAUDE.md               # Development guide (AI/dev instructions)
 ├── README.md               # This file
-├── docs/                   # Game design documents (12 files)
+├── docs/                   # Game design documents + PRDs + ADRs
 │   ├── gdd.md              # Game Design Document
-│   ├── prd.md              # Product Requirements Document (roadmap)
 │   ├── fases.md            # 10 stages detailed
 │   ├── itens.md            # Items, evolutions, relics
 │   ├── mecanicas.md        # Gameplay mechanics
 │   ├── personagens.md      # 15 characters and weapons
 │   ├── progressao.md       # Shop, crystals, meta-progression
-│   └── prd_*.md            # Active PRDs (qa, build, steam)
+│   ├── prd_01 a prd_15.md      # 15 PRDs concluidos (playtest, polish, cutscenes)
+│   └── adr/                    # 12 Architecture Decision Records
 ├── server/                 # Telemetry server (Node.js)
 │   ├── index.js            # Express + SQLite (API + dashboard)
 │   ├── package.json        # Dependencies (express, better-sqlite3)
@@ -202,4 +202,4 @@ Features: run statistics, crash reports, balance analytics, Discord webhook noti
 
 In active development. Current version: see `game/VERSION`.
 
-All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. 428+ sprites, 51 SFX, 16 music tracks. Full narrative layer (lore, backstories, boss dialogues). Telemetry dashboard. CI/CD pipeline (Windows + Linux). Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard, tutorial, world map, inventory overlay, bestiary, codex. Comprehensive refactoring completed (GameConstants with 561 centralized constants, zero magic numbers in hot paths). Automated test suites (9 suites including 150-combo matrix).
+All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. 453+ sprites, 51 SFX, 16 music tracks. Full narrative layer (lore, backstories, boss dialogues, mystery cutscene, 4-act intro cinematic). Credits screen with hero carousel and speech bubbles. Telemetry dashboard. CI/CD pipeline (Windows + Linux). Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard, tutorial, world map, inventory overlay, bestiary, codex. Comprehensive refactoring completed (GameConstants with 712 centralized constants, zero magic numbers in hot paths). Automated test suites (9 suites including 150-combo matrix). 15 PRDs resolved. 12 Architecture Decision Records documented.
