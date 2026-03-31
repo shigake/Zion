@@ -304,8 +304,8 @@ func _prewarm_shaders() -> void:
 	# Camera
 	var cam = Camera3D.new()
 	cam.position = Vector3(0, 2, 5)
+	cam.rotation.x = deg_to_rad(-20)
 	temp_viewport.add_child(cam)
-	cam.look_at(Vector3.ZERO)
 
 	# Luz
 	var light = DirectionalLight3D.new()
@@ -356,8 +356,8 @@ func _prewarm_materials() -> void:
 
 	var cam = Camera3D.new()
 	cam.position = Vector3(0, 1, 3)
+	cam.rotation.x = deg_to_rad(-15)
 	temp_vp.add_child(cam)
-	cam.look_at(Vector3.ZERO)
 
 	# Compile billboard material (used by MultiMeshManager)
 	var billboard_mesh = MeshInstance3D.new()

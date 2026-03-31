@@ -133,7 +133,8 @@ func _setup_and_emit(particles: GPUParticles3D, pos: Vector3, cleanup_time: floa
 	# Schedule return to pool
 	_active_particles[particles] = cleanup_time
 	var tween = create_tween()
-	tween.tween_callback(_return_particle.bind(particles)).set_delay(cleanup_time)
+	var p_ref = particles
+	tween.tween_callback(func(): _return_particle(p_ref)).set_delay(cleanup_time)
 
 # --- Damage Number Pool ---
 

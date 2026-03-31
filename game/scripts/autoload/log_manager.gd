@@ -367,7 +367,7 @@ func _write_session_header() -> void:
 
 
 func _write_session_footer() -> void:
-	if _log_file == null:
+	if _log_file == null or not _log_file.is_open():
 		return
 	var stats = get_session_stats()
 	_log_file.store_line("")
