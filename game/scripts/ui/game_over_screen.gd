@@ -200,6 +200,11 @@ func _show() -> void:
 	crystals_label.text += "\n" + LocaleManager.tr_key("total_damage") % GameManager.total_damage_dealt
 	# Unlocks (computed earlier, before UI setup)
 	if not _unlocked_chars.is_empty():
+		# Mystery character cutscene (plays once before showing unlock text)
+		if "mystery" in _unlocked_chars and not SaveManager.data.get("mystery_cutscene_seen", false):
+			var cutscene = preload("res://scenes/ui/mystery_cutscene.tscn").instantiate()
+			add_child(cutscene)
+			await cutscene.cutscene_finished
 		for char_id in _unlocked_chars:
 			var unlocked_data = CharacterDB.get_character(char_id)
 			crystals_label.text += "\n" + LocaleManager.tr_key("unlocked") % unlocked_data["name"]
