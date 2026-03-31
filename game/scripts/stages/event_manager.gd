@@ -780,7 +780,7 @@ func _show_merchant_ui() -> void:
 	var close_center = CenterContainer.new()
 	main_vbox.add_child(close_center)
 	var close_btn = Button.new()
-	close_btn.text = "Fechar"
+	close_btn.text = LocaleManager.tr_key("merchant_close")
 	close_btn.custom_minimum_size = Vector2(140, 38)
 	var close_style = StyleBoxFlat.new()
 	close_style.bg_color = Color(0.2, 0.15, 0.15, 0.8)
@@ -807,7 +807,7 @@ func _show_merchant_ui() -> void:
 
 	# --- Keyboard hint ---
 	var hint = Label.new()
-	hint.text = "ESC para fechar"
+	hint.text = LocaleManager.tr_key("esc_to_close")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 10)
 	hint.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))

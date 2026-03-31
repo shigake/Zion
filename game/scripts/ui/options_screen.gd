@@ -6,6 +6,9 @@ var waiting_for_key: String = ""
 var keybind_buttons: Dictionary = {}
 var tab_container: TabContainer
 var tab_controls: Dictionary = {}  # tab_index -> Array of {key, default, node, type}
+var _pending_changes: Dictionary = {}  # key -> value (not yet saved to disk)
+var _original_values: Dictionary = {}  # key -> value (snapshot when opened)
+var _save_btn: Button = null
 
 # ---------------------------------------------------------------------------
 # Lifecycle
@@ -38,8 +41,11 @@ func _ready() -> void:
 # Helpers — save / load
 # ---------------------------------------------------------------------------
 func _save(key: String, value: Variant) -> void:
+	# Armazena em pending — so persiste quando clicar "Salvar"
+	_pending_changes[key] = value
+	# Aplica preview imediato (ex: volume, resolucao)
 	SaveManager.data[key] = value
-	SaveManager.save_game()
+	_update_save_btn_label()
 
 func _load_setting(key: String, default: Variant = null) -> Variant:
 	return SaveManager.data.get(key, default)
@@ -195,7 +201,7 @@ func _build_ui() -> void:
 
 	# Title
 	var title := Label.new()
-	title.text = "Opcoes"
+	title.text = LocaleManager.tr_key("opt_title")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
 	root_vbox.add_child(title)
@@ -225,19 +231,34 @@ func _build_ui() -> void:
 	_build_tab_acessibilidade()
 	_build_tab_idioma()
 
+	# Snapshot dos valores originais para poder reverter
+	_original_values = SaveManager.data.duplicate()
+
 	# Footer
 	var footer := HBoxContainer.new()
 	footer.alignment = BoxContainer.ALIGNMENT_END
 	footer.add_theme_constant_override("separation", 12)
 
 	var reset_btn := Button.new()
-	reset_btn.text = "Restaurar padrao"
+	reset_btn.text = LocaleManager.tr_key("opt_reset_defaults")
 	reset_btn.focus_mode = Control.FOCUS_ALL
 	reset_btn.pressed.connect(_on_reset_tab)
 	footer.add_child(reset_btn)
 
+	_save_btn = Button.new()
+	_save_btn.text = LocaleManager.tr_key("opt_save")
+	_save_btn.focus_mode = Control.FOCUS_ALL
+	_save_btn.pressed.connect(_on_save_settings)
+	var save_style = StyleBoxFlat.new()
+	save_style.bg_color = Color(0.12, 0.35, 0.12)
+	save_style.set_corner_radius_all(6)
+	save_style.set_border_width_all(1)
+	save_style.border_color = Color(0.3, 0.8, 0.3)
+	_save_btn.add_theme_stylebox_override("normal", save_style)
+	footer.add_child(_save_btn)
+
 	var back_btn := Button.new()
-	back_btn.text = "Voltar"
+	back_btn.text = LocaleManager.tr_key("opt_back")
 	back_btn.focus_mode = Control.FOCUS_ALL
 	back_btn.pressed.connect(_on_back)
 	footer.add_child(back_btn)
@@ -249,11 +270,11 @@ func _build_ui() -> void:
 # ---------------------------------------------------------------------------
 func _build_tab_video() -> void:
 	var t := 0
-	var vbox := _make_tab_content("Video")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_video"))
 
 	# Window Mode
-	_add_dropdown(vbox, "Modo de janela", "video_window_mode",
-		["Janela", "Tela cheia", "Sem bordas"], 0,
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_window_mode"), "video_window_mode",
+		[LocaleManager.tr_key("opt_window_windowed"), LocaleManager.tr_key("opt_window_fullscreen"), LocaleManager.tr_key("opt_window_borderless")], 0,
 		func(idx: int) -> void:
 			if idx == 0:
 				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
@@ -284,7 +305,7 @@ func _build_tab_video() -> void:
 		if resolutions[i] == Vector2i(1920, 1080):
 			default_res_idx = i
 
-	_add_dropdown(vbox, "Resolucao", "video_resolution",
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_resolution"), "video_resolution",
 		res_labels, default_res_idx,
 		func(idx: int) -> void:
 			if idx < resolutions.size():
@@ -295,7 +316,7 @@ func _build_tab_video() -> void:
 		t)
 
 	# V-Sync
-	_add_toggle(vbox, "V-Sync", "video_vsync", true,
+	_add_toggle(vbox, LocaleManager.tr_key("opt_vsync"), "video_vsync", true,
 		func(on: bool) -> void:
 			if on:
 				DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
@@ -306,7 +327,7 @@ func _build_tab_video() -> void:
 	# FPS Limit
 	var fps_options := GameConstants.FPS_LABELS
 	var fps_values := GameConstants.FPS_OPTIONS
-	_add_dropdown(vbox, "Limite de FPS", "video_fps_limit",
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_fps_limit"), "video_fps_limit",
 		fps_options, 1,
 		func(idx: int) -> void:
 			if idx < fps_values.size():
@@ -314,7 +335,7 @@ func _build_tab_video() -> void:
 		t)
 
 	# Brightness
-	_add_slider(vbox, "Brilho", "video_brightness", 0.5, 2.0, 0.05, 1.0, Callable(), t)
+	_add_slider(vbox, LocaleManager.tr_key("opt_brightness"), "video_brightness", 0.5, 2.0, 0.05, 1.0, Callable(), t)
 
 # ---------------------------------------------------------------------------
 # TAB 2 — Graficos
@@ -323,62 +344,62 @@ var _gfx_controls: Dictionary = {}
 
 func _build_tab_graficos() -> void:
 	var t := 1
-	var vbox := _make_tab_content("Graficos")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_graphics"))
 
 	# Quality Preset
-	_add_dropdown(vbox, "Predefinicao de qualidade", "gfx_preset",
-		["Baixo", "Medio", "Alto", "Ultra", "Personalizado"], 2,
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_quality_preset"), "gfx_preset",
+		[LocaleManager.tr_key("opt_quality_low"), LocaleManager.tr_key("opt_quality_medium"), LocaleManager.tr_key("opt_quality_high"), LocaleManager.tr_key("opt_quality_ultra"), LocaleManager.tr_key("opt_quality_custom")], 2,
 		func(idx: int) -> void:
 			_apply_gfx_preset(idx),
 		t)
 
 	# MSAA
-	var msaa_dd := _add_dropdown(vbox, "MSAA", "gfx_msaa",
-		["Desligado", "2x", "4x", "8x"], 1,
+	var msaa_dd := _add_dropdown(vbox, LocaleManager.tr_key("opt_msaa"), "gfx_msaa",
+		[LocaleManager.tr_key("opt_off"), "2x", "4x", "8x"], 1,
 		func(idx: int) -> void:
 			_apply_msaa(idx),
 		t)
 	_gfx_controls["msaa"] = msaa_dd
 
 	# Bloom
-	var bloom_toggle := _add_toggle(vbox, "Bloom / Glow", "gfx_bloom", true, Callable(), t)
+	var bloom_toggle := _add_toggle(vbox, LocaleManager.tr_key("opt_bloom"), "gfx_bloom", true, Callable(), t)
 	_gfx_controls["bloom"] = bloom_toggle
 
 	# Bloom Intensity
-	var bloom_slider := _add_slider(vbox, "Intensidade do bloom", "gfx_bloom_intensity", 0.0, 2.0, 0.05, 1.0, Callable(), t)
+	var bloom_slider := _add_slider(vbox, LocaleManager.tr_key("opt_bloom_intensity"), "gfx_bloom_intensity", 0.0, 2.0, 0.05, 1.0, Callable(), t)
 	_gfx_controls["bloom_intensity"] = bloom_slider
 
 	# SSAO
-	var ssao_dd := _add_dropdown(vbox, "SSAO", "gfx_ssao",
-		["Desligado", "Baixo", "Medio", "Alto"], 0, Callable(), t)
+	var ssao_dd := _add_dropdown(vbox, LocaleManager.tr_key("opt_ssao"), "gfx_ssao",
+		[LocaleManager.tr_key("opt_off"), LocaleManager.tr_key("opt_quality_low"), LocaleManager.tr_key("opt_quality_medium"), LocaleManager.tr_key("opt_quality_high")], 0, Callable(), t)
 	_gfx_controls["ssao"] = ssao_dd
 
 	# Shadow Quality
-	var shadow_dd := _add_dropdown(vbox, "Qualidade de sombras", "gfx_shadows",
-		["Desligado", "Baixo", "Medio", "Alto"], 2, Callable(), t)
+	var shadow_dd := _add_dropdown(vbox, LocaleManager.tr_key("opt_shadow_quality"), "gfx_shadows",
+		[LocaleManager.tr_key("opt_off"), LocaleManager.tr_key("opt_quality_low"), LocaleManager.tr_key("opt_quality_medium"), LocaleManager.tr_key("opt_quality_high")], 2, Callable(), t)
 	_gfx_controls["shadows"] = shadow_dd
 
 	# Tone Mapping
-	_add_dropdown(vbox, "Tone mapping", "gfx_tonemap",
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_tone_mapping"), "gfx_tonemap",
 		["Linear", "Reinhardt", "Filmic", "ACES"], 3, Callable(), t)
 
 	# Particles
-	var particles_dd := _add_dropdown(vbox, "Particulas", "gfx_particles",
-		["Baixo", "Medio", "Alto"], 2, Callable(), t)
+	var particles_dd := _add_dropdown(vbox, LocaleManager.tr_key("opt_particles"), "gfx_particles",
+		[LocaleManager.tr_key("opt_quality_low"), LocaleManager.tr_key("opt_quality_medium"), LocaleManager.tr_key("opt_quality_high")], 2, Callable(), t)
 	_gfx_controls["particles"] = particles_dd
 
 	# Screen Shake
-	_add_dropdown(vbox, "Tremor de tela", "gfx_screen_shake",
-		["Desligado", "Leve", "Normal", "Forte"], 2, Callable(), t)
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_screen_shake"), "gfx_screen_shake",
+		[LocaleManager.tr_key("opt_screen_shake_off"), LocaleManager.tr_key("opt_screen_shake_light"), LocaleManager.tr_key("opt_screen_shake_normal"), LocaleManager.tr_key("opt_screen_shake_strong")], 2, Callable(), t)
 
 	# Hit Freeze
-	_add_toggle(vbox, "Congelamento de hit", "gfx_hit_freeze", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_hit_freeze"), "gfx_hit_freeze", true, Callable(), t)
 
 	# Cel Shader
-	_add_toggle(vbox, "Cel shader", "gfx_cel_shader", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_cel_shader"), "gfx_cel_shader", true, Callable(), t)
 
 	# Outline
-	_add_toggle(vbox, "Contorno", "gfx_outline", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_outline"), "gfx_outline", true, Callable(), t)
 
 func _apply_msaa(idx: int) -> void:
 	match idx:
@@ -425,25 +446,25 @@ func _apply_gfx_preset(idx: int) -> void:
 # ---------------------------------------------------------------------------
 func _build_tab_audio() -> void:
 	var t := 2
-	var vbox := _make_tab_content("Audio")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_audio"))
 
-	_add_slider(vbox, "Volume master", "audio_master", 0, 100, 5, 100,
+	_add_slider(vbox, LocaleManager.tr_key("opt_volume_master"), "audio_master", 0, 100, 5, 100,
 		func(val: float) -> void:
 			_apply_audio_bus("Master", val / 100.0),
 		t)
 
-	_add_slider(vbox, "Volume musica", "audio_music", 0, 100, 5, 80,
+	_add_slider(vbox, LocaleManager.tr_key("opt_volume_music"), "audio_music", 0, 100, 5, 80,
 		func(val: float) -> void:
 			_apply_audio_bus("Music", val / 100.0),
 		t)
 
-	_add_slider(vbox, "Volume efeitos", "audio_sfx", 0, 100, 5, 100,
+	_add_slider(vbox, LocaleManager.tr_key("opt_volume_sfx"), "audio_sfx", 0, 100, 5, 100,
 		func(val: float) -> void:
 			_apply_audio_bus("SFX", val / 100.0)
 			AudioManager.play_sfx("menu_click"),
 		t)
 
-	_add_slider(vbox, "Volume interface", "audio_ui", 0, 100, 5, 100,
+	_add_slider(vbox, LocaleManager.tr_key("opt_volume_ui"), "audio_ui", 0, 100, 5, 100,
 		func(val: float) -> void:
 			_apply_audio_bus("UI", val / 100.0)
 			AudioManager.play_sfx("menu_click"),
@@ -459,29 +480,29 @@ func _apply_audio_bus(bus_name: String, linear: float) -> void:
 # ---------------------------------------------------------------------------
 func _build_tab_gameplay() -> void:
 	var t := 3
-	var vbox := _make_tab_content("Gameplay")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_gameplay"))
 
 	# Section: HUD
-	_add_section(vbox, "HUD")
-	_add_toggle(vbox, "Numeros de dano", "hud_damage_numbers", true, Callable(), t)
-	_add_toggle(vbox, "Barra de HP inimigo", "hud_enemy_hp", true, Callable(), t)
-	_add_toggle(vbox, "Contador de FPS", "hud_fps", false, Callable(), t)
-	_add_toggle(vbox, "Timer", "hud_timer", true, Callable(), t)
-	_add_toggle(vbox, "Contador de kills", "hud_kills", true, Callable(), t)
-	_add_toggle(vbox, "Direcao do boss", "hud_boss_direction", true, Callable(), t)
+	_add_section(vbox, LocaleManager.tr_key("opt_section_hud"))
+	_add_toggle(vbox, LocaleManager.tr_key("opt_damage_numbers"), "hud_damage_numbers", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_enemy_hp_bar"), "hud_enemy_hp", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_fps_counter"), "hud_fps", false, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_timer"), "hud_timer", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_kill_counter"), "hud_kills", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_boss_direction"), "hud_boss_direction", true, Callable(), t)
 
 	# Section: Jogo
-	_add_section(vbox, "Jogo")
-	_add_toggle(vbox, "Pausar ao perder foco", "game_pause_focus_loss", true, Callable(), t)
-	_add_toggle(vbox, "Confirmar ao sair", "game_confirm_exit", true, Callable(), t)
+	_add_section(vbox, LocaleManager.tr_key("opt_section_game"))
+	_add_toggle(vbox, LocaleManager.tr_key("opt_pause_focus_loss"), "game_pause_focus_loss", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_confirm_exit"), "game_confirm_exit", true, Callable(), t)
 
 	# Section: Multiplayer
-	_add_section(vbox, "Multiplayer")
-	_add_toggle(vbox, "Level up sincrono", "levelup_sync", true, Callable(), t)
+	_add_section(vbox, LocaleManager.tr_key("opt_section_multiplayer"))
+	_add_toggle(vbox, LocaleManager.tr_key("opt_sync_levelup"), "levelup_sync", true, Callable(), t)
 
 	# Section: Telemetria
-	_add_section(vbox, "Telemetria")
-	_add_toggle(vbox, "Enviar dados anonimos", "telemetry_enabled", true,
+	_add_section(vbox, LocaleManager.tr_key("opt_section_telemetry"))
+	_add_toggle(vbox, LocaleManager.tr_key("opt_send_anonymous"), "telemetry_enabled", true,
 		func(on: bool) -> void:
 			Telemetry.set_enabled(on),
 		t)
@@ -491,10 +512,10 @@ func _build_tab_gameplay() -> void:
 # ---------------------------------------------------------------------------
 func _build_tab_controles() -> void:
 	var t := 4
-	var vbox := _make_tab_content("Controles")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_controls"))
 
 	# Section: Teclado
-	_add_section(vbox, "Teclado")
+	_add_section(vbox, LocaleManager.tr_key("opt_section_keyboard"))
 
 	for action in KeybindingManager.get_rebindable_actions():
 		var hbox := HBoxContainer.new()
@@ -513,7 +534,7 @@ func _build_tab_controles() -> void:
 		vbox.add_child(hbox)
 
 	var reset_keys_btn := Button.new()
-	reset_keys_btn.text = "Restaurar controles padrao"
+	reset_keys_btn.text = LocaleManager.tr_key("opt_reset_controls")
 	reset_keys_btn.pressed.connect(func() -> void:
 		KeybindingManager.reset_defaults()
 		for act in keybind_buttons:
@@ -522,41 +543,41 @@ func _build_tab_controles() -> void:
 	vbox.add_child(reset_keys_btn)
 
 	# Section: Gamepad
-	_add_section(vbox, "Gamepad")
+	_add_section(vbox, LocaleManager.tr_key("opt_section_gamepad"))
 
-	_add_slider(vbox, "Zona morta do analogico", "input_deadzone", 0.05, 0.5, 0.01, 0.15, Callable(), t)
-	_add_slider(vbox, "Sensibilidade do gamepad", "gamepad_deadzone", 0.1, 0.5, 0.01, 0.3,
+	_add_slider(vbox, LocaleManager.tr_key("opt_analog_deadzone"), "input_deadzone", 0.05, 0.5, 0.01, 0.15, Callable(), t)
+	_add_slider(vbox, LocaleManager.tr_key("opt_gamepad_sensitivity"), "gamepad_deadzone", 0.1, 0.5, 0.01, 0.3,
 		func(val: float) -> void:
 			SaveManager.data["gamepad_deadzone"] = val,
 		t)
-	_add_toggle(vbox, "Vibracao", "input_vibration", true, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_vibration"), "input_vibration", true, Callable(), t)
 
 # ---------------------------------------------------------------------------
 # TAB 6 — Acessibilidade
 # ---------------------------------------------------------------------------
 func _build_tab_acessibilidade() -> void:
 	var t := 5
-	var vbox := _make_tab_content("Acessibilidade")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_accessibility"))
 
-	_add_dropdown(vbox, "Tamanho da fonte", "access_font_size",
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_font_size"), "access_font_size",
 		["80%", "100%", "120%", "150%"], 1, Callable(), t)
 
-	_add_dropdown(vbox, "Escala da interface", "access_ui_scale",
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_ui_scale"), "access_ui_scale",
 		["80%", "100%", "120%", "150%"], 1, Callable(), t)
 
-	_add_toggle(vbox, "Movimento reduzido", "access_reduced_motion", false, Callable(), t)
-	_add_toggle(vbox, "Flash reduzido", "access_reduced_flash", false, Callable(), t)
-	_add_toggle(vbox, "Alto contraste", "access_high_contrast", false, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_motion"), "access_reduced_motion", false, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_flash"), "access_reduced_flash", false, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_high_contrast"), "access_high_contrast", false, Callable(), t)
 
-	_add_dropdown(vbox, "Modo daltonico", "access_colorblind",
-		["Desligado", "Protanopia", "Deuteranopia", "Tritanopia"], 0, Callable(), t)
+	_add_dropdown(vbox, LocaleManager.tr_key("opt_colorblind_mode"), "access_colorblind",
+		[LocaleManager.tr_key("opt_colorblind_off"), "Protanopia", "Deuteranopia", "Tritanopia"], 0, Callable(), t)
 
 # ---------------------------------------------------------------------------
 # TAB 7 — Idioma
 # ---------------------------------------------------------------------------
 func _build_tab_idioma() -> void:
 	var t := 6
-	var vbox := _make_tab_content("Idioma")
+	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_language"))
 
 	var locales := LocaleManager.get_available_locales()
 	var locale_names: Array[String] = []
@@ -566,11 +587,13 @@ func _build_tab_idioma() -> void:
 		if locales[i] == LocaleManager.get_locale():
 			current_idx = i
 
-	_add_dropdown(vbox, "Idioma", "locale_index",
+	_add_dropdown(vbox, LocaleManager.tr_key("language"), "locale_index",
 		locale_names, current_idx,
 		func(idx: int) -> void:
 			if idx < locales.size():
-				LocaleManager.set_locale(locales[idx]),
+				LocaleManager.set_locale(locales[idx])
+				# Rebuild entire UI so all labels update to new language
+				_rebuild_ui(),
 		t)
 
 # ---------------------------------------------------------------------------
@@ -647,8 +670,49 @@ func _on_reset_tab() -> void:
 				(node as OptionButton).selected = default_val
 
 # ---------------------------------------------------------------------------
+# Rebuild UI (after language change)
+# ---------------------------------------------------------------------------
+func _rebuild_ui() -> void:
+	var current_tab := tab_container.current_tab
+	# Remove all children and rebuild
+	for child in get_children():
+		child.queue_free()
+	tab_controls.clear()
+	_gfx_controls.clear()
+	keybind_buttons.clear()
+	_save_btn = null
+	call_deferred("_deferred_rebuild", current_tab)
+
+func _deferred_rebuild(restore_tab: int) -> void:
+	_build_ui()
+	_original_values = SaveManager.data.duplicate()
+	if restore_tab < tab_container.get_tab_count():
+		tab_container.current_tab = restore_tab
+	call_deferred("_set_tab_focus")
+
+# ---------------------------------------------------------------------------
 # Back
 # ---------------------------------------------------------------------------
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
+	# Reverter mudancas nao salvas
+	if not _pending_changes.is_empty():
+		for key in _pending_changes:
+			if _original_values.has(key):
+				SaveManager.data[key] = _original_values[key]
+		_pending_changes.clear()
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
+
+func _on_save_settings() -> void:
+	AudioManager.play_sfx("menu_click")
+	SaveManager.save_game()
+	_original_values = SaveManager.data.duplicate()
+	_pending_changes.clear()
+	_update_save_btn_label()
+
+func _update_save_btn_label() -> void:
+	if _save_btn and is_instance_valid(_save_btn):
+		if _pending_changes.is_empty():
+			_save_btn.text = LocaleManager.tr_key("opt_save")
+		else:
+			_save_btn.text = LocaleManager.tr_key("opt_save_pending")

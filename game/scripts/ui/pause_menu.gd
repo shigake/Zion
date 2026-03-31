@@ -8,6 +8,8 @@ extends CanvasLayer
 @onready var menu_btn: Button = $Panel/VBox/MenuButton
 
 var options_panel: PanelContainer = null
+var options_btn_ref: Button = null
+var quit_btn_ref: Button = null
 var waiting_for_key: String = ""
 var keybind_buttons: Dictionary = {}
 # Guarda se o jogo ja estava "pausado" antes do pause ser aberto
@@ -36,20 +38,22 @@ func _ready() -> void:
 	# Aplica texto localizado nos botoes da cena
 	resume_btn.text = LocaleManager.tr_key("resume")
 	menu_btn.text = LocaleManager.tr_key("quit_to_menu")
+	# Atualiza textos quando o idioma mudar
+	LocaleManager.locale_changed.connect(_on_locale_changed)
 	# Options button
-	var options_btn = Button.new()
-	options_btn.text = LocaleManager.tr_key("options")
-	options_btn.custom_minimum_size = Vector2(0, 40)
-	options_btn.pressed.connect(_on_options)
-	$Panel/VBox.add_child(options_btn)
-	$Panel/VBox.move_child(options_btn, 2)  # After Resume, before Menu
+	options_btn_ref = Button.new()
+	options_btn_ref.text = LocaleManager.tr_key("options")
+	options_btn_ref.custom_minimum_size = Vector2(0, 40)
+	options_btn_ref.pressed.connect(_on_options)
+	$Panel/VBox.add_child(options_btn_ref)
+	$Panel/VBox.move_child(options_btn_ref, 2)  # After Resume, before Menu
 
 	# Quit button (fecha a aplicacao)
-	var quit_btn = Button.new()
-	quit_btn.text = LocaleManager.tr_key("quit_game")
-	quit_btn.custom_minimum_size = Vector2(0, 40)
-	quit_btn.pressed.connect(_on_quit)
-	$Panel/VBox.add_child(quit_btn)
+	quit_btn_ref = Button.new()
+	quit_btn_ref.text = LocaleManager.tr_key("quit_game")
+	quit_btn_ref.custom_minimum_size = Vector2(0, 40)
+	quit_btn_ref.pressed.connect(_on_quit)
+	$Panel/VBox.add_child(quit_btn_ref)
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Handle keybinding rebind
@@ -425,6 +429,11 @@ func _on_options() -> void:
 			lang_btn.selected = i
 	lang_btn.item_selected.connect(func(idx):
 		LocaleManager.set_locale(locales[idx])
+		# Rebuild the options panel so all text updates to the new language
+		if options_panel and is_instance_valid(options_panel):
+			options_panel.queue_free()
+			options_panel = null
+		call_deferred("_on_options")
 	)
 	lang_hbox.add_child(lang_btn)
 	vbox.add_child(lang_hbox)
@@ -534,6 +543,15 @@ func _start_rebind(action: String, btn: Button) -> void:
 	waiting_for_key = action
 	btn.text = "..."
 
+func _on_locale_changed(_new_locale: String) -> void:
+	# Update pause menu button texts when language changes
+	resume_btn.text = LocaleManager.tr_key("resume")
+	menu_btn.text = LocaleManager.tr_key("quit_to_menu")
+	if options_btn_ref and is_instance_valid(options_btn_ref):
+		options_btn_ref.text = LocaleManager.tr_key("options")
+	if quit_btn_ref and is_instance_valid(quit_btn_ref):
+		quit_btn_ref.text = LocaleManager.tr_key("quit_game")
+
 func _on_menu() -> void:
 	AudioManager.play_sfx("menu_click")
 	if options_panel and is_instance_valid(options_panel):
@@ -557,7 +575,7 @@ func _show_quit_confirmation() -> void:
 		return
 	var dialog := AcceptDialog.new()
 	dialog.name = "QuitDialog"
-	dialog.title = "Sair"
+	dialog.title = LocaleManager.tr_key("quit_title")
 	dialog.exclusive = true
 	dialog.unresizable = true
 	dialog.dialog_close_on_escape = true
@@ -567,9 +585,9 @@ func _show_quit_confirmation() -> void:
 	var _tex := ImageTexture.create_from_image(_img)
 	dialog.add_theme_icon_override("close", _tex)
 	dialog.add_theme_icon_override("close_pressed", _tex)
-	dialog.dialog_text = "Deseja sair do jogo?"
-	dialog.ok_button_text = "Sair"
-	dialog.add_cancel_button("Cancelar")
+	dialog.dialog_text = LocaleManager.tr_key("quit_confirm")
+	dialog.ok_button_text = LocaleManager.tr_key("quit_ok")
+	dialog.add_cancel_button(LocaleManager.tr_key("cancel"))
 	dialog.confirmed.connect(func():
 		get_tree().quit()
 	)
