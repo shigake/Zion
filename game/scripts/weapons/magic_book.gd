@@ -16,7 +16,7 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
 func _ready() -> void:
 	book_area.body_entered.connect(_on_body_entered)
-	# Billboard sprite
+	# Billboard sprite — child do book_mesh para orbitar junto
 	var _sprite_path = "res://assets/sprites/weapons/magic_book.png"
 	if ResourceLoader.exists(_sprite_path):
 		book_mesh.visible = false
@@ -28,7 +28,9 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		book_mesh.get_parent().add_child(sprite)
+		add_child(sprite)
+		# Sprite segue a posicao do book_mesh no _process
+		sprite.set_meta("follows_book", true)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
@@ -67,6 +69,10 @@ func _process(delta: float) -> void:
 	var pos = Vector3(cos(angle) * radius, 0.5, sin(angle) * radius)
 	book_area.position = pos
 	book_mesh.position = pos
+	# Atualiza sprite que segue o livro
+	var ws = get_node_or_null("WeaponSprite")
+	if ws:
+		ws.position = pos
 	book_area.rotation.y = angle + PI / 2
 	book_mesh.rotation.y = angle + PI / 2
 

@@ -83,9 +83,11 @@ func _create_chest_node() -> Area3D:
 	col.shape = shape
 	chest.add_child(col)
 
-	# Conectar coleta ANTES de qualquer script change
+	# Coleta por proximidade — mais robusto que body_entered
 	chest.monitoring = true
 	chest.monitorable = false
+	chest.collision_layer = 0   # Nao precisa estar em nenhuma layer
+	chest.collision_mask = 1    # Detecta players (layer 1)
 	chest.body_entered.connect(_on_chest_body_entered.bind(chest))
 
 	# Metadata para despawn timer (sem trocar script)
@@ -103,6 +105,16 @@ func _process(delta: float) -> void:
 	if _chest_timer >= GameConstants.CHEST_SPAWN_INTERVAL:
 		_chest_timer = 0.0
 		_spawn_chest()
+
+	# Fallback: distance-based collection (caso body_entered nao dispare)
+	var players = GameManager.get_players()
+	if not players.is_empty():
+		var player_pos = players[0].global_position
+		for chest in _active_chests.duplicate():
+			if is_instance_valid(chest) and chest.is_inside_tree():
+				if player_pos.distance_to(chest.global_position) < 2.0:
+					_on_chest_body_entered(players[0], chest)
+					break
 
 	# Update chest animations + despawn
 	for i in range(_active_chests.size() - 1, -1, -1):
