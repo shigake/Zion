@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 15 — Cinematica de intro
 
 ## Contexto
