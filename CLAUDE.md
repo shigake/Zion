@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 30 Bosses (10 Sentinelas + 20 alternativos), 30 Mini-bosses, 12 evolucoes, 19 itens, 7 reliquias, 17 achievements. 448+ sprites, 51 SFX, 16 musicas. Baus de recompensa, sistema de quests, boss AoE attacks.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 30 Bosses (10 Sentinelas + 20 alternativos), 30 Mini-bosses, 12 evolucoes, 19 itens, 7 reliquias, 17 achievements. 453+ sprites, 51 SFX, 16 musicas. Baus de recompensa, sistema de quests, boss AoE attacks.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (12 arquivos)          # Game design documents
+├── docs/ (15 arquivos)          # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── prd.md                   # Product Requirements (roadmap, status real)
 │   ├── story.md                 # Historia, lore, narrativa completa
@@ -52,7 +52,10 @@ Zion/
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
 │   ├── prd_qa_stress_test.md    # PRD de QA e stress test (~80% automatizado)
 │   ├── prd_build_distribution.md # PRD de build e distribuicao (~60% pronto)
-│   └── prd_steam_integration.md # PRD de integracao Steam (codigo pronto, falta plugin)
+│   ├── prd_steam_integration.md # PRD de integracao Steam (codigo pronto, falta plugin)
+│   ├── prd_gamepad_ux.md        # PRD gamepad UX — concluido (4 bugs)
+│   ├── prd_gamepad_controls.md  # PRD gamepad controles — concluido (15 bugs)
+│   └── prd_stability_polish.md  # PRD estabilidade e polish — concluido
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
 │   ├── package.json             # Dependencias (express, better-sqlite3)
@@ -64,21 +67,21 @@ Zion/
 └── game/                        # Projeto Godot 4
     ├── project.godot            # Config (autoloads, layers, display)
     ├── VERSION                  # Versao atual (sem "v")
-    ├── scenes/ (103 .tscn)       # Cenas
-    │   ├── enemies/             # 16 genericos + 10 bosses (26 total)
+    ├── scenes/ (123 .tscn)       # Cenas
+    │   ├── enemies/             # 46 (16 genericos + 10 bosses + 20 alt bosses)
     │   ├── stages/              # 10 fendas com props procedurais
     │   ├── weapons/             # 40 cenas (32 armas + projeteis)
     │   ├── ui/                  # 20 telas (HUD, menus, shop, leaderboard, etc)
     │   └── player/              # Cena do jogador
-    ├── scripts/ (216 .gd)       # GDScript
-    │   ├── autoload/            # Singletons (ver lista abaixo)
-    │   ├── player/              # Player controller
-    │   ├── enemies/             # Base + spawner + 10 bosses + especiais
-    │   ├── weapons/             # 43 scripts (32 armas + projectiles + behaviors)
-    │   ├── ui/                  # 24+ telas + debug overlay (F3/F4)
-    │   ├── stages/              # 10 fendas + 10 props + camera + events
-    │   ├── effects/             # Particulas, shaders, procedural anims
-    │   ├── tools/               # 20+ geradores de sprites e assets
+    ├── scripts/ (219 .gd)       # GDScript
+    │   ├── autoload/            # 33 singletons (ver lista abaixo)
+    │   ├── player/              # 2 player controller
+    │   ├── enemies/             # 22 (base + spawner + 10 bosses + especiais)
+    │   ├── weapons/             # 45 scripts (32 armas + projectiles + behaviors)
+    │   ├── ui/                  # 32 telas + debug overlay (F3/F4)
+    │   ├── stages/              # 23 (10 fendas + props + camera + events)
+    │   ├── effects/             # 9 (particulas, shaders, procedural anims)
+    │   ├── tools/               # 43 geradores de sprites e assets
     │   └── tests/               # 5 testes (balance, smoke, auto_player, runner, report)
     └── assets/                  # Materiais, shaders, audio
 ```
@@ -112,7 +115,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 - **Reward Chests**: ChestManager — baus de recompensa a cada 45s com setas no HUD
 - **Quest System**: QuestManager — mini-objetivos durante a run (kill, survive, find chest, reach level)
 - **Boss AoE**: BossAttackPatterns — ataques de area (circulo, cone) com telegraph visual em todos 10 bosses
-- **GameConstants**: 561 linhas de constantes centralizadas (29 categorias: balance, spawner, boss, drops, visual, camera, events, etc.)
+- **GameConstants**: 712 linhas de constantes centralizadas (29 categorias: balance, spawner, boss, drops, visual, camera, events, etc.)
 - **Performance**: LOD system, PerfMonitor, EnemyCuller, pickup cap (200), sprite cache, O(1) weapon lookups, slash trail pool
 - **Damage Feedback**: Screen shake, damage numbers, player hurt flash
 - **Drops**: Health pickups (5%) e magnet pickups (1%) de inimigos
@@ -170,6 +173,9 @@ Sempre notifique ao concluir ou falhar uma task. Escreva a mensagem em portugues
 Arquivo `game/VERSION` contem a versao atual (sem o "v"). Começa em 1.0.0.
 O label de versão aparece no canto inferior direito do menu principal.
 
+**Regra obrigatoria — ANTES de comecar QUALQUER tarefa:**
+1. Executar `git pull` para garantir que o código está atualizado
+
 **Regra obrigatoria — ao terminar QUALQUER tarefa:**
 1. Incrementar a **patch** version em `game/VERSION` (ex: 1.1.0 → 1.1.1)
 2. Fazer `git add` + `git commit` + `git push` automaticamente
@@ -188,7 +194,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 428+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~95%. FASE C (polish) ~98%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~80% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 561 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 7 PRDs concluidos e arquivados, 3 PRDs ativos (QA, build, Steam).
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~95%. FASE C (polish) ~98%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~80% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 10 PRDs (7 concluidos, 3 ativos: QA, build, Steam). Gamepad: 19 bugs corrigidos (4 UX + 15 controles).
 
 Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
