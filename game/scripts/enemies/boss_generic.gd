@@ -21,11 +21,14 @@ func _ready() -> void:
 	_load_boss_sprite()
 
 func _load_boss_sprite() -> void:
-	# Tenta carregar sprite especifico do boss (ex: cemetery_lich.png)
+	# Tenta varias variantes do nome para encontrar o sprite
 	var snake_name = boss_name.to_snake_case().replace(" ", "_")
+	var node_snake = name.to_snake_case()
+	var node_no_prefix = node_snake.replace("boss_", "")
 	var paths_to_try = [
-		"res://assets/sprites/bosses/%s.png" % snake_name,
-		"res://assets/sprites/bosses/%s.png" % name.to_snake_case(),
+		"res://assets/sprites/bosses/%s.png" % node_no_prefix,   # cemetery_reaper
+		"res://assets/sprites/bosses/%s.png" % snake_name,        # death_reaper
+		"res://assets/sprites/bosses/%s.png" % node_snake,        # boss_cemetery_reaper
 	]
 	for path in paths_to_try:
 		if ResourceLoader.exists(path):
