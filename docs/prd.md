@@ -1,8 +1,8 @@
-# Zion — PRD v3.3 (Estado Real do Projeto)
+# Zion — PRD v3.22 (Estado Real do Projeto)
 
 > *"Zion nao e onde voce chega. E o que voce constroi no caminho."*
 
-## Status: BETA — ~85% completo, jogavel de ponta a ponta
+## Status: BETA — ~92% completo, jogavel de ponta a ponta
 
 ---
 
@@ -33,7 +33,7 @@
 - Desafio Diario com seed fixo
 
 ### Visual (Pixel Art Billboard)
-- 333+ sprites pixel art gerados proceduralmente
+- 428+ sprites pixel art gerados proceduralmente
 - Billboard Sprite3D com NEAREST filter
 - Themed HP bar unico por personagem (MANA pro mago, SANGUE pro vampiro, etc.)
 - HUD: armas (esquerda) separadas de itens (direita)
@@ -133,10 +133,10 @@
 
 | Metrica | Valor |
 |---------|-------|
-| Scripts | ~160 .gd |
-| Cenas | ~100 .tscn |
-| Sprites | 333+ PNG |
-| SFX | 43 WAV |
+| Scripts | 212 .gd |
+| Cenas | 103 .tscn |
+| Sprites | 428+ PNG |
+| SFX | 47 WAV |
 | Musicas | 16 MP3/WAV |
 | Personagens | 15 |
 | Armas | 32 (31 ativas) |

@@ -115,7 +115,7 @@ godot --headless --path game --export-release "Windows Desktop" ../build/zion.ex
 Zion/
 ├── CLAUDE.md               # Development guide (AI/dev instructions)
 ├── README.md               # This file
-├── docs/                   # Game design documents (15 files)
+├── docs/                   # Game design documents (18 files)
 │   ├── gdd.md              # Game Design Document
 │   ├── prd.md              # Product Requirements Document (roadmap)
 │   ├── spec.md             # Technical specification
@@ -203,4 +203,4 @@ Features: run statistics, crash reports, balance analytics, Discord webhook noti
 
 In active development. Current version: see `game/VERSION`.
 
-All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. 415+ sprites, 43 SFX, 16 music tracks. Full narrative layer (lore, backstories, boss dialogues). Telemetry dashboard. CI/CD pipeline. Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard, tutorial, world map, inventory overlay, bestiary, codex.
+All 10 stages, 15 characters, 32 weapons, and 10 bosses implemented. 428+ sprites, 47 SFX, 16 music tracks. Full narrative layer (lore, backstories, boss dialogues). Telemetry dashboard. CI/CD pipeline. Ascension mode, cross-combos, daily challenges, achievement system, global leaderboard, tutorial, world map, inventory overlay, bestiary, codex. Comprehensive refactoring completed (GameConstants with 561 centralized constants, zero magic numbers in hot paths).

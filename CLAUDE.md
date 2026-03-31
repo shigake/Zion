@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 415+ sprites, 43 SFX, 16 musicas.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 10 Sentinelas, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 428+ sprites, 47 SFX, 16 musicas.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (16 arquivos)          # Game design documents
+├── docs/ (18 arquivos)          # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── prd.md                   # Product Requirements (roadmap fases A-E)
 │   ├── story.md                 # Historia, lore, narrativa completa
@@ -50,13 +50,15 @@ Zion/
 │   ├── personagens.md           # 15 Fragmentados + backstories
 │   ├── progressao.md            # Loja, cristais, meta-progressao
 │   ├── balance_analysis.md      # Analise de balanceamento verificada
-│   ├── prd_auto_tester.md       # PRD de testes automatizados (8 suites)
-│   ├── prd_achievements_popup.md # PRD de popup de conquistas
-│   ├── prd_leaderboard_online.md # PRD de leaderboard global
-│   ├── prd_cemetery_music.md    # PRD de musica dinamica do cemiterio
-│   ├── prd_checklist_final.md   # Checklist final pre-release
-│   ├── prd_multiplayer_menu.md  # PRD de menu multiplayer (lobby completo)
-│   └── prd_pendencias.md       # Pendencias e tarefas restantes
+│   ├── prd_refactoring.md       # PRD de refatoracao DRY/performance
+│   ├── prd_bruxa_visual_update.md # PRD de visual update da bruxa
+│   ├── prd_dynamic_music.md     # PRD de musica dinamica
+│   ├── prd_ui_polish_bugfixes.md # PRD de polish e bugfixes de UI
+│   ├── prd_steam_integration.md # PRD de integracao Steam
+│   ├── prd_projectile_bugfix.md # PRD de bugfix de projeteis
+│   ├── prd_annulus_spawning.md  # PRD de spawn annular
+│   ├── prd_qa_stress_test.md    # PRD de QA e stress test
+│   └── prd_build_distribution.md # PRD de build e distribuicao
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
 │   ├── package.json             # Dependencias (express, better-sqlite3)
@@ -68,13 +70,13 @@ Zion/
 └── game/                        # Projeto Godot 4
     ├── project.godot            # Config (autoloads, layers, display)
     ├── VERSION                  # Versao atual (sem "v")
-    ├── scenes/ (102 .tscn)       # Cenas
+    ├── scenes/ (103 .tscn)       # Cenas
     │   ├── enemies/             # 16 genericos + 10 bosses (26 total)
     │   ├── stages/              # 10 fendas com props procedurais
     │   ├── weapons/             # 40 cenas (32 armas + projeteis)
     │   ├── ui/                  # 20 telas (HUD, menus, shop, leaderboard, etc)
     │   └── player/              # Cena do jogador
-    ├── scripts/ (201 .gd)       # GDScript
+    ├── scripts/ (212 .gd)       # GDScript
     │   ├── autoload/            # Singletons (ver lista abaixo)
     │   ├── player/              # Player controller
     │   ├── enemies/             # Base + spawner + 10 bosses + especiais
@@ -116,7 +118,8 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 - **Reward Chests**: ChestManager — baus de recompensa a cada 45s com setas no HUD
 - **Quest System**: QuestManager — mini-objetivos durante a run (kill, survive, find chest, reach level)
 - **Boss AoE**: BossAttackPatterns — ataques de area (circulo, cone) com telegraph visual em todos 10 bosses
-- **Performance**: LOD system, PerfMonitor, EnemyCuller, pickup cap (200)
+- **GameConstants**: 561 linhas de constantes centralizadas (29 categorias: balance, spawner, boss, drops, visual, camera, events, etc.)
+- **Performance**: LOD system, PerfMonitor, EnemyCuller, pickup cap (200), sprite cache, O(1) weapon lookups, slash trail pool
 - **Damage Feedback**: Screen shake, damage numbers, player hurt flash
 - **Drops**: Health pickups (5%) e magnet pickups (1%) de inimigos
 - **Themed HP Bar**: Barra de HP unica por Fragmentado
@@ -187,18 +190,17 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 415+ sprites, 43 SFX, 16 musicas. FASE A (visual) ~95% — sprites billboard, efeitos de tela, feedback de dano, bullet trails, slash trails melee com pool, creditos animados. FASE B (gameplay) ~95% — 10 mecanicas de fenda, 40 monstros tematicos, sinergias refatoradas (data-driven), boss patterns, musica dinamica completa. FASE C (polish) ~98% — achievements popup, leaderboard global, dialogos, tutorial, inventario, mapa, bestiary, codex, R1/L1 tab navigation, card alignment, text overflow. FASE D (audio) ~95% — 43 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~65% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants, WeaponVFX, UICardBuilder, SpatialGrid, ItemBonusCalc, EnemyStageBehavior).
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 428+ sprites, 47 SFX, 16 musicas. FASE A (visual) ~95% — sprites billboard, efeitos de tela, feedback de dano, bullet trails, slash trails melee com pool, creditos animados. FASE B (gameplay) ~95% — 10 mecanicas de fenda, 40 monstros tematicos, sinergias refatoradas (data-driven), boss patterns, musica dinamica completa. FASE C (polish) ~98% — achievements popup, leaderboard global, dialogos, tutorial, inventario, mapa, bestiary, codex, R1/L1 tab navigation, card alignment, text overflow. FASE D (audio) ~95% — 47 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~75% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 561 linhas, WeaponVFX, UICardBuilder, SpatialGrid, ItemBonusCalc, EnemyStageBehavior, HUDMultiplayer split, magic numbers extraidos).
 
 Ver `docs/prd.md` para roadmap e `docs/story.md` para narrativa.
 
 ## Remaining Work
 
-- **Sprites**: 415+ pixel art sprites implementados (personagens, inimigos, armas, itens, UI)
-- **Audio**: 16 musicas + 43 SFX implementados; falta musica dinamica por fenda
-- **Visual Polish**: walk animations, props animados
-- **Steam**: plugin GodotSteam necessario para multiplayer P2P
-- **Distribuicao**: testar export, pagina no itch.io, trailer
+- **QA**: teste manual 15x10 combinacoes, multiplayer LAN, stress test 300+ inimigos
+- **Steam**: plugin GodotSteam necessario para multiplayer P2P (codigo pronto)
+- **Distribuicao**: testar export Windows em maquina limpa, pagina no itch.io, trailer 30s
 - **Narrativa**: cutscene do ??? (Zion despertando), cinematica de intro
+- **Pos-lancamento**: matchmaking online, workshop de mods, localizacao EN/ES/JP, replays
 
 ## Regras Importantes
 
