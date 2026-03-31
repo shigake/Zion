@@ -701,7 +701,47 @@ func _banish_option(index: int) -> void:
 	GameManager.banished_options.append(opt["id"])
 	GameManager.banishes -= 1
 	banish_mode = false
-	_show_choices()
+
+	# Show banished name briefly before closing
+	var banished_name = UpgradeOptionGenerator.get_opt_name(opt)
+	title_label.text = "✕ %s banido" % banished_name
+	subtitle_label.text = ""
+
+	# Flash the card red
+	if index < _card_panels.size():
+		var flash_card = _card_panels[index]
+		var flash_tween = create_tween()
+		flash_tween.tween_property(flash_card, "modulate", Color(1.0, 0.3, 0.3, 0.6), 0.15)
+		flash_tween.tween_property(flash_card, "modulate", Color(1.0, 0.3, 0.3, 0.0), 0.3)
+
+	await get_tree().create_timer(0.6).timeout
+
+	# Close level-up screen (banish consumes the level)
+	var fade_tween = create_tween()
+	fade_tween.tween_property(overlay, "color", Color(0, 0, 0, 0), 0.2)
+
+	panel.visible = false
+	pending_levels -= 1
+
+	if _async_mode:
+		_async_timer = 0.0
+		_hide_choosing_label()
+
+	if MultiplayerManager.is_online:
+		if _async_mode:
+			if pending_levels > 0:
+				call_deferred("_start_async_levelup")
+		else:
+			var choice_data = {"type": "banish", "id": opt["id"]}
+			MultiplayerManager.submit_level_up_choice(MultiplayerManager.local_player_id, choice_data)
+			if pending_levels > 0:
+				MultiplayerManager.request_level_up_pause(MultiplayerManager.local_player_id)
+	else:
+		if pending_levels > 0:
+			call_deferred("_show_choices")
+		else:
+			GameManager.paused = false
+	choice_made.emit()
 
 # ---- Multiplayer Level Up Coordination ----
 
