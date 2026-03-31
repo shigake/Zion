@@ -28,6 +28,7 @@ const QUEST_POOL := [
 func _ready() -> void:
 	GameManager.enemy_killed.connect(_on_enemy_killed)
 	GameManager.player_leveled_up.connect(_on_level_up)
+	ChestManager.chest_collected.connect(_on_chest_collected)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -148,6 +149,10 @@ func _on_enemy_killed(_pos: Vector3, _xp: int) -> void:
 
 func _on_level_up(_level: int) -> void:
 	pass  # reach_level checked in _update_quest_progress
+
+func _on_chest_collected(_reward: Dictionary) -> void:
+	if _quest_active and current_quest["type"] == "find_chest":
+		_quest_progress = 1
 
 func on_player_damaged() -> void:
 	## Chamado pelo GameManager quando o jogador toma dano.

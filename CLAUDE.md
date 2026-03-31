@@ -90,7 +90,7 @@ Zion/
 ## Architecture
 
 ### Autoload Singletons (34 registrados no project.godot)
-LogManager, PlatformHelper, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry, MultiMeshManager, AutoTester, GamepadUI, MutationManager, DailyChallenge, LoadingScreen, AchievementPopup, BossDialogue, InventoryOverlay
+LogManager, PlatformHelper, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry, MultiMeshManager, AutoTester, GamepadUI, MutationManager, DailyChallenge, LoadingScreen, AchievementPopup, BossDialogue, InventoryOverlay, ChestManager, QuestManager
 
 Registrados como autoload (mas ficam em scripts/effects/):
 ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
@@ -113,6 +113,9 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 - **Cross-Combo**: Ressonancia elemental entre Fragmentados (multiplayer)
 - **Revive System**: Estilhaco compartilhado — sacrificio de cristal pra impedir rebobinamento
 - **Daily Challenge**: DailyChallenge — micro-fraturas diarias com leaderboard
+- **Reward Chests**: ChestManager — baus de recompensa a cada 45s com setas no HUD
+- **Quest System**: QuestManager — mini-objetivos durante a run (kill, survive, find chest, reach level)
+- **Boss AoE**: BossAttackPatterns — ataques de area (circulo, cone) com telegraph visual em todos 10 bosses
 - **Performance**: LOD system, PerfMonitor, EnemyCuller, pickup cap (200)
 - **Damage Feedback**: Screen shake, damage numbers, player hurt flash
 - **Drops**: Health pickups (5%) e magnet pickups (1%) de inimigos
