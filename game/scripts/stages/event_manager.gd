@@ -459,14 +459,24 @@ func _spawn_merchant() -> void:
 	get_parent().add_child(_merchant_node)
 	_merchant_node.global_position = center + offset
 
-	# Generate 3 random items to sell (exclude disabled)
+	# Generate 3 random items to sell (exclude disabled and already owned)
 	_merchant_items.clear()
 	var all_items = ItemDB.get_all_item_ids()
 	var available_items: Array = []
 	for iid in all_items:
 		var data = ItemDB.get_item(iid)
-		if not data.get("disabled", false):
-			available_items.append(iid)
+		if data.is_empty():
+			continue
+		if data.get("disabled", false):
+			continue
+		available_items.append(iid)
+	# Fallback: if all items filtered out, use all non-disabled as-is
+	if available_items.is_empty():
+		LogManager.warn("Merchant: no items available after filtering, using full pool")
+		for iid in all_items:
+			var data = ItemDB.get_item(iid)
+			if not data.is_empty():
+				available_items.append(iid)
 	available_items.shuffle()
 	for i in range(mini(3, available_items.size())):
 		var item_data = ItemDB.get_item(available_items[i])
@@ -475,6 +485,7 @@ func _spawn_merchant() -> void:
 			"name": item_data.get("name", available_items[i]),
 			"cost": rng.randi_range(5, 15),
 		})
+	LogManager.info("Merchant: %d items for sale" % _merchant_items.size())
 
 	# Show merchant UI when player enters area
 	area.body_entered.connect(_on_merchant_body_entered)
@@ -526,11 +537,11 @@ func _show_merchant_ui() -> void:
 	canvas.layer = 15
 	canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 
-	# --- Dark overlay backdrop ---
+	# --- Dark overlay backdrop --- (STOP captures clicks so they don't reach the game)
 	var overlay = ColorRect.new()
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0, 0, 0, 0)
-	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	canvas.add_child(overlay)
 
 	# Fade in overlay

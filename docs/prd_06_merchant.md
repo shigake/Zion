@@ -1,3 +1,5 @@
+## Status: ✅ CONCLUIDO
+
 # PRD 06 — Mercador dimensional (3 problemas)
 
 ## Problemas

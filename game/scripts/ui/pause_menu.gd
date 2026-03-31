@@ -65,6 +65,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			if get_viewport(): get_viewport().set_input_as_handled()
 		return
 
+	# ui_cancel: if merchant is open, close it first
+	if event.is_action_pressed("ui_cancel"):
+		var merchant_ui_uc = get_tree().root.find_child("MerchantUI", true, false)
+		if merchant_ui_uc and is_instance_valid(merchant_ui_uc):
+			AudioManager.play_sfx("menu_click")
+			merchant_ui_uc.queue_free()
+			GameManager.paused = false
+			get_tree().paused = false
+			var event_mgr_uc = get_tree().root.find_child("EventManager", true, false)
+			if event_mgr_uc:
+				event_mgr_uc._merchant_ui_cooldown = 2.0
+			if get_viewport(): get_viewport().set_input_as_handled()
+			return
+
 	# ui_cancel fecha opcoes se estiverem abertas
 	if event.is_action_pressed("ui_cancel") and options_panel and is_instance_valid(options_panel):
 		options_panel.queue_free()
@@ -80,6 +94,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("pause") and not GameManager.is_game_over:
+		# If merchant UI is open, close it instead of opening pause
+		var merchant_ui = get_tree().root.find_child("MerchantUI", true, false)
+		if merchant_ui and is_instance_valid(merchant_ui):
+			AudioManager.play_sfx("menu_click")
+			merchant_ui.queue_free()
+			GameManager.paused = false
+			get_tree().paused = false
+			# Set cooldown on event_manager to prevent immediate reopen
+			var event_mgr = get_tree().root.find_child("EventManager", true, false)
+			if event_mgr and event_mgr.has_method("set"):
+				event_mgr._merchant_ui_cooldown = 2.0
+			if get_viewport(): get_viewport().set_input_as_handled()
+			return
 		if options_panel and is_instance_valid(options_panel):
 			options_panel.queue_free()
 			options_panel = null
