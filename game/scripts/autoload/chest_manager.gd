@@ -54,11 +54,12 @@ func _create_chest_node() -> Node3D:
 		sprite.texture = load(chest_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.04
+		sprite.pixel_size = 0.06
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.position.y = 0.5
 		sprite.name = "ChestSprite"
+		sprite.modulate = Color(1.2, 1.1, 0.9)  # Slight golden boost
 		chest.add_child(sprite)
 	else:
 		var mesh_inst = MeshInstance3D.new()
