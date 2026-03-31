@@ -140,11 +140,46 @@ func _ready() -> void:
 	boss_died.connect(_on_timeline_boss_died)
 	LogManager.info("Game", "GameManager ready")
 
+var _orphan_cleanup_timer: float = 0.0
+
 func _process(delta: float) -> void:
 	if not paused and not is_game_over:
 		game_time += delta
 		if enemies_alive > peak_enemies:
 			peak_enemies = enemies_alive
+		# Periodic cleanup of orphaned temporary nodes (every 10 seconds)
+		_orphan_cleanup_timer += delta
+		if _orphan_cleanup_timer >= 10.0:
+			_orphan_cleanup_timer = 0.0
+			_cleanup_orphaned_nodes()
+
+# ---------------------------------------------------------------------------
+# Orphaned node cleanup — prevents memory leaks from VFX nodes
+# ---------------------------------------------------------------------------
+
+func _cleanup_orphaned_nodes() -> void:
+	var scene = get_tree().current_scene if get_tree() else null
+	if not scene:
+		return
+	var freed_count := 0
+	for child in scene.get_children():
+		if not is_instance_valid(child):
+			continue
+		# Cleanup dead enemies still in scene (is_dead but not freed)
+		if child is CharacterBody3D and child.is_in_group("enemies"):
+			if child.get("is_dead") == true:
+				child.queue_free()
+				freed_count += 1
+				continue
+		# Cleanup stale poison pools (behavior node handles lifetime, but just in case)
+		if child.name == "PoisonPool" and child is Node3D:
+			var behavior = child.get_node_or_null("Node")
+			if not behavior or not is_instance_valid(behavior):
+				child.queue_free()
+				freed_count += 1
+				continue
+	if freed_count > 0:
+		LogManager.debug("GameManager", "Cleaned up %d orphaned nodes" % freed_count)
 
 # ---------------------------------------------------------------------------
 # Weapon damage tracking

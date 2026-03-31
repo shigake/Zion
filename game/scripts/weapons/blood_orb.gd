@@ -132,6 +132,10 @@ class BloodOrbInstance extends Area3D:
 			queue_free()
 			return
 
+		# Decrement rate-limit timers
+		if _drain_line_throttle > 0.0:
+			_drain_line_throttle -= delta
+
 		# Gentle orbit around player with floating bob
 		_orbit_angle += _orbit_speed * delta
 		var bob_offset = sin(_lifetime_timer * 2.5) * 0.25
@@ -153,9 +157,9 @@ class BloodOrbInstance extends Area3D:
 			_sprite.scale = Vector3(pulse, pulse, pulse)
 			_sprite.modulate = Color(1.0, 0.85 + sin(_lifetime_timer * 4.0) * 0.15, 0.9, glow_alpha)
 
-		# Dark trail particles
+		# Dark trail particles (reduced frequency to avoid node buildup)
 		_trail_timer += delta
-		if _trail_timer >= 0.12 and Engine.get_frames_per_second() > 35:
+		if _trail_timer >= 0.25 and Engine.get_frames_per_second() > 35:
 			_trail_timer = 0.0
 			_spawn_dark_trail()
 
@@ -201,7 +205,10 @@ class BloodOrbInstance extends Area3D:
 	func _spawn_drain_wisps(from_pos: Vector3) -> void:
 		if not is_inside_tree():
 			return
-		if Engine.get_frames_per_second() < 40:
+		if Engine.get_frames_per_second() < 45:
+			return
+		# Skip wisps if drain line throttle is active (avoid double visual spam)
+		if _drain_line_throttle > 0.15:
 			return
 		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 		if not scene:
@@ -227,18 +234,24 @@ class BloodOrbInstance extends Area3D:
 		tween.tween_property(wisp, "global_position", global_position, 0.35).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 		tween.tween_callback(wisp.queue_free)
 
+	var _drain_line_throttle: float = 0.0  # Rate limit drain lines
+
 	func _spawn_drain_line(from_pos: Vector3) -> void:
 		if not is_inside_tree():
 			return
 		if Engine.get_frames_per_second() < 35:
 			return
-		# Spawn 3-5 blood droplets flying from enemy to orb
+		# Rate limit: max one drain line call per 0.3s to avoid node spam
+		if _drain_line_throttle > 0.0:
+			return
+		_drain_line_throttle = 0.3
+		# Spawn 2-3 blood droplets flying from enemy to orb (reduced from 3-5)
 		var start = from_pos + Vector3(0, 0.5, 0)
 		var target = global_position
 		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 		if not scene:
 			return
-		var count = randi_range(3, 5)
+		var count = randi_range(2, 3)
 		for i in range(count):
 			var droplet = MeshInstance3D.new()
 			var sphere = SphereMesh.new()

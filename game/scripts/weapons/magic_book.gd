@@ -24,10 +24,11 @@ func _ready() -> void:
 		sprite.texture = load(_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
+		sprite.pixel_size = 0.05
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
+		sprite.render_priority = 1  # Render on top of player
 		add_child(sprite)
 		# Sprite segue a posicao do book_mesh no _process
 		sprite.set_meta("follows_book", true)
@@ -45,9 +46,10 @@ func _setup_billboard_sprite() -> void:
 		sprite.texture = load(sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.02
+		sprite.pixel_size = 0.04
 		sprite.shaded = false
 		sprite.transparent = true
+		sprite.render_priority = 1
 		sprite.name = "ProjectileSprite"
 		book_mesh.add_child(sprite)
 
@@ -69,10 +71,10 @@ func _process(delta: float) -> void:
 	var pos = Vector3(cos(angle) * radius, 0.5, sin(angle) * radius)
 	book_area.position = pos
 	book_mesh.position = pos
-	# Atualiza sprite que segue o livro
+	# Atualiza sprite que segue o livro (float above player for visibility)
 	var ws = get_node_or_null("WeaponSprite")
 	if ws:
-		ws.position = pos
+		ws.position = Vector3(pos.x, maxf(pos.y, 0.8), pos.z)
 	book_area.rotation.y = angle + PI / 2
 	book_mesh.rotation.y = angle + PI / 2
 

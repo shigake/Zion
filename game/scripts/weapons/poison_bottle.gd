@@ -88,6 +88,7 @@ func _throw_bottle(level: int) -> void:
 		sprite.position = Vector3(0, 0.5, 0)
 		pool.add_child(sprite)
 
+	# Base puddle layer — dark toxic pool
 	var mesh_inst = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
 	disc.top_radius = pool_radius
@@ -96,20 +97,72 @@ func _throw_bottle(level: int) -> void:
 	mesh_inst.mesh = disc
 	mesh_inst.position = Vector3(0, 0.04, 0)
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.05, 0.3, 0.02, 0.75)
+	mat.albedo_color = Color(0.02, 0.18, 0.01, 0.85)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.roughness = 0.1
-	mat.metallic = 0.15
+	mat.roughness = 0.05
+	mat.metallic = 0.3
 	mat.emission_enabled = true
-	mat.emission = Color(0.15, 0.9, 0.05)
-	mat.emission_energy_multiplier = 1.2
+	mat.emission = Color(0.1, 0.7, 0.03)
+	mat.emission_energy_multiplier = 1.5
 	mesh_inst.material_override = mat
 	pool.add_child(mesh_inst)
 
-	# Pulsing scale animation on pool surface
+	# Inner swirl layer — brighter, smaller, rotates for movement illusion
+	var swirl = MeshInstance3D.new()
+	var swirl_disc = CylinderMesh.new()
+	swirl_disc.top_radius = pool_radius * 0.7
+	swirl_disc.bottom_radius = pool_radius * 0.65
+	swirl_disc.height = 0.04
+	swirl.mesh = swirl_disc
+	swirl.position = Vector3(0, 0.07, 0)
+	var swirl_mat = StandardMaterial3D.new()
+	swirl_mat.albedo_color = Color(0.08, 0.45, 0.02, 0.6)
+	swirl_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	swirl_mat.roughness = 0.0
+	swirl_mat.metallic = 0.5
+	swirl_mat.emission_enabled = true
+	swirl_mat.emission = Color(0.2, 1.0, 0.1)
+	swirl_mat.emission_energy_multiplier = 2.0
+	swirl_mat.no_depth_test = true
+	swirl.material_override = swirl_mat
+	pool.add_child(swirl)
+
+	# Toxic highlight spots — small bright discs at random offsets
+	for _i in range(3):
+		var spot = MeshInstance3D.new()
+		var spot_disc = CylinderMesh.new()
+		spot_disc.top_radius = pool_radius * 0.2
+		spot_disc.bottom_radius = pool_radius * 0.15
+		spot_disc.height = 0.03
+		spot.mesh = spot_disc
+		var spot_offset = Vector3(randf_range(-pool_radius * 0.5, pool_radius * 0.5), 0.09, randf_range(-pool_radius * 0.5, pool_radius * 0.5))
+		spot.position = spot_offset
+		var spot_mat = StandardMaterial3D.new()
+		spot_mat.albedo_color = Color(0.15, 0.9, 0.05, 0.5)
+		spot_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		spot_mat.emission_enabled = true
+		spot_mat.emission = Color(0.3, 1.0, 0.1)
+		spot_mat.emission_energy_multiplier = 3.0
+		spot_mat.no_depth_test = true
+		spot.material_override = spot_mat
+		pool.add_child(spot)
+
+	# Pulsing scale animation on base pool surface
 	var tween = pool.create_tween().set_loops()
 	tween.tween_property(mesh_inst, "scale", Vector3(1.05, 1.0, 1.05), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(mesh_inst, "scale", Vector3(0.95, 1.0, 0.95), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	# Swirl rotation animation — spins to simulate liquid movement
+	var swirl_tween = pool.create_tween().set_loops()
+	swirl_tween.tween_property(swirl, "rotation:y", TAU, 4.0).from(0.0)
+
+	# Spot pulsing — each spot glows independently
+	for spot_node in pool.get_children():
+		if spot_node is MeshInstance3D and spot_node != mesh_inst and spot_node != swirl:
+			var spot_tw = pool.create_tween().set_loops()
+			var delay = randf_range(0.0, 1.5)
+			spot_tw.tween_property(spot_node, "scale", Vector3(1.3, 1.0, 1.3), 0.6).set_delay(delay).set_trans(Tween.TRANS_SINE)
+			spot_tw.tween_property(spot_node, "scale", Vector3(0.7, 1.0, 0.7), 0.6).set_trans(Tween.TRANS_SINE)
 
 	# Bubbles rising from pool surface
 	var bubbles = GPUParticles3D.new()

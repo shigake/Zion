@@ -106,6 +106,16 @@ func _process(delta: float) -> void:
 		event_timer -= delta
 		if event_timer <= 0:
 			_end_event()
+			return
+		# Merchant proximity check — fallback for when body_entered signal misses
+		if active_event == "merchant" and is_instance_valid(_merchant_node) and not get_node_or_null("MerchantUI"):
+			var merchant_players = GameManager.get_players()
+			if not merchant_players.is_empty():
+				var merchant_pos = _merchant_node.global_position
+				for mp in merchant_players:
+					if is_instance_valid(mp) and merchant_pos.distance_to(mp.global_position) < 3.0:
+						_show_merchant_ui()
+						break
 		return
 
 	# Check warnings for upcoming timed events (10s before)
@@ -437,9 +447,11 @@ func _spawn_merchant() -> void:
 	# Interaction Area
 	var area = Area3D.new()
 	area.name = "InteractArea"
+	area.monitoring = true
+	area.monitorable = false
 	var col = CollisionShape3D.new()
 	var shape = SphereShape3D.new()
-	shape.radius = 2.5
+	shape.radius = 3.0  # Slightly larger for easier interaction
 	col.shape = shape
 	area.add_child(col)
 	area.collision_layer = 0
@@ -477,11 +489,24 @@ func _check_merchant_overlap() -> void:
 	var area = _merchant_node.get_node_or_null("InteractArea")
 	if not area or not is_instance_valid(area):
 		return
+	# Wait for physics to detect overlaps (Area3D needs at least one physics frame)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not is_instance_valid(_merchant_node) or not is_instance_valid(area):
+		return
 	var bodies = area.get_overlapping_bodies()
 	for body in bodies:
 		if body.is_in_group("players"):
 			_show_merchant_ui()
 			return
+	# Fallback: direct distance check since Area3D overlap may fail
+	var players = GameManager.get_players()
+	if not players.is_empty() and is_instance_valid(_merchant_node):
+		var merchant_pos = _merchant_node.global_position
+		for player in players:
+			if is_instance_valid(player) and merchant_pos.distance_to(player.global_position) < 3.0:
+				_show_merchant_ui()
+				return
 
 func _on_merchant_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("players"):

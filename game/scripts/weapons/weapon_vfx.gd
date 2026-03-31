@@ -69,7 +69,8 @@ static func spawn_slash_trail(
 	sprite.global_position = pos
 	sprite.scale = Vector3(0.5, 0.5, 0.5)
 	sprite.modulate = Color(1, 1, 1, 1)
-	var tween = caller.create_tween()
+	# Use sprite's own tween so it survives even if caller is freed
+	var tween = sprite.create_tween()
 	tween.set_parallel(true)
 	var s = Vector3(final_scale, final_scale, final_scale)
 	tween.tween_property(sprite, "scale", s, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
@@ -106,7 +107,8 @@ static func spawn_shockwave_ring(
 	ring.global_position = pos + Vector3(0, 0.05, 0)
 	ring.scale = Vector3(0.3, 0.1, 0.3)
 	var target_scale = Vector3(area_scale, 0.1, area_scale)
-	var tween = caller.create_tween()
+	# Use ring's own tween so it survives even if caller is freed
+	var tween = ring.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(ring, "scale", target_scale, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(mat, "albedo_color:a", 0.0, duration).set_ease(Tween.EASE_IN)
