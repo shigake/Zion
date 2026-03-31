@@ -197,7 +197,7 @@ const QUEST_INTERVAL := 60.0  # Nova quest a cada 60s
 const QUEST_REWARD_CRYSTALS := 10
 const QUEST_REWARD_XP := 30
 const PICKUP_CAP := 200
-const MAX_ENEMIES := 500
+const MAX_ENEMIES := 150
 
 # ==================================================================
 # PLAYER
@@ -323,9 +323,9 @@ const FPS_CRITICAL := 20.0       # FPS critico: para spawning
 const FPS_LOW := 30.0            # FPS baixo: limita spawning
 const FPS_MEDIUM := 45.0         # FPS medio: soft cap
 const FPS_LOW_SPAWN_MULT := 0.5  # Multiplicador de spawn em FPS baixo
-const ENEMIES_CAP_CRITICAL := 30
-const ENEMIES_CAP_LOW := 60
-const ENEMIES_CAP_MEDIUM := 120
+const ENEMIES_CAP_CRITICAL := 10
+const ENEMIES_CAP_LOW := 20
+const ENEMIES_CAP_MEDIUM := 40
 
 # ---- Boss Rush ----
 const BOSS_RUSH_FILLER_INTERVAL := 1.5

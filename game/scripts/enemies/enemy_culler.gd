@@ -16,21 +16,21 @@ class_name EnemyCuller
 ##   add_child(culler)
 
 # ---- Constantes ----
-## Distancia ao quadrado para dormir inimigos (45^2 = 2025, was 60^2)
-const SLEEP_DIST_SQ := 2025.0
+## Distancia ao quadrado para dormir inimigos (32^2 = 1024)
+const SLEEP_DIST_SQ := 1024.0
 
-## Distancia ao quadrado para despawnar inimigos (65^2 = 4225, was 80^2)
-const DESPAWN_DIST_SQ := 4225.0
+## Distancia ao quadrado para despawnar inimigos (45^2 = 2025)
+const DESPAWN_DIST_SQ := 2025.0
 
-## Distancia ao quadrado para acordar inimigos dormindo (40^2 = 1600, was 55^2)
+## Distancia ao quadrado para acordar inimigos dormindo (28^2 = 784)
 ## Um pouco menor que SLEEP para criar histerese e evitar oscilacao
-const WAKE_DIST_SQ := 1600.0
+const WAKE_DIST_SQ := 784.0
 
 ## Maximo de inimigos processados por frame
-const BATCH_SIZE := 150
+const BATCH_SIZE := 200
 
 ## Intervalo base entre checagens (segundos) — adaptativo com FPS
-const CHECK_INTERVAL_BASE := 0.4
+const CHECK_INTERVAL_BASE := 0.25
 const CHECK_INTERVAL_FAST := 0.2  # Usado quando FPS < 30
 
 # ---- Estado ----

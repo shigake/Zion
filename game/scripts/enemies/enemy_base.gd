@@ -760,6 +760,10 @@ func _die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	# Immediately stop rendering and processing for performance
+	visible = false
+	set_physics_process(false)
+	set_process(false)
 	AudioManager.play_sfx("kill")
 	# Track in bestiary
 	SaveManager.track_bestiary(name)

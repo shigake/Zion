@@ -80,6 +80,14 @@ func _process(delta: float) -> void:
 func _spawn_wave(mult: float) -> void:
 	if GameManager.enemies_alive >= GameManager.max_enemies:
 		return
+	# Dynamic FPS-based hard cap on enemies
+	var fps = Engine.get_frames_per_second()
+	var dynamic_cap = 150
+	if fps < 45: dynamic_cap = 100
+	if fps < 35: dynamic_cap = 70
+	if fps < 25: dynamic_cap = 40
+	if GameManager.enemies_alive >= dynamic_cap:
+		return
 	# Dynamic cap: reduce spawns when FPS is low — aggressive throttling
 	var fps = Engine.get_frames_per_second()
 	if fps < GameConstants.FPS_CRITICAL and GameManager.enemies_alive > GameConstants.ENEMIES_CAP_CRITICAL:
@@ -389,14 +397,10 @@ func _make_elite(enemy: Node3D) -> void:
 		enemy.enemy_color = GameConstants.ELITE_COLOR
 		enemy.scale = GameConstants.ELITE_SCALE
 		AudioManager.play_sfx("enemy_growl")
-		# Aura dourada pulsante para elites
-		var aura = OmniLight3D.new()
-		aura.name = "EliteAura"
-		aura.light_color = Color(1.0, 0.85, 0.2)
-		aura.light_energy = 1.5
-		aura.omni_range = 3.0
-		aura.position.y = 0.5
-		enemy.add_child(aura)
+		# Elite golden tint (no light for performance)
+		var sprite = enemy.get_node_or_null("EnemySprite")
+		if sprite:
+			sprite.modulate = Color(1.0, 0.85, 0.2)
 
 func _spawn_miniboss() -> void:
 	var players = GameManager.get_players()
