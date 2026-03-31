@@ -37,6 +37,10 @@ var _emote_wheel_open: bool = false
 var _emote_label: Label3D = null
 var _emote_timer: float = 0.0
 
+# World HP bar
+var _world_hp_bar: MeshInstance3D = null
+var _world_hp_bg: MeshInstance3D = null
+
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
 
@@ -95,6 +99,9 @@ func _ready() -> void:
 		_animator.setup(proc_model)
 		add_child(_animator)
 
+	# World-space HP bar (pequena, abaixo do sprite)
+	_create_world_hp_bar()
+
 	# Player aura
 	var aura_script = preload("res://scripts/effects/player_aura.gd")
 	var aura = MeshInstance3D.new()
@@ -123,7 +130,57 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_create_barrier_walls()
 
+func _create_world_hp_bar() -> void:
+	# Barra verde de HP embaixo do sprite do jogador (world-space)
+	var bar_width = 1.0
+	var bar_height = 0.06
+
+	# Background (cinza escuro)
+	_world_hp_bg = MeshInstance3D.new()
+	var bg_mesh = BoxMesh.new()
+	bg_mesh.size = Vector3(bar_width + 0.04, bar_height, 0.01)
+	_world_hp_bg.mesh = bg_mesh
+	var bg_mat = StandardMaterial3D.new()
+	bg_mat.albedo_color = Color(0.1, 0.1, 0.12, 0.8)
+	bg_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bg_mat.no_depth_test = true
+	_world_hp_bg.material_override = bg_mat
+	_world_hp_bg.position = Vector3(0, 0.15, 0)
+	add_child(_world_hp_bg)
+
+	# Fill (verde)
+	_world_hp_bar = MeshInstance3D.new()
+	var fill_mesh = BoxMesh.new()
+	fill_mesh.size = Vector3(bar_width, bar_height - 0.02, 0.01)
+	_world_hp_bar.mesh = fill_mesh
+	var fill_mat = StandardMaterial3D.new()
+	fill_mat.albedo_color = Color(0.2, 0.85, 0.2)
+	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fill_mat.no_depth_test = true
+	_world_hp_bar.material_override = fill_mat
+	_world_hp_bar.position = Vector3(0, 0.15, 0.001)
+	add_child(_world_hp_bar)
+
+func _update_world_hp_bar() -> void:
+	if not _world_hp_bar or not _world_hp_bg:
+		return
+	var max_hp = GameManager.get_effective_max_hp()
+	var ratio = clampf(float(GameManager.player_hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 1.0
+	_world_hp_bar.scale.x = ratio
+	_world_hp_bar.position.x = -(1.0 - ratio) * 0.5
+	# Cor muda com HP: verde → amarelo → vermelho
+	var mat = _world_hp_bar.material_override
+	if mat:
+		if ratio > 0.5:
+			mat.albedo_color = Color(0.2, 0.85, 0.2)
+		elif ratio > 0.25:
+			mat.albedo_color = Color(0.9, 0.8, 0.1)
+		else:
+			mat.albedo_color = Color(0.9, 0.15, 0.1)
+
 func _physics_process(delta: float) -> void:
+	_update_world_hp_bar()
 	if GameManager.is_game_over or GameManager.paused:
 		return
 
