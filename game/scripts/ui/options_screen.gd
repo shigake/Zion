@@ -547,8 +547,7 @@ func _build_tab_controles() -> void:
 
 	_add_slider(vbox, LocaleManager.tr_key("opt_analog_deadzone"), "input_deadzone", 0.05, 0.5, 0.01, 0.15, Callable(), t)
 	_add_slider(vbox, LocaleManager.tr_key("opt_gamepad_sensitivity"), "gamepad_deadzone", 0.1, 0.5, 0.01, 0.3,
-		func(val: float) -> void:
-			SaveManager.data["gamepad_deadzone"] = val,
+		Callable(),
 		t)
 	_add_toggle(vbox, LocaleManager.tr_key("opt_vibration"), "input_vibration", true, Callable(), t)
 
@@ -695,11 +694,13 @@ func _deferred_rebuild(restore_tab: int) -> void:
 # ---------------------------------------------------------------------------
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
-	# Reverter mudancas nao salvas
+	# Reverter mudancas nao salvas (restaura previews ao estado original)
 	if not _pending_changes.is_empty():
 		for key in _pending_changes:
 			if _original_values.has(key):
 				SaveManager.data[key] = _original_values[key]
+		# Re-aplicar configuracoes originais para reverter previews visuais/audio
+		SaveManager._restore_settings()
 		_pending_changes.clear()
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
 

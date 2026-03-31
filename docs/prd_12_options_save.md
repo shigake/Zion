@@ -1,3 +1,5 @@
+## Status: CONCLUIDO
+
 # PRD 12 — Opcoes: salva automaticamente, precisa de botao Salvar
 
 ## Problema
