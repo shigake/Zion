@@ -6,7 +6,7 @@ extends Node
 
 signal locale_changed(new_locale: String)
 
-var current_locale: String = "pt"
+var current_locale: String = "en"  # Default English
 const AVAILABLE_LOCALES := ["pt", "en", "es", "fr", "de", "ja", "zh", "ko", "it", "ru"]
 const LOCALE_NAMES := {
 	"pt": "Português", "en": "English", "es": "Español", "fr": "Français",
@@ -398,7 +398,7 @@ func _ready() -> void:
 
 func tr_key(key: String) -> String:
 	if key in translations:
-		return translations[key].get(current_locale, translations[key].get("pt", key))
+		return translations[key].get(current_locale, translations[key].get("en", key))
 	return key
 
 ## Converte texto para sentence case: primeira letra maiúscula, resto minúsculo.

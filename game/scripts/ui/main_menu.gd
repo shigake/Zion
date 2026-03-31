@@ -95,6 +95,9 @@ func _ready() -> void:
 	_setup_floating_particles()
 	_setup_hover_glow()
 
+	# Language selector (top-right)
+	_setup_language_selector()
+
 	# Connect buttons
 	play_btn.pressed.connect(_on_play)
 	multi_btn.pressed.connect(_on_multiplayer)
@@ -782,6 +785,33 @@ func _on_unlock_all() -> void:
 func _on_quit() -> void:
 	AudioManager.play_sfx("menu_click")
 	_show_quit_confirmation()
+
+func _setup_language_selector() -> void:
+	var lang_btn = OptionButton.new()
+	lang_btn.name = "LanguageSelector"
+	var locales = LocaleManager.AVAILABLE_LOCALES
+	var current_idx := 0
+	for i in range(locales.size()):
+		lang_btn.add_item(LocaleManager.LOCALE_NAMES.get(locales[i], locales[i]), i)
+		if locales[i] == LocaleManager.current_locale:
+			current_idx = i
+	lang_btn.selected = current_idx
+	lang_btn.item_selected.connect(func(idx: int):
+		if idx < locales.size():
+			LocaleManager.set_locale(locales[idx])
+			# Recarrega menu para aplicar traduções
+			get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	)
+	lang_btn.anchor_left = 1.0
+	lang_btn.anchor_right = 1.0
+	lang_btn.anchor_top = 0.0
+	lang_btn.anchor_bottom = 0.0
+	lang_btn.offset_left = -180.0
+	lang_btn.offset_top = 10.0
+	lang_btn.offset_right = -10.0
+	lang_btn.offset_bottom = 40.0
+	lang_btn.add_theme_font_size_override("font_size", 13)
+	add_child(lang_btn)
 
 
 func _unhandled_input(event: InputEvent) -> void:
