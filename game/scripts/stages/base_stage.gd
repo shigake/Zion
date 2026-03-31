@@ -19,12 +19,13 @@ func _ready() -> void:
 	# Aplica iluminação e atmosfera da fenda
 	load("res://scripts/stages/stage_atmosphere.gd").apply(self, GameManager.selected_stage)
 
-	# Conecta signals para checar sinergias quando armas mudam
-	GameManager.weapon_added.connect(func(_id): SynergySystem.check_synergies())
-	GameManager.weapon_upgraded.connect(func(_id, _lv): SynergySystem.check_synergies())
-
-	# Conecta signal de kill para sinergias on-kill
-	GameManager.enemy_killed.connect(_on_enemy_killed_synergy)
+	# Conecta signals para checar sinergias (usando Callable direto, não lambda)
+	if not GameManager.weapon_added.is_connected(_on_weapon_changed):
+		GameManager.weapon_added.connect(_on_weapon_changed)
+	if not GameManager.weapon_upgraded.is_connected(_on_weapon_upgraded_synergy):
+		GameManager.weapon_upgraded.connect(_on_weapon_upgraded_synergy)
+	if not GameManager.enemy_killed.is_connected(_on_enemy_killed_synergy):
+		GameManager.enemy_killed.connect(_on_enemy_killed_synergy)
 
 	AudioManager.play_music(music_track)
 
@@ -111,6 +112,12 @@ func _check_evolutions() -> void:
 	var offset = Vector3(randf_range(-5, 5), 0, randf_range(-5, 5))
 	add_child(chest)
 	chest.global_position = pos + offset
+
+func _on_weapon_changed(_id: String) -> void:
+	SynergySystem.check_synergies()
+
+func _on_weapon_upgraded_synergy(_id: String, _lv: int) -> void:
+	SynergySystem.check_synergies()
 
 func _on_enemy_killed_synergy(pos: Vector3, _xp: int) -> void:
 	SynergySystem.apply_on_kill_synergies(pos)

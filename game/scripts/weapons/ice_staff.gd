@@ -192,10 +192,15 @@ func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
 	crystal_mat.emission = Color(0.3, 0.7, 1.0)
 	crystal_mat.emission_energy_multiplier = 1.2
 
+	if not is_inside_tree():
+		return
+	var scene = get_tree().current_scene
+	if not scene:
+		return
 	var num_crystals = randi_range(5, 8)
 	var container = Node3D.new()
+	scene.add_child(container)
 	container.global_position = pos
-	get_tree().current_scene.call_deferred("add_child", container)
 
 	for i in range(num_crystals):
 		var crystal = MeshInstance3D.new()
@@ -231,8 +236,12 @@ func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
 	cleanup_tween.tween_callback(container.queue_free)
 
 func _spawn_frost_mist(pos: Vector3, duration: float) -> void:
+	if not is_inside_tree():
+		return
+	var scene = get_tree().current_scene
+	if not scene:
+		return
 	var mist = GPUParticles3D.new()
-	mist.global_position = pos
 	mist.amount = 12
 	mist.lifetime = 1.0
 	mist.one_shot = false
@@ -264,7 +273,8 @@ func _spawn_frost_mist(pos: Vector3, duration: float) -> void:
 	proc_mat.scale_max = 1.5
 	mist.process_material = proc_mat
 
-	get_tree().current_scene.call_deferred("add_child", mist)
+	scene.add_child(mist)
+	mist.global_position = pos
 
 	# Stop emitting after duration, then free
 	var tween = mist.create_tween()
