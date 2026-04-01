@@ -87,8 +87,8 @@ func _ready() -> void:
 
 	# Conecta ao EventManager se existir
 	await get_tree().process_frame
-	var em = get_tree().current_scene.get_node_or_null("EventManager")
-	if em:
+	var em = get_tree().current_scene.get_node_or_null("EventManager") if get_tree().current_scene else null
+	if em and em.has_signal("event_started"):
 		em.event_started.connect(_on_event_started)
 		em.event_ended.connect(_on_event_ended)
 		em.event_warning.connect(_on_event_warning)
