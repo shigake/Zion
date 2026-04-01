@@ -674,17 +674,17 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		var pos = global_position
 		var dmg_label = ParticleFactory.get_damage_number()
 		dmg_label.text = str(final_damage) + ("!" if is_crit else "")
-		dmg_label.font_size = 64 if is_crit else 48
-		dmg_label.outline_size = 10
+		dmg_label.font_size = 640 if is_crit else 480
+		dmg_label.outline_size = 30
 		dmg_label.modulate = dmg_color
 		dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		dmg_label.position = global_position + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
+		dmg_label.position = global_position + Vector3(randf_range(-0.5, 0.5), 1.8, 0)
 		dmg_label.visible = true
 		dmg_label.set_process(true)
 		if not dmg_label.get_parent():
 			get_tree().current_scene.call_deferred("add_child", dmg_label)
 		elif dmg_label.is_inside_tree():
-			dmg_label.global_position = global_position + Vector3(randf_range(-0.3, 0.3), 1.2, 0)
+			dmg_label.global_position = global_position + Vector3(randf_range(-0.5, 0.5), 1.8, 0)
 
 	# Hit particles + screen shake (throttled: skip particles at low FPS to save performance)
 	if fps > 30 or randf() < 0.3:

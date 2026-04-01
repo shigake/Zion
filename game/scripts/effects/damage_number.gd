@@ -3,8 +3,8 @@ extends Label3D
 ## Numero de dano flutuante. Pop up, sobe e desaparece.
 ## Usa pool do ParticleFactory para evitar alocacoes constantes.
 
-var velocity: Vector3 = Vector3(0, 3, 0)
-var lifetime: float = 0.8
+var velocity: Vector3 = Vector3(0, 5, 0)
+var lifetime: float = 1.2
 var timer: float = 0.0
 
 func setup(value: int, color: Color = Color.WHITE, is_crit: bool = false) -> void:
@@ -12,10 +12,10 @@ func setup(value: int, color: Color = Color.WHITE, is_crit: bool = false) -> voi
 	modulate = color
 	if is_crit:
 		text = str(value) + "!"
-		font_size = 48
+		font_size = 640
 	else:
-		font_size = 32
-	outline_size = 8
+		font_size = 480
+	outline_size = 30
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	visible = true
 
@@ -31,12 +31,12 @@ func setup_text(msg: String, color: Color = Color.WHITE, size: int = 28) -> void
 
 func _reset_for_reuse() -> void:
 	timer = 0.0
-	velocity = Vector3(0, 3, 0)
+	velocity = Vector3(0, 5, 0)
 	modulate = Color.WHITE
 	modulate.a = 1.0
 	visible = false
 	text = ""
-	font_size = 32
+	font_size = 480
 	set_process(false)
 
 func _process(delta: float) -> void:

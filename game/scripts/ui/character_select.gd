@@ -337,7 +337,11 @@ func _build_info_panel(parent: VBoxContainer) -> void:
 
 	_weapon_icon = TextureRect.new()
 	_weapon_icon.custom_minimum_size = Vector2(20, 20)
+	_weapon_icon.size = Vector2(20, 20)
 	_weapon_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_weapon_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_weapon_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_weapon_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	weapon_row.add_child(_weapon_icon)
 
 	_weapon_label = Label.new()

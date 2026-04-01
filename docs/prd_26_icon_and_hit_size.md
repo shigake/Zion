@@ -1,6 +1,6 @@
 # PRD 26 — Ícones de HUD maiores (4×) e hit numbers maiores (10×)
 
-**Status:** pendente  
+**Status:** CONCLUIDO  
 **Prioridade:** alta  
 **Impacto:** visual (zero impacto em gameplay, balance ou rede)
 
