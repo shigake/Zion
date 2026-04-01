@@ -1,6 +1,6 @@
 # PRD 23 — Pause menu: visual aprimorado
 
-## Status: pendente
+## Status: CONCLUIDO
 
 ## Problema
 

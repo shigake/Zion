@@ -106,16 +106,16 @@ func _apply_overlay_style() -> void:
 # ---- Panel central: dark bg, golden border, shadow ----
 func _apply_panel_style() -> void:
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.04, 0.10, 0.97)
+	style.bg_color = Color(0.03, 0.03, 0.06, 0.97)
 	style.border_width_left = 1
 	style.border_width_right = 1
 	style.border_width_top = 1
 	style.border_width_bottom = 1
-	style.border_color = Color(0.9, 0.8, 0.3, 0.45)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
+	style.border_color = Color(0.9, 0.8, 0.3)
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
 	style.shadow_color = Color(0.9, 0.75, 0.2, 0.18)
 	style.shadow_size = 12
 	style.content_margin_left = 20
@@ -127,8 +127,8 @@ func _apply_panel_style() -> void:
 # ---- Title: golden, localized ----
 func _apply_title_style() -> void:
 	_title_ref = $Panel/VBox/Title
-	_title_ref.text = LocaleManager.tr_key("pause_title")
-	_title_ref.add_theme_font_size_override("font_size", 26)
+	_title_ref.text = "PAUSA"
+	_title_ref.add_theme_font_size_override("font_size", 28)
 	_title_ref.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	_title_ref.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
@@ -814,7 +814,7 @@ func _on_locale_changed(_new_locale: String) -> void:
 	resume_btn.text = LocaleManager.tr_key("resume")
 	menu_btn.text = LocaleManager.tr_key("quit_to_menu")
 	if _title_ref and is_instance_valid(_title_ref):
-		_title_ref.text = LocaleManager.tr_key("pause_title")
+		_title_ref.text = "PAUSA"
 	if options_btn_ref and is_instance_valid(options_btn_ref):
 		options_btn_ref.text = LocaleManager.tr_key("options")
 	if quit_btn_ref and is_instance_valid(quit_btn_ref):
