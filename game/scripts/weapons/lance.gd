@@ -14,8 +14,7 @@ var _trail: Node3D = null
 var _slash_tex: Texture2D = null
 
 func _ready() -> void:
-	thrust_mesh.visible = false
-	thrust_mesh.mesh = null  # Hide debug geometry; trail + slash sprites provide visual feedback
+	thrust_mesh.visible = true
 	thrust_area.body_entered.connect(_on_body_entered)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/lance_thrust.png"
@@ -23,18 +22,17 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path2)
 	# Weapon trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.8, 0.7, 0.2, 0.6)
-	_trail.max_points = 8
+	_trail.trail_color = Color(0.9, 0.8, 0.3, 0.85)
+	_trail.max_points = 14
 	thrust_mesh.add_child(_trail)
 	# Billboard sprite
 	var _sprite_path = "res://assets/sprites/weapons/lance.png"
 	if ResourceLoader.exists(_sprite_path):
-		thrust_mesh.visible = false
 		var sprite = Sprite3D.new()
 		sprite.texture = load(_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
+		sprite.pixel_size = 0.030
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
@@ -98,7 +96,7 @@ func _attack(level: int) -> void:
 	_spawn_slash_trail()
 
 func _spawn_slash_trail() -> void:
-	WeaponVFX.spawn_slash_trail(self, _slash_tex, global_position + Vector3(0, 0.5, 0), 0.03, 1.2, 0.17)
+	WeaponVFX.spawn_slash_trail(self, _slash_tex, global_position + Vector3(0, 0.5, 0), 0.030, 2.0, 0.22, Vector3(0.8, 0.8, 0.8))
 
 func _on_body_entered(body: Node3D) -> void:
 	# Pierces all enemies in the line — no hit limit

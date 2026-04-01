@@ -52,9 +52,10 @@ static func spawn_slash_trail(
 	caller: Node,
 	texture: Texture2D,
 	pos: Vector3,
-	pixel_size: float = 0.03,
+	pixel_size: float = 0.015,
 	final_scale: float = 1.2,
 	duration: float = 0.18,
+	start_scale: Vector3 = Vector3(0.5, 0.5, 0.5),
 ) -> void:
 	if not caller.is_inside_tree() or not texture:
 		return
@@ -67,7 +68,7 @@ static func spawn_slash_trail(
 	sprite.texture = texture
 	sprite.pixel_size = pixel_size
 	sprite.global_position = pos
-	sprite.scale = Vector3(0.5, 0.5, 0.5)
+	sprite.scale = start_scale
 	sprite.modulate = Color(1, 1, 1, 1)
 	# Use sprite's own tween so it survives even if caller is freed
 	var tween = sprite.create_tween()
