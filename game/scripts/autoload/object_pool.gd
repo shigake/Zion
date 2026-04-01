@@ -6,6 +6,21 @@ extends Node
 var _pools: Dictionary = {}  # scene_path -> Array[Node]
 var _active: Dictionary = {}  # scene_path -> int (count of active instances)
 
+## Pre-warm the pool by instantiating `count` copies of a scene ahead of time.
+## Call during loading screens or _ready() to avoid first-spawn stutters.
+func prewarm(scene: PackedScene, count: int) -> void:
+	var path = scene.resource_path
+	if path not in _pools:
+		_pools[path] = []
+		_active[path] = 0
+	var pool: Array = _pools[path]
+	for _i in range(count):
+		var instance = scene.instantiate()
+		# Disable processing so pre-warmed instances don't run logic
+		instance.set_process(false)
+		instance.set_physics_process(false)
+		pool.append(instance)
+
 func get_instance(scene: PackedScene) -> Node:
 	var path = scene.resource_path
 	if path not in _pools:

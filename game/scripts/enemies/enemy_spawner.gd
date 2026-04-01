@@ -40,6 +40,9 @@ var _boss_rush_index: int = 0
 var _boss_rush_cooldown: float = 0.0
 var _boss_rush_active_boss: bool = false
 
+# Cached FPS value — updated once per _process to avoid redundant Engine calls
+var _cached_fps: float = 60.0
+
 # Cached stage skin data (resolved once at start instead of per-spawn)
 var _cached_skin_colors: Array = []
 var _cached_skin_names: Dictionary = {}
@@ -48,10 +51,16 @@ var _cached_skin_stage: String = ""
 func _ready() -> void:
 	rng.randomize()
 	_cache_stage_skin()
+	# Pre-warm ObjectPool with common enemies to avoid first-spawn stutters
+	ObjectPool.prewarm(slime_scene, 10)
+	ObjectPool.prewarm(bat_scene, 5)
+	ObjectPool.prewarm(skeleton_scene, 5)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
 		return
+
+	_cached_fps = Engine.get_frames_per_second()
 
 	var mult = GameManager.get_difficulty_multiplier()
 	# Hyper mode: 2x spawn rate
@@ -80,8 +89,8 @@ func _process(delta: float) -> void:
 func _spawn_wave(mult: float) -> void:
 	if GameManager.enemies_alive >= GameManager.max_enemies:
 		return
-	# Dynamic FPS-based hard cap on enemies
-	var fps = Engine.get_frames_per_second()
+	# Dynamic FPS-based hard cap on enemies (uses cached value from _process)
+	var fps = _cached_fps
 	var dynamic_cap = 150
 	if fps < 45: dynamic_cap = 100
 	if fps < 35: dynamic_cap = 70

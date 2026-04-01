@@ -24,6 +24,13 @@ var _spark_draw_pass: SphereMesh  # For slash sparks, whip sparks
 var _dust_draw_pass: SphereMesh   # For ground dust, hammer dust
 var _debris_draw_pass: BoxMesh    # For hammer debris
 
+# Shared draw passes for hit/death/collect/level-up/explosion (avoid per-emission allocation)
+var _hit_draw_pass: SphereMesh
+var _death_draw_pass: BoxMesh
+var _collect_draw_pass: SphereMesh
+var _levelup_draw_pass: SphereMesh
+var _explosion_draw_pass: SphereMesh
+
 func _ready() -> void:
 	_create_shared_meshes()
 	_init_particle_pool()
@@ -67,6 +74,50 @@ func _create_shared_meshes() -> void:
 	debris_mat.emission_enabled = true
 	debris_mat.emission_energy_multiplier = 1.0
 	_debris_draw_pass.surface_set_material(0, debris_mat)
+
+	# Hit draw pass (shared for spawn_hit_particles)
+	_hit_draw_pass = SphereMesh.new()
+	_hit_draw_pass.radius = 0.08
+	_hit_draw_pass.height = 0.16
+	var hit_mat = StandardMaterial3D.new()
+	hit_mat.emission_enabled = true
+	hit_mat.emission_energy_multiplier = 2.0
+	_hit_draw_pass.surface_set_material(0, hit_mat)
+
+	# Death draw pass (shared for spawn_death_particles)
+	_death_draw_pass = BoxMesh.new()
+	_death_draw_pass.size = Vector3(0.1, 0.1, 0.1)
+	var death_mat = StandardMaterial3D.new()
+	death_mat.emission_enabled = true
+	death_mat.emission_energy_multiplier = 1.5
+	_death_draw_pass.surface_set_material(0, death_mat)
+
+	# Collect draw pass (shared for spawn_collect_particles)
+	_collect_draw_pass = SphereMesh.new()
+	_collect_draw_pass.radius = 0.05
+	_collect_draw_pass.height = 0.1
+	var collect_mat = StandardMaterial3D.new()
+	collect_mat.emission_enabled = true
+	collect_mat.emission_energy_multiplier = 3.0
+	_collect_draw_pass.surface_set_material(0, collect_mat)
+
+	# Level-up draw pass (shared for spawn_level_up_particles)
+	_levelup_draw_pass = SphereMesh.new()
+	_levelup_draw_pass.radius = 0.06
+	_levelup_draw_pass.height = 0.12
+	var levelup_mat = StandardMaterial3D.new()
+	levelup_mat.emission_enabled = true
+	levelup_mat.emission_energy_multiplier = 3.0
+	_levelup_draw_pass.surface_set_material(0, levelup_mat)
+
+	# Explosion draw pass (shared for spawn_explosion_particles)
+	_explosion_draw_pass = SphereMesh.new()
+	_explosion_draw_pass.radius = 0.1
+	_explosion_draw_pass.height = 0.2
+	var explosion_mat = StandardMaterial3D.new()
+	explosion_mat.emission_enabled = true
+	explosion_mat.emission_energy_multiplier = 4.0
+	_explosion_draw_pass.surface_set_material(0, explosion_mat)
 
 func _init_particle_pool() -> void:
 	for i in PARTICLE_POOL_SIZE:
@@ -130,11 +181,20 @@ func _setup_and_emit(particles: GPUParticles3D, pos: Vector3, cleanup_time: floa
 	particles.global_position = pos
 	particles.emitting = true
 
-	# Schedule return to pool
-	_active_particles[particles] = cleanup_time
-	var tween = create_tween()
-	var p_ref = particles
-	tween.tween_callback(func(): _return_particle(p_ref)).set_delay(cleanup_time)
+	# Schedule return to pool via expiry time (no Tween allocation)
+	_active_particles[particles] = Time.get_ticks_msec() / 1000.0 + cleanup_time
+
+func _process(_delta: float) -> void:
+	# Clean up expired particles (replaces per-emission Tween allocation)
+	if _active_particles.is_empty():
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	var to_return: Array = []
+	for p in _active_particles:
+		if now >= _active_particles[p]:
+			to_return.append(p)
+	for p in to_return:
+		_return_particle(p)
 
 # --- Damage Number Pool ---
 
@@ -222,22 +282,12 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 	particles.lifetime = 0.4
 	particles.explosiveness = 1.0
 
-	# Update draw pass
-	var draw_pass = particles.draw_pass_1
-	if draw_pass:
-		if not draw_pass is SphereMesh:
-			draw_pass = SphereMesh.new()
-			draw_pass.radius = 0.08
-			draw_pass.height = 0.16
-			var draw_mat = StandardMaterial3D.new()
-			draw_mat.emission_enabled = true
-			draw_pass.surface_set_material(0, draw_mat)
-			particles.draw_pass_1 = draw_pass
-		var draw_mat: StandardMaterial3D = draw_pass.surface_get_material(0)
-		if draw_mat:
-			draw_mat.albedo_color = color
-			draw_mat.emission = color
-			draw_mat.emission_energy_multiplier = 2.0
+	# Use shared draw pass (no per-emission allocation)
+	particles.draw_pass_1 = _hit_draw_pass
+	var draw_mat: StandardMaterial3D = _hit_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = color
 
 	_setup_and_emit(particles, pos, 1.0)
 
@@ -265,20 +315,12 @@ func spawn_death_particles(pos: Vector3, color: Color, count: int = 12) -> void:
 	particles.lifetime = 0.6
 	particles.explosiveness = 1.0
 
-	# Use box mesh for death particles
-	var draw_pass = particles.draw_pass_1
-	if not draw_pass is BoxMesh:
-		draw_pass = BoxMesh.new()
-		draw_pass.size = Vector3(0.1, 0.1, 0.1)
-		var draw_mat = StandardMaterial3D.new()
-		draw_mat.emission_enabled = true
-		draw_pass.surface_set_material(0, draw_mat)
-		particles.draw_pass_1 = draw_pass
-	var draw_mat: StandardMaterial3D = draw_pass.surface_get_material(0)
+	# Use shared draw pass (no per-emission allocation)
+	particles.draw_pass_1 = _death_draw_pass
+	var draw_mat: StandardMaterial3D = _death_draw_pass.surface_get_material(0)
 	if draw_mat:
 		draw_mat.albedo_color = color
 		draw_mat.emission = color
-		draw_mat.emission_energy_multiplier = 1.5
 
 	_setup_and_emit(particles, pos, 1.5)
 
@@ -301,21 +343,12 @@ func spawn_collect_particles(pos: Vector3, color: Color = Color(0.2, 0.6, 1.0)) 
 	particles.lifetime = 0.5
 	particles.explosiveness = 1.0
 
-	var draw_pass = particles.draw_pass_1
-	if draw_pass:
-		if not draw_pass is SphereMesh:
-			draw_pass = SphereMesh.new()
-			draw_pass.radius = 0.05
-			draw_pass.height = 0.1
-			var draw_mat = StandardMaterial3D.new()
-			draw_mat.emission_enabled = true
-			draw_pass.surface_set_material(0, draw_mat)
-			particles.draw_pass_1 = draw_pass
-		var draw_mat: StandardMaterial3D = draw_pass.surface_get_material(0)
-		if draw_mat:
-			draw_mat.albedo_color = color
-			draw_mat.emission = color
-			draw_mat.emission_energy_multiplier = 3.0
+	# Use shared draw pass (no per-emission allocation)
+	particles.draw_pass_1 = _collect_draw_pass
+	var draw_mat: StandardMaterial3D = _collect_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = color
 
 	_setup_and_emit(particles, pos, 1.0)
 
@@ -336,21 +369,12 @@ func spawn_level_up_particles(pos: Vector3) -> void:
 	particles.lifetime = 1.0
 	particles.explosiveness = 0.8
 
-	var draw_pass = particles.draw_pass_1
-	if draw_pass:
-		if not draw_pass is SphereMesh:
-			draw_pass = SphereMesh.new()
-			draw_pass.radius = 0.06
-			draw_pass.height = 0.12
-			var draw_mat = StandardMaterial3D.new()
-			draw_mat.emission_enabled = true
-			draw_pass.surface_set_material(0, draw_mat)
-			particles.draw_pass_1 = draw_pass
-		var draw_mat: StandardMaterial3D = draw_pass.surface_get_material(0)
-		if draw_mat:
-			draw_mat.albedo_color = color
-			draw_mat.emission = Color(1, 0.85, 0.2)
-			draw_mat.emission_energy_multiplier = 3.0
+	# Use shared draw pass (no per-emission allocation)
+	particles.draw_pass_1 = _levelup_draw_pass
+	var draw_mat: StandardMaterial3D = _levelup_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(1, 0.85, 0.2)
 
 	_setup_and_emit(particles, pos, 2.0)
 
@@ -523,21 +547,12 @@ func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	particles.lifetime = 0.6
 	particles.explosiveness = 1.0
 
-	var draw_pass = particles.draw_pass_1
-	if draw_pass:
-		if not draw_pass is SphereMesh:
-			draw_pass = SphereMesh.new()
-			draw_pass.radius = 0.1
-			draw_pass.height = 0.2
-			var draw_mat = StandardMaterial3D.new()
-			draw_mat.emission_enabled = true
-			draw_pass.surface_set_material(0, draw_mat)
-			particles.draw_pass_1 = draw_pass
-		var draw_mat: StandardMaterial3D = draw_pass.surface_get_material(0)
-		if draw_mat:
-			draw_mat.albedo_color = color
-			draw_mat.emission = Color(1, 0.4, 0.05)
-			draw_mat.emission_energy_multiplier = 4.0
+	# Use shared draw pass (no per-emission allocation)
+	particles.draw_pass_1 = _explosion_draw_pass
+	var draw_mat: StandardMaterial3D = _explosion_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(1, 0.4, 0.05)
 
 	_setup_and_emit(particles, pos, 1.5)
 

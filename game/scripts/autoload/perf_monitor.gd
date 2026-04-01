@@ -36,9 +36,11 @@ const WARN_DRAW_CALLS := 2000
 const WARN_MEMORY_MB := 1024.0
 
 # ---- Estado ----
-## Historico para media movel
+## Historico para media movel (ring buffer — O(1) insert, no remove_at(0))
 var _fps_history: Array[float] = []
 var _frame_time_history: Array[float] = []
+var _history_index: int = 0
+var _history_count: int = 0  # tracks how many slots have been written
 
 ## Metricas atuais
 var current_fps: float = 60.0
@@ -74,6 +76,11 @@ const RENDER_SCALE_STEP := 0.1  # Step de ajuste
 
 
 func _ready() -> void:
+	# Pre-allocate ring buffers for moving average (avoids remove_at(0) O(n))
+	_fps_history.resize(MOVING_AVG_WINDOW)
+	_fps_history.fill(60.0)
+	_frame_time_history.resize(MOVING_AVG_WINDOW)
+	_frame_time_history.fill(16.6)
 	LogManager.info("Perf", "PerfMonitor inicializado — auto_adjust=%s" % str(auto_adjust_enabled))
 
 
@@ -213,27 +220,21 @@ func _count_active_particles() -> int:
 # ===========================================================================
 
 func _update_moving_averages() -> void:
-	_fps_history.append(current_fps)
-	_frame_time_history.append(current_frame_time_ms)
+	# Ring buffer insert — O(1), no array shifting
+	_fps_history[_history_index] = current_fps
+	_frame_time_history[_history_index] = current_frame_time_ms
+	_history_index = (_history_index + 1) % MOVING_AVG_WINDOW
+	if _history_count < MOVING_AVG_WINDOW:
+		_history_count += 1
 
-	# Manter tamanho da janela
-	while _fps_history.size() > MOVING_AVG_WINDOW:
-		_fps_history.remove_at(0)
-	while _frame_time_history.size() > MOVING_AVG_WINDOW:
-		_frame_time_history.remove_at(0)
-
-	# Calcular medias
-	if _fps_history.size() > 0:
-		var fps_sum := 0.0
-		for v in _fps_history:
-			fps_sum += v
-		avg_fps = fps_sum / _fps_history.size()
-
-	if _frame_time_history.size() > 0:
-		var ft_sum := 0.0
-		for v in _frame_time_history:
-			ft_sum += v
-		avg_frame_time_ms = ft_sum / _frame_time_history.size()
+	# Calcular medias over filled portion
+	var fps_sum := 0.0
+	var ft_sum := 0.0
+	for i in range(_history_count):
+		fps_sum += _fps_history[i]
+		ft_sum += _frame_time_history[i]
+	avg_fps = fps_sum / _history_count
+	avg_frame_time_ms = ft_sum / _history_count
 
 
 # ===========================================================================

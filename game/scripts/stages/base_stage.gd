@@ -119,5 +119,13 @@ func _on_weapon_changed(_id: String) -> void:
 func _on_weapon_upgraded_synergy(_id: String, _lv: int) -> void:
 	SynergySystem.check_synergies()
 
+func _exit_tree() -> void:
+	if GameManager.weapon_added.is_connected(_on_weapon_changed):
+		GameManager.weapon_added.disconnect(_on_weapon_changed)
+	if GameManager.weapon_upgraded.is_connected(_on_weapon_upgraded_synergy):
+		GameManager.weapon_upgraded.disconnect(_on_weapon_upgraded_synergy)
+	if GameManager.enemy_killed.is_connected(_on_enemy_killed_synergy):
+		GameManager.enemy_killed.disconnect(_on_enemy_killed_synergy)
+
 func _on_enemy_killed_synergy(pos: Vector3, _xp: int) -> void:
 	SynergySystem.apply_on_kill_synergies(pos)

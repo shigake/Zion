@@ -21,7 +21,7 @@ const DEFAULT_MEDIUM_DIST_SQ := 1600.0 # < 40 unidades (was 50)
 ## Acima de 40 = low/hidden
 
 ## Quantidade maxima de props processados por frame (evita spikes)
-const BATCH_SIZE := 50
+const BATCH_SIZE := 150
 
 ## Intervalo entre checagens de LOD (segundos)
 const CHECK_INTERVAL := 0.5
@@ -45,6 +45,7 @@ var _particle_batch_index: int = 0
 ## Timers
 var _lod_timer: float = 0.0
 var _frustum_timer: float = 0.0
+var _cleanup_timer: float = 0.0
 
 ## Camera ativa (cache)
 var _camera: Camera3D = null
@@ -63,6 +64,12 @@ func _process(delta: float) -> void:
 
 	_lod_timer += delta
 	_frustum_timer += delta
+	_cleanup_timer += delta
+
+	# Cleanup invalid entries on its own slower cycle (every 2s instead of every LOD batch)
+	if _cleanup_timer >= 2.0:
+		_cleanup_timer = 0.0
+		_cleanup_invalid_entries()
 
 	# Checagem de LOD em intervalos
 	if _lod_timer >= CHECK_INTERVAL:
@@ -186,9 +193,6 @@ func _process_lod_batch() -> void:
 	_update_camera()
 	if not _camera:
 		return
-
-	# Limpa entradas invalidas periodicamente
-	_cleanup_invalid_entries()
 
 	var camera_pos := _camera.global_position
 	var count := 0
