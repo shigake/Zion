@@ -64,6 +64,7 @@ Zion/
 │   ├── prd_14_cutscene_mystery.md # PRD 14: cutscene ??? — concluido
 │   ├── prd_15_intro_cinematic.md  # PRD 15: cinematica intro — concluido
 │   ├── prd_16_solo_balance.md     # PRD 16: balance solo — concluido
+│   ├── prd_17_credits_quotes.md  # PRD 17: creditos falas bilíngues + balao posicional — pendente
 │   └── adr/                     # 12 Architecture Decision Records (ADR-001 a ADR-012)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
