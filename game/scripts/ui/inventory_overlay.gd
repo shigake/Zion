@@ -417,14 +417,14 @@ func _add_evolution_entry(parent: Control, evo: Dictionary) -> void:
 	# Weapon progress bar
 	var wpn_bar = ProgressBar.new()
 	wpn_bar.min_value = 0
-	wpn_bar.max_value = 8
+	wpn_bar.max_value = 6
 	wpn_bar.value = evo["weapon_level"]
 	wpn_bar.custom_minimum_size = Vector2(120, 14)
 	wpn_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	wpn_bar.show_percentage = false
 	# Color: green if complete, yellow otherwise
 	var wpn_style = StyleBoxFlat.new()
-	if evo["weapon_level"] >= 8:
+	if evo["weapon_level"] >= 6:
 		wpn_style.bg_color = Color(0.2, 0.9, 0.3)
 	else:
 		wpn_style.bg_color = Color(0.9, 0.8, 0.2)
@@ -437,13 +437,13 @@ func _add_evolution_entry(parent: Control, evo: Dictionary) -> void:
 	# Item progress bar
 	var item_bar = ProgressBar.new()
 	item_bar.min_value = 0
-	item_bar.max_value = 5
+	item_bar.max_value = 3
 	item_bar.value = evo["item_level"]
 	item_bar.custom_minimum_size = Vector2(120, 14)
 	item_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	item_bar.show_percentage = false
 	var item_style = StyleBoxFlat.new()
-	if evo["item_level"] >= 5:
+	if evo["item_level"] >= 3:
 		item_style.bg_color = Color(0.2, 0.9, 0.3)
 	else:
 		item_style.bg_color = Color(0.7, 0.5, 1.0)

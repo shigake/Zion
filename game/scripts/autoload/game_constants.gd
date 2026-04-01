@@ -177,7 +177,7 @@ const RESOLUTIONS: Array[Vector2i] = [
 # ==================================================================
 # BALANCE — XP & DIFICULDADE
 # ==================================================================
-const XP_SCALE_FACTOR := 1.15
+const XP_SCALE_FACTOR := 1.12
 const XP_FLAT_BONUS := 3
 const DIFFICULTY_TIME_SCALE := 0.35
 const BOSS_SPAWN_TIME := 300.0  # 5 minutos (1o boss)
@@ -295,7 +295,7 @@ const ELITE_XP_MULT := 5
 const ELITE_SPEED_MULT := 1.2
 const ELITE_SCALE := Vector3(1.3, 1.3, 1.3)
 const ELITE_COLOR := Color(1.0, 0.85, 0.2)  # Dourado
-const ELITE_MIN_MINUTE := 15.0
+const ELITE_MIN_MINUTE := 10.0  # Elites a partir do min 10 (era 15)
 const ELITE_SPAWN_CHANCE := 0.1  # 10%
 
 # ==================================================================
@@ -304,7 +304,7 @@ const ELITE_SPAWN_CHANCE := 0.1  # 10%
 const SPAWN_MIN_INTERVAL := 0.15
 
 # ---- Fases de Spawn (minutos) ----
-const SPAWN_PHASE_1_END := 2.0    # So slimes
+const SPAWN_PHASE_1_END := 1.0    # So slimes (era 2 min)
 const SPAWN_PHASE_2_END := 5.0    # Slimes + Bats
 const SPAWN_PHASE_3_END := 8.0    # Skeletons + Bats + Slimes grandes
 const SPAWN_PHASE_4_END := 12.0   # Archers + Zombies + Ghosts + Bombers
@@ -365,9 +365,9 @@ const BOSS_FURIOUS_MUTATION_HP := 0.75  # Bosses furiosos comecam com 75% HP
 # ==================================================================
 const CRYSTAL_DROP_CHANCE := 0.3         # 30% base
 const CRYSTAL_DROP_CHANCE_KEY := 0.5     # 50% com master key
-const HEALTH_DROP_CHANCE := 0.02         # 2% base (era 5%)
+const HEALTH_DROP_CHANCE := 0.04         # 4% base (era 2%)
 const HEALTH_DROP_BONUS_THRESHOLD := 0.3 # 30% HP threshold (era 40%)
-const HEALTH_DROP_BONUS_CHANCE := 0.02   # 2% extra quando HP baixo (era 3%)
+const HEALTH_DROP_BONUS_CHANCE := 0.03   # 3% extra quando HP baixo (era 2%)
 const HEALTH_HEAL_FRACTION := 0.08       # 8% do max HP
 const MAGNET_DROP_CHANCE := 0.01         # 1% base
 const MAGNET_DROP_CHANCE_KEY := 0.02     # 2% com master key
@@ -565,15 +565,15 @@ const BOSS_ANNULUS_MAX_RADIUS := 22.0
 # MULTIPLAYER SCALING
 # ==================================================================
 const MP_HP_MULT := [1.0, 1.0, 1.3, 1.6, 2.0]
-const MP_SPAWN_MULT := [1.0, 1.0, 1.2, 1.4, 1.6]
-const MP_BOSS_HP_MULT := [1.0, 1.0, 1.5, 2.0, 2.5]
+const MP_SPAWN_MULT := [0.85, 1.0, 1.2, 1.4, 1.6]  # Solo = 0.85x (era 1.0)
+const MP_BOSS_HP_MULT := [0.85, 1.0, 1.5, 2.0, 2.5]  # Boss solo = 0.85x HP
 
 # ==================================================================
 # DIFFICULTY
 # ==================================================================
-const DIFFICULTY_CAP := 8.0
+const DIFFICULTY_CAP := 12.0
 const HYPER_XP_MULT := 2.0
-const XP_LEVEL_SCALE := 1.15
+const XP_LEVEL_SCALE := 1.12
 const XP_LEVEL_FLAT := 3
 const ARMOR_DIMINISH_DIVISOR := 50   # reduction = armor / (armor + 50)
 const ONESHOT_THRESHOLD_RATIO := 0.5 # Alerta se dano > 50% max HP

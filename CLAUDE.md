@@ -63,6 +63,7 @@ Zion/
 │   ├── prd_13_translation.md    # PRD 13: traducao/localizacao — concluido
 │   ├── prd_14_cutscene_mystery.md # PRD 14: cutscene ??? — concluido
 │   ├── prd_15_intro_cinematic.md  # PRD 15: cinematica intro — concluido
+│   ├── prd_16_solo_balance.md     # PRD 16: balance solo — concluido
 │   └── adr/                     # 12 Architecture Decision Records (ADR-001 a ADR-012)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -202,7 +203,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~99%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 15 PRDs todos concluidos, 12 ADRs documentados. Credits: carrossel de herois com baloes de fala.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~99%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 16 PRDs todos concluidos, 12 ADRs documentados. Credits: carrossel de herois com baloes de fala.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais.
 
