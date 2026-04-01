@@ -24,6 +24,7 @@ var data: Dictionary = {
 	"audio_combat": 100,  # Combat SFX volume (0-100)
 	"audio_ambient": 100,  # Ambient SFX volume (0-100)
 	"audio_ducking": true,  # Auto-ducking music during voice/dialogue
+	"tutorial_advanced_completed": false,  # Phase 2 advanced tutorial (PRD 28 §6)
 }
 
 func _ready() -> void:

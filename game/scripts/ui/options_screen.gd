@@ -523,6 +523,27 @@ func _build_tab_gameplay() -> void:
 			Telemetry.set_enabled(on),
 		t)
 
+	# Section: Tutorial
+	_add_section(vbox, LocaleManager.tr_key("opt_section_tutorial"))
+	var reset_tutorial_btn := Button.new()
+	reset_tutorial_btn.text = LocaleManager.tr_key("opt_reset_tutorial")
+	reset_tutorial_btn.custom_minimum_size = Vector2(200, 32)
+	reset_tutorial_btn.focus_mode = Control.FOCUS_ALL
+	reset_tutorial_btn.pressed.connect(func() -> void:
+		SaveManager.data["tutorial_completed"] = false
+		SaveManager.data["tutorial_complete"] = false
+		SaveManager.data["tutorial_advanced_completed"] = false
+		SaveManager.save_game()
+		reset_tutorial_btn.text = LocaleManager.tr_key("opt_reset_tutorial_confirm")
+		# Restore label after 2 seconds
+		var timer = get_tree().create_timer(2.0)
+		timer.timeout.connect(func() -> void:
+			if is_instance_valid(reset_tutorial_btn):
+				reset_tutorial_btn.text = LocaleManager.tr_key("opt_reset_tutorial")
+		)
+	)
+	vbox.add_child(reset_tutorial_btn)
+
 # ---------------------------------------------------------------------------
 # TAB 5 — Controles
 # ---------------------------------------------------------------------------
