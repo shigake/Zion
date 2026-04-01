@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (22 arquivos + adr/)      # Game design documents
+├── docs/ (32 arquivos + adr/)      # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── story.md                 # Historia, lore, narrativa completa
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
@@ -64,8 +64,18 @@ Zion/
 │   ├── prd_14_cutscene_mystery.md # PRD 14: cutscene ??? — concluido
 │   ├── prd_15_intro_cinematic.md  # PRD 15: cinematica intro — concluido
 │   ├── prd_16_solo_balance.md     # PRD 16: balance solo — concluido
-│   ├── prd_17_credits_quotes.md  # PRD 17: creditos falas bilíngues + balao posicional — pendente
-│   └── adr/                     # 12 Architecture Decision Records (ADR-001 a ADR-012)
+│   ├── prd_17_credits_quotes.md          # PRD 17: creditos falas bilingues + balao posicional — pendente
+│   ├── prd_18_menu_transition_flash.md  # PRD 18: remover mini-loading em transicoes de menu — concluido
+│   ├── prd_19_subtitle_position.md      # PRD 19: tagline do menu abaixo do titulo — concluido
+│   ├── prd_20_weapon_icon_size.md       # PRD 20: icone de arma uniforme na selecao de personagem — concluido
+│   ├── prd_21_loading_anyclick.md       # PRD 21: loading screen clique em qualquer lugar — concluido
+│   ├── prd_22_lance_visual_size.md      # PRD 22: lanca visual maior e mais visivel — concluido
+│   ├── prd_23_pause_menu_visual.md      # PRD 23: pause menu visual aprimorado — concluido
+│   ├── prd_24_worldbar_thickness_xpbar.md # PRD 24: HP bar mais grossa + XP bar world-space — concluido
+│   ├── prd_25_performance_deep.md       # PRD 25: otimizacao de performance profunda — concluido
+│   ├── prd_26_icon_and_hit_size.md      # PRD 26: icones HUD 4x maiores + hit numbers 10x maiores — concluido
+│   ├── prd_27_candy_map_halfsize.md     # PRD 27: Mundo Doce com mapa pela metade (teste de tamanho) — concluido
+│   └── adr/                             # 12 Architecture Decision Records (ADR-001 a ADR-012)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
 │   ├── package.json             # Dependencias (express, better-sqlite3)
@@ -204,7 +214,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~99%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 16 PRDs todos concluidos, 12 ADRs documentados. Credits: carrossel de herois com baloes de fala.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~99%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 27 PRDs (26 concluidos, 1 pendente), 12 ADRs documentados. Credits: carrossel de herois com baloes de fala.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais.
 
