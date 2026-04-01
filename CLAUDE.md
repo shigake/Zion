@@ -64,7 +64,7 @@ Zion/
 │   ├── prd_14_cutscene_mystery.md # PRD 14: cutscene ??? — concluido
 │   ├── prd_15_intro_cinematic.md  # PRD 15: cinematica intro — concluido
 │   ├── prd_16_solo_balance.md     # PRD 16: balance solo — concluido
-│   ├── prd_17_credits_quotes.md          # PRD 17: creditos falas bilingues + balao posicional — pendente
+│   ├── prd_17_credits_quotes.md          # PRD 17: creditos falas bilingues + balao posicional — concluido
 │   ├── prd_18_menu_transition_flash.md  # PRD 18: remover mini-loading em transicoes de menu — concluido
 │   ├── prd_19_subtitle_position.md      # PRD 19: tagline do menu abaixo do titulo — concluido
 │   ├── prd_20_weapon_icon_size.md       # PRD 20: icone de arma uniforme na selecao de personagem — concluido
@@ -214,7 +214,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~99%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 27 PRDs (26 concluidos, 1 pendente), 12 ADRs documentados. Credits: carrossel de herois com baloes de fala.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~99%. FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 27 PRDs (27 concluidos), 12 ADRs documentados. Credits: carrossel de herois com baloes de fala.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais.
 
