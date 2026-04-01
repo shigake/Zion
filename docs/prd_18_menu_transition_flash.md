@@ -1,6 +1,6 @@
 # PRD 18 — Remover mini-loading nas transições de menu
 
-**Status:** pendente  
+**Status:** CONCLUIDO  
 **Prioridade:** P1 — polimento visual  
 **Estimativa:** 1–2h  
 

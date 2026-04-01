@@ -28,6 +28,7 @@ var _tip_label: Label
 var _press_label: Label
 var _title_label: Label
 var _fade_rect: ColorRect
+var _click_catcher: Control
 var _spinner_dots: Array[ColorRect] = []
 
 # — Stage metadata —
@@ -426,6 +427,8 @@ func _on_all_complete() -> void:
 	_waiting_for_input = true
 	if _press_label:
 		_press_label.visible = true
+	if _click_catcher:
+		_click_catcher.visible = true
 	if _progress_label:
 		_progress_label.text = "Pronto!"
 	LogManager.info("Loading", "Carregamento completo, aguardando input")
@@ -445,6 +448,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if is_valid_input:
 		_waiting_for_input = false
+		if _click_catcher:
+			_click_catcher.visible = false
+		if get_viewport():
+			get_viewport().set_input_as_handled()
+		_transition_to_scene()
+
+func _on_click_catcher_input(event: InputEvent) -> void:
+	if not _waiting_for_input:
+		return
+	if event is InputEventMouseButton and event.pressed:
+		_waiting_for_input = false
+		if _click_catcher:
+			_click_catcher.visible = false
 		if get_viewport():
 			get_viewport().set_input_as_handled()
 		_transition_to_scene()
@@ -492,6 +508,8 @@ func _cleanup() -> void:
 	_load_complete = false
 	_waiting_for_input = false
 	_prewarm_done = false
+	if _click_catcher:
+		_click_catcher.visible = false
 	visible = false
 	# Remove UI criada
 	if _root and is_instance_valid(_root):
@@ -670,6 +688,14 @@ func _build_ui() -> void:
 	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_fade_rect)
 
+	# Full-screen click catcher — captures mouse clicks anywhere on screen
+	_click_catcher = Control.new()
+	_click_catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_click_catcher.mouse_filter = Control.MOUSE_FILTER_STOP
+	_click_catcher.visible = false
+	_click_catcher.gui_input.connect(_on_click_catcher_input)
+	_root.add_child(_click_catcher)
+
 func _update_stage_visuals() -> void:
 	var stage_id = _get_stage_id()
 
@@ -758,7 +784,7 @@ const TRANSITION_TIPS: Array = [
 	"Cada boss derrotado e um guardiao libertado.",
 ]
 
-func transition_to(scene_path: String) -> void:
+func transition_to(scene_path: String, show_info: bool = true) -> void:
 	if _is_transitioning or _is_loading:
 		LogManager.warn("Loading", "Transicao ignorada: ja em andamento")
 		return
@@ -804,8 +830,9 @@ func transition_to(scene_path: String) -> void:
 	if not _is_transitioning:
 		return
 
-	# Show loading info (character, stage, tip)
-	if is_instance_valid(_transition_root):
+	# Show loading info (character, stage, tip) — only for non-UI scenes
+	var _is_ui_scene := scene_path.find("scenes/ui/") != -1
+	if show_info and not _is_ui_scene and is_instance_valid(_transition_root):
 		_build_transition_info()
 
 	# Change scene

@@ -191,9 +191,11 @@ func _style_title() -> void:
 		parent.move_child(logo_tex, idx)
 		# Spacer entre logo e subtitulo para respiro visual
 		var logo_spacer = Control.new()
-		logo_spacer.custom_minimum_size = Vector2(0, 12)
+		logo_spacer.custom_minimum_size = Vector2(0, 16)
 		parent.add_child(logo_spacer)
 		parent.move_child(logo_spacer, idx + 1)
+		# Ensure subtitle is always AFTER the logo + spacer
+		parent.move_child(subtitle_label, idx + 2)
 	else:
 		# Fallback: styled text title with gold + glow
 		title_label.text = "ZION"
