@@ -108,6 +108,8 @@ func _update_quest_progress(delta: float) -> void:
 		_complete_quest()
 
 func _complete_quest() -> void:
+	if current_quest.is_empty():
+		return  # reset() foi chamado durante o await
 	_quest_active = false
 	_quests_completed += 1
 
