@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 ## Pause menu — ESC para pausar/despausar.
+## Visual: dark+gold aesthetic matching main menu.
 
 @onready var panel: PanelContainer = $Panel
 @onready var overlay: ColorRect = $Overlay
@@ -15,6 +16,11 @@ var keybind_buttons: Dictionary = {}
 # Guarda se o jogo ja estava "pausado" antes do pause ser aberto
 # (ex: levelup aberto). Ao retomar, restaura esse estado.
 var _was_gm_paused_before: bool = false
+var _vignette: ColorRect = null
+var _gold_line: ColorRect = null
+var _title_ref: Label = null
+var _separator_line: ColorRect = null
+var _original_panel_y: float = 0.0
 
 func _ready() -> void:
 	panel.visible = false
@@ -35,25 +41,205 @@ func _ready() -> void:
 		event.physical_keycode = KEY_ESCAPE
 		InputMap.action_add_event("pause", event)
 
+	# ---- Apply dark+gold visual styling ----
+	_apply_overlay_style()
+	_apply_panel_style()
+	_apply_title_style()
+	_apply_gold_line()
+	_apply_separator_style()
+
 	# Aplica texto localizado nos botoes da cena
 	resume_btn.text = LocaleManager.tr_key("resume")
 	menu_btn.text = LocaleManager.tr_key("quit_to_menu")
 	# Atualiza textos quando o idioma mudar
 	LocaleManager.locale_changed.connect(_on_locale_changed)
+
+	# Style resume button (highlighted golden)
+	_apply_resume_button_style(resume_btn)
+
+	# Style menu button (quit/reddish)
+	_apply_quit_button_style(menu_btn)
+
 	# Options button
 	options_btn_ref = Button.new()
 	options_btn_ref.text = LocaleManager.tr_key("options")
-	options_btn_ref.custom_minimum_size = Vector2(0, 40)
+	options_btn_ref.custom_minimum_size = Vector2(0, 44)
 	options_btn_ref.pressed.connect(_on_options)
+	_apply_normal_button_style(options_btn_ref)
 	$Panel/VBox.add_child(options_btn_ref)
 	$Panel/VBox.move_child(options_btn_ref, 2)  # After Resume, before Menu
 
 	# Quit button (fecha a aplicacao)
 	quit_btn_ref = Button.new()
 	quit_btn_ref.text = LocaleManager.tr_key("quit_game")
-	quit_btn_ref.custom_minimum_size = Vector2(0, 40)
+	quit_btn_ref.custom_minimum_size = Vector2(0, 44)
 	quit_btn_ref.pressed.connect(_on_quit)
+	_apply_quit_button_style(quit_btn_ref)
 	$Panel/VBox.add_child(quit_btn_ref)
+
+	# Apply style to existing scene buttons
+	resume_btn.custom_minimum_size = Vector2(0, 44)
+	menu_btn.custom_minimum_size = Vector2(0, 44)
+	resume_btn.add_theme_font_size_override("font_size", 18)
+	menu_btn.add_theme_font_size_override("font_size", 18)
+
+# ---- Overlay: two layers (solid bg + central vignette) ----
+func _apply_overlay_style() -> void:
+	overlay.color = Color(0.0, 0.0, 0.0, 0.72)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	_vignette = ColorRect.new()
+	_vignette.name = "Vignette"
+	_vignette.color = Color(0.05, 0.04, 0.10, 0.55)
+	_vignette.anchors_preset = Control.PRESET_CENTER
+	_vignette.set_anchors_preset(Control.PRESET_CENTER)
+	_vignette.offset_left = -300.0
+	_vignette.offset_top = -250.0
+	_vignette.offset_right = 300.0
+	_vignette.offset_bottom = 250.0
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_vignette)
+	# Make sure vignette is behind the panel
+	if panel.get_index() >= 0:
+		move_child(_vignette, panel.get_index())
+
+# ---- Panel central: dark bg, golden border, shadow ----
+func _apply_panel_style() -> void:
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.04, 0.10, 0.97)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.9, 0.8, 0.3, 0.45)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.shadow_color = Color(0.9, 0.75, 0.2, 0.18)
+	style.shadow_size = 12
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	panel.add_theme_stylebox_override("panel", style)
+
+# ---- Title: golden, localized ----
+func _apply_title_style() -> void:
+	_title_ref = $Panel/VBox/Title
+	_title_ref.text = LocaleManager.tr_key("pause_title")
+	_title_ref.add_theme_font_size_override("font_size", 26)
+	_title_ref.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
+	_title_ref.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+# ---- Golden decorative line below title ----
+func _apply_gold_line() -> void:
+	_gold_line = ColorRect.new()
+	_gold_line.name = "GoldLine"
+	_gold_line.color = Color(0.9, 0.8, 0.3, 0.6)
+	_gold_line.custom_minimum_size = Vector2(200, 2)
+	_gold_line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	# Insert right after the title (index 1 in VBox)
+	$Panel/VBox.add_child(_gold_line)
+	$Panel/VBox.move_child(_gold_line, 1)
+
+# ---- Replace HSeparator with thin gold ColorRect ----
+func _apply_separator_style() -> void:
+	# Find any HSeparator in the VBox and replace
+	for child in $Panel/VBox.get_children():
+		if child is HSeparator:
+			var idx = child.get_index()
+			child.queue_free()
+			var sep = ColorRect.new()
+			sep.name = "GoldSeparator"
+			sep.color = Color(0.9, 0.8, 0.3, 0.25)
+			sep.custom_minimum_size = Vector2(0, 1)
+			$Panel/VBox.add_child(sep)
+			$Panel/VBox.move_child(sep, idx)
+
+# ---- Button styles ----
+func _make_button_stylebox(bg: Color, border: Color, corner: int = 5) -> StyleBoxFlat:
+	var s = StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_width_left = 1
+	s.border_width_right = 1
+	s.border_width_top = 1
+	s.border_width_bottom = 1
+	s.border_color = border
+	s.corner_radius_top_left = corner
+	s.corner_radius_top_right = corner
+	s.corner_radius_bottom_left = corner
+	s.corner_radius_bottom_right = corner
+	s.content_margin_left = 12
+	s.content_margin_right = 12
+	s.content_margin_top = 6
+	s.content_margin_bottom = 6
+	return s
+
+func _apply_normal_button_style(btn: Button) -> void:
+	btn.add_theme_stylebox_override("normal", _make_button_stylebox(
+		Color(0.10, 0.09, 0.14), Color(0.28, 0.26, 0.35, 0.7)))
+	btn.add_theme_stylebox_override("hover", _make_button_stylebox(
+		Color(0.16, 0.14, 0.22), Color(0.9, 0.8, 0.3, 0.75)))
+	btn.add_theme_stylebox_override("pressed", _make_button_stylebox(
+		Color(0.20, 0.18, 0.28), Color(0.95, 0.85, 0.35, 0.9)))
+	btn.add_theme_stylebox_override("focus", _make_button_stylebox(
+		Color(0.16, 0.14, 0.22), Color(0.9, 0.8, 0.3, 0.75)))
+	btn.add_theme_color_override("font_color", Color(0.82, 0.82, 0.88))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.7))
+	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.95, 0.7))
+	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.95, 0.7))
+	btn.add_theme_font_size_override("font_size", 18)
+	btn.custom_minimum_size = Vector2(0, 44)
+
+func _apply_resume_button_style(btn: Button) -> void:
+	btn.add_theme_stylebox_override("normal", _make_button_stylebox(
+		Color(0.14, 0.12, 0.08), Color(0.85, 0.72, 0.22, 0.7)))
+	btn.add_theme_stylebox_override("hover", _make_button_stylebox(
+		Color(0.20, 0.17, 0.10), Color(0.95, 0.82, 0.30, 0.95)))
+	btn.add_theme_stylebox_override("pressed", _make_button_stylebox(
+		Color(0.20, 0.18, 0.28), Color(0.95, 0.85, 0.35, 0.9)))
+	btn.add_theme_stylebox_override("focus", _make_button_stylebox(
+		Color(0.20, 0.17, 0.10), Color(0.95, 0.82, 0.30, 0.95)))
+	btn.add_theme_color_override("font_color", Color(0.82, 0.82, 0.88))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.55))
+	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.92, 0.55))
+	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.92, 0.55))
+	btn.add_theme_font_size_override("font_size", 18)
+	btn.custom_minimum_size = Vector2(0, 44)
+
+func _apply_quit_button_style(btn: Button) -> void:
+	btn.add_theme_stylebox_override("normal", _make_button_stylebox(
+		Color(0.08, 0.07, 0.08), Color(0.30, 0.22, 0.22, 0.6)))
+	btn.add_theme_stylebox_override("hover", _make_button_stylebox(
+		Color(0.14, 0.09, 0.09), Color(0.85, 0.45, 0.40, 0.8)))
+	btn.add_theme_stylebox_override("pressed", _make_button_stylebox(
+		Color(0.20, 0.14, 0.14), Color(0.90, 0.50, 0.45, 0.9)))
+	btn.add_theme_stylebox_override("focus", _make_button_stylebox(
+		Color(0.14, 0.09, 0.09), Color(0.85, 0.45, 0.40, 0.8)))
+	btn.add_theme_color_override("font_color", Color(0.82, 0.82, 0.88))
+	btn.add_theme_color_override("font_hover_color", Color(0.95, 0.60, 0.55))
+	btn.add_theme_color_override("font_pressed_color", Color(0.95, 0.60, 0.55))
+	btn.add_theme_color_override("font_focus_color", Color(0.95, 0.60, 0.55))
+	btn.add_theme_font_size_override("font_size", 18)
+	btn.custom_minimum_size = Vector2(0, 44)
+
+# ---- Stats panel style (dark+gold) ----
+func _apply_stats_panel_style(sp: PanelContainer) -> void:
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.04, 0.10, 0.95)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.9, 0.8, 0.3, 0.35)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.shadow_color = Color(0.9, 0.75, 0.2, 0.12)
+	style.shadow_size = 8
+	sp.add_theme_stylebox_override("panel", style)
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Handle keybinding rebind
@@ -123,6 +309,8 @@ func _pause() -> void:
 	_was_gm_paused_before = GameManager.paused
 	panel.visible = true
 	overlay.visible = true
+	if _vignette:
+		_vignette.visible = true
 	GameManager.paused = true
 	get_tree().paused = true
 	# Show run stats
@@ -130,6 +318,19 @@ func _pause() -> void:
 	# Gamepad: foco no Resume
 	_setup_pause_focus()
 	GamepadUI.notify_menu_opened()
+	# Entry animation
+	_animate_panel_in()
+
+func _animate_panel_in() -> void:
+	_original_panel_y = panel.offset_top
+	panel.modulate.a = 0.0
+	panel.offset_top += 18
+	panel.offset_bottom += 18
+	var tw = create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(panel, "modulate:a", 1.0, 0.18)
+	tw.tween_property(panel, "offset_top", _original_panel_y, 0.18).set_ease(Tween.EASE_OUT)
+	tw.tween_property(panel, "offset_bottom", _original_panel_y + 280.0, 0.18).set_ease(Tween.EASE_OUT)
 
 func _setup_pause_focus() -> void:
 	var buttons := []
@@ -158,6 +359,8 @@ func _on_resume() -> void:
 		stats_panel = null
 	panel.visible = false
 	overlay.visible = false
+	if _vignette:
+		_vignette.visible = false
 	get_tree().paused = false
 	# Restaura o estado de pausa anterior ao pause:
 	# Se o levelup estava aberto antes, GameManager.paused deve continuar true
@@ -176,6 +379,7 @@ func _show_stats() -> void:
 	stats_panel.offset_top = -200
 	stats_panel.offset_right = -20
 	stats_panel.offset_bottom = 200
+	_apply_stats_panel_style(stats_panel)
 
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 12)
@@ -189,33 +393,40 @@ func _show_stats() -> void:
 	margin.add_child(vbox)
 
 	var title = Label.new()
-	title.text = "Run Stats"
+	title.text = LocaleManager.tr_key("stats_title")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	vbox.add_child(title)
 
-	vbox.add_child(HSeparator.new())
+	# Golden separator instead of HSeparator
+	var sep1 = ColorRect.new()
+	sep1.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep1.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep1)
 
 	# DPS
 	var dps = GameManager.total_damage_dealt / maxf(1.0, GameManager.game_time)
-	_add_stat_line(vbox, "DPS", "%.1f" % dps)
+	_add_stat_line(vbox, LocaleManager.tr_key("stats_dps"), "%.1f" % dps)
 
 	# Total kills
-	_add_stat_line(vbox, "Kills", str(GameManager.total_kills))
+	_add_stat_line(vbox, LocaleManager.tr_key("stats_kills"), str(GameManager.total_kills))
 
 	# Game time
 	var t = int(GameManager.game_time)
-	_add_stat_line(vbox, "Time", "%02d:%02d" % [t / 60, t % 60])
+	_add_stat_line(vbox, LocaleManager.tr_key("stats_time"), "%02d:%02d" % [t / 60, t % 60])
 
 	# Total damage
-	_add_stat_line(vbox, "Total DMG", str(GameManager.total_damage_dealt))
+	_add_stat_line(vbox, LocaleManager.tr_key("stats_total_dmg"), str(GameManager.total_damage_dealt))
 
-	vbox.add_child(HSeparator.new())
+	var sep2 = ColorRect.new()
+	sep2.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep2.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep2)
 
 	# Current weapons and levels
 	var weapons_title = Label.new()
-	weapons_title.text = "Weapons"
+	weapons_title.text = LocaleManager.tr_key("stats_weapons")
 	weapons_title.add_theme_font_size_override("font_size", 16)
 	weapons_title.add_theme_color_override("font_color", Color(0.6, 0.8, 1.0))
 	vbox.add_child(weapons_title)
@@ -248,10 +459,13 @@ func _show_stats() -> void:
 	# Current items and levels
 	var items = GameManager.player_items
 	if not items.is_empty():
-		vbox.add_child(HSeparator.new())
+		var sep3 = ColorRect.new()
+		sep3.color = Color(0.9, 0.8, 0.3, 0.25)
+		sep3.custom_minimum_size = Vector2(0, 1)
+		vbox.add_child(sep3)
 
 		var items_title = Label.new()
-		items_title.text = "Items"
+		items_title.text = LocaleManager.tr_key("stats_items")
 		items_title.add_theme_font_size_override("font_size", 16)
 		items_title.add_theme_color_override("font_color", Color(0.6, 1.0, 0.8))
 		vbox.add_child(items_title)
@@ -284,9 +498,13 @@ func _show_stats() -> void:
 	# Active synergies
 	var synergies = SynergySystem.active_synergies
 	if not synergies.is_empty():
-		vbox.add_child(HSeparator.new())
+		var sep4 = ColorRect.new()
+		sep4.color = Color(0.9, 0.8, 0.3, 0.25)
+		sep4.custom_minimum_size = Vector2(0, 1)
+		vbox.add_child(sep4)
+
 		var syn_title = Label.new()
-		syn_title.text = "Synergies"
+		syn_title.text = LocaleManager.tr_key("stats_synergies")
 		syn_title.add_theme_font_size_override("font_size", 16)
 		syn_title.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
 		vbox.add_child(syn_title)
@@ -330,6 +548,7 @@ func _on_options() -> void:
 	options_panel.offset_top = -280
 	options_panel.offset_right = 250
 	options_panel.offset_bottom = 280
+	_apply_stats_panel_style(options_panel)
 
 	var scroll = ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(480, 540)
@@ -355,16 +574,23 @@ func _on_options() -> void:
 	title.text = LocaleManager.tr_key("options")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	vbox.add_child(title)
 
-	vbox.add_child(HSeparator.new())
+	var sep_opt = ColorRect.new()
+	sep_opt.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep_opt.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep_opt)
 
 	# ---- Volume ----
 	_add_slider(vbox, LocaleManager.tr_key("volume_master"), "master", 1.0)
 	_add_slider(vbox, LocaleManager.tr_key("volume_music"), "music", 0.8)
 	_add_slider(vbox, LocaleManager.tr_key("volume_sfx"), "sfx", 1.0)
 
-	vbox.add_child(HSeparator.new())
+	var sep_vol = ColorRect.new()
+	sep_vol.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep_vol.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep_vol)
 
 	# ---- Fullscreen ----
 	var fs_hbox = HBoxContainer.new()
@@ -440,7 +666,10 @@ func _on_options() -> void:
 	res_hbox.add_child(res_option)
 	vbox.add_child(res_hbox)
 
-	vbox.add_child(HSeparator.new())
+	var sep_res = ColorRect.new()
+	sep_res.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep_res.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep_res)
 
 	# ---- Language ----
 	var lang_hbox = HBoxContainer.new()
@@ -465,12 +694,16 @@ func _on_options() -> void:
 	lang_hbox.add_child(lang_btn)
 	vbox.add_child(lang_hbox)
 
-	vbox.add_child(HSeparator.new())
+	var sep_lang = ColorRect.new()
+	sep_lang.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep_lang.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep_lang)
 
 	# ---- Keybindings ----
 	var kb_title = Label.new()
 	kb_title.text = LocaleManager.tr_key("controls_title")
 	kb_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kb_title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	vbox.add_child(kb_title)
 
 	keybind_buttons.clear()
@@ -485,6 +718,7 @@ func _on_options() -> void:
 		key_btn.text = KeybindingManager.get_key_name(action)
 		key_btn.custom_minimum_size = Vector2(120, 30)
 		key_btn.pressed.connect(_start_rebind.bind(action, key_btn))
+		_apply_normal_button_style(key_btn)
 		hbox.add_child(key_btn)
 		keybind_buttons[action] = key_btn
 		vbox.add_child(hbox)
@@ -496,9 +730,13 @@ func _on_options() -> void:
 		for act in keybind_buttons:
 			keybind_buttons[act].text = KeybindingManager.get_key_name(act)
 	)
+	_apply_normal_button_style(reset_btn)
 	vbox.add_child(reset_btn)
 
-	vbox.add_child(HSeparator.new())
+	var sep_kb = ColorRect.new()
+	sep_kb.color = Color(0.9, 0.8, 0.3, 0.25)
+	sep_kb.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep_kb)
 
 	# Close button
 	var close_btn = Button.new()
@@ -507,6 +745,7 @@ func _on_options() -> void:
 		options_panel.queue_free()
 		options_panel = null
 	)
+	_apply_normal_button_style(close_btn)
 	vbox.add_child(close_btn)
 
 	add_child(options_panel)
@@ -574,6 +813,8 @@ func _on_locale_changed(_new_locale: String) -> void:
 	# Update pause menu button texts when language changes
 	resume_btn.text = LocaleManager.tr_key("resume")
 	menu_btn.text = LocaleManager.tr_key("quit_to_menu")
+	if _title_ref and is_instance_valid(_title_ref):
+		_title_ref.text = LocaleManager.tr_key("pause_title")
 	if options_btn_ref and is_instance_valid(options_btn_ref):
 		options_btn_ref.text = LocaleManager.tr_key("options")
 	if quit_btn_ref and is_instance_valid(quit_btn_ref):
