@@ -41,6 +41,11 @@ var _emote_timer: float = 0.0
 var _world_hp_bar: MeshInstance3D = null
 var _world_hp_bg: MeshInstance3D = null
 
+# World XP bar
+var _world_xp_bar: MeshInstance3D = null
+var _world_xp_bg: MeshInstance3D = null
+var _world_xp_y: float = 0.0
+
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
 
@@ -101,6 +106,7 @@ func _ready() -> void:
 
 	# World-space HP bar (pequena, abaixo do sprite)
 	_create_world_hp_bar()
+	_create_world_xp_bar()
 
 	# Player aura
 	var aura_script = preload("res://scripts/effects/player_aura.gd")
@@ -133,7 +139,7 @@ func _ready() -> void:
 func _create_world_hp_bar() -> void:
 	# Barra verde de HP embaixo do sprite do jogador (world-space)
 	var bar_width = 1.6
-	var bar_height = 0.12
+	var bar_height = 0.48
 	var bar_y = 0.05  # Bem rente ao chao, abaixo do sprite
 	var bar_z = 0.5   # Levemente a frente para nao ficar atras do personagem
 
@@ -201,8 +207,75 @@ func _update_world_hp_bar() -> void:
 		else:
 			mat.albedo_color = Color(0.9, 0.15, 0.1)
 
+func _create_world_xp_bar() -> void:
+	var bar_width: float = 1.6
+	var bar_height: float = 0.48
+	var gap: float = 0.06
+	var xp_y: float = 0.05 + bar_height + gap + bar_height / 2.0
+	var bar_z: float = 0.5
+
+	# Border (black)
+	var xp_border := MeshInstance3D.new()
+	var border_mesh := QuadMesh.new()
+	border_mesh.size = Vector2(bar_width + 0.16, bar_height + 0.08)
+	xp_border.mesh = border_mesh
+	var border_mat := StandardMaterial3D.new()
+	border_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.95)
+	border_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	border_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	border_mat.no_depth_test = true
+	border_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	border_mat.render_priority = 10
+	xp_border.material_override = border_mat
+	xp_border.position = Vector3(0, xp_y, bar_z - 0.002)
+	add_child(xp_border)
+
+	# Background (dark gray)
+	_world_xp_bg = MeshInstance3D.new()
+	var bg_mesh := QuadMesh.new()
+	bg_mesh.size = Vector2(bar_width + 0.06, bar_height + 0.02)
+	_world_xp_bg.mesh = bg_mesh
+	var bg_mat := StandardMaterial3D.new()
+	bg_mat.albedo_color = Color(0.12, 0.10, 0.18, 0.9)
+	bg_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bg_mat.no_depth_test = true
+	bg_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	bg_mat.render_priority = 11
+	_world_xp_bg.material_override = bg_mat
+	_world_xp_bg.position = Vector3(0, xp_y, bar_z - 0.001)
+	add_child(_world_xp_bg)
+
+	# Fill (crystal purple)
+	_world_xp_bar = MeshInstance3D.new()
+	var fill_mesh := QuadMesh.new()
+	fill_mesh.size = Vector2(bar_width, bar_height)
+	_world_xp_bar.mesh = fill_mesh
+	var fill_mat := StandardMaterial3D.new()
+	fill_mat.albedo_color = Color(0.45, 0.25, 0.95)
+	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fill_mat.no_depth_test = true
+	fill_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	fill_mat.render_priority = 12
+	_world_xp_bar.material_override = fill_mat
+	_world_xp_bar.position = Vector3(0, xp_y, bar_z)
+	add_child(_world_xp_bar)
+
+	_world_xp_y = xp_y
+
+func _update_world_xp_bar() -> void:
+	if not _world_xp_bar:
+		return
+	var ratio := clampf(
+		float(GameManager.player_xp) / float(GameManager.player_xp_to_next),
+		0.0, 1.0
+	) if GameManager.player_xp_to_next > 0 else 0.0
+	_world_xp_bar.scale.x = ratio
+	_world_xp_bar.position.x = -(1.0 - ratio) * 0.8
+
 func _physics_process(delta: float) -> void:
 	_update_world_hp_bar()
+	_update_world_xp_bar()
 	if GameManager.is_game_over or GameManager.paused:
 		return
 
