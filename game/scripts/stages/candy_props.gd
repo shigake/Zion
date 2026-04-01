@@ -2,7 +2,7 @@ extends Node3D
 
 ## Mundo Doce — pink/pastel candy floors with sweet props scattered around.
 
-@export var area_size: float = 80.0
+@export var area_size: float = 40.0  # PRD-27: mapa pela metade para teste
 
 # Prop definitions: name -> count
 var _prop_defs: Dictionary = {
