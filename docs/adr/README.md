@@ -17,3 +17,5 @@ Cada ADR documenta **o quê** foi decidido, **por quê**, e **quais alternativas
 | [ADR-010](ADR-010-narrative-first.md) | Regra narrativa: toda feature respeita a lore | Aceito |
 | [ADR-011](ADR-011-weapons-auto-attack.md) | Armas com ataque automático (sem input do jogador) | Aceito |
 | [ADR-012](ADR-012-db-singletons-separados.md) | DBs separados por tipo de conteúdo | Aceito |
+| [ADR-013](ADR-013-resource-caching-pool-prewarm.md) | Resource caching e ObjectPool pre-warming (performance) | Aceito |
+| [ADR-014](ADR-014-stage-scoped-parameter-override.md) | Stage-scoped parameter override no GameManager | Aceito |
