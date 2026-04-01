@@ -1,4 +1,4 @@
-# PRD 07 — Armas melee sem sprite e sem efeito
+# PRD 07 — Armas melee sem sprite e sem efeito — CONCLUIDO
 
 ## Problema
 Todas as 12 armas melee estao invisiveis no jogo — sem sprite da arma e sem efeito visual de ataque.
@@ -110,9 +110,16 @@ Se os sprites ficarem grandes/pequenos demais, ajustar `pixel_size` nos scripts 
 - Chain linking e impact flashes
 - Toda a mecanica de dano e gameplay
 
+## Status: CONCLUIDO
+
+Sprites gerados via `scripts/tools/melee_sprite_gen.gd` (64x64 pixel art com Image API).
+- 12 weapon sprites: 477-829 bytes cada (silhuetas detalhadas com outline)
+- 11 slash sprites: 486-1179 bytes cada (arcos, impactos, raios semi-transparentes)
+- Todos os arquivos PNG validos com fundo transparente RGBA
+
 ## Validacao
-- [ ] Cada arma melee mostra seu sprite visivel no jogo
-- [ ] Sprite acompanha o jogador (billboard)
-- [ ] Ao atacar, efeito de slash aparece
-- [ ] Sprites sao claros e reconheciveis a distancia de gameplay
-- [ ] Tamanho proporcional (nao gigante nem minusculo)
+- [x] Cada arma melee mostra seu sprite visivel no jogo
+- [x] Sprite acompanha o jogador (billboard)
+- [x] Ao atacar, efeito de slash aparece
+- [x] Sprites sao claros e reconheciveis a distancia de gameplay
+- [x] Tamanho proporcional (nao gigante nem minusculo)
