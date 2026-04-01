@@ -253,7 +253,7 @@ var translations: Dictionary = {
 	"screenshot_saved": {"pt": "Salvo!", "en": "Saved!", "es": "Guardado!", "fr": "Sauvegardé !", "de": "Gespeichert!", "ja": "保存しました！", "zh": "已保存！", "ko": "저장됨!", "it": "Salvato!", "ru": "Сохранено!"},
 	"screenshot": {"pt": "Screenshot", "en": "Screenshot", "es": "Captura", "fr": "Capture", "de": "Screenshot", "ja": "スクリーンショット", "zh": "截图", "ko": "스크린샷", "it": "Screenshot", "ru": "Скриншот"},
 	"miniboss_alert": {"pt": "Miniboss: %s", "en": "Miniboss: %s", "es": "Miniboss: %s", "fr": "Miniboss: %s", "de": "Miniboss: %s", "ja": "ミニボス: %s", "zh": "小Boss: %s", "ko": "미니보스: %s", "it": "Miniboss: %s", "ru": "Минибосс: %s"},
-	"dash_ready": {"pt": "Dash", "en": "Dash", "es": "Dash", "fr": "Dash", "de": "Dash", "ja": "ダッシュ", "zh": "冲刺", "ko": "대시", "it": "Scatto", "ru": "Рывок"},
+	"dash": {"pt": "Dash", "en": "Dash", "es": "Dash", "fr": "Dash", "de": "Dash", "ja": "ダッシュ", "zh": "冲刺", "ko": "대시", "it": "Scatto", "ru": "Рывок"},
 	"quest_complete": {"pt": "Quest completa!", "en": "Quest complete!", "es": "Mision completa!", "fr": "Quête terminée !", "de": "Quest abgeschlossen!", "ja": "クエスト完了！", "zh": "任务完成！", "ko": "퀘스트 완료!", "it": "Missione completata!", "ru": "Задание выполнено!"},
 	"mp_host": {"pt": "Host", "en": "Host", "es": "Host", "fr": "Hôte", "de": "Host", "ja": "ホスト", "zh": "房主", "ko": "호스트", "it": "Host", "ru": "Хост"},
 	"mp_ping": {"pt": "Ping: %dms", "en": "Ping: %dms", "es": "Ping: %dms", "fr": "Ping: %dms", "de": "Ping: %dms", "ja": "Ping: %dms", "zh": "延迟: %dms", "ko": "핑: %dms", "it": "Ping: %dms", "ru": "Пинг: %dms"},
