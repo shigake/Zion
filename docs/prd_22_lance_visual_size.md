@@ -1,6 +1,6 @@
 # PRD 22 — Lança: visual maior e mais visível durante o ataque
 
-**Status:** pendente  
+**Status:** CONCLUIDO  
 **Prioridade:** média  
 **Área:** weapons / VFX  
 

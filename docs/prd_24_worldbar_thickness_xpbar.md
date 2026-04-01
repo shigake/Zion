@@ -1,6 +1,6 @@
 # PRD 24 — Barra de HP mais grossa + barra de XP abaixo (world-space)
 
-**Status:** pendente
+**Status:** CONCLUIDO
 **Prioridade:** média
 **Escopo:** `game/scripts/player/player.gd`
 

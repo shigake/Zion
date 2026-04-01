@@ -22,8 +22,9 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path2)
 	# Weapon trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.9, 0.8, 0.3, 0.85)
-	_trail.max_points = 14
+	_trail.trail_color = Color(1.0, 0.9, 0.35, 0.95)
+	_trail.max_points = 20
+	_trail.trail_width = 0.35
 	thrust_mesh.add_child(_trail)
 	# Billboard sprite
 	var _sprite_path = "res://assets/sprites/weapons/lance.png"
@@ -32,7 +33,7 @@ func _ready() -> void:
 		sprite.texture = load(_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.030
+		sprite.pixel_size = 0.050
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
@@ -96,7 +97,7 @@ func _attack(level: int) -> void:
 	_spawn_slash_trail()
 
 func _spawn_slash_trail() -> void:
-	WeaponVFX.spawn_slash_trail(self, _slash_tex, global_position + Vector3(0, 0.5, 0), 0.030, 2.0, 0.22, Vector3(0.8, 0.8, 0.8))
+	WeaponVFX.spawn_slash_trail(self, _slash_tex, global_position + Vector3(0, 0.5, 0), 0.050, 2.8, 0.28, Vector3(1.0, 1.0, 1.0))
 
 func _on_body_entered(body: Node3D) -> void:
 	# Pierces all enemies in the line — no hit limit
@@ -106,5 +107,5 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "lance"
 		body.call_deferred("take_damage", dmg, "physical")
 		# Golden thrust sparks
-		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.9, 0.8, 0.3), 4)
-		ScreenEffects.shake(0.03)
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.9, 0.35), 7)
+		ScreenEffects.shake(0.05)
