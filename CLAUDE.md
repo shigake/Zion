@@ -75,6 +75,7 @@ Zion/
 │   ├── prd_25_performance_deep.md       # PRD 25: otimizacao de performance profunda — concluido
 │   ├── prd_26_icon_and_hit_size.md      # PRD 26: icones HUD 4x maiores + hit numbers 10x maiores — concluido
 │   ├── prd_27_candy_map_halfsize.md     # PRD 27: Mundo Doce com mapa pela metade (teste de tamanho) — concluido
+│   ├── prd_28_polish_pack.md            # PRD 28: polish pack (sinergias, audio, acessibilidade, stats, seeds, tutorial) — pendente
 │   └── adr/                             # 12 Architecture Decision Records (ADR-001 a ADR-012)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
