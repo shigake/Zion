@@ -470,6 +470,22 @@ func _build_tab_audio() -> void:
 			AudioManager.play_sfx("menu_click"),
 		t)
 
+	_add_slider(vbox, LocaleManager.tr_key("opt_volume_combat"), "audio_combat", 0, 100, 5, 100,
+		func(val: float) -> void:
+			AudioManager.combat_volume = val / 100.0
+			AudioManager.play_sfx("hit"),
+		t)
+
+	_add_slider(vbox, LocaleManager.tr_key("opt_volume_ambient"), "audio_ambient", 0, 100, 5, 100,
+		func(val: float) -> void:
+			AudioManager.ambient_volume = val / 100.0,
+		t)
+
+	_add_toggle(vbox, LocaleManager.tr_key("opt_ducking"), "audio_ducking", true,
+		func(on: bool) -> void:
+			AudioManager._ducking_enabled = on,
+		t)
+
 func _apply_audio_bus(bus_name: String, linear: float) -> void:
 	var bus_idx := AudioServer.get_bus_index(bus_name)
 	if bus_idx >= 0:
@@ -559,17 +575,35 @@ func _build_tab_acessibilidade() -> void:
 	var vbox := _make_tab_content(LocaleManager.tr_key("opt_tab_accessibility"))
 
 	_add_dropdown(vbox, LocaleManager.tr_key("opt_font_size"), "access_font_size",
-		["80%", "100%", "120%", "150%"], 1, Callable(), t)
+		["80%", "100%", "120%", "150%"], 1,
+		func(idx: int) -> void:
+			AccessibilityManager.set_font_scale(idx),
+		t)
 
 	_add_dropdown(vbox, LocaleManager.tr_key("opt_ui_scale"), "access_ui_scale",
-		["80%", "100%", "120%", "150%"], 1, Callable(), t)
+		["80%", "100%", "120%", "150%"], 1,
+		func(idx: int) -> void:
+			AccessibilityManager.set_ui_scale(idx),
+		t)
 
-	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_motion"), "access_reduced_motion", false, Callable(), t)
-	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_flash"), "access_reduced_flash", false, Callable(), t)
-	_add_toggle(vbox, LocaleManager.tr_key("opt_high_contrast"), "access_high_contrast", false, Callable(), t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_motion"), "access_reduced_motion", false,
+		func(on: bool) -> void:
+			AccessibilityManager.set_reduced_motion(on),
+		t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_flash"), "access_reduced_flash", false,
+		func(on: bool) -> void:
+			AccessibilityManager.set_reduced_flash(on),
+		t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_high_contrast"), "access_high_contrast", false,
+		func(on: bool) -> void:
+			AccessibilityManager.set_high_contrast(on),
+		t)
 
 	_add_dropdown(vbox, LocaleManager.tr_key("opt_colorblind_mode"), "access_colorblind",
-		[LocaleManager.tr_key("opt_colorblind_off"), "Protanopia", "Deuteranopia", "Tritanopia"], 0, Callable(), t)
+		[LocaleManager.tr_key("opt_colorblind_off"), "Protanopia", "Deuteranopia", "Tritanopia"], 0,
+		func(idx: int) -> void:
+			AccessibilityManager.set_colorblind_mode(idx),
+		t)
 
 # ---------------------------------------------------------------------------
 # TAB 7 — Idioma

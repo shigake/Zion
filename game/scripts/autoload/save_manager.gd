@@ -21,6 +21,9 @@ var data: Dictionary = {
 	"pending_leaderboard_scores": [],  # Offline fallback: scores to submit later
 	"best_run": {},  # Best run stats for comparison {time, kills, dps, level, crystals, damage}
 	"story_seen": false,  # Whether the story intro has been shown
+	"audio_combat": 100,  # Combat SFX volume (0-100)
+	"audio_ambient": 100,  # Ambient SFX volume (0-100)
+	"audio_ducking": true,  # Auto-ducking music during voice/dialogue
 }
 
 func _ready() -> void:
@@ -153,6 +156,13 @@ func _restore_audio() -> void:
 	_apply_audio_bus("Music", music / 100.0 if music > 1.0 else music)
 	_apply_audio_bus("SFX", sfx / 100.0 if sfx > 1.0 else sfx)
 	_apply_audio_bus("UI", ui / 100.0 if ui > 1.0 else ui)
+	# Restore new audio settings (PRD 28 §2)
+	var combat = data.get("audio_combat", 100)
+	var ambient = data.get("audio_ambient", 100)
+	var ducking = data.get("audio_ducking", true)
+	AudioManager.combat_volume = combat / 100.0 if combat > 1.0 else combat
+	AudioManager.ambient_volume = ambient / 100.0 if ambient > 1.0 else ambient
+	AudioManager._ducking_enabled = ducking
 
 func _apply_audio_bus(bus_name: String, linear: float) -> void:
 	var bus_idx = AudioServer.get_bus_index(bus_name)

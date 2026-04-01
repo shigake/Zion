@@ -9,6 +9,16 @@ var music_volume: float = 0.5
 var sfx_volume: float = 0.6
 var master_volume: float = 0.7
 
+var combat_volume: float = 1.0:
+	set(v):
+		combat_volume = v
+		_apply_bus_volume("Combat", v)
+
+var ambient_volume: float = 1.0:
+	set(v):
+		ambient_volume = v
+		_apply_bus_volume("Ambient", v)
+
 # Audio players (created in _ready)
 var _music_player: AudioStreamPlayer
 var _music_player_fade: AudioStreamPlayer  # For crossfade
@@ -54,24 +64,76 @@ const SFX_COOLDOWN_MS: int = 50  # 0.05 seconds minimum between same SFX
 # Audio file cache to avoid repeated load attempts
 var _audio_cache: Dictionary = {}  # path -> AudioStream or null
 
+# --- Dynamic Audio Balancing (PRD 28 §2) ---
+
+# SFX category mapping: sfx_name -> bus name
+var _sfx_categories: Dictionary = {
+	"hit": "Combat", "slash": "Combat", "explosion": "Combat", "shoot": "Combat",
+	"arrow": "Combat", "fireball": "Combat", "lightning": "Combat", "boss_roar": "Combat",
+	"sword_slash": "Combat", "axe_chop": "Combat", "scythe_swoosh": "Combat",
+	"whip_crack": "Combat", "hammer_slam": "Combat", "lance_thrust": "Combat",
+	"punch_hit": "Combat", "gun_shot": "Combat", "bow_release": "Combat",
+	"magic_cast": "Combat", "electric_zap": "Combat", "poison_splash": "Combat",
+	"boss_attack": "Combat", "boss_phase": "Combat", "boss_death": "Combat",
+	"enemy_growl": "Combat", "fire_whoosh": "Combat", "kill": "Combat",
+	"boomerang": "Combat", "tornado": "Combat", "chain_whip": "Combat",
+	"blood_orb": "Combat", "summon_pop": "Combat",
+	"click": "UI_Audio", "hover": "UI_Audio", "level_up": "UI_Audio", "menu": "UI_Audio",
+	"menu_click": "UI_Audio", "select": "UI_Audio", "reroll": "UI_Audio",
+	"banish": "UI_Audio", "equip": "UI_Audio", "error": "UI_Audio",
+	"achievement": "UI_Audio", "evolve": "UI_Audio",
+	"crystal": "Pickup", "xp_collect": "Pickup", "item_pickup": "Pickup",
+	"chest_open": "Pickup", "collect_xp": "Pickup", "collect_crystal": "Pickup",
+	"heal": "Pickup", "portal_hum": "Pickup",
+	"ambient": "Ambient", "wind": "Ambient", "water": "Ambient",
+	"lava_bubble": "Ambient", "footstep": "Ambient",
+}
+
+# Limits per category (max simultaneous sounds)
+var _category_limits: Dictionary = {
+	"Combat": 8,
+	"UI_Audio": 2,
+	"Pickup": 4,
+	"Ambient": 2,
+	"Voice": 1,
+}
+
+var _category_active_count: Dictionary = {}
+var _category_cooldowns: Dictionary = {}
+const CATEGORY_COOLDOWN_MS: int = 30
+
+# Ducking system
+var _ducking_active: bool = false
+var _ducking_tween: Tween = null
+var _ducking_enabled: bool = true  # User setting
+
+# Distance-based attenuation
+const ATTENUATION_RADIUS: float = 15.0
+
 func _ready() -> void:
+	_setup_buses()
+
 	_music_player = AudioStreamPlayer.new()
 	_music_player.name = "MusicPlayer"
-	_music_player.bus = "Master"
+	_music_player.bus = "Music"
 	add_child(_music_player)
 
 	_music_player_fade = AudioStreamPlayer.new()
 	_music_player_fade.name = "MusicPlayerFade"
-	_music_player_fade.bus = "Master"
+	_music_player_fade.bus = "Music"
 	add_child(_music_player_fade)
 
 	# Create SFX player pool
 	for i in range(SFX_POOL_SIZE):
 		var player = AudioStreamPlayer.new()
 		player.name = "SFXPlayer_%d" % i
-		player.bus = "Master"
+		player.bus = "SFX"
 		add_child(player)
 		_sfx_players.append(player)
+
+	# Initialize category active counts
+	for cat in _category_limits:
+		_category_active_count[cat] = 0
 
 	_apply_volumes()
 	# Connect boss phase signal for dynamic music intensity
@@ -157,18 +219,35 @@ func stop_music() -> void:
 	_music_player_fade.stream = null
 	_crossfading = false
 
-func play_sfx(sfx_name: String) -> void:
+func play_sfx(sfx_name: String, volume_mult: float = 1.0) -> void:
 	if sfx_name not in _valid_sfx:
 		LogManager.warn("Audio", "Unknown SFX: " + sfx_name)
 		return
 
-	# Cooldown check: prevent same SFX spamming
+	# Determine category for this SFX
+	var category: String = _sfx_categories.get(sfx_name, "SFX")
+
+	# Per-category cooldown check
 	var now_ms = Time.get_ticks_msec()
+	var cooldown_key = sfx_name + "_" + category
+	if cooldown_key in _category_cooldowns:
+		var elapsed = now_ms - _category_cooldowns[cooldown_key]
+		if elapsed < CATEGORY_COOLDOWN_MS:
+			return
+
+	# Legacy cooldown check: prevent same SFX spamming
 	if sfx_name in _sfx_last_played:
 		var elapsed = now_ms - _sfx_last_played[sfx_name]
 		if elapsed < SFX_COOLDOWN_MS:
 			return
 	_sfx_last_played[sfx_name] = now_ms
+	_category_cooldowns[cooldown_key] = now_ms
+
+	# Category limit check
+	if category in _category_limits:
+		var active = _count_active_in_category(category)
+		if active >= _category_limits[category]:
+			return  # Too many sounds in this category
 
 	# Try to load the audio file
 	var stream = _load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
@@ -181,8 +260,10 @@ func play_sfx(sfx_name: String) -> void:
 	if player == null:
 		return  # All players busy, skip this SFX
 
+	# Assign the correct bus for this category
+	player.bus = category if AudioServer.get_bus_index(category) != -1 else "SFX"
 	player.stream = stream
-	player.volume_db = linear_to_db(maxf(sfx_volume * master_volume, 0.0001))
+	player.volume_db = linear_to_db(maxf(sfx_volume * master_volume * volume_mult, 0.0001))
 	player.play()
 	if not player.playing:
 		push_warning("[Audio] SFX player NOT playing after play() call: %s (vol_db=%.1f)" % [sfx_name, player.volume_db])
@@ -294,6 +375,88 @@ func _update_stage_music_intensity() -> void:
 		return
 	var time_factor = clampf(GameManager.game_time / 900.0, 0.0, 1.0)
 	_music_player.pitch_scale = 1.0 + time_factor * 0.12
+
+# ---- Bus Setup (PRD 28 §2) ----
+
+func _setup_buses() -> void:
+	## Create audio bus hierarchy: Master -> Music, SFX (Combat, UI_Audio, Pickup, Ambient), Voice
+	var bus_config = {
+		"Music": {"parent": "Master", "volume_db": -6.0},
+		"SFX": {"parent": "Master", "volume_db": 0.0},
+		"Combat": {"parent": "SFX", "volume_db": 0.0},
+		"UI_Audio": {"parent": "SFX", "volume_db": 0.0},
+		"Pickup": {"parent": "SFX", "volume_db": 0.0},
+		"Ambient": {"parent": "SFX", "volume_db": 0.0},
+		"Voice": {"parent": "Master", "volume_db": 0.0},
+	}
+	for bus_name in bus_config:
+		var idx = AudioServer.get_bus_index(bus_name)
+		if idx == -1:
+			AudioServer.add_bus()
+			idx = AudioServer.bus_count - 1
+			AudioServer.set_bus_name(idx, bus_name)
+		AudioServer.set_bus_send(idx, bus_config[bus_name]["parent"])
+		AudioServer.set_bus_volume_db(idx, bus_config[bus_name]["volume_db"])
+	LogManager.info("Audio", "Audio buses configured: %d total" % AudioServer.bus_count)
+
+func _apply_bus_volume(bus_name: String, volume: float) -> void:
+	var idx = AudioServer.get_bus_index(bus_name)
+	if idx != -1:
+		AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(volume, 0.0001)))
+
+func _count_active_in_category(category: String) -> int:
+	var count := 0
+	for player in _sfx_players:
+		if player.playing and player.bus == category:
+			count += 1
+	return count
+
+# ---- Ducking System (PRD 28 §2) ----
+
+func start_ducking(reason: String = "voice") -> void:
+	if not _ducking_enabled or _ducking_active:
+		return
+	_ducking_active = true
+	var music_idx = AudioServer.get_bus_index("Music")
+	if music_idx == -1:
+		return
+	if _ducking_tween:
+		_ducking_tween.kill()
+	_ducking_tween = create_tween()
+	var current_db = AudioServer.get_bus_volume_db(music_idx)
+	_ducking_tween.tween_method(func(db): AudioServer.set_bus_volume_db(music_idx, db), current_db, -18.0, 0.3)
+	LogManager.debug("Audio", "Ducking started: " + reason)
+
+func stop_ducking() -> void:
+	if not _ducking_active:
+		return
+	_ducking_active = false
+	var music_idx = AudioServer.get_bus_index("Music")
+	if music_idx == -1:
+		return
+	if _ducking_tween:
+		_ducking_tween.kill()
+	_ducking_tween = create_tween()
+	var current_db = AudioServer.get_bus_volume_db(music_idx)
+	_ducking_tween.tween_method(func(db): AudioServer.set_bus_volume_db(music_idx, db), current_db, -6.0, 0.5)
+	LogManager.debug("Audio", "Ducking stopped")
+
+# ---- Distance-based Attenuation (PRD 28 §2) ----
+
+func play_sfx_at_position(sfx_name: String, world_pos: Vector3, is_local_player: bool = true) -> void:
+	if is_local_player:
+		play_sfx(sfx_name)
+		return
+	# Attenuate based on distance to local player
+	var local_player = GameManager.get_local_player()
+	if not local_player:
+		play_sfx(sfx_name)
+		return
+	var distance = local_player.global_position.distance_to(world_pos)
+	if distance > ATTENUATION_RADIUS:
+		return  # Too far, don't play
+	var volume_mult = 1.0 - (distance / ATTENUATION_RADIUS)
+	play_sfx(sfx_name, volume_mult)
 
 # ---- Integration points ----
 # Call AudioManager.play_sfx("hit") when an enemy is hit
