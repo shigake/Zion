@@ -188,3 +188,12 @@ func _setup_slider_style() -> void:
 	# Sizes
 	theme.set_constant("grabber_offset", "HSlider", 1)
 	theme.set_constant("center_grabber", "HSlider", 1)
+
+# ---------------------------------------------------------------------------
+# Accessibility: font scale
+# ---------------------------------------------------------------------------
+func apply_font_scale(scale: float) -> void:
+	if not theme:
+		return
+	theme.set_default_font_size(int(18 * scale))
+	theme.set_font_size("font_size", "Label", int(18 * scale))

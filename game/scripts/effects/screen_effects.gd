@@ -113,6 +113,9 @@ func _update_vignette() -> void:
 
 
 func shake(amount: float = 0.15) -> void:
+	# Accessibility: skip shake if reduced motion is on
+	if AccessibilityManager.reduced_motion:
+		return
 	# Respect gfx_screen_shake setting: 0=Off, 1=Light, 2=Normal, 3=Strong
 	var setting: int = SaveManager.data.get("gfx_screen_shake", 2)
 	if setting == 0:
@@ -121,6 +124,9 @@ func shake(amount: float = 0.15) -> void:
 	shake_amount = maxf(shake_amount, amount * multiplier)
 
 func hit_freeze(duration: float = 0.05) -> void:
+	# Accessibility: reduce hit freeze duration by 70% if reduced motion
+	if AccessibilityManager.reduced_motion:
+		duration *= 0.3
 	Engine.time_scale = 0.1
 	await get_tree().create_timer(duration * 0.1).timeout
 	Engine.time_scale = 1.0
@@ -133,6 +139,14 @@ func slow_motion(duration: float = 0.5, scale: float = 0.3) -> void:
 ## Brief white flash overlay (e.g. on heavy swing)
 func flash(duration: float = 0.05, alpha: float = 0.1) -> void:
 	if not _flash_overlay:
+		return
+	# Accessibility: rate-limit flashes; use subtle tint if blocked
+	if not AccessibilityManager.can_flash():
+		_flash_overlay.color = Color(1.0, 0.85, 0.85, alpha * 0.3)
+		_flash_overlay.visible = true
+		var tween = create_tween()
+		tween.tween_property(_flash_overlay, "color:a", 0.0, duration * 2.0)
+		tween.tween_callback(func(): _flash_overlay.visible = false)
 		return
 	_flash_overlay.color = Color(1.0, 1.0, 1.0, alpha)
 	_flash_overlay.visible = true
@@ -180,6 +194,9 @@ func _on_player_leveled_up(_new_level: int) -> void:
 ## Brief white flash when player levels up
 func level_up_flash() -> void:
 	if not _flash_overlay:
+		return
+	# Accessibility: rate-limit flashes
+	if not AccessibilityManager.can_flash():
 		return
 	_flash_overlay.color = Color(1.0, 1.0, 1.0, GameConstants.LEVEL_UP_FLASH_ALPHA)
 	_flash_overlay.visible = true
@@ -264,6 +281,13 @@ var _boss_display_names: Dictionary = {
 
 ## Dramatic boss entrance: letterbox + vignette + zoom + title card + shake + slow-mo + roar + particles
 func boss_entrance_effect() -> void:
+	# Accessibility: skip most visual effects if reduced motion
+	if AccessibilityManager.reduced_motion:
+		# Keep audio cues only
+		AudioManager.play_sfx("boss_roar")
+		AudioManager.play_sfx("boss_appear")
+		Input.start_joy_vibration(0, GameConstants.BOSS_ENTRANCE_RUMBLE_1_WEAK, GameConstants.BOSS_ENTRANCE_RUMBLE_1_STRONG, GameConstants.BOSS_ENTRANCE_RUMBLE_1_DURATION)
+		return
 	# 0. Cinematic letterbox bars (top and bottom black bars)
 	_show_letterbox(GameConstants.BOSS_ENTRANCE_LETTERBOX_DURATION)
 
@@ -279,8 +303,8 @@ func boss_entrance_effect() -> void:
 	shake(GameConstants.BOSS_ENTRANCE_SHAKE_1)
 	_escalate_shake()
 
-	# 3. White flash → deep red flash → fade
-	if _flash_overlay:
+	# 3. White flash → deep red flash → fade (respects flash accessibility)
+	if _flash_overlay and AccessibilityManager.can_flash():
 		_flash_overlay.color = Color(1.0, 0.95, 0.85, 0.7)
 		_flash_overlay.visible = true
 		var flash_tween = create_tween()

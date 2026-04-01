@@ -258,6 +258,9 @@ func _get_cached_fps() -> float:
 
 
 func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 6) -> void:
+	# Accessibility: reduce particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		count = maxi(1, int(count * 0.3))
 	# Skip entirely at very low FPS — hit particles are the most frequent spawn
 	var fps = _get_cached_fps()
 	if fps < 35 and randf() > 0.15:
@@ -292,6 +295,9 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 	_setup_and_emit(particles, pos, 1.0)
 
 func spawn_death_particles(pos: Vector3, color: Color, count: int = 12) -> void:
+	# Accessibility: reduce particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		count = maxi(2, int(count * 0.3))
 	# Reduce particle count at low FPS
 	var fps = _get_cached_fps()
 	if fps < 25:
@@ -325,6 +331,9 @@ func spawn_death_particles(pos: Vector3, color: Color, count: int = 12) -> void:
 	_setup_and_emit(particles, pos, 1.5)
 
 func spawn_collect_particles(pos: Vector3, color: Color = Color(0.2, 0.6, 1.0)) -> void:
+	# Accessibility: skip decorative collect particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		return
 	# Skip collect particles at very low FPS
 	if _get_cached_fps() < 30:
 		return
@@ -353,6 +362,9 @@ func spawn_collect_particles(pos: Vector3, color: Color = Color(0.2, 0.6, 1.0)) 
 	_setup_and_emit(particles, pos, 1.0)
 
 func spawn_level_up_particles(pos: Vector3) -> void:
+	# Accessibility: skip decorative level-up particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		return
 	var color = Color(1.0, 0.9, 0.3)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
@@ -406,6 +418,9 @@ func spawn_slash_sparks(pos: Vector3, count: int = 5) -> void:
 
 ## Cloud sword ground dust — brown/gray particles rising then falling
 func spawn_ground_dust(pos: Vector3, count: int = 8) -> void:
+	# Accessibility: skip decorative ground dust if reduced motion
+	if AccessibilityManager.reduced_motion:
+		return
 	var color = Color(0.55, 0.45, 0.35, 0.6)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
@@ -432,6 +447,9 @@ func spawn_ground_dust(pos: Vector3, count: int = 8) -> void:
 
 ## Hammer debris — rocky bits flying outward
 func spawn_hammer_debris(pos: Vector3, count: int = 12) -> void:
+	# Accessibility: reduce particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		count = maxi(2, int(count * 0.3))
 	var color = Color(0.5, 0.35, 0.2)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
@@ -458,6 +476,9 @@ func spawn_hammer_debris(pos: Vector3, count: int = 12) -> void:
 
 ## Hammer dust cloud — rising brown-gray mist
 func spawn_hammer_dust(pos: Vector3, count: int = 8) -> void:
+	# Accessibility: skip decorative dust if reduced motion
+	if AccessibilityManager.reduced_motion:
+		return
 	var color = Color(0.5, 0.45, 0.4, 0.4)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
@@ -532,6 +553,12 @@ func spawn_chest_reward_text(position: Vector3, text: String, color: Color) -> v
 
 func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	var color = Color(1.0, 0.5, 0.1)
+	var explosion_count := 15
+	var explosion_lifetime := 0.6
+	# Accessibility: reduce explosion particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		explosion_count = 4
+		explosion_lifetime = 0.3
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
@@ -543,8 +570,8 @@ func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	mat.scale_max = 0.3
 	mat.color = color
 
-	particles.amount = 15
-	particles.lifetime = 0.6
+	particles.amount = explosion_count
+	particles.lifetime = explosion_lifetime
 	particles.explosiveness = 1.0
 
 	# Use shared draw pass (no per-emission allocation)
