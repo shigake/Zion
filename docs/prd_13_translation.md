@@ -1,5 +1,7 @@
 # PRD 13 — Traducao incompleta e idioma nao persiste
 
+## Status: CONCLUIDO
+
 ## Problema
 1. Nem todos os textos estao traduzidos (ex: tela de opcoes inteira em portugues hardcoded)
 2. Ao trocar idioma na tela principal, voltar ao menu mostra o idioma antigo

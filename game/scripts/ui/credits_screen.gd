@@ -29,82 +29,310 @@ const STAR_COLORS := [
 	Color(1.0, 1.0, 1.0),    # Branco
 ]
 
-## Frases engraçadas por personagem — devem ser curtas e em carater com o heroi
-const CHARACTER_QUOTES := {
+## Frases engraçadas por personagem — 8 por heroi, PT-BR e EN
+const CHARACTER_QUOTES_PT := {
 	"amazona": [
 		"Minha lança não erra.\nAs piadas do Ronin é que deixam a desejar.",
 		"Filha de Zion não recua.\nSó dá um passo estratégico pra trás.",
 		"Atirei o pau no gato...\nNo sentido figurado. Ou não.",
+		"Caça desde os 5 anos.\nPresas dimensionais são as mais interessantes.",
+		"Floresta ou fenda,\no instinto é o mesmo. Atacar primeiro.",
+		"Minha tribo dizia: nunca atire sem mirar.\nMas às vezes é mais rápido.",
+		"Conheço cada planta medicinal de 3 biomas.\nE cada veneno também.",
+		"Guerreira antes de ser Fragmentada.\nA ordem importa.",
 	],
 	"bruxa": [
 		"Transformei o último inimigo em sapo.\nEle nem reclamou.",
 		"Feitiço de amor? Não, obrigada.\nPrefiro feitiço de dano em área.",
 		"A lua me dá poderes.\nE insônia. Principalmente insônia.",
+		"Meu grimório tem 600 anos.\nAinda não terminei de ler.",
+		"Poção de invisibilidade: testada.\nEfeito colateral: visibilidade inversa.",
+		"Gato preto dá azar?\nMeu gato dá azar pra quem me ataca.",
+		"Magia negra é relativismo.\nDepende de quem está perguntando.",
+		"Vassoura é transporte. Caldeirão é ferramenta.\nChapéu é estilo.",
 	],
 	"lealith": [
 		"Velocidade é tudo.\nInclusive pra fugir do chef.",
 		"Dodge 15%? Na teoria.\nNa prática é 100% estilo.",
 		"Passei tão rápido que\nnem me vi passar.",
+		"Quem corre mais rápido chega primeiro.\nFilosofia simples, resultado garantido.",
+		"Já corri de dragões, guardas\ne contas de padaria. Treino variado.",
+		"Velocidade não é só física.\nÉ comprometimento. Bem, principalmente física.",
+		"O vento me segue.\nOu sou eu que sigo ele. Detalhes.",
+		"Invisível em movimento.\nPresente na vitória. Essa é a arte.",
 	],
 	"ronin": [
 		"Minha espada tem nome.\nNão vou dizer qual. É constrangedor.",
 		"Bushido: o caminho do guerreiro.\nHoje o caminho vai ali no armazém.",
 		"Silêncio é sabedoria.\nPelo menos é o que digo quando não sei a resposta.",
+		"Medito todo dia às 5h.\nBem, todo dia não. Às vezes.",
+		"Dizem que estou sempre sério.\nMentira. Às vezes estou muito sério.",
+		"Cada cicatriz tem uma história.\nA maioria é embaraçosa.",
+		"O inimigo que me subestima\né o inimigo favorito.",
+		"Já não lembro como era antes de Zion.\nBom sinal, acho.",
 	],
 	"soldado": [
 		"TATATATATA!\nOpa. Desculpa. Reflexo.",
 		"Protocolo de combate ativo.\nCafé também. Principalmente o café.",
 		"Munição infinita seria ótimo.\nAlguém anota pra mim?",
+		"Regra nº1: nunca deixe o inimigo saber seu plano.\nRegra nº2: tenha um plano.",
+		"Meu superior disse que eu era irrefreável.\nConcordo.",
+		"Granadas? Sim.\nCoordenação? Em desenvolvimento.",
+		"Dormia 4h por dia no exército.\nAgora durmo 3. Evolução.",
+		"Fenda dimensional?\nJá vi coisa pior. Quase.",
 	],
 	"mago": [
 		"Área de efeito?\nEu chamo de 'zona de respeito'.",
 		"Estudei 40 anos de magia pra isso.\nValeu a pena. Acho.",
 		"Meu cajado é decorativo.\nO dano não é.",
+		"Feitiço de invisibilidade existe.\nEu é que escolho não usar.",
+		"Magia é ciência. Ciência é magia.\nFilosofia é complicada.",
+		"O grimório me avisou que esta fenda era perigosa.\nIgnorei. Claro.",
+		"Toda explosão tem um propósito.\nDescobrir qual é a parte difícil.",
+		"Aprendi com os melhores.\nEles sobreviveram. Inspirador.",
 	],
 	"berserker": [
 		"O médico mandou relaxar.\nEle não trabalha mais aqui.",
 		"Com 30% de HP fico mais forte.\nÉ motivação às avessas.",
 		"Raiva? Isso se chama foco.\nIntenso. Muito intenso.",
+		"Musculação é meditação.\nNão leia estudos sobre isso.",
+		"Minha armadura pesava 80kg.\nSinto falta dela.",
+		"Estratégia?\nIr na frente é estratégia.",
+		"Quanto mais inimigos,\nmais eficiente fica minha área de dano.",
+		"Não sou violento. Sou vigoroso.\nGrande diferença.",
 	],
 	"ninja": [
 		"Você não me viu chegar?\nPerfeito. Funcionou.",
 		"A sombra que te protege.\nOu assusta. Tanto faz.",
 		"Invisível não é superpoder,\né modo de vida.",
+		"Treino 16h por dia.\nAs outras 8h finjo que estou dormindo.",
+		"O nome é segredo. O rosto também.\nAté eu esqueci como sou.",
+		"Movo-me em silêncio.\nExceto quando tropeço. Isso não acontece.",
+		"Fumaça não é fuga.\nÉ... reposicionamento tático.",
+		"Vivo nas sombras.\nMas meu coração é de ouro. Desculpe o clichê.",
 	],
 	"pirata": [
 		"Cristais valem mais que ouro.\nNão conta pra ninguém.",
 		"Tive um barco. Longa história.\nAlguém tem cristal sobrando?",
 		"Mapa do tesouro? Esse aqui.\nGuarda segredo.",
+		"Sete mares? Já naveguei dez.\nOs outros três são dimensionais.",
+		"Rum dimensional é diferente.\nNão bebo mais. Quase.",
+		"O código pirata diz: não deixar aliado pra trás.\nExceto o chef.",
+		"Tempestade não me assusta.\nFenda dimensional também não. Cebola sim.",
+		"Todo pirata tem um papagaio.\nO meu me abandonou. Respeito.",
 	],
 	"engenheiro": [
 		"Meu drone faz tudo.\nInclusive me envergonhar em público.",
 		"Cooldown 15% menor.\nBurocracia não tem cooldown infelizmente.",
 		"Tecnologia resolve tudo.\nExceto esse bug. E aquele outro.",
+		"Construí meu primeiro robô aos 8 anos.\nEle fugiu. Traição.",
+		"Sistemas automatizados: eficientes\ne sem reclamação de hora extra.",
+		"Nunca terceirize o que você pode automatizar.\nFilosofia de vida.",
+		"O drone tem nome.\nNão vou revelar. Ele prefere assim.",
+		"Análise concluída: 99% de chance de vitória.\nO 1% me preocupa.",
 	],
 	"vampiro": [
 		"Lifesteal não é vampirismo.\nÉ nutrição alternativa.",
 		"Durmo de dia, acordo de noite.\nSou do turno da tarde, ok?",
 		"Não mordo ninguém.\nHá décadas. Quase.",
+		"Imortalidade é superestimada.\nMas é melhor que a alternativa.",
+		"O sol é inconveniente. Não letal.\nSó muito, muito inconveniente.",
+		"Século XVIII foi meu melhor período.\nA moda era excelente.",
+		"Vampiro é um rótulo.\nPrefiro 'consumidor de força vital'.",
+		"Tenho 400 anos de experiência.\nEm tudo. Menos em culinária.",
 	],
 	"gladiador": [
 		"Armadura +20%?\nÉ porque combina com os olhos.",
 		"No arena, ou você vence ou...\ntambém vence, se for eu.",
 		"Escudo não é pra se esconder.\nÉ pra bater na cabeça do inimigo.",
+		"Multidão gritando meu nome.\nSaudades. As fendas são muito silenciosas.",
+		"Honra em combate. Vitória em estilo.\nIsso não é negociável.",
+		"Já lutei leões, ursos e um Sentinela.\nO Sentinela foi o mais educado.",
+		"Minha armadura pesa mais que alguns inimigos.\nConveniente.",
+		"Público adorava minha entrada no arena.\nAqui não tem público. Triste.",
 	],
 	"chef": [
 		"Avó tinha razão:\ncomida cura tudo.",
 		"Receita secreta de cura: amor,\ncarinho e fungos dimensionais.",
 		"Faca de cozinha também é arma.\nPergunta pro último Sentinela.",
+		"Cozinhei em 3 dimensões diferentes.\nEsta aqui tem os melhores ingredientes.",
+		"Tempero certo faz milagre.\nNo prato e no campo de batalha.",
+		"Não desperdiço nada. Nem inimigos.\nEles viram caldo.",
+		"Michelin de dimensão? Não sei se existe.\nMas merecia.",
+		"A fome é o pior inimigo.\nFelizmente, sou o chef.",
 	],
 	"mystery": [
 		"...",
 		"Eu sei coisas.\nNão, não vou contar.",
 		"???",
+		"Nem meu nome você sabe.\nNem eu.",
+		"A resposta está aqui.\nVocê só não sabe a pergunta.",
+		"Mistério não é ausência de resposta.\nÉ excesso de perguntas.",
+		"Talvez eu seja real. Talvez não.\nZion sabe.",
+		"Cada vez que me observam,\nmudo um pouco. Mecânica quântica?",
 	],
 	"fragmentado": [
 		"Estou bem.\nSão só 10 fendas por dia.",
 		"Tenho um estilhaço de Zion dentro de mim.\nArde um pouco.",
 		"Comecei com 50% de HP.\nAinda assim cheguei aqui.",
+		"Ser Fragmentado não é defeito.\nÉ diferencial competitivo.",
+		"O cristal dentro de mim tem opiniões próprias.\nIgnoro a maioria.",
+		"Zion me escolheu. Ou eu escolhi Zion.\nA linha é tênue.",
+		"Cada fenda que restauro,\nme sinto um pouco mais inteiro. Irônico.",
+		"Fragmentado, mas não quebrado.\nTem diferença.",
+	],
+}
+
+const CHARACTER_QUOTES_EN := {
+	"amazona": [
+		"My spear never misses.\nUnlike Ronin's jokes.",
+		"A daughter of Zion doesn't retreat.\nShe takes a strategic step back.",
+		"I threw the stick at the cat...\nFiguratively. Or not.",
+		"I've hunted since I was 5.\nDimensional prey is the most interesting.",
+		"Forest or rift,\nthe instinct is the same. Strike first.",
+		"My tribe said: never shoot without aiming.\nBut sometimes it's faster.",
+		"I know every medicinal plant in 3 biomes.\nAnd every poison too.",
+		"Warrior before being Fragmented.\nThe order matters.",
+	],
+	"bruxa": [
+		"I turned the last enemy into a frog.\nHe didn't even complain.",
+		"Love spell? No thanks.\nI prefer area damage spells.",
+		"The moon gives me power.\nAnd insomnia. Mainly insomnia.",
+		"My grimoire is 600 years old.\nI haven't finished reading it.",
+		"Invisibility potion: tested.\nSide effect: inverse visibility.",
+		"Black cat brings bad luck?\nMine brings bad luck to those who attack me.",
+		"Dark magic is relativism.\nDepends on who's asking.",
+		"Broom is transport. Cauldron is a tool.\nHat is style.",
+	],
+	"lealith": [
+		"Speed is everything.\nIncluding for escaping the chef.",
+		"15% dodge? In theory.\nIn practice it's 100% style.",
+		"I passed so fast\nI didn't even see myself go by.",
+		"Whoever runs faster gets there first.\nSimple philosophy, guaranteed results.",
+		"I've run from dragons, guards\nand bakery bills. Varied training.",
+		"Speed isn't just physical.\nIt's commitment. Well, mainly physical.",
+		"The wind follows me.\nOr I follow it. Details.",
+		"Invisible in motion.\nPresent in victory. That's the art.",
+	],
+	"ronin": [
+		"My sword has a name.\nI won't say what. It's embarrassing.",
+		"Bushido: the warrior's path.\nToday the path leads to the supply room.",
+		"Silence is wisdom.\nThat's what I say when I don't know the answer.",
+		"I meditate every day at 5am.\nWell. Most days. Sometimes.",
+		"They say I'm always serious.\nFalse. Sometimes I'm very serious.",
+		"Every scar has a story.\nMost are embarrassing.",
+		"The enemy who underestimates me\nis my favorite enemy.",
+		"I no longer remember life before Zion.\nThat's probably a good sign.",
+	],
+	"soldado": [
+		"RATATATA!\nSorry. Reflex.",
+		"Combat protocol active.\nCoffee too. Especially the coffee.",
+		"Infinite ammo would be great.\nSomeone write that down.",
+		"Rule #1: never let the enemy know your plan.\nRule #2: have a plan.",
+		"My commander called me unstoppable.\nI agree.",
+		"Grenades? Yes.\nCoordination? In progress.",
+		"I slept 4h a day in the army.\nNow I sleep 3. Growth.",
+		"Dimensional rift?\nI've seen worse. Almost.",
+	],
+	"mago": [
+		"Area of effect?\nI call it the 'zone of respect'.",
+		"I studied magic for 40 years for this.\nWorth it. Probably.",
+		"My staff is decorative.\nThe damage is not.",
+		"Invisibility spells exist.\nI just choose not to use them.",
+		"Magic is science. Science is magic.\nPhilosophy is complicated.",
+		"The grimoire warned me this rift was dangerous.\nI ignored it. Obviously.",
+		"Every explosion has a purpose.\nFinding it is the hard part.",
+		"I learned from the best.\nThey survived. Inspirational.",
+	],
+	"berserker": [
+		"Doctor told me to relax.\nHe no longer works here.",
+		"At 30% HP I get stronger.\nReverse motivation.",
+		"Anger? This is called focus.\nIntense. Very intense.",
+		"Weightlifting is meditation.\nDon't read studies about it.",
+		"My armor weighed 80kg.\nI miss it.",
+		"Strategy?\nCharging first is strategy.",
+		"More enemies means\nmy AoE gets more efficient.",
+		"I'm not violent. I'm vigorous.\nBig difference.",
+	],
+	"ninja": [
+		"You didn't see me coming?\nPerfect. It worked.",
+		"The shadow that protects you.\nOr frightens you. Either way.",
+		"Invisible isn't a superpower —\nit's a lifestyle.",
+		"I train 16 hours a day.\nThe other 8 I pretend to sleep.",
+		"My name is a secret. My face too.\nI've forgotten what I look like.",
+		"I move in silence.\nExcept when I trip. That doesn't happen.",
+		"Smoke isn't fleeing.\nIt's... tactical repositioning.",
+		"I live in shadows.\nBut my heart is gold. Sorry for the cliche.",
+	],
+	"pirata": [
+		"Crystals are worth more than gold.\nDon't tell anyone.",
+		"I had a ship. Long story.\nAnyone have spare crystals?",
+		"Treasure map? Right here.\nKeep it secret.",
+		"Seven seas? I've sailed ten.\nThree of them are dimensional.",
+		"Dimensional rum is different.\nI don't drink anymore. Almost.",
+		"The pirate code says: leave no ally behind.\nExcept the chef.",
+		"Storms don't scare me.\nDimensional rifts don't either. Onions do.",
+		"Every pirate has a parrot.\nMine left me. Respect.",
+	],
+	"engenheiro": [
+		"My drone does everything.\nIncluding embarrass me in public.",
+		"15% cooldown reduction.\nBureaucracy has no cooldown unfortunately.",
+		"Technology solves everything.\nExcept that bug. And the other one.",
+		"I built my first robot at 8.\nIt ran away. Betrayal.",
+		"Automated systems: efficient\nand no overtime complaints.",
+		"Never outsource what you can automate.\nLife philosophy.",
+		"The drone has a name.\nI won't say it. It prefers that.",
+		"Analysis complete: 99% chance of victory.\nThe 1% worries me.",
+	],
+	"vampiro": [
+		"Lifesteal isn't vampirism.\nIt's alternative nutrition.",
+		"Sleep during the day, wake at night.\nI'm on the late shift, ok?",
+		"I don't bite anyone.\nHaven't in decades. Almost.",
+		"Immortality is overrated.\nBut better than the alternative.",
+		"The sun is inconvenient. Not lethal.\nJust very, very inconvenient.",
+		"The 18th century was my best period.\nThe fashion was excellent.",
+		"Vampire is a label.\nI prefer 'life force consumer'.",
+		"I have 400 years of experience.\nIn everything. Except cooking.",
+	],
+	"gladiador": [
+		"Armor +20%?\nIt matches my eyes.",
+		"In the arena, you either win or...\nyou also win, if it's me.",
+		"A shield isn't for hiding.\nIt's for hitting enemies on the head.",
+		"Crowds chanting my name.\nI miss it. Rifts are too quiet.",
+		"Honor in combat. Victory in style.\nNon-negotiable.",
+		"I've fought lions, bears and a Sentinel.\nThe Sentinel was the most polite.",
+		"My armor weighs more than some enemies.\nConvenient.",
+		"The crowd loved my arena entrance.\nThere's no crowd here. Sad.",
+	],
+	"chef": [
+		"Grandma was right:\nfood heals everything.",
+		"Secret healing recipe: love,\ncare and dimensional mushrooms.",
+		"Kitchen knife is also a weapon.\nAsk the last Sentinel.",
+		"I've cooked in 3 different dimensions.\nThis one has the best ingredients.",
+		"The right seasoning works miracles.\nOn the plate and on the battlefield.",
+		"I waste nothing. Not even enemies.\nThey become broth.",
+		"Dimensional Michelin star?\nDon't know if it exists. But I'd deserve it.",
+		"Hunger is the worst enemy.\nLuckily, I'm the chef.",
+	],
+	"mystery": [
+		"...",
+		"I know things.\nNo, I won't tell you.",
+		"???",
+		"You don't even know my name.\nNeither do I.",
+		"The answer is right here.\nYou just don't know the question.",
+		"Mystery isn't the absence of an answer.\nIt's an excess of questions.",
+		"Maybe I'm real. Maybe not.\nZion knows.",
+		"Every time someone observes me,\nI change a little. Quantum mechanics?",
+	],
+	"fragmentado": [
+		"I'm fine.\nIt's only 10 rifts a day.",
+		"I have a shard of Zion inside me.\nIt stings a little.",
+		"I started at 50% HP.\nStill made it here.",
+		"Being Fragmented isn't a flaw.\nIt's a competitive advantage.",
+		"The crystal inside me has its own opinions.\nI ignore most of them.",
+		"Zion chose me. Or I chose Zion.\nThe line is blurry.",
+		"Every rift I restore,\nI feel a little more whole. Ironic.",
+		"Fragmented, but not broken.\nThere's a difference.",
 	],
 }
 
@@ -132,6 +360,7 @@ var _bubble_name_lbl: Label = null
 var _bubble_text_lbl: Label = null
 var _current_speaker_idx: int = -1
 var _last_speaker_idx: int = -1
+var _last_quote_indices: Dictionary = {}  # char_id -> last quote index (avoid repeats)
 
 @onready var viewport_container: SubViewportContainer = $SubViewportContainer
 @onready var sub_viewport: SubViewport = $SubViewportContainer/SubViewport
@@ -489,33 +718,64 @@ func _animate_speech_bubbles(delta: float) -> void:
 	if _char_roots.is_empty() or _camera == null:
 		return
 
+	# Find the hero currently in the "stage" position (front of carousel, closest to camera)
+	var stage_idx := _find_stage_hero()
+
+	# If the stage hero changed, trigger a new bubble
+	if stage_idx >= 0 and stage_idx != _current_speaker_idx:
+		_hide_bubble()
+		_current_speaker_idx = stage_idx
+		_last_speaker_idx = stage_idx
+		# Small delay before showing new bubble
+		_bubble_timer = BUBBLE_COOLDOWN
+		_in_cooldown = true
+	elif stage_idx < 0 and _current_speaker_idx >= 0:
+		# No hero on stage — hide bubble
+		_hide_bubble()
+		_current_speaker_idx = -1
+
 	_bubble_timer -= delta
 
 	if _bubble_timer <= 0.0:
 		if _in_cooldown:
 			_in_cooldown = false
-			_pick_next_speaker()
+			if _current_speaker_idx >= 0:
+				_show_bubble(_current_speaker_idx)
+				_bubble_timer = BUBBLE_SHOW_DURATION
 		else:
-			_hide_bubble()
-			_in_cooldown = true
-			_bubble_timer = BUBBLE_COOLDOWN
+			# Show next quote for the same hero on stage
+			if _current_speaker_idx >= 0:
+				_hide_bubble()
+				_in_cooldown = true
+				_bubble_timer = BUBBLE_COOLDOWN
 
 	# Atualiza posição do balão enquanto o carrossel gira
 	if _bubble_panel != null and _bubble_panel.visible and _current_speaker_idx >= 0:
 		_reposition_bubble(_current_speaker_idx)
 
-func _pick_next_speaker() -> void:
-	if _char_roots.is_empty():
-		return
-	var idx = _last_speaker_idx
-	var attempts = 0
-	while idx == _last_speaker_idx and attempts < 15:
-		idx = randi() % _char_roots.size()
-		attempts += 1
-	_current_speaker_idx = idx
-	_last_speaker_idx = idx
-	_show_bubble(idx)
-	_bubble_timer = BUBBLE_SHOW_DURATION
+## Finds the hero index closest to the "stage" position (angle ~ PI/2, front of camera).
+## Returns -1 if no hero is within tolerance.
+func _find_stage_hero() -> int:
+	var best_idx := -1
+	var best_dist := 999.0
+	var tolerance := 0.35  # ~20 degrees
+
+	for i in range(_char_roots.size()):
+		var data = _char_roots[i]
+		var current_angle: float = data["base_angle"] + _carousel_angle
+		# Normalize to [0, TAU)
+		current_angle = fmod(current_angle, TAU)
+		if current_angle < 0.0:
+			current_angle += TAU
+		# Distance to PI/2 (front position)
+		var dist := absf(current_angle - PI / 2.0)
+		if dist > PI:
+			dist = TAU - dist
+		if dist < tolerance and dist < best_dist:
+			best_dist = dist
+			best_idx = i
+
+	return best_idx
 
 func _show_bubble(idx: int) -> void:
 	if idx < 0 or idx >= _char_roots.size():
@@ -526,9 +786,19 @@ func _show_bubble(idx: int) -> void:
 	var data    = _char_roots[idx]
 	var char_id: String = data["char_id"]
 
-	# Frase aleatória do personagem
-	var quotes: Array = CHARACTER_QUOTES.get(char_id, ["..."])
-	var quote: String = quotes[randi() % quotes.size()]
+	# Frase aleatória do personagem — bilíngue via LocaleManager
+	var quotes_db: Dictionary = CHARACTER_QUOTES_EN if LocaleManager.get_locale() == "en" else CHARACTER_QUOTES_PT
+	var quotes: Array = quotes_db.get(char_id, ["..."])
+	# Avoid repeating the same quote consecutively for this character
+	var last_qi: int = _last_quote_indices.get(char_id, -1)
+	var qi: int = randi() % quotes.size()
+	if quotes.size() > 1:
+		var attempts := 0
+		while qi == last_qi and attempts < 10:
+			qi = randi() % quotes.size()
+			attempts += 1
+	_last_quote_indices[char_id] = qi
+	var quote: String = quotes[qi]
 
 	# Nome display
 	var display_name: String = char_id.capitalize()

@@ -1,6 +1,6 @@
 # PRD 17 — Créditos: falas aprimoradas e balão posicional
 
-## Status: pendente
+## Status: CONCLUIDO
 
 ## Problema
 
