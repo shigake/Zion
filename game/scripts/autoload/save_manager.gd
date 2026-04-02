@@ -25,6 +25,9 @@ var data: Dictionary = {
 	"audio_ambient": 100,  # Ambient SFX volume (0-100)
 	"audio_ducking": true,  # Auto-ducking music during voice/dialogue
 	"tutorial_advanced_completed": false,  # Phase 2 advanced tutorial (PRD 28 §6)
+	"screen_shake_enabled": true,  # PRD 28 §3 — Screen shake toggle
+	"damage_numbers_enabled": true,  # PRD 28 §3 — Damage numbers toggle
+	"manual_aim": false,  # PRD 28 §3 — Manual aim (right stick) toggle
 }
 
 func _ready() -> void:

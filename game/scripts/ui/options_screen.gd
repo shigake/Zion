@@ -607,6 +607,22 @@ func _build_tab_acessibilidade() -> void:
 			AccessibilityManager.set_ui_scale(idx),
 		t)
 
+	# PRD 28 §3 — Screen shake, damage numbers, auto-aim toggles
+	_add_section(vbox, "Gameplay accessibility")
+	_add_toggle(vbox, LocaleManager.tr_key("opt_screen_shake_toggle"), "screen_shake_enabled", true,
+		func(on: bool) -> void:
+			GameManager.screen_shake_enabled = on,
+		t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_damage_numbers_toggle"), "damage_numbers_enabled", true,
+		func(on: bool) -> void:
+			GameManager.damage_numbers_enabled = on,
+		t)
+	_add_toggle(vbox, LocaleManager.tr_key("opt_auto_aim"), "manual_aim", false,
+		func(on: bool) -> void:
+			GameManager.manual_aim = on,
+		t)
+
+	_add_section(vbox, LocaleManager.tr_key("opt_section_visual"))
 	_add_toggle(vbox, LocaleManager.tr_key("opt_reduced_motion"), "access_reduced_motion", false,
 		func(on: bool) -> void:
 			AccessibilityManager.set_reduced_motion(on),

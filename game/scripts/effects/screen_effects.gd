@@ -113,6 +113,9 @@ func _update_vignette() -> void:
 
 
 func shake(amount: float = 0.15) -> void:
+	# PRD 28 §3 — Accessibility: skip shake if toggle is off
+	if not GameManager.screen_shake_enabled:
+		return
 	# Accessibility: skip shake if reduced motion is on
 	if AccessibilityManager.reduced_motion:
 		return

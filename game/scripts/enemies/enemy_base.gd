@@ -659,8 +659,9 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	if not is_inside_tree():
 		return
 	# Damage number - skip at low FPS to reduce draw calls (Label3D = 1 draw call each)
+	# PRD 28 §3 — Accessibility: skip damage numbers if toggle is off
 	var fps = Engine.get_frames_per_second()
-	var show_dmg_number = true
+	var show_dmg_number = GameManager.damage_numbers_enabled
 	if fps < 25:
 		show_dmg_number = is_crit  # Only show crits at very low FPS
 	elif fps < 35:

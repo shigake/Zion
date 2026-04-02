@@ -150,6 +150,10 @@ var map_half_size: float = 95.0
 var manual_aim: bool = false
 var aim_direction: Vector3 = Vector3.ZERO
 
+# Accessibility toggles (synced from SaveManager on run start)
+var screen_shake_enabled: bool = true
+var damage_numbers_enabled: bool = true
+
 func _ready() -> void:
 	_spatial_grid = load("res://scripts/autoload/spatial_enemy_grid.gd").new()
 	_register_input_actions()
@@ -162,6 +166,10 @@ func _ready() -> void:
 	boss_died.connect(_on_timeline_boss_died)
 	# Connect synergy procs for stats tracking (PRD 28 §4)
 	SynergySystem.synergy_procced.connect(record_synergy_proc)
+	# PRD 28 §3 — Restore accessibility toggles from save
+	screen_shake_enabled = SaveManager.data.get("screen_shake_enabled", true)
+	damage_numbers_enabled = SaveManager.data.get("damage_numbers_enabled", true)
+	manual_aim = SaveManager.data.get("manual_aim", false)
 	LogManager.info("Game", "GameManager ready")
 
 var _orphan_cleanup_timer: float = 0.0

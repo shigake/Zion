@@ -87,6 +87,9 @@ func _show() -> void:
 	if crystal_mult > 1.0:
 		crystals_label.text += " (x%.1f)" % crystal_mult
 
+	# PRD 28 §4 — Expanded post-run stats
+	_build_expanded_stats()
+
 	# Character sprite
 	var char_path = "res://assets/sprites/characters/%s.png" % GameManager.selected_character
 	if ResourceLoader.exists(char_path):
@@ -325,6 +328,107 @@ func _on_copy_seed() -> void:
 func _clear_container(container: Container) -> void:
 	for child in container.get_children():
 		child.queue_free()
+
+
+# ---------------------------------------------------------------------------
+# PRD 28 §4 — Expanded Post-Run Stats
+# ---------------------------------------------------------------------------
+
+var _stats_container: VBoxContainer = null
+
+func _build_expanded_stats() -> void:
+	# Remove previous stats container if it exists
+	if _stats_container and is_instance_valid(_stats_container):
+		_stats_container.queue_free()
+		_stats_container = null
+
+	var vbox = $Panel/MarginContainer/VBox
+	_stats_container = VBoxContainer.new()
+	_stats_container.name = "ExpandedStats"
+	_stats_container.add_theme_constant_override("separation", 2)
+
+	# Section title with gold accent
+	var section_label := Label.new()
+	section_label.text = LocaleManager.tr_key("stat_combat_details")
+	section_label.add_theme_font_size_override("font_size", 14)
+	section_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	section_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stats_container.add_child(section_label)
+
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("separator", Color(1.0, 0.85, 0.3, 0.4))
+	_stats_container.add_child(sep)
+
+	# Grid for stat rows
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 3)
+
+	var stats = GameManager.get_run_stats()
+
+	# DPS peak
+	_add_stat_row(grid, LocaleManager.tr_key("stat_dps_peak"), _format_number(int(stats.get("dps_peak", 0.0))), stats.get("dps_peak", 0.0) > 500.0)
+
+	# Total damage dealt
+	_add_stat_row(grid, LocaleManager.tr_key("stat_total_damage"), _format_number(stats.get("total_damage_dealt", 0)))
+
+	# Highest single hit
+	_add_stat_row(grid, LocaleManager.tr_key("stat_highest_hit"), _format_number(stats.get("highest_single_hit", 0)), stats.get("highest_single_hit", 0) > 1000)
+
+	# Longest no-damage streak
+	var streak_secs: float = stats.get("longest_no_damage_streak", 0.0)
+	var streak_str: String
+	if streak_secs >= 60.0:
+		streak_str = "%dm %ds" % [int(streak_secs) / 60, int(streak_secs) % 60]
+	else:
+		streak_str = "%.1fs" % streak_secs
+	_add_stat_row(grid, LocaleManager.tr_key("stat_no_damage_streak"), streak_str, streak_secs > 30.0)
+
+	# Total damage taken
+	_add_stat_row(grid, LocaleManager.tr_key("stat_damage_taken"), _format_number(stats.get("total_damage_taken", 0)))
+
+	# Dash count
+	_add_stat_row(grid, LocaleManager.tr_key("stat_dash_count"), str(stats.get("dash_count", 0)))
+
+	# Overkill damage
+	_add_stat_row(grid, LocaleManager.tr_key("stat_overkill"), _format_number(stats.get("overkill_damage", 0)), stats.get("overkill_damage", 0) > 5000)
+
+	_stats_container.add_child(grid)
+
+	# Insert before weapons section
+	var weapons_idx = weapons_title.get_index()
+	vbox.add_child(_stats_container)
+	vbox.move_child(_stats_container, weapons_idx)
+
+
+## Add a stat row to the grid: label on left, value on right.
+## If highlight is true, value gets a gold accent color.
+func _add_stat_row(grid: GridContainer, label_text: String, value_text: String, highlight: bool = false) -> void:
+	var label := Label.new()
+	label.text = label_text
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+	grid.add_child(label)
+
+	var value := Label.new()
+	value.text = value_text
+	value.add_theme_font_size_override("font_size", 12)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	if highlight:
+		value.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	else:
+		value.add_theme_color_override("font_color", Color(0.9, 0.9, 0.95))
+	grid.add_child(value)
+
+
+## Format large numbers with K/M suffixes.
+func _format_number(n: int) -> String:
+	if n >= 1000000:
+		return "%.1fM" % (float(n) / 1000000.0)
+	elif n >= 10000:
+		return "%.1fK" % (float(n) / 1000.0)
+	return str(n)
 
 
 # ---------------------------------------------------------------------------
