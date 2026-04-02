@@ -322,6 +322,7 @@ func _physics_process(delta: float) -> void:
 			dash_timer = dash_duration
 			dash_cooldown_timer = dash_cooldown
 			dash_direction = move_direction.normalized()
+			GameManager.dash_count += 1
 			AudioManager.play_sfx("dash")
 
 	move_and_slide()

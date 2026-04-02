@@ -84,6 +84,7 @@ func _collect() -> void:
 	AudioManager.play_sfx("heal")
 	ParticleFactory.spawn_collect_particles(global_position, Color(1.0, 0.3, 0.4))
 	GameManager.heal(heal_value)
+	GameManager.health_pickups_used += 1
 	queue_free()
 
 func _on_body_entered(body: Node3D) -> void:

@@ -75,6 +75,7 @@ func _collect() -> void:
 	if _collected or not is_inside_tree():
 		return
 	_collected = true
+	GameManager.magnets_collected += 1
 	AudioManager.play_sfx("collect_xp")
 	# Flash branco na tela
 	ScreenEffects.flash(0.15, 0.2)
