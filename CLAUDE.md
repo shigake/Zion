@@ -162,7 +162,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 5. EnemyAttacks
 
 ### Display
-- Viewport: 1280x720 (stretch: canvas_items, aspect: expand)
+- Viewport: 1280x720 (stretch: canvas_items, aspect: keep)
 - Renderer: Forward Plus, MSAA 2x
 - Main scene: `res://scenes/ui/main_menu.tscn`
 

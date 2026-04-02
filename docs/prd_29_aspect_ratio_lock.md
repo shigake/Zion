@@ -1,6 +1,6 @@
 # PRD 29 — Trava de Aspect Ratio 16:9 e Controle de Janela
 
-**Status**: pendente  
+**Status**: CONCLUIDO  
 **Prioridade**: alta  
 **Categoria**: qualidade visual / UX
 
@@ -96,9 +96,9 @@ Não é necessário criar um `VideoSettingsManager` — o pipeline já está com
 
 ## Critérios de aceitação
 
-- [ ] Redimensionar a janela apenas na horizontal adiciona barras pretas (letterboxing) — UI não distorce
-- [ ] Redimensionar na vertical adiciona barras pretas (pillarboxing) — UI não distorce
-- [ ] FOV vertical da câmera top-down permanece constante independente do aspect ratio da janela
-- [ ] Tela cheia em 16:9 funciona sem barras pretas
-- [ ] Tela cheia em 16:10 ou 4:3 exibe barras pretas nas laterais
-- [ ] Todas as opções de vídeo continuam funcionando normalmente
+- [x] Redimensionar a janela apenas na horizontal adiciona barras pretas (letterboxing) — UI não distorce
+- [x] Redimensionar na vertical adiciona barras pretas (pillarboxing) — UI não distorce
+- [x] FOV vertical da câmera top-down permanece constante independente do aspect ratio da janela
+- [x] Tela cheia em 16:9 funciona sem barras pretas
+- [x] Tela cheia em 16:10 ou 4:3 exibe barras pretas nas laterais
+- [x] Todas as opções de vídeo continuam funcionando normalmente
