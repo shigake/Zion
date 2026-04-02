@@ -637,7 +637,7 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		return
 	# Apply resistance multiplier (minimum 1 damage)
 	var resist_mult: float = resistances.get(damage_type, 1.0)
-	var is_crit = GameManager.crit_chance > 0.0 and GameManager.seeded_rng.randf() < GameManager.crit_chance
+	var is_crit = GameManager.crit_chance > 0.0 and randf() < GameManager.crit_chance
 	var crit_mult = GameManager.crit_multiplier if is_crit else 1.0
 	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult * crit_mult))
 	hp -= final_damage
@@ -647,7 +647,7 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	# Lifesteal: chance-based per hit (prevents OP with fast weapons)
 	# 5% lifesteal = 5% chance to heal 15% of damage dealt
 	if GameManager.lifesteal > 0.0 and final_damage > 0:
-		if GameManager.seeded_rng.randf() < GameManager.lifesteal:
+		if randf() < GameManager.lifesteal:
 			var heal_amount = maxi(1, ceili(final_damage * 0.15))
 			GameManager.heal(heal_amount)
 	# Cross-combo check (multiplayer)
@@ -674,8 +674,8 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		var pos = global_position
 		var dmg_label = ParticleFactory.get_damage_number()
 		dmg_label.text = str(final_damage) + ("!" if is_crit else "")
-		dmg_label.font_size = 640 if is_crit else 480
-		dmg_label.outline_size = 30
+		dmg_label.font_size = 40 if is_crit else 28
+		dmg_label.outline_size = 6
 		dmg_label.modulate = dmg_color
 		dmg_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		dmg_label.position = global_position + Vector3(randf_range(-0.5, 0.5), 1.8, 0)
@@ -905,7 +905,7 @@ func _spawn_xp_gem(pos: Vector3) -> void:
 func _spawn_crystal(pos: Vector3) -> void:
 	# 30% chance de dropar cristal (50% with master key)
 	var drop_chance = 0.5 if GameManager.master_key_active else 0.3
-	if GameManager.seeded_rng.randf() > drop_chance:
+	if randf() > drop_chance:
 		return
 	var crystal_scene = preload("res://scenes/crystal_pickup.tscn")
 	var crystal = crystal_scene.instantiate()
@@ -925,7 +925,7 @@ func _spawn_health_pickup(pos: Vector3) -> void:
 		base_chance += 0.03
 	# Luck multiplier
 	var drop_chance = base_chance * GameManager.luck_mult
-	if GameManager.seeded_rng.randf() > drop_chance:
+	if randf() > drop_chance:
 		return
 	var hp_scene = preload("res://scenes/health_pickup.tscn")
 	var hp_pickup = hp_scene.instantiate()
@@ -943,7 +943,7 @@ func _spawn_magnet_pickup(pos: Vector3) -> void:
 	if GameManager.master_key_active:
 		base_chance = 0.02
 	var drop_chance = base_chance * GameManager.luck_mult
-	if GameManager.seeded_rng.randf() > drop_chance:
+	if randf() > drop_chance:
 		return
 	var magnet_scene = preload("res://scenes/magnet_pickup.tscn")
 	var magnet = magnet_scene.instantiate()

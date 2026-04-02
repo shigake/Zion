@@ -582,6 +582,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not tutorial_active:
 		return
 
+	# ESC or ui_cancel skips tutorial in any phase
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_skip_tutorial()
+		return
+
+	# Space/dash advances Phase 1 steps instantly
+	if _phase == 1 and event.is_action_pressed("dash"):
+		get_viewport().set_input_as_handled()
+		_on_condition_met()
+		return
+
 	# Phase 2: dismiss current message on any button/key press
 	if _phase == 2 and _overlay.visible:
 		var is_press = false
