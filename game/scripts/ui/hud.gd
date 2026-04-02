@@ -33,7 +33,7 @@ var _prev_weapon_hash: String = ""
 var _prev_item_hash: String = ""
 
 # Synergy display
-var synergy_container: VBoxContainer = null
+var synergy_container: Control = null
 var _synergy_update_timer: float = 0.0
 var _prev_synergy_hash: String = ""
 
@@ -179,18 +179,19 @@ func _ready() -> void:
 
 	# Achievement popup now handled by AchievementPopup autoload (CanvasLayer 10)
 
-	# Synergy indicator area (bottom-left, below weapon icons)
-	synergy_container = VBoxContainer.new()
-	synergy_container.name = "SynergyContainer"
+	# Synergy HUD — icon-based with tooltips (replaces old text-based display)
+	var synergy_hud_script = preload("res://scripts/ui/synergy_hud.gd")
+	synergy_container = Control.new()
+	synergy_container.set_script(synergy_hud_script)
+	synergy_container.name = "SynergyHUD"
 	synergy_container.anchor_left = 0.0
 	synergy_container.anchor_top = 1.0
 	synergy_container.anchor_right = 0.0
 	synergy_container.anchor_bottom = 1.0
 	synergy_container.offset_left = 10.0
-	synergy_container.offset_top = -120.0
-	synergy_container.offset_right = 200.0
+	synergy_container.offset_top = -80.0
+	synergy_container.offset_right = 300.0
 	synergy_container.offset_bottom = -10.0
-	synergy_container.add_theme_constant_override("separation", 2)
 	add_child(synergy_container)
 
 	# Minimap (bottom-right, hexagonal)
@@ -655,28 +656,9 @@ func _update_synergies(delta: float) -> void:
 		return
 	_prev_synergy_hash = hash
 
-	# Clear old labels
-	for child in synergy_container.get_children():
-		child.queue_free()
-
-	var synergy_display := {
-		"fire_fire": {"name": "Explosion", "color": Color(1.0, 0.6, 0.1)},
-		"ice_ice": {"name": "Shatter", "color": Color(0.4, 0.9, 1.0)},
-		"electric_electric": {"name": "Chain", "color": Color(1.0, 1.0, 0.3)},
-		"dark_dark": {"name": "Darkness", "color": Color(0.7, 0.3, 0.9)},
-		"fire_ice": {"name": "Steam", "color": Color.WHITE},
-		"electric_ice": {"name": "Conductor", "color": Color(0.3, 0.5, 1.0)},
-	}
-
-	for syn_id in synergies:
-		var info = synergy_display.get(syn_id, null)
-		if info == null:
-			continue
-		var lbl = Label.new()
-		lbl.text = info["name"]
-		lbl.add_theme_font_size_override("font_size", 14)
-		lbl.add_theme_color_override("font_color", info["color"])
-		synergy_container.add_child(lbl)
+	# SynergyHUD handles display via signals; just remove stale icons
+	if synergy_container.has_method("remove_stale_synergies"):
+		synergy_container.remove_stale_synergies()
 
 # --------------- Chest Arrows ---------------
 

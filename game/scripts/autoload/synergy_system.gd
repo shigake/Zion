@@ -3,8 +3,38 @@ extends Node
 ## Sistema de Sinergias Elementais.
 ## Armas do mesmo elemento ou elementos complementares criam efeitos bonus.
 
+signal synergy_activated(synergy_name: String, synergy_data: Dictionary)
+signal synergy_procced(synergy_name: String, damage: float)
+
 # Sinergias ativas nesta run
 var active_synergies: Array[String] = []
+var _prev_active_synergies: Array[String] = []
+
+const SYNERGY_INFO := {
+	"fire_fire": {"icon_symbol": "🔥", "name": "Explosion", "effect": "20% chance de explosao ao matar", "trigger": "Fogo + Fogo (2 armas de fogo)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 0.6, 0.1)},
+	"ice_ice": {"icon_symbol": "❄", "name": "Shatter", "effect": "Inimigos congelados explodem em estilhacos", "trigger": "Gelo + Gelo (2 armas de gelo)", "cooldown": 0.0, "type": "base", "color": Color(0.4, 0.9, 1.0)},
+	"electric_electric": {"icon_symbol": "⚡", "name": "Chain Lightning", "effect": "Chain lightning ao matar (5 alvos, 12 dano cada)", "trigger": "Eletrico + Eletrico (2 armas eletricas)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 1.0, 0.3)},
+	"dark_dark": {"icon_symbol": "🌑", "name": "Darkness", "effect": "Area de trevas passiva (5 dano/s em raio de 4)", "trigger": "Dark + Dark (2 armas sombrias)", "cooldown": 1.0, "type": "base", "color": Color(0.7, 0.3, 0.9)},
+	"water_water": {"icon_symbol": "🌊", "name": "Tidal Wave", "effect": "Onda de mare empurra inimigos a cada 4s", "trigger": "Agua + Agua (2 armas de agua)", "cooldown": 4.0, "type": "water", "color": Color(0.2, 0.5, 1.0)},
+	"fire_ice": {"icon_symbol": "♨", "name": "Steam Cloud", "effect": "Nuvem de vapor (8 dano + slow 40%)", "trigger": "Fogo + Gelo", "cooldown": 1.5, "type": "cross", "color": Color(0.8, 0.8, 0.8)},
+	"electric_ice": {"icon_symbol": "🔷", "name": "Conductor", "effect": "Descarga massiva em area (25 dano, raio 6)", "trigger": "Eletrico + Gelo", "cooldown": 3.0, "type": "cross", "color": Color(0.3, 0.5, 1.0)},
+	"water_fire": {"icon_symbol": "💨", "name": "Steam Explosion", "effect": "Explosao de vapor (12 dano em area + slow)", "trigger": "Agua + Fogo", "cooldown": 1.5, "type": "water", "color": Color(1.0, 0.9, 0.8)},
+	"water_electric": {"icon_symbol": "⚗", "name": "Electrolysis", "effect": "Inimigos em zona de agua tomam 2x dano eletrico", "trigger": "Agua + Eletrico", "cooldown": 0.0, "type": "water", "color": Color(0.3, 0.6, 1.0)},
+	"water_ice": {"icon_symbol": "🧊", "name": "Absolute Zero", "effect": "Congela inimigos por 2s em raio de 4", "trigger": "Agua + Gelo", "cooldown": 5.0, "type": "water", "color": Color(0.6, 0.9, 1.0)},
+	"water_dark": {"icon_symbol": "🌀", "name": "Abyssal Depths", "effect": "Inimigos 40% mais lentos em raio de 6", "trigger": "Agua + Dark", "cooldown": 0.5, "type": "water", "color": Color(0.1, 0.15, 0.4)},
+	"fire_poison": {"icon_symbol": "☣", "name": "Toxic Fire", "effect": "DoT de fogo dobrado (8+8 dano/s)", "trigger": "Fogo + Veneno", "cooldown": 1.0, "type": "cross", "color": Color(0.8, 0.5, 0.1)},
+	"ice_dark": {"icon_symbol": "🌘", "name": "Shadow Freeze", "effect": "Congela + drena vida (2% do dano vira cura)", "trigger": "Gelo + Dark", "cooldown": 2.0, "type": "cross", "color": Color(0.3, 0.1, 0.5)},
+	"electric_poison": {"icon_symbol": "💀", "name": "Toxic Shock", "effect": "Stun 0.5s + DoT de veneno (6 dano/1.5s)", "trigger": "Eletrico + Veneno", "cooldown": 1.5, "type": "cross", "color": Color(0.3, 1.0, 0.3)},
+	"poison_poison": {"icon_symbol": "☠", "name": "Plague", "effect": "Veneno se espalha para inimigos proximos", "trigger": "Veneno + Veneno (2 armas de veneno)", "cooldown": 0.0, "type": "base", "color": Color(0.5, 0.9, 0.2)},
+	"light_light": {"icon_symbol": "✦", "name": "Radiance", "effect": "Aura de luz que enfraquece inimigos", "trigger": "Luz + Luz (2 armas de luz)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 1.0, 0.8)},
+	"physical_physical": {"icon_symbol": "⚔", "name": "Berserker", "effect": "Velocidade de ataque aumenta com kills", "trigger": "Fisico + Fisico (2 armas fisicas)", "cooldown": 0.0, "type": "base", "color": Color(0.8, 0.3, 0.3)},
+}
+
+func get_synergy_info(synergy_id: String) -> Dictionary:
+	if synergy_id in SYNERGY_INFO:
+		return SYNERGY_INFO[synergy_id]
+	# Fallback for unknown synergies
+	return {"icon_symbol": "?", "name": synergy_id.capitalize(), "effect": get_synergy_description(synergy_id), "trigger": synergy_id, "cooldown": 0.0, "type": "base", "color": Color.WHITE}
 
 func check_synergies() -> void:
 	active_synergies.clear()
@@ -44,6 +74,12 @@ func check_synergies() -> void:
 		active_synergies.append("ice_dark")
 	if "electric" in element_count and "poison" in element_count:
 		active_synergies.append("electric_poison")
+
+	# Emit signals for newly activated synergies
+	for syn_id in active_synergies:
+		if syn_id not in _prev_active_synergies:
+			synergy_activated.emit(syn_id, get_synergy_info(syn_id))
+	_prev_active_synergies = active_synergies.duplicate()
 
 func has_synergy(synergy_id: String) -> bool:
 	return synergy_id in active_synergies
@@ -180,6 +216,7 @@ func _fire_explosion(pos: Vector3) -> void:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < 2.5:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", 20, "fire")
+	synergy_procced.emit("fire_fire", 20.0)
 
 # ---- Ice + Ice: Shatter frozen enemies ----
 
@@ -200,6 +237,7 @@ func _ice_shatter(pos: Vector3) -> void:
 					if is_instance_valid(e):
 						e.speed = original_speed
 				)
+	synergy_procced.emit("ice_ice", 15.0)
 
 # ---- Electric + Electric: Chain Lightning ----
 
@@ -232,6 +270,7 @@ func _chain_lightning(start_pos: Vector3) -> void:
 
 	if not hit_enemies.is_empty():
 		ScreenEffects.shake(0.05)
+		synergy_procced.emit("electric_electric", 12.0 * hit_enemies.size())
 
 # ---- Dark + Dark: Passive aura damage ----
 
@@ -244,6 +283,7 @@ func _dark_aura_tick(pos: Vector3) -> void:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "dark")
+	synergy_procced.emit("dark_dark", float(dmg))
 
 # ---- Fire + Ice: Steam Cloud (slow + damage) ----
 
@@ -258,6 +298,7 @@ func _steam_cloud_tick(pos: Vector3) -> void:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "fire")
 			_apply_speed_debuff(e, 0.6, 1.5)
+	synergy_procced.emit("fire_ice", 8.0)
 
 # ---- Electric + Ice: Conductor (massive AoE) ----
 
@@ -272,6 +313,7 @@ func _conductor_tick(pos: Vector3) -> void:
 		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "electric")
+	synergy_procced.emit("electric_ice", 25.0)
 
 # ---- Water + Water: Tidal Wave (knockback every 4s) ----
 
@@ -291,6 +333,7 @@ func _tidal_wave_tick(pos: Vector3) -> void:
 			e.global_position += push_dir * 3.0
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "water")
+	synergy_procced.emit("water_water", 5.0)
 
 # ---- Water + Fire: Steam Explosion (12 damage AoE, like fire_ice but stronger) ----
 
@@ -307,6 +350,7 @@ func _steam_explosion_tick(pos: Vector3) -> void:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "fire")
 			_apply_speed_debuff(e, 0.5, 1.5)
+	synergy_procced.emit("water_fire", 12.0)
 
 # ---- Water + Electric: Electrolysis (2x electric damage in water zones) ----
 # This synergy is passive — it modifies electric damage via get_electrolysis_multiplier()
@@ -333,6 +377,7 @@ func _absolute_zero_tick(pos: Vector3) -> void:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "ice")
 			_freeze_enemy(e, 2.0)
+	synergy_procced.emit("water_ice", 8.0)
 
 # ---- Water + Dark: Abyssal Depths (40% slow aura, refreshed continuously) ----
 
@@ -355,6 +400,7 @@ func _abyssal_depths_tick(pos: Vector3) -> void:
 				e.speed = _abyssal_slowed_enemies[eid]
 			_abyssal_slowed_enemies.erase(eid)
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.1, 0), Color(0.1, 0.15, 0.3, 0.4), 3)
+	synergy_procced.emit("water_dark", 0.0)
 
 # ---- Fire + Poison: Toxic Fire (double fire DoT) ----
 
@@ -369,6 +415,7 @@ func _toxic_fire_tick(pos: Vector3) -> void:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "fire")
 				e.call_deferred("take_damage", dmg, "fire")
+	synergy_procced.emit("fire_poison", 16.0)
 
 # ---- Ice + Dark: Shadow Freeze (freeze + life drain to player) ----
 
@@ -390,6 +437,7 @@ func _shadow_freeze_tick(pos: Vector3) -> void:
 		if heal_amount < 1.0:
 			heal_amount = 1.0
 		GameManager.heal(int(heal_amount))
+		synergy_procced.emit("ice_dark", float(dmg))
 
 # ---- Electric + Poison: Toxic Shock (stun 0.5s + poison DoT) ----
 
@@ -404,9 +452,11 @@ func _toxic_shock_tick(pos: Vector3) -> void:
 			if e.has_method("take_damage"):
 				e.call_deferred("take_damage", dmg, "poison")
 			_freeze_enemy(e, 0.5)
+	synergy_procced.emit("electric_poison", 6.0)
 
 func reset() -> void:
 	active_synergies.clear()
+	_prev_active_synergies.clear()
 	_synergy_timers.clear()
 	_electrolysis_active = false
 	# Restore speeds of abyssal-slowed enemies
