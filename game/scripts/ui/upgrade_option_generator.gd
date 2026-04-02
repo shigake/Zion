@@ -60,6 +60,7 @@ static func generate_options() -> Array:
 	pool = pool.filter(func(opt): return opt["id"] not in GameManager.banished_options)
 
 	# Weighted random selection (luck_mult increases rare weapon chance)
+	# Uses seeded RNG for deterministic runs
 	var selected: Array = []
 	for _i in range(3):
 		if pool.is_empty():
@@ -67,7 +68,7 @@ static func generate_options() -> Array:
 		var total_weight = 0.0
 		for opt in pool:
 			total_weight += opt["weight"] * GameManager.luck_mult
-		var roll = randf() * total_weight
+		var roll = GameManager.seeded_rng.randf() * total_weight
 		var cumulative = 0.0
 		for j in range(pool.size()):
 			cumulative += pool[j]["weight"] * GameManager.luck_mult

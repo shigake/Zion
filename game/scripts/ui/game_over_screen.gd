@@ -23,6 +23,11 @@ extends CanvasLayer
 
 @onready var overlay: ColorRect = $Overlay
 
+# Seed display and copy
+var _seed_row: HBoxContainer = null
+var _seed_label: Label = null
+var _seed_copy_btn: Button = null
+
 func _ready() -> void:
 	overlay.visible = false
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -31,6 +36,7 @@ func _ready() -> void:
 	retry_btn.pressed.connect(_on_retry)
 	menu_btn.pressed.connect(_on_menu)
 	screenshot_btn.pressed.connect(_take_screenshot)
+	_build_seed_row()
 
 func _show() -> void:
 	GameManager.end_run()
@@ -204,6 +210,9 @@ func _show() -> void:
 				unlock_label.text += "\n" + LocaleManager.tr_key("lore_mystery_unlock")
 	unlock_label.visible = unlock_label.text != ""
 
+	# Seed display
+	_update_seed_display()
+
 	if GameManager.is_victory:
 		AudioManager.play_music("victory")
 	else:
@@ -264,6 +273,53 @@ func _take_screenshot() -> void:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+## Build seed display row (added to ButtonRow parent VBox).
+func _build_seed_row() -> void:
+	var vbox = $Panel/MarginContainer/VBox
+	_seed_row = HBoxContainer.new()
+	_seed_row.name = "SeedRow"
+	_seed_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_seed_row.add_theme_constant_override("separation", 8)
+	_seed_row.visible = false
+	vbox.add_child(_seed_row)
+
+	_seed_label = Label.new()
+	_seed_label.add_theme_font_size_override("font_size", 13)
+	_seed_label.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
+	_seed_row.add_child(_seed_label)
+
+	_seed_copy_btn = Button.new()
+	_seed_copy_btn.text = LocaleManager.tr_key("seed_copy")
+	_seed_copy_btn.add_theme_font_size_override("font_size", 12)
+	_seed_copy_btn.focus_mode = Control.FOCUS_ALL
+	_seed_copy_btn.pressed.connect(_on_copy_seed)
+	_seed_row.add_child(_seed_copy_btn)
+
+func _update_seed_display() -> void:
+	if GameManager.current_seed != "":
+		_seed_label.text = LocaleManager.tr_key("seed_coordinate_short") + ": " + GameManager.current_seed
+		_seed_row.visible = true
+	else:
+		_seed_row.visible = false
+
+func _on_copy_seed() -> void:
+	var t = int(GameManager.game_time)
+	var time_str = "%02d:%02d" % [t / 60, t % 60]
+	var stage_key = "stage_" + GameManager.selected_stage
+	var stage_name = LocaleManager.tr_key(stage_key)
+	var text = "Zion | Seed: %s | %s | Lv.%d | %d kills | %s" % [
+		GameManager.current_seed,
+		stage_name,
+		GameManager.player_level,
+		GameManager.total_kills,
+		time_str
+	]
+	DisplayServer.clipboard_set(text)
+	AudioManager.play_sfx("menu_click")
+	_seed_copy_btn.text = LocaleManager.tr_key("seed_copied")
+	await get_tree().create_timer(2.0).timeout
+	_seed_copy_btn.text = LocaleManager.tr_key("seed_copy")
 
 ## Remove all children from a container (used to reset between shows).
 func _clear_container(container: Container) -> void:
@@ -335,3 +391,16 @@ func _submit_leaderboard_online() -> void:
 		"version": version_str,
 	}
 	Telemetry.submit_leaderboard(score_data)
+
+	# Submit to per-seed leaderboard if run had a seed
+	if GameManager.current_seed != "":
+		var seed_entry := {
+			"score": score,
+			"kills": kills,
+			"time": survived,
+			"crystals": crystals,
+			"character": GameManager.selected_character,
+			"level": GameManager.player_level,
+			"date": Time.get_date_string_from_system(),
+		}
+		SaveManager.save_seed_score(GameManager.current_seed, seed_entry)

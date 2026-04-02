@@ -345,6 +345,34 @@ func track_codex(weapon_id: String) -> void:
 func get_codex() -> Array:
 	return data.get("codex", [])
 
+# ---- Seed Leaderboard ----
+func save_seed_score(seed_text: String, score_data: Dictionary) -> void:
+	## Save a score entry for a specific seed. Keeps top 10 per seed.
+	if seed_text.is_empty():
+		return
+	if "seed_leaderboards" not in data:
+		data["seed_leaderboards"] = {}
+	var boards: Dictionary = data["seed_leaderboards"]
+	if seed_text not in boards:
+		boards[seed_text] = []
+	boards[seed_text].append(score_data)
+	# Sort by score descending (kills*10 + time + crystals)
+	boards[seed_text].sort_custom(func(a, b):
+		var sa = a.get("kills", 0) * 10 + int(a.get("time", 0.0)) + a.get("crystals", 0)
+		var sb = b.get("kills", 0) * 10 + int(b.get("time", 0.0)) + b.get("crystals", 0)
+		return sa > sb
+	)
+	# Keep top 10
+	if boards[seed_text].size() > 10:
+		boards[seed_text].resize(10)
+	save_game()
+
+func get_seed_leaderboard(seed_text: String) -> Array:
+	## Get the leaderboard entries for a specific seed (up to 10).
+	if "seed_leaderboards" not in data:
+		return []
+	return data.get("seed_leaderboards", {}).get(seed_text, [])
+
 # ---- Best Run ----
 func save_best_run(run_stats: Dictionary) -> void:
 	## Save current run stats if it beats the best run (by score = kills*10 + time + crystals).

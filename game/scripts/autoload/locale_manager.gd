@@ -594,6 +594,9 @@ var translations: Dictionary = {
 	"seed_none": {"pt": "Sem coordenada = fenda aleatória", "en": "No coordinate = random rift", "es": "Sin coordenada = grieta aleatoria", "fr": "Sans coordonnée = faille aléatoire", "de": "Keine Koordinate = zufälliger Riss", "ja": "座標なし = ランダム裂け目", "zh": "无坐标 = 随机裂隙", "ko": "좌표 없음 = 랜덤 균열", "it": "Nessuna coordinata = fenditura casuale", "ru": "Без координат = случайный разлом"},
 	"seed_copy": {"pt": "Copiar", "en": "Copy", "es": "Copiar", "fr": "Copier", "de": "Kopieren", "ja": "コピー", "zh": "复制", "ko": "복사", "it": "Copia", "ru": "Копировать"},
 	"seed_copied": {"pt": "Copiado!", "en": "Copied!", "es": "¡Copiado!", "fr": "Copié!", "de": "Kopiert!", "ja": "コピーしました!", "zh": "已复制!", "ko": "복사됨!", "it": "Copiato!", "ru": "Скопировано!"},
+	"seed_preview_difficulty": {"pt": "Modificador: +%s%%", "en": "Modifier: +%s%%", "es": "Modificador: +%s%%", "fr": "Modificateur: +%s%%", "de": "Modifikator: +%s%%", "ja": "修正値: +%s%%", "zh": "修正: +%s%%", "ko": "수정치: +%s%%", "it": "Modificatore: +%s%%", "ru": "Модификатор: +%s%%"},
+	"seed_preview_events": {"pt": "Eventos: %s", "en": "Events: %s", "es": "Eventos: %s", "fr": "Événements: %s", "de": "Ereignisse: %s", "ja": "イベント: %s", "zh": "事件: %s", "ko": "이벤트: %s", "it": "Eventi: %s", "ru": "События: %s"},
+	"seed_leaderboard_title": {"pt": "Ranking desta coordenada", "en": "This coordinate's ranking", "es": "Ranking de esta coordenada", "fr": "Classement de cette coordonnée", "de": "Rangliste dieser Koordinate", "ja": "この座標のランキング", "zh": "此坐标排行榜", "ko": "이 좌표 랭킹", "it": "Classifica di questa coordinata", "ru": "Рейтинг этой координаты"},
 }
 
 func _ready() -> void:

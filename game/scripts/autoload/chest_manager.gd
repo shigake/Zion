@@ -28,8 +28,8 @@ func _spawn_chest() -> void:
 		return
 	var player_pos = players[0].global_position
 	# Spawna em posicao aleatoria entre 15-25 unidades do jogador
-	var angle = randf() * TAU
-	var dist = randf_range(15.0, 25.0)
+	var angle = GameManager.seeded_rng.randf() * TAU
+	var dist = GameManager.seeded_rng.randf_range(15.0, 25.0)
 	var spawn_pos = player_pos + Vector3(cos(angle), 0, sin(angle)) * dist
 	spawn_pos.y = 0.3
 
@@ -132,10 +132,10 @@ func _collect_chest(chest: Node3D) -> void:
 
 	# Gera recompensa
 	var reward := {}
-	var roll = randf()
+	var roll = GameManager.seeded_rng.randf()
 	if roll < 0.3:
 		# Cristais
-		var crystals = randi_range(GameConstants.CHEST_REWARD_CRYSTALS_MIN, GameConstants.CHEST_REWARD_CRYSTALS_MAX)
+		var crystals = GameManager.seeded_rng.randi_range(GameConstants.CHEST_REWARD_CRYSTALS_MIN, GameConstants.CHEST_REWARD_CRYSTALS_MAX)
 		GameManager.crystals_this_run += crystals
 		SaveManager.data["crystals"] = SaveManager.data.get("crystals", 0) + crystals
 		reward = {"type": "crystals", "amount": crystals}

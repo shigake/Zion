@@ -70,7 +70,11 @@ var timed_events: Dictionary = {
 var triggered_timed: Array = []
 
 func _ready() -> void:
-	rng.randomize()
+	# Use seeded RNG for deterministic runs when a seed is set
+	if GameManager.current_seed != "":
+		rng.seed = hash(GameManager.current_seed) ^ 0xE0E17
+	else:
+		rng.randomize()
 	next_random_event_time = rng.randf_range(GameConstants.EVENT_FIRST_RANDOM_MIN, GameConstants.EVENT_FIRST_RANDOM_MAX)
 	GameManager.enemy_killed.connect(_on_enemy_killed)
 
