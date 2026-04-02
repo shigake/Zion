@@ -1,1 +1,5 @@
 build/
+.gstack/
+server/telemetry.db
+server/telemetry.db-shm
+server/telemetry.db-wal
