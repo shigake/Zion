@@ -221,9 +221,9 @@ var translations: Dictionary = {
 	"stats_kills": {"pt": "Kills", "en": "Kills", "es": "Muertes", "fr": "Kills", "de": "Kills", "ja": "キル", "zh": "击杀", "ko": "킬", "it": "Uccisioni", "ru": "Убийства"},
 	"stats_time": {"pt": "Tempo", "en": "Time", "es": "Tiempo", "fr": "Temps", "de": "Zeit", "ja": "時間", "zh": "时间", "ko": "시간", "it": "Tempo", "ru": "Время"},
 	"stats_total_dmg": {"pt": "Dano total", "en": "Total DMG", "es": "Dano total", "fr": "Dégâts totaux", "de": "Gesamtschaden", "ja": "総ダメージ", "zh": "总伤害", "ko": "총 피해", "it": "Danno totale", "ru": "Общий урон"},
-	"stats_weapons": {"pt": "Armas", "en": "Weapons", "es": "Armas", "fr": "Armes", "de": "Waffen", "ja": "武器", "zh": "武器", "ko": "무기", "it": "Armi", "ru": "Оружие"},
-	"stats_items": {"pt": "Itens", "en": "Items", "es": "Objetos", "fr": "Objets", "de": "Items", "ja": "アイテム", "zh": "道具", "ko": "아이템", "it": "Oggetti", "ru": "Предметы"},
-	"stats_synergies": {"pt": "Sinergias", "en": "Synergies", "es": "Sinergias", "fr": "Synergies", "de": "Synergien", "ja": "シナジー", "zh": "协同效果", "ko": "시너지", "it": "Sinergie", "ru": "Синергии"},
+	"stats_weapons_short": {"pt": "Armas", "en": "Weapons", "es": "Armas", "fr": "Armes", "de": "Waffen", "ja": "武器", "zh": "武器", "ko": "무기", "it": "Armi", "ru": "Оружие"},
+	"stats_items_short": {"pt": "Itens", "en": "Items", "es": "Objetos", "fr": "Objets", "de": "Items", "ja": "アイテム", "zh": "道具", "ko": "아이템", "it": "Oggetti", "ru": "Предметы"},
+	"stats_synergies_short": {"pt": "Sinergias", "en": "Synergies", "es": "Sinergias", "fr": "Synergies", "de": "Synergien", "ja": "シナジー", "zh": "协同效果", "ko": "시너지", "it": "Sinergie", "ru": "Синергии"},
 
 	# ---- Common UI strings ----
 	"achievement_title": {"pt": "Conquista!", "en": "Achievement!", "es": "Logro!", "fr": "Succès !", "de": "Erfolg!", "ja": "実績！", "zh": "成就！", "ko": "업적!", "it": "Obiettivo!", "ru": "Достижение!"},
