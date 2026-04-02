@@ -109,7 +109,7 @@ func _check_evolutions() -> void:
 	var pos = player.global_position
 	var chest = chest_scene.instantiate()
 	chest.evolution_id = evo_id
-	var offset = Vector3(GameManager.seeded_rng.randf_range(-5, 5), 0, GameManager.seeded_rng.randf_range(-5, 5))
+	var offset = Vector3(randf_range(-5, 5), 0, randf_range(-5, 5))
 	add_child(chest)
 	chest.global_position = pos + offset
 

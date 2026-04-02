@@ -68,7 +68,7 @@ static func generate_options() -> Array:
 		var total_weight = 0.0
 		for opt in pool:
 			total_weight += opt["weight"] * GameManager.luck_mult
-		var roll = GameManager.seeded_rng.randf() * total_weight
+		var roll = randf() * total_weight
 		var cumulative = 0.0
 		for j in range(pool.size()):
 			cumulative += pool[j]["weight"] * GameManager.luck_mult

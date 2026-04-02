@@ -191,10 +191,16 @@ func _process(_delta: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	var to_return: Array = []
 	for p in _active_particles:
+		if not is_instance_valid(p):
+			to_return.append(p)
+			continue
 		if now >= _active_particles[p]:
 			to_return.append(p)
 	for p in to_return:
-		_return_particle(p)
+		if is_instance_valid(p):
+			_return_particle(p)
+		else:
+			_active_particles.erase(p)
 
 # --- Damage Number Pool ---
 

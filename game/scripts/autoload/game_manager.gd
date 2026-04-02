@@ -48,6 +48,28 @@ var weapon_damage_dealt: Dictionary = {}
 # Context: set by weapon scripts before dealing damage so enemy_base can attribute it
 var _last_attacking_weapon: String = ""
 
+# PRD 28 §4 — Extended run stats tracking
+var overkill_damage: int = 0
+var highest_single_hit: int = 0
+var total_damage_taken: int = 0
+var dash_count: int = 0
+var xp_collected: int = 0
+var chests_opened: int = 0
+var health_pickups_used: int = 0
+var magnets_collected: int = 0
+var weapon_kills: Dictionary = {}  # weapon_id -> kill count
+var synergy_procs: Dictionary = {}  # synergy_name -> proc count
+var synergy_damage: Dictionary = {}  # synergy_name -> total damage
+var _no_damage_streak: float = 0.0
+var longest_no_damage_streak: float = 0.0
+var _dps_window: Array[float] = []  # last 5s of damage samples
+var _dps_window_timer: float = 0.0
+var dps_peak: float = 0.0
+
+# Seeded runs (daily challenge)
+var current_seed: String = ""
+var near_deaths: int = 0  # times HP < 10%
+
 # Run timeline: key events during the run
 var run_timeline: Array = []  # [{time: float, event: String}]
 var paused: bool = false
@@ -138,6 +160,8 @@ func _ready() -> void:
 	boss_spawned.connect(_on_timeline_boss_spawned)
 	miniboss_spawned.connect(_on_timeline_miniboss_spawned)
 	boss_died.connect(_on_timeline_boss_died)
+	# Connect synergy procs for stats tracking (PRD 28 §4)
+	SynergySystem.synergy_procced.connect(record_synergy_proc)
 	LogManager.info("Game", "GameManager ready")
 
 var _orphan_cleanup_timer: float = 0.0
@@ -147,6 +171,21 @@ func _process(delta: float) -> void:
 		game_time += delta
 		if enemies_alive > peak_enemies:
 			peak_enemies = enemies_alive
+		# No-damage streak tracking
+		_no_damage_streak += delta
+		if _no_damage_streak > longest_no_damage_streak:
+			longest_no_damage_streak = _no_damage_streak
+		# DPS peak tracking (5s rolling window)
+		_dps_window_timer += delta
+		if _dps_window_timer >= 1.0:
+			_dps_window_timer = 0.0
+			_dps_window.append(float(total_damage_dealt))
+			if _dps_window.size() > 5:
+				_dps_window.remove_at(0)
+			if _dps_window.size() >= 2:
+				var window_dps = (_dps_window[-1] - _dps_window[0]) / float(_dps_window.size() - 1)
+				if window_dps > dps_peak:
+					dps_peak = window_dps
 		# Periodic cleanup of orphaned temporary nodes (every 10 seconds)
 		_orphan_cleanup_timer += delta
 		if _orphan_cleanup_timer >= 10.0:
@@ -190,6 +229,67 @@ func record_weapon_damage(weapon_id: String, amount: int) -> void:
 	if weapon_id.is_empty():
 		return
 	weapon_damage_dealt[weapon_id] = weapon_damage_dealt.get(weapon_id, 0) + amount
+	# Track highest single hit
+	if amount > highest_single_hit:
+		highest_single_hit = amount
+
+## Record a kill attributed to a weapon.
+func record_kill(weapon_id: String) -> void:
+	if weapon_id.is_empty():
+		return
+	weapon_kills[weapon_id] = weapon_kills.get(weapon_id, 0) + 1
+
+## Record overkill damage (damage beyond lethal).
+func record_overkill(amount: float) -> void:
+	overkill_damage += int(amount)
+
+## Record synergy proc for stats tracking.
+func record_synergy_proc(synergy_name: String, damage: float) -> void:
+	synergy_procs[synergy_name] = synergy_procs.get(synergy_name, 0) + 1
+	synergy_damage[synergy_name] = synergy_damage.get(synergy_name, 0) + int(damage)
+
+## Compile all run stats into a Dictionary for the game over screen.
+func get_run_stats() -> Dictionary:
+	# Determine favorite weapon (most kills)
+	var fav_weapon := ""
+	var fav_kills := 0
+	for wid in weapon_kills:
+		if weapon_kills[wid] > fav_kills:
+			fav_kills = weapon_kills[wid]
+			fav_weapon = wid
+	var fav_name := ""
+	if not fav_weapon.is_empty():
+		var w_data = WeaponDB.weapons.get(fav_weapon, {})
+		fav_name = "%s (%d kills)" % [w_data.get("name", fav_weapon), fav_kills]
+
+	return {
+		# Basic
+		"kills": total_kills,
+		"playtime": game_time,
+		"level": player_level,
+		"crystals": crystals_this_run,
+		# Combat
+		"total_damage_dealt": total_damage_dealt,
+		"total_damage_taken": total_damage_taken,
+		"highest_single_hit": highest_single_hit,
+		"dps_peak": dps_peak,
+		"near_deaths": near_deaths,
+		"dash_count": dash_count,
+		"overkill_damage": overkill_damage,
+		"favorite_weapon": fav_name,
+		"longest_no_damage_streak": longest_no_damage_streak,
+		# Per-weapon
+		"damage_per_weapon": weapon_damage_dealt.duplicate(),
+		"kills_per_weapon": weapon_kills.duplicate(),
+		# Synergies
+		"synergy_procs": synergy_procs.duplicate(),
+		"synergy_damage": synergy_damage.duplicate(),
+		# Economy
+		"xp_collected": xp_collected,
+		"chests_opened": chests_opened,
+		"health_pickups_used": health_pickups_used,
+		"magnets_collected": magnets_collected,
+	}
 
 # ---------------------------------------------------------------------------
 # Run timeline
@@ -317,7 +417,9 @@ func add_xp(amount: int) -> void:
 	var final_mult = xp_mult
 	if game_mode == "hyper":
 		final_mult *= GameConstants.HYPER_XP_MULT
-	player_xp += int(amount * final_mult)
+	var xp_gained = int(amount * final_mult)
+	xp_collected += xp_gained
+	player_xp += xp_gained
 	while player_xp >= player_xp_to_next:
 		player_xp -= player_xp_to_next
 		player_level += 1
@@ -380,6 +482,11 @@ func take_damage(amount: int) -> void:
 				if nearest:
 					nearest.call_deferred("take_damage", reflected, "physical")
 	player_hp -= reduced
+	total_damage_taken += reduced
+	_no_damage_streak = 0.0  # Reset no-damage streak
+	# Near-death tracking (HP < 10%)
+	if player_hp > 0 and player_hp < int(get_effective_max_hp() * 0.1):
+		near_deaths += 1
 	# Sync HP com aliados no multiplayer
 	MultiplayerManager.notify_damage(player_hp, get_effective_max_hp())
 	# Notifica quest de sobrevivencia
@@ -513,7 +620,24 @@ func reset() -> void:
 	peak_enemies = 0
 	events_triggered.clear()
 	weapon_damage_dealt.clear()
+	weapon_kills.clear()
 	_last_attacking_weapon = ""
+	overkill_damage = 0
+	highest_single_hit = 0
+	total_damage_taken = 0
+	dash_count = 0
+	xp_collected = 0
+	chests_opened = 0
+	health_pickups_used = 0
+	magnets_collected = 0
+	synergy_procs.clear()
+	synergy_damage.clear()
+	_no_damage_streak = 0.0
+	longest_no_damage_streak = 0.0
+	_dps_window.clear()
+	_dps_window_timer = 0.0
+	dps_peak = 0.0
+	near_deaths = 0
 	run_timeline.clear()
 	paused = false
 	is_game_over = false
@@ -741,4 +865,6 @@ func end_run() -> void:
 		"level": player_level,
 		"crystals": crystals_this_run,
 		"damage": total_damage_dealt,
+		"highest_hit": highest_single_hit,
+		"dps_peak": dps_peak,
 	})
