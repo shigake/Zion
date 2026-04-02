@@ -476,7 +476,7 @@ func _spawn_merchant() -> void:
 		available_items.append(iid)
 	# Fallback: if all items filtered out, use all non-disabled as-is
 	if available_items.is_empty():
-		LogManager.warn("Merchant: no items available after filtering, using full pool")
+		LogManager.warn("Event", "Merchant: no items available after filtering, using full pool")
 		for iid in all_items:
 			var data = ItemDB.get_item(iid)
 			if not data.is_empty():
@@ -489,7 +489,7 @@ func _spawn_merchant() -> void:
 			"name": item_data.get("name", available_items[i]),
 			"cost": rng.randi_range(5, 15),
 		})
-	LogManager.info("Merchant: %d items for sale" % _merchant_items.size())
+	LogManager.info("Event", "Merchant: %d items for sale" % _merchant_items.size())
 
 	# Show merchant UI when player enters area
 	area.body_entered.connect(_on_merchant_body_entered)

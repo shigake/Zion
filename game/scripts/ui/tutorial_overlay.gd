@@ -126,7 +126,7 @@ func _disable() -> void:
 
 
 func _build_ui() -> void:
-	# Dark overlay
+	# Dark overlay (starts hidden)
 	_overlay = ColorRect.new()
 	_overlay.name = "Overlay"
 	_overlay.color = Color(0, 0, 0, 0.3)
@@ -134,6 +134,7 @@ func _build_ui() -> void:
 	_overlay.anchor_right = 1.0
 	_overlay.anchor_bottom = 1.0
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.visible = false
 	add_child(_overlay)
 
 	# Center label
