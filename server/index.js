@@ -108,6 +108,15 @@ if (!crashCols.includes("resolved")) db.exec("ALTER TABLE crashes ADD COLUMN res
 if (!crashCols.includes("notes")) db.exec("ALTER TABLE crashes ADD COLUMN notes TEXT DEFAULT ''");
 
 // ---------------------------------------------------------------------------
+// Helper: safely stringify JSON (avoids double-encoding when value is already a string)
+// ---------------------------------------------------------------------------
+function safeStringify(val, fallback) {
+  if (val === undefined || val === null) return JSON.stringify(fallback);
+  if (typeof val === "string") return val;
+  return JSON.stringify(val);
+}
+
+// ---------------------------------------------------------------------------
 // Prepared statements
 // ---------------------------------------------------------------------------
 const insertRun = db.prepare(`
@@ -240,10 +249,10 @@ app.post("/telemetry", rateLimit(60000, 30), (req, res) => {
       total_kills: b.total_kills ?? null,
       total_damage: b.total_damage ?? null,
       level_reached: b.level_reached ?? null,
-      weapons: JSON.stringify(b.weapons || []),
-      items: JSON.stringify(b.items || []),
-      evolutions: JSON.stringify(b.evolutions || []),
-      events: JSON.stringify(b.events || []),
+      weapons: safeStringify(b.weapons, []),
+      items: safeStringify(b.items, []),
+      evolutions: safeStringify(b.evolutions, []),
+      events: safeStringify(b.events, []),
       crystals_earned: b.crystals_earned ?? null,
       fps_avg: b.fps_avg ?? null,
       fps_min: b.fps_min ?? null,
@@ -267,12 +276,12 @@ app.post("/crash", rateLimit(60000, 10), async (req, res) => {
       version: b.version || b.system?.version || null,
       module: b.module || null,
       description: b.description || null,
-      game_state: JSON.stringify(b.game_state || {}),
-      recent_log: JSON.stringify(b.recent_log || []),
-      system_info: JSON.stringify(b.system || b.system_info || {}),
-      scene_tree: JSON.stringify(b.scene_tree || {}),
-      session_stats: JSON.stringify(b.session_stats || {}),
-      extra_data: JSON.stringify(b.extra_data || {}),
+      game_state: safeStringify(b.game_state, {}),
+      recent_log: safeStringify(b.recent_log, []),
+      system_info: safeStringify(b.system || b.system_info, {}),
+      scene_tree: safeStringify(b.scene_tree, {}),
+      session_stats: safeStringify(b.session_stats, {}),
+      extra_data: safeStringify(b.extra_data, {}),
     });
     res.json({ ok: true });
 
