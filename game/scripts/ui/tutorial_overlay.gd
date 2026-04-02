@@ -76,6 +76,27 @@ var _advanced_steps: Array = [
 		"key_pt": "Anomalia dimensional! Eventos especiais alteram o campo de batalha.",
 		"key_en": "Dimensional anomaly! Special events alter the battlefield.",
 	},
+	{
+		"id": "synergy_element",
+		"signal_source": "SynergySystem",
+		"signal_name": "synergy_activated",
+		"key_pt": "Sinergia elemental! Duas armas do mesmo elemento amplificam o dano.",
+		"key_en": "Elemental synergy! Two weapons of the same element amplify damage.",
+	},
+	{
+		"id": "evolution_hint",
+		"signal_source": "GameManager",
+		"signal_name": "weapon_upgraded",
+		"key_pt": "Evolucao possivel! Combine arma nivel 8 com o item certo para evoluir.",
+		"key_en": "Evolution possible! Combine a level 8 weapon with the right item to evolve.",
+	},
+	{
+		"id": "dash_hint",
+		"signal_source": "GameManager",
+		"signal_name": "boss_spawned",
+		"key_pt": "Boss se aproximando! Use o dash (ESPACO) para desviar de ataques.",
+		"key_en": "Boss approaching! Use dash (SPACE) to dodge attacks.",
+	},
 ]
 
 

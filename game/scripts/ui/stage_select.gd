@@ -100,6 +100,11 @@ var _stage_textures: Dictionary = {}
 @onready var play_btn: Button = $InfoPanel/InfoVBox/PlayButton
 @onready var back_btn: Button = $ButtonRow/BackButton
 
+# Seed input (built in code)
+var _seed_row: HBoxContainer = null
+var _seed_input: LineEdit = null
+var _seed_random_btn: Button = null
+
 # ── Lifecycle ─────────────────────────────────────────────────────────
 
 func _ready() -> void:
@@ -115,6 +120,8 @@ func _ready() -> void:
 
 	play_btn.pressed.connect(_on_play)
 	back_btn.pressed.connect(_on_back)
+
+	_build_seed_input()
 
 	# Connect map_area draw
 	map_area.draw.connect(_draw_map)
@@ -482,6 +489,50 @@ func _style_back_button() -> void:
 	back_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
 	back_btn.add_theme_font_size_override("font_size", 14)
 
+# ── Seed input ────────────────────────────────────────────────────────
+
+func _build_seed_input() -> void:
+	var info_vbox: VBoxContainer = $InfoPanel/InfoVBox
+	# Insert seed row before the PlayButton
+	_seed_row = HBoxContainer.new()
+	_seed_row.name = "SeedRow"
+	_seed_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_seed_row.add_theme_constant_override("separation", 6)
+
+	var seed_label := Label.new()
+	seed_label.text = LocaleManager.tr_key("seed_coordinate_short") + ":"
+	seed_label.add_theme_font_size_override("font_size", 12)
+	seed_label.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
+	_seed_row.add_child(seed_label)
+
+	_seed_input = LineEdit.new()
+	_seed_input.placeholder_text = LocaleManager.tr_key("seed_none")
+	_seed_input.custom_minimum_size = Vector2(140, 28)
+	_seed_input.add_theme_font_size_override("font_size", 12)
+	_seed_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_seed_input.max_length = 32
+	_seed_row.add_child(_seed_input)
+
+	_seed_random_btn = Button.new()
+	_seed_random_btn.text = LocaleManager.tr_key("seed_random")
+	_seed_random_btn.add_theme_font_size_override("font_size", 11)
+	_seed_random_btn.custom_minimum_size = Vector2(0, 28)
+	_seed_random_btn.pressed.connect(_on_seed_random)
+	_seed_row.add_child(_seed_random_btn)
+
+	# Add before the Spacer (which is before PlayButton)
+	var spacer_node := info_vbox.get_node_or_null("Spacer")
+	if spacer_node:
+		info_vbox.add_child(_seed_row)
+		info_vbox.move_child(_seed_row, spacer_node.get_index())
+	else:
+		info_vbox.add_child(_seed_row)
+
+func _on_seed_random() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	_seed_input.text = str(rng.randi() % 999999)
+
 # ── Actions ───────────────────────────────────────────────────────────
 
 func _on_play() -> void:
@@ -489,6 +540,12 @@ func _on_play() -> void:
 		return
 	AudioManager.play_sfx("menu_click")
 	GameManager.selected_stage = selected_stage
+	# Apply custom seed if provided
+	var seed_text := _seed_input.text.strip_edges() if _seed_input else ""
+	if seed_text != "":
+		GameManager.current_seed = seed_text
+	else:
+		GameManager.current_seed = ""
 	LoadingScreen.transition_to("res://scenes/ui/relic_select.tscn")
 
 func _on_back() -> void:
