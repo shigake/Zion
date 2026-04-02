@@ -92,30 +92,31 @@ Zion/
     │   ├── enemies/             # 46 (16 genericos + 10 bosses + 20 alt bosses)
     │   ├── stages/              # 10 fendas com props procedurais
     │   ├── weapons/             # 40 cenas (32 armas + projeteis)
-    │   ├── ui/                  # 20 telas (HUD, menus, shop, leaderboard, etc)
+    │   ├── ui/                  # 21 telas (HUD, menus, shop, leaderboard, etc)
     │   └── player/              # Cena do jogador
-    ├── scripts/ (225 .gd)       # GDScript
-    │   ├── autoload/            # 33 singletons (ver lista abaixo)
+    ├── scripts/ (231 .gd)       # GDScript
+    │   ├── autoload/            # 34 singletons (ver lista abaixo)
     │   ├── player/              # 2 player controller
     │   ├── enemies/             # 22 (base + spawner + 10 bosses + especiais)
     │   ├── weapons/             # 45 scripts (32 armas + projectiles + behaviors)
-    │   ├── ui/                  # 32 telas + debug overlay (F3/F4)
-    │   ├── stages/              # 23 (10 fendas + props + camera + events)
+    │   ├── ui/                  # 36 telas + debug overlay (F3/F4)
+    │   ├── stages/              # 24 (10 fendas + props + camera + events)
     │   ├── effects/             # 9 (particulas, shaders, procedural anims)
-    │   ├── tools/               # 43 geradores de sprites e assets
+    │   ├── tools/               # 49 geradores de sprites e assets
     │   └── tests/               # 5 testes (balance, smoke, auto_player, runner, report)
     └── assets/                  # Materiais, shaders, audio
 ```
 
 ## Architecture
 
-### Autoload Singletons (34 registrados no project.godot)
-LogManager, PlatformHelper, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, AchievementManager, UITheme, KeybindingManager, LocaleManager, SteamManager, Telemetry, MultiMeshManager, AutoTester, GamepadUI, MutationManager, DailyChallenge, LoadingScreen, AchievementPopup, BossDialogue, InventoryOverlay, ChestManager, QuestManager
+### Autoload Singletons (38 registrados no project.godot)
+GameConstants, LogManager, PlatformHelper, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, UITheme, AccessibilityManager, KeybindingManager, LocaleManager, SteamManager, AchievementManager, MultiMeshManager, AutoTester, GamepadUI, Telemetry, MutationManager, DailyChallenge, LoadingScreen, ChestManager, QuestManager
 
 Registrados como autoload (mas ficam em scripts/effects/):
 ScreenEffects, ParticleFactory, VisualSetup, ModelFactory
 
-DebugOverlay fica em scripts/ui/ (registrado como autoload).
+Registrados como autoload (mas ficam em scripts/ui/):
+AchievementPopup, BossDialogue, InventoryOverlay, DebugOverlay
 
 Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao registrados como autoload no project.godot (sao instanciados manualmente).
 

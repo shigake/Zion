@@ -136,7 +136,7 @@ func _update_preview():
 		var preview_rng = RandomNumberGenerator.new()
 		preview_rng.seed = h
 		var difficulty_mod = preview_rng.randi_range(0, 25)
-		# Number of random events this seed will produce (2-5)
+		# Number of random events this seed will produce (10-13)
 		var event_count = 10 + preview_rng.randi_range(0, 3)
 		var lines = PackedStringArray()
 		lines.append(LocaleManager.tr_key("seed_coordinate_short") + ": " + coord_id)
