@@ -9,6 +9,8 @@ extends Camera3D
 var target: Node3D = null
 
 func _ready() -> void:
+	# Mantém FOV vertical fixo independente do aspect ratio da janela (PRD-29)
+	keep_aspect = Camera3D.KEEP_HEIGHT
 	# Encontra jogador
 	await get_tree().process_frame
 	var players = GameManager.get_players()

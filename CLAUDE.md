@@ -76,6 +76,7 @@ Zion/
 │   ├── prd_26_icon_and_hit_size.md      # PRD 26: icones HUD 4x maiores + hit numbers 10x maiores — concluido
 │   ├── prd_27_candy_map_halfsize.md     # PRD 27: Mundo Doce com mapa pela metade (teste de tamanho) — concluido
 │   ├── prd_28_polish_pack.md            # PRD 28: polish pack (sinergias, audio, acessibilidade, stats, seeds, tutorial) — pendente
+│   ├── prd_29_aspect_ratio_lock.md      # PRD 29: trava de aspect ratio 16:9 + keep_aspect camera — concluido
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -216,7 +217,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~88% — PRD 28 pendente (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 28 PRDs (27 concluidos, 1 pendente — PRD 28 Polish Pack), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~88% — PRD 28 pendente (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 29 PRDs (28 concluidos, 1 pendente — PRD 28 Polish Pack), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais (ADR-001 a ADR-014).
 
