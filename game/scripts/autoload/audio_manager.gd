@@ -25,7 +25,7 @@ var _music_player_fade: AudioStreamPlayer  # For crossfade
 
 # SFX player pool for simultaneous sounds
 var _sfx_players: Array[AudioStreamPlayer] = []
-const SFX_POOL_SIZE: int = 5
+const SFX_POOL_SIZE: int = 12
 
 # Known SFX names
 var _valid_sfx: Array[String] = [
@@ -139,6 +139,9 @@ func _ready() -> void:
 	# Connect boss phase signal for dynamic music intensity
 	GameManager.boss_phase_changed.connect(_on_boss_phase_changed)
 	GameManager.boss_died.connect(_on_boss_died_music)
+	# Music ducking during important events (PRD 28 §2)
+	GameManager.player_leveled_up.connect(_on_level_up_ducking)
+	GameManager.boss_spawned.connect(_on_boss_spawned_ducking)
 
 func _on_boss_phase_changed(_boss_name: String, phase: int) -> void:
 	set_boss_phase_intensity(phase)
@@ -248,6 +251,13 @@ func play_sfx(sfx_name: String, volume_mult: float = 1.0) -> void:
 		var active = _count_active_in_category(category)
 		if active >= _category_limits[category]:
 			return  # Too many sounds in this category
+
+	# Hit sound volume normalization — prevent clipping when many enemies die at once
+	var _hit_sfx_names = ["hit", "kill", "sword_slash", "axe_chop", "scythe_swoosh",
+		"whip_crack", "hammer_slam", "lance_thrust", "punch_hit", "gun_shot",
+		"bow_release", "explosion", "electric_zap"]
+	if sfx_name in _hit_sfx_names:
+		volume_mult *= _get_hit_volume_multiplier()
 
 	# Try to load the audio file
 	var stream = _load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
@@ -397,7 +407,23 @@ func _setup_buses() -> void:
 			AudioServer.set_bus_name(idx, bus_name)
 		AudioServer.set_bus_send(idx, bus_config[bus_name]["parent"])
 		AudioServer.set_bus_volume_db(idx, bus_config[bus_name]["volume_db"])
-	LogManager.info("Audio", "Audio buses configured: %d total" % AudioServer.bus_count)
+	# Add a limiter effect to the Combat bus to prevent clipping
+	var combat_idx = AudioServer.get_bus_index("Combat")
+	if combat_idx != -1:
+		var limiter = AudioEffectLimiter.new()
+		limiter.ceiling_db = -1.0
+		limiter.threshold_db = -6.0
+		limiter.soft_clip_db = 2.0
+		AudioServer.add_bus_effect(combat_idx, limiter)
+	# Add a limiter to the SFX bus as a safety net
+	var sfx_idx = AudioServer.get_bus_index("SFX")
+	if sfx_idx != -1:
+		var sfx_limiter = AudioEffectLimiter.new()
+		sfx_limiter.ceiling_db = -0.5
+		sfx_limiter.threshold_db = -3.0
+		sfx_limiter.soft_clip_db = 2.0
+		AudioServer.add_bus_effect(sfx_idx, sfx_limiter)
+	LogManager.info("Audio", "Audio buses configured: %d total (with limiters)" % AudioServer.bus_count)
 
 func _apply_bus_volume(bus_name: String, volume: float) -> void:
 	var idx = AudioServer.get_bus_index(bus_name)
@@ -440,6 +466,42 @@ func stop_ducking() -> void:
 	var current_db = AudioServer.get_bus_volume_db(music_idx)
 	_ducking_tween.tween_method(func(db): AudioServer.set_bus_volume_db(music_idx, db), current_db, -6.0, 0.5)
 	LogManager.debug("Audio", "Ducking stopped")
+
+# ---- Music Ducking Triggers (PRD 28 §2) ----
+
+func _on_level_up_ducking(_new_level: int) -> void:
+	start_ducking("level_up")
+	# Restore music after 2 seconds
+	get_tree().create_timer(2.0).timeout.connect(stop_ducking)
+
+func _on_boss_spawned_ducking(_boss_name: String) -> void:
+	start_ducking("boss_spawn")
+	# Restore music after 3 seconds (boss entrance)
+	get_tree().create_timer(3.0).timeout.connect(stop_ducking)
+
+# ---- Hit Sound Volume Normalization (PRD 28 §2) ----
+# When many hits happen in quick succession, reduce volume of subsequent hits
+# to prevent audio clipping and ear fatigue.
+
+var _hit_sfx_count: int = 0  # Number of hit SFX in current normalization window
+var _hit_sfx_window_start: int = 0  # Start of current window (msec)
+const HIT_NORMALIZATION_WINDOW_MS: int = 200  # 200ms window
+const HIT_NORMALIZATION_MAX: int = 4  # After this many hits in window, start reducing
+const HIT_NORMALIZATION_MIN_MULT: float = 0.3  # Minimum volume multiplier for normalized hits
+
+func _get_hit_volume_multiplier() -> float:
+	var now_ms = Time.get_ticks_msec()
+	if now_ms - _hit_sfx_window_start > HIT_NORMALIZATION_WINDOW_MS:
+		# New window
+		_hit_sfx_window_start = now_ms
+		_hit_sfx_count = 0
+	_hit_sfx_count += 1
+	if _hit_sfx_count <= HIT_NORMALIZATION_MAX:
+		return 1.0
+	# Gradually reduce volume for excess hits
+	var excess = _hit_sfx_count - HIT_NORMALIZATION_MAX
+	var mult = maxf(1.0 - (excess * 0.15), HIT_NORMALIZATION_MIN_MULT)
+	return mult
 
 # ---- Distance-based Attenuation (PRD 28 §2) ----
 
