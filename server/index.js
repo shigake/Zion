@@ -843,6 +843,9 @@ app.get("/health", (_req, res) => {
 // ---------------------------------------------------------------------------
 app.use("/dashboard", express.static(path.join(__dirname, "public")));
 
+// Suppress favicon 404
+app.get("/favicon.ico", (_req, res) => res.status(204).end());
+
 // Redirect root to dashboard
 app.get("/", (_req, res) => res.redirect("/dashboard"));
 
