@@ -83,8 +83,26 @@ func _attack(level: int) -> void:
 	slash_area.monitoring = true
 	hit_enemies.clear()
 
-	# Manual aim: rotate slash to face aim direction
-	if GameManager.manual_aim:
+	# Auto-aim toward nearest enemy (instinto dimensional)
+	if not GameManager.manual_aim:
+		var enemies = GameManager.get_enemies()
+		if not enemies.is_empty():
+			var player = get_parent().get_parent() if get_parent() else null
+			if player and is_instance_valid(player):
+				var nearest: Node3D = null
+				var min_dist = INF
+				for e in enemies:
+					if not is_instance_valid(e):
+						continue
+					var d = player.global_position.distance_squared_to(e.global_position)
+					if d < min_dist:
+						min_dist = d
+						nearest = e
+				if nearest:
+					var dir = (nearest.global_position - player.global_position).normalized()
+					var aim_angle = atan2(-dir.x, -dir.z)
+					rotation.y = aim_angle
+	else:
 		var aim_angle = atan2(-GameManager.aim_direction.x, -GameManager.aim_direction.z)
 		rotation.y = aim_angle
 

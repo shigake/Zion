@@ -1,6 +1,6 @@
 # PRD 30 — Auto-aim para armas melee
 
-**Status**: pendente
+**Status**: concluido
 **Prioridade**: alta (afeta gameplay core de todos os personagens melee)
 **Tipo**: fix/enhancement
 **Impacto**: 8 armas melee × 15 personagens = 120 combinacoes afetadas
