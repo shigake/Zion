@@ -374,6 +374,11 @@ func _register_input_actions() -> void:
 	_add_key_action("dash", KEY_SPACE)
 	_add_key_action("interact", KEY_E)
 	_add_key_action("inventory", KEY_TAB)
+	# WASD também navega menus (ui_*): assim WASD e setas funcionam em todas as telas
+	_add_key_action("ui_up", KEY_W)
+	_add_key_action("ui_down", KEY_S)
+	_add_key_action("ui_left", KEY_A)
+	_add_key_action("ui_right", KEY_D)
 	# Gamepad
 	_add_joypad_actions()
 
