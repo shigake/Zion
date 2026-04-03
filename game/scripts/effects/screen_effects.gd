@@ -499,6 +499,126 @@ func boss_title_card(boss_name: String) -> void:
 			_boss_subtitle_label.queue_free()
 	)
 
+## Boss phase 3 fury transition — dramatic cinematic sequence
+var _phase3_title_label: Label = null
+
+func boss_phase3_transition(boss_position: Vector3, boss_color: Color) -> void:
+	# Accessibility: reduced mode
+	if AccessibilityManager.reduced_motion:
+		shake(0.15)
+		AudioManager.play_sfx("boss_phase")
+		Input.start_joy_vibration(0, GameConstants.BOSS_P3_RUMBLE_WEAK, GameConstants.BOSS_P3_RUMBLE_STRONG, GameConstants.BOSS_P3_RUMBLE_DURATION)
+		_show_phase3_title()
+		return
+
+	# Slow-mo
+	Engine.time_scale = GameConstants.BOSS_P3_SLOW_MO_SCALE
+
+	# Letterbox
+	_show_letterbox(1.5)
+
+	# Camera zoom
+	_phase3_camera_zoom()
+
+	# Escalating shakes
+	shake(GameConstants.BOSS_P3_SHAKE_1)
+	_phase3_shake_sequence()
+
+	# Flash 1
+	if AccessibilityManager.can_flash():
+		flash(0.08, GameConstants.BOSS_P3_FLASH_ALPHA)
+
+	# Particles burst
+	ParticleFactory.spawn_death_particles(boss_position, boss_color, GameConstants.BOSS_P3_PARTICLES_1)
+
+	# SFX
+	AudioManager.play_sfx("boss_phase")
+	AudioManager.start_ducking("phase3_transition")
+
+	# Gamepad rumble
+	Input.start_joy_vibration(0, GameConstants.BOSS_P3_RUMBLE_WEAK, GameConstants.BOSS_P3_RUMBLE_STRONG, GameConstants.BOSS_P3_RUMBLE_DURATION)
+
+	# Title text
+	_show_phase3_title()
+
+	# Second burst + flash after delay
+	_phase3_delayed_effects(boss_position, boss_color)
+
+	# Restore time scale
+	_phase3_restore_timescale()
+
+func _phase3_camera_zoom() -> void:
+	if not camera or not is_instance_valid(camera):
+		camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	var original_fov = camera.fov
+	var zoom_tween = create_tween()
+	zoom_tween.tween_property(camera, "fov", original_fov - GameConstants.BOSS_P3_ZOOM_AMOUNT, 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	zoom_tween.tween_interval(0.6)
+	zoom_tween.tween_property(camera, "fov", original_fov + 5.0, 0.15).set_ease(Tween.EASE_OUT)
+	zoom_tween.tween_property(camera, "fov", original_fov, 0.2).set_ease(Tween.EASE_IN_OUT)
+
+func _phase3_shake_sequence() -> void:
+	await get_tree().create_timer(0.3 * Engine.time_scale).timeout
+	shake(GameConstants.BOSS_P3_SHAKE_2)
+	await get_tree().create_timer(0.4 * Engine.time_scale).timeout
+	shake(GameConstants.BOSS_P3_SHAKE_3)
+
+func _phase3_delayed_effects(boss_pos: Vector3, boss_color: Color) -> void:
+	await get_tree().create_timer(0.5 * Engine.time_scale).timeout
+	if AccessibilityManager.can_flash():
+		if _flash_overlay:
+			_flash_overlay.color = Color(boss_color.r, boss_color.g, boss_color.b, 0.2)
+			_flash_overlay.visible = true
+			var t = create_tween()
+			t.tween_property(_flash_overlay, "color:a", 0.0, 0.1)
+			t.tween_callback(func(): _flash_overlay.visible = false)
+	await get_tree().create_timer(0.4 * Engine.time_scale).timeout
+	ParticleFactory.spawn_death_particles(boss_pos, boss_color, GameConstants.BOSS_P3_PARTICLES_2)
+
+func _phase3_restore_timescale() -> void:
+	await get_tree().create_timer(GameConstants.BOSS_P3_SLOW_MO_DURATION * GameConstants.BOSS_P3_SLOW_MO_SCALE).timeout
+	# Gradual restore
+	var restore_tween = create_tween()
+	restore_tween.tween_method(func(v): Engine.time_scale = v, GameConstants.BOSS_P3_SLOW_MO_SCALE, 1.0, 0.2)
+	await restore_tween.finished
+	AudioManager.stop_ducking()
+
+func _show_phase3_title() -> void:
+	if not _vignette_canvas:
+		return
+	if _phase3_title_label and is_instance_valid(_phase3_title_label):
+		_phase3_title_label.queue_free()
+	_phase3_title_label = Label.new()
+	_phase3_title_label.text = LocaleManager.tr_key("boss_phase3_fury") if LocaleManager.has_method("tr_key") else "FURIA DESPERTA"
+	_phase3_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_phase3_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_phase3_title_label.anchors_preset = Control.PRESET_CENTER
+	_phase3_title_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_phase3_title_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_phase3_title_label.add_theme_font_size_override("font_size", 42)
+	_phase3_title_label.add_theme_color_override("font_color", Color(1.0, 0.15, 0.1))
+	_phase3_title_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
+	_phase3_title_label.add_theme_constant_override("outline_size", 6)
+	_phase3_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_phase3_title_label.modulate.a = 0.0
+	_phase3_title_label.scale = Vector2(0.2, 0.2)
+	_phase3_title_label.pivot_offset = Vector2(200, 25)
+	_vignette_canvas.add_child(_phase3_title_label)
+
+	var t = create_tween()
+	t.set_parallel(true)
+	t.tween_property(_phase3_title_label, "modulate:a", 1.0, 0.15)
+	t.tween_property(_phase3_title_label, "scale", Vector2(GameConstants.BOSS_P3_TITLE_SCALE_OVERSHOOT, GameConstants.BOSS_P3_TITLE_SCALE_OVERSHOOT), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	t.chain().tween_property(_phase3_title_label, "scale", Vector2(1.0, 1.0), 0.15)
+	t.chain().tween_interval(1.0)
+	t.chain().tween_property(_phase3_title_label, "modulate:a", 0.0, 0.3)
+	t.chain().tween_callback(func():
+		if is_instance_valid(_phase3_title_label):
+			_phase3_title_label.queue_free()
+	)
+
 ## Camera zoom pulse for boss entrance — deeper zoom, dramatic snap-back
 func _boss_camera_zoom() -> void:
 	if not camera or not is_instance_valid(camera):

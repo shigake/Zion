@@ -9,10 +9,11 @@ extends "res://scripts/enemies/enemy_base.gd"
 @export var attack_style: String = "balanced"  # "melee", "ranged", "summoner", "balanced"
 
 var phase: int = 1
-var target: Node3D = null
+# target is inherited from enemy_base.gd
 var attack_timer: float = 3.0
 var summon_timer: float = 5.0
 var special_timer: float = 8.0
+var _phase3_transition_done: bool = false
 
 func _ready() -> void:
 	super._ready()
@@ -93,6 +94,9 @@ func _process(delta: float) -> void:
 		phase = new_phase
 		GameManager.boss_phase_changed.emit(boss_name, phase)
 		AudioManager.play_sfx("boss_phase")
+		if new_phase == 3 and not _phase3_transition_done:
+			_phase3_transition_done = true
+			ScreenEffects.boss_phase3_transition(global_position, boss_color)
 
 	# Fury mode
 	if hp_ratio <= GameConstants.BOSS_FURY_THRESHOLD:
