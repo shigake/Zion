@@ -107,6 +107,12 @@ var _ducking_active: bool = false
 var _ducking_tween: Tween = null
 var _ducking_enabled: bool = true  # User setting
 
+# Duck priority enum and stack system
+enum DuckPriority { NONE, LEVEL_UP, BOSS_SFX, CINEMATIC, VOICE }
+
+var _duck_stack: Array[Dictionary] = []  # {priority, music_db, sfx_db, duration}
+var _current_duck_priority: int = 0  # DuckPriority value
+
 # Distance-based attenuation
 const ATTENUATION_RADIUS: float = 15.0
 
@@ -423,7 +429,17 @@ func _setup_buses() -> void:
 		sfx_limiter.threshold_db = -3.0
 		sfx_limiter.soft_clip_db = 2.0
 		AudioServer.add_bus_effect(sfx_idx, sfx_limiter)
-	LogManager.info("Audio", "Audio buses configured: %d total (with limiters)" % AudioServer.bus_count)
+	# Master compressor to prevent clipping
+	var master_idx = AudioServer.get_bus_index("Master")
+	if master_idx != -1:
+		var compressor = AudioEffectCompressor.new()
+		compressor.threshold = GameConstants.MASTER_COMPRESSOR_THRESHOLD
+		compressor.ratio = GameConstants.MASTER_COMPRESSOR_RATIO
+		compressor.attack_us = GameConstants.MASTER_COMPRESSOR_ATTACK_US
+		compressor.release_ms = GameConstants.MASTER_COMPRESSOR_RELEASE_MS
+		compressor.gain = 0.0
+		AudioServer.add_bus_effect(master_idx, compressor)
+	LogManager.info("Audio", "Audio buses configured: %d total (with limiters + compressor)" % AudioServer.bus_count)
 
 func _apply_bus_volume(bus_name: String, volume: float) -> void:
 	var idx = AudioServer.get_bus_index(bus_name)
@@ -437,47 +453,76 @@ func _count_active_in_category(category: String) -> int:
 			count += 1
 	return count
 
-# ---- Ducking System (PRD 28 §2) ----
+# ---- Ducking System (PRD 28 §2 + PRD 38 stack-based) ----
 
-func start_ducking(reason: String = "voice") -> void:
-	if not _ducking_enabled or _ducking_active:
+func push_duck(priority: int, music_db: float, sfx_db: float, duration: float = 0.0) -> void:
+	_duck_stack.append({"priority": priority, "music_db": music_db, "sfx_db": sfx_db})
+	_apply_highest_duck()
+	if duration > 0:
+		get_tree().create_timer(duration).timeout.connect(func(): pop_duck(priority))
+
+func pop_duck(priority: int) -> void:
+	for i in range(_duck_stack.size() - 1, -1, -1):
+		if _duck_stack[i]["priority"] == priority:
+			_duck_stack.remove_at(i)
+			break
+	_apply_highest_duck()
+
+func _apply_highest_duck() -> void:
+	if _duck_stack.is_empty():
+		# Restore to normal
+		_restore_bus_volume("Music", -6.0, GameConstants.DUCK_RESTORE_TIME)
+		_restore_bus_volume("SFX", 0.0, GameConstants.DUCK_RESTORE_TIME)
+		_current_duck_priority = 0
+		_ducking_active = false
 		return
+
+	# Find highest priority entry
+	var highest = _duck_stack[0]
+	for entry in _duck_stack:
+		if entry["priority"] > highest["priority"]:
+			highest = entry
+
+	_current_duck_priority = highest["priority"]
 	_ducking_active = true
-	var music_idx = AudioServer.get_bus_index("Music")
-	if music_idx == -1:
+	_duck_bus("Music", highest["music_db"], GameConstants.DUCK_TRANSITION_TIME)
+	if highest["sfx_db"] != 0.0:
+		_duck_bus("SFX", highest["sfx_db"], GameConstants.DUCK_TRANSITION_TIME)
+
+func _duck_bus(bus_name: String, target_db: float, duration: float) -> void:
+	var idx = AudioServer.get_bus_index(bus_name)
+	if idx == -1:
 		return
-	if _ducking_tween:
-		_ducking_tween.kill()
-	_ducking_tween = create_tween()
-	var current_db = AudioServer.get_bus_volume_db(music_idx)
-	_ducking_tween.tween_method(func(db): AudioServer.set_bus_volume_db(music_idx, db), current_db, -18.0, 0.3)
+	var current_db = AudioServer.get_bus_volume_db(idx)
+	var tween = create_tween()
+	tween.tween_method(func(db): AudioServer.set_bus_volume_db(idx, db), current_db, target_db, duration)
+
+func _restore_bus_volume(bus_name: String, target_db: float, duration: float) -> void:
+	var idx = AudioServer.get_bus_index(bus_name)
+	if idx == -1:
+		return
+	var current_db = AudioServer.get_bus_volume_db(idx)
+	var tween = create_tween()
+	tween.tween_method(func(db): AudioServer.set_bus_volume_db(idx, db), current_db, target_db, duration)
+
+# Backwards-compatible wrappers for existing callers
+func start_ducking(reason: String = "voice") -> void:
+	if not _ducking_enabled:
+		return
+	push_duck(DuckPriority.VOICE, -18.0, 0.0)
 	LogManager.debug("Audio", "Ducking started: " + reason)
 
 func stop_ducking() -> void:
-	if not _ducking_active:
-		return
-	_ducking_active = false
-	var music_idx = AudioServer.get_bus_index("Music")
-	if music_idx == -1:
-		return
-	if _ducking_tween:
-		_ducking_tween.kill()
-	_ducking_tween = create_tween()
-	var current_db = AudioServer.get_bus_volume_db(music_idx)
-	_ducking_tween.tween_method(func(db): AudioServer.set_bus_volume_db(music_idx, db), current_db, -6.0, 0.5)
+	pop_duck(DuckPriority.VOICE)
 	LogManager.debug("Audio", "Ducking stopped")
 
 # ---- Music Ducking Triggers (PRD 28 §2) ----
 
 func _on_level_up_ducking(_new_level: int) -> void:
-	start_ducking("level_up")
-	# Restore music after 2 seconds
-	get_tree().create_timer(2.0).timeout.connect(stop_ducking)
+	push_duck(DuckPriority.LEVEL_UP, -18.0, 0.0, 2.0)
 
 func _on_boss_spawned_ducking(_boss_name: String) -> void:
-	start_ducking("boss_spawn")
-	# Restore music after 3 seconds (boss entrance)
-	get_tree().create_timer(3.0).timeout.connect(stop_ducking)
+	push_duck(DuckPriority.BOSS_SFX, GameConstants.DUCK_BOSS_AMBIENT_DB, 0.0, 3.0)
 
 # ---- Hit Sound Volume Normalization (PRD 28 §2) ----
 # When many hits happen in quick succession, reduce volume of subsequent hits
@@ -519,6 +564,19 @@ func play_sfx_at_position(sfx_name: String, world_pos: Vector3, is_local_player:
 		return  # Too far, don't play
 	var volume_mult = 1.0 - (distance / ATTENUATION_RADIUS)
 	play_sfx(sfx_name, volume_mult)
+
+# ---- Dynamic Volume Based on Enemy Count (PRD 38) ----
+
+func get_enemy_volume_modifier() -> float:
+	var enemy_count = GameManager.enemies_alive
+	if enemy_count <= GameConstants.AUDIO_ENEMY_THRESHOLD_LOW:
+		return 0.0
+	elif enemy_count <= GameConstants.AUDIO_ENEMY_THRESHOLD_MED:
+		return GameConstants.AUDIO_ENEMY_DUCK_LOW
+	elif enemy_count <= GameConstants.AUDIO_ENEMY_THRESHOLD_HIGH:
+		return GameConstants.AUDIO_ENEMY_DUCK_MED
+	else:
+		return GameConstants.AUDIO_ENEMY_DUCK_HIGH
 
 # ---- Integration points ----
 # Call AudioManager.play_sfx("hit") when an enemy is hit
