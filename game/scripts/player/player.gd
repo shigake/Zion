@@ -46,6 +46,13 @@ var _world_xp_bar: MeshInstance3D = null
 var _world_xp_bg: MeshInstance3D = null
 var _world_xp_y: float = 0.0
 
+var _hp_bar_target_ratio: float = 1.0
+var _xp_bar_target_ratio: float = 0.0
+const BAR_LERP_SPEED: float = 8.0
+# Highlight meshes
+var _world_hp_highlight: MeshInstance3D = null
+var _world_xp_highlight: MeshInstance3D = null
+
 # Barrier walls (4 edges)
 var _barrier_walls: Array[MeshInstance3D] = []
 
@@ -149,7 +156,7 @@ func _create_world_hp_bar() -> void:
 	border_mesh.size = Vector2(bar_width + 0.16, bar_height + 0.08)
 	_world_hp_border.mesh = border_mesh
 	var border_mat = StandardMaterial3D.new()
-	border_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.95)
+	border_mat.albedo_color = Color(0.05, 0.35, 0.05, 0.95)
 	border_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	border_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	border_mat.no_depth_test = true
@@ -182,6 +189,9 @@ func _create_world_hp_bar() -> void:
 	_world_hp_bar.mesh = fill_mesh
 	var fill_mat = StandardMaterial3D.new()
 	fill_mat.albedo_color = Color(0.2, 0.85, 0.2)
+	fill_mat.emission_enabled = true
+	fill_mat.emission = Color(0.1, 0.6, 0.1)
+	fill_mat.emission_energy_multiplier = 0.6
 	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	fill_mat.no_depth_test = true
 	fill_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
@@ -190,22 +200,35 @@ func _create_world_hp_bar() -> void:
 	_world_hp_bar.position = Vector3(0, bar_y, bar_z)
 	add_child(_world_hp_bar)
 
-func _update_world_hp_bar() -> void:
+	# Highlight (glossy strip)
+	_world_hp_highlight = MeshInstance3D.new()
+	var hl_mesh := QuadMesh.new()
+	hl_mesh.size = Vector2(bar_width - 0.1, bar_height * 0.22)
+	_world_hp_highlight.mesh = hl_mesh
+	var hl_mat := StandardMaterial3D.new()
+	hl_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.18)
+	hl_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hl_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	hl_mat.no_depth_test = true
+	hl_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	hl_mat.render_priority = 13
+	_world_hp_highlight.material_override = hl_mat
+	_world_hp_highlight.position = Vector3(0, bar_y + bar_height * 0.28, bar_z + 0.001)
+	add_child(_world_hp_highlight)
+
+func _update_world_hp_bar(delta: float) -> void:
 	if not _world_hp_bar or not _world_hp_bg:
 		return
 	var max_hp = GameManager.get_effective_max_hp()
-	var ratio = clampf(float(GameManager.player_hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 1.0
-	_world_hp_bar.scale.x = ratio
-	_world_hp_bar.position.x = -(1.0 - ratio) * 0.8  # Metade da bar_width (1.6 / 2)
-	# Cor muda com HP: verde → amarelo → vermelho
-	var mat = _world_hp_bar.material_override
-	if mat:
-		if ratio > 0.5:
-			mat.albedo_color = Color(0.2, 0.85, 0.2)
-		elif ratio > 0.25:
-			mat.albedo_color = Color(0.9, 0.8, 0.1)
-		else:
-			mat.albedo_color = Color(0.9, 0.15, 0.1)
+	_hp_bar_target_ratio = clampf(float(GameManager.player_hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 1.0
+	var current := _world_hp_bar.scale.x
+	var new_scale := lerpf(current, _hp_bar_target_ratio, BAR_LERP_SPEED * delta)
+	_world_hp_bar.scale.x = new_scale
+	_world_hp_bar.position.x = -(1.0 - new_scale) * 0.8
+	# HP highlight follows fill bar scale
+	if _world_hp_highlight:
+		_world_hp_highlight.scale.x = new_scale
+		_world_hp_highlight.position.x = -(1.0 - new_scale) * 0.75
 
 func _create_world_xp_bar() -> void:
 	var bar_width: float = 1.6
@@ -220,7 +243,7 @@ func _create_world_xp_bar() -> void:
 	border_mesh.size = Vector2(bar_width + 0.16, bar_height + 0.08)
 	xp_border.mesh = border_mesh
 	var border_mat := StandardMaterial3D.new()
-	border_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.95)
+	border_mat.albedo_color = Color(0.03, 0.10, 0.30, 0.95)
 	border_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	border_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	border_mat.no_depth_test = true
@@ -236,7 +259,7 @@ func _create_world_xp_bar() -> void:
 	bg_mesh.size = Vector2(bar_width + 0.06, bar_height + 0.02)
 	_world_xp_bg.mesh = bg_mesh
 	var bg_mat := StandardMaterial3D.new()
-	bg_mat.albedo_color = Color(0.12, 0.10, 0.18, 0.9)
+	bg_mat.albedo_color = Color(0.08, 0.12, 0.22, 0.9)
 	bg_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	bg_mat.no_depth_test = true
@@ -252,7 +275,10 @@ func _create_world_xp_bar() -> void:
 	fill_mesh.size = Vector2(bar_width, bar_height)
 	_world_xp_bar.mesh = fill_mesh
 	var fill_mat := StandardMaterial3D.new()
-	fill_mat.albedo_color = Color(0.45, 0.25, 0.95)
+	fill_mat.albedo_color = Color(0.15, 0.55, 0.95)
+	fill_mat.emission_enabled = true
+	fill_mat.emission = Color(0.05, 0.3, 0.7)
+	fill_mat.emission_energy_multiplier = 0.5
 	fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	fill_mat.no_depth_test = true
 	fill_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
@@ -261,21 +287,43 @@ func _create_world_xp_bar() -> void:
 	_world_xp_bar.position = Vector3(0, xp_y, bar_z)
 	add_child(_world_xp_bar)
 
+	# Highlight (glossy strip)
+	_world_xp_highlight = MeshInstance3D.new()
+	var hl_mesh := QuadMesh.new()
+	hl_mesh.size = Vector2(bar_width - 0.1, bar_height * 0.22)
+	_world_xp_highlight.mesh = hl_mesh
+	var hl_mat := StandardMaterial3D.new()
+	hl_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.18)
+	hl_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hl_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	hl_mat.no_depth_test = true
+	hl_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	hl_mat.render_priority = 13
+	_world_xp_highlight.material_override = hl_mat
+	_world_xp_highlight.position = Vector3(0, xp_y + bar_height * 0.28, bar_z + 0.001)
+	add_child(_world_xp_highlight)
+
 	_world_xp_y = xp_y
 
-func _update_world_xp_bar() -> void:
+func _update_world_xp_bar(delta: float) -> void:
 	if not _world_xp_bar:
 		return
-	var ratio := clampf(
+	_xp_bar_target_ratio = clampf(
 		float(GameManager.player_xp) / float(GameManager.player_xp_to_next),
 		0.0, 1.0
 	) if GameManager.player_xp_to_next > 0 else 0.0
-	_world_xp_bar.scale.x = ratio
-	_world_xp_bar.position.x = -(1.0 - ratio) * 0.8
+	var current := _world_xp_bar.scale.x
+	var new_scale := lerpf(current, _xp_bar_target_ratio, BAR_LERP_SPEED * delta)
+	_world_xp_bar.scale.x = new_scale
+	_world_xp_bar.position.x = -(1.0 - new_scale) * 0.8
+	# XP highlight follows fill bar scale
+	if _world_xp_highlight:
+		_world_xp_highlight.scale.x = new_scale
+		_world_xp_highlight.position.x = -(1.0 - new_scale) * 0.75
 
 func _physics_process(delta: float) -> void:
-	_update_world_hp_bar()
-	_update_world_xp_bar()
+	_update_world_hp_bar(delta)
+	_update_world_xp_bar(delta)
 	if GameManager.is_game_over or GameManager.paused:
 		return
 
