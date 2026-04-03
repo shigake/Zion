@@ -1,6 +1,6 @@
 # PRD 32 — Barras de HP e XP world-space: cores fixas + polish visual
 
-**Status:** pendente
+**Status:** concluido
 **Prioridade:** média
 **Escopo:** `game/scripts/player/player.gd`
 
