@@ -98,6 +98,7 @@ func _apply_overlay_style() -> void:
 	_vignette.offset_right = 300.0
 	_vignette.offset_bottom = 250.0
 	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.visible = false
 	add_child(_vignette)
 	# Make sure vignette is behind the panel
 	if panel.get_index() >= 0:
