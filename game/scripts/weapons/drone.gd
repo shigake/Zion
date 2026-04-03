@@ -25,7 +25,7 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		drone_mesh.get_parent().add_child(sprite)
+		drone_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():
