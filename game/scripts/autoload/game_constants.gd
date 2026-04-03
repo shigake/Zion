@@ -688,3 +688,16 @@ const MINIBOSS_ESCORT_RADIUS := 5.0
 # ---- Camera ----
 const CAMERA_SMOOTH_SPEED := 5.0
 const CAMERA_LOOK_AHEAD := 0.3
+
+# ==================================================================
+# HUD ICON SIZES
+# ==================================================================
+const HUD_ICON_SIZES = {
+	"large": { "panel": Vector2(80, 80), "texture": Vector2(68, 68), "font": 14 },
+	"medium": { "panel": Vector2(64, 64), "texture": Vector2(54, 54), "font": 12 },
+	"small": { "panel": Vector2(52, 52), "texture": Vector2(44, 44), "font": 10 },
+}
+const HUD_ICON_LARGE_MAX = 4
+const HUD_ICON_MEDIUM_MAX = 6
+const HUD_ICON_SEPARATION = 6
+const HUD_ICON_MAX_PER_ROW = 9

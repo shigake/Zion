@@ -63,9 +63,9 @@ func _ready() -> void:
 
 	# Setup weapon icons container (bottom-left) and item icons (bottom-right)
 	weapon_container = $WeaponPanel/WeaponIcons
-	weapon_container.add_theme_constant_override("separation", 8)
+	weapon_container.add_theme_constant_override("separation", GameConstants.HUD_ICON_SEPARATION)
 	item_container = $ItemPanel/ItemIcons
-	item_container.add_theme_constant_override("separation", 8)
+	item_container.add_theme_constant_override("separation", GameConstants.HUD_ICON_SEPARATION)
 	boss_hp_bar = $BossHPBar
 	boss_hp_bar.visible = false
 
@@ -434,6 +434,16 @@ func _on_miniboss_spawned(boss_name: String) -> void:
 	tween.tween_interval(4.0)
 	tween.tween_callback(func(): event_label.visible = false)
 
+# --------------- Icon Size Helper ---------------
+
+func _get_icon_sizes(count: int) -> Dictionary:
+	if count <= GameConstants.HUD_ICON_LARGE_MAX:
+		return GameConstants.HUD_ICON_SIZES["large"]
+	elif count <= GameConstants.HUD_ICON_MEDIUM_MAX:
+		return GameConstants.HUD_ICON_SIZES["medium"]
+	else:
+		return GameConstants.HUD_ICON_SIZES["small"]
+
 # --------------- Weapon Icons ---------------
 
 func _update_weapon_icons() -> void:
@@ -449,6 +459,12 @@ func _update_weapon_icons() -> void:
 	for child in weapon_container.get_children():
 		child.queue_free()
 
+	if weapons.is_empty():
+		return
+
+	var sizes := _get_icon_sizes(weapons.size())
+	weapon_container.add_theme_constant_override("separation", GameConstants.HUD_ICON_SEPARATION)
+
 	var type_colors := {
 		"melee": Color(0.9, 0.2, 0.2),
 		"ranged": Color(0.2, 0.4, 0.9),
@@ -461,7 +477,7 @@ func _update_weapon_icons() -> void:
 		var color = type_colors.get(weapon_type, Color.WHITE)
 
 		var panel := PanelContainer.new()
-		panel.custom_minimum_size = Vector2(128, 128)
+		panel.custom_minimum_size = sizes.panel
 		# Type-colored border
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.08, 0.08, 0.12, 0.85)
@@ -476,13 +492,13 @@ func _update_weapon_icons() -> void:
 		if _icon_tex:
 			var tex_rect := TextureRect.new()
 			tex_rect.texture = _icon_tex
-			tex_rect.custom_minimum_size = Vector2(112, 112)
+			tex_rect.custom_minimum_size = sizes.texture
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			icon_node = tex_rect
 		else:
 			var rect := ColorRect.new()
-			rect.custom_minimum_size = Vector2(112, 112)
+			rect.custom_minimum_size = sizes.texture
 			rect.color = color
 			icon_node = rect
 		panel.add_child(icon_node)
@@ -490,10 +506,10 @@ func _update_weapon_icons() -> void:
 		# Level badge (bottom-right corner)
 		var lbl := Label.new()
 		lbl.text = str(w.level)
-		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_font_size_override("font_size", sizes.font)
 		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		lbl.offset_left = -24
-		lbl.offset_top = -24
+		lbl.offset_left = -(sizes.font + 6)
+		lbl.offset_top = -(sizes.font + 6)
 		lbl.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 		icon_node.add_child(lbl)
 
@@ -514,12 +530,41 @@ func _update_item_icons() -> void:
 	for child in item_container.get_children():
 		child.queue_free()
 
-	for it in items:
+	if items.is_empty():
+		return
+
+	var sizes := _get_icon_sizes(items.size())
+	item_container.add_theme_constant_override("separation", GameConstants.HUD_ICON_SEPARATION)
+
+	# Determine if we need 2 rows
+	var use_grid := items.size() > GameConstants.HUD_ICON_MAX_PER_ROW
+	var containers: Array[HBoxContainer] = []
+
+	if use_grid:
+		var vbox := VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 2)
+		var row1 := HBoxContainer.new()
+		row1.add_theme_constant_override("separation", GameConstants.HUD_ICON_SEPARATION)
+		row1.alignment = BoxContainer.ALIGNMENT_END
+		var row2 := HBoxContainer.new()
+		row2.add_theme_constant_override("separation", GameConstants.HUD_ICON_SEPARATION)
+		row2.alignment = BoxContainer.ALIGNMENT_END
+		vbox.add_child(row1)
+		vbox.add_child(row2)
+		item_container.add_child(vbox)
+		containers = [row1, row2]
+	else:
+		containers = [item_container]
+
+	var first_row_count := ceili(items.size() / 2.0) if use_grid else items.size()
+
+	for i in range(items.size()):
+		var it = items[i]
 		var data = ItemDB.items.get(it.id, {})
 		var color = data.get("color", Color.WHITE)
 
 		var panel := PanelContainer.new()
-		panel.custom_minimum_size = Vector2(128, 128)
+		panel.custom_minimum_size = sizes.panel
 		# Item-colored border
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.08, 0.08, 0.12, 0.85)
@@ -534,13 +579,13 @@ func _update_item_icons() -> void:
 		if _icon_tex:
 			var tex_rect := TextureRect.new()
 			tex_rect.texture = _icon_tex
-			tex_rect.custom_minimum_size = Vector2(112, 112)
+			tex_rect.custom_minimum_size = sizes.texture
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			icon_node = tex_rect
 		else:
 			var rect := ColorRect.new()
-			rect.custom_minimum_size = Vector2(112, 112)
+			rect.custom_minimum_size = sizes.texture
 			rect.color = color
 			icon_node = rect
 		panel.add_child(icon_node)
@@ -548,14 +593,21 @@ func _update_item_icons() -> void:
 		# Level badge (bottom-right corner)
 		var lbl := Label.new()
 		lbl.text = str(it.level)
-		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_font_size_override("font_size", sizes.font)
 		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		lbl.offset_left = -24
-		lbl.offset_top = -24
+		lbl.offset_left = -(sizes.font + 6)
+		lbl.offset_top = -(sizes.font + 6)
 		lbl.add_theme_color_override("font_color", Color(0.5, 0.9, 1.0))
 		icon_node.add_child(lbl)
 
-		item_container.add_child(panel)
+		# Determine target container
+		if use_grid:
+			if i < first_row_count:
+				containers[0].add_child(panel)
+			else:
+				containers[1].add_child(panel)
+		else:
+			containers[0].add_child(panel)
 
 # --------------- Boss HP Bar ---------------
 
