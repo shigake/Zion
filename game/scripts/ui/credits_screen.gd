@@ -849,6 +849,14 @@ func _hide_bubble() -> void:
 	if _bubble_panel == null or not _bubble_panel.visible:
 		return
 	var tw = create_tween()
+	# Pisca 3 vezes antes de sumir (sinaliza que o próximo balão vem)
+	tw.tween_property(_bubble_panel, "modulate:a", 0.1, 0.07).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bubble_panel, "modulate:a", 1.0, 0.07).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bubble_panel, "modulate:a", 0.1, 0.07).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bubble_panel, "modulate:a", 1.0, 0.07).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bubble_panel, "modulate:a", 0.1, 0.07).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_bubble_panel, "modulate:a", 1.0, 0.07).set_trans(Tween.TRANS_SINE)
+	# Fade out final
 	tw.tween_property(_bubble_panel, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func(): _bubble_panel.visible = false)
 
