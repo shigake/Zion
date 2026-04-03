@@ -211,7 +211,7 @@ func _create_world_xp_bar() -> void:
 	var bar_width: float = 1.6
 	var bar_height: float = 0.48
 	var gap: float = 0.06
-	var xp_y: float = 0.05 + bar_height + gap + bar_height / 2.0
+	var xp_y: float = 0.05 - bar_height - gap
 	var bar_z: float = 0.5
 
 	# Border (black)
