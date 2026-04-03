@@ -20,6 +20,7 @@ var data: Dictionary = {
 	"player_name": "Anonymous",  # Player name for online leaderboard
 	"pending_leaderboard_scores": [],  # Offline fallback: scores to submit later
 	"best_run": {},  # Best run stats for comparison {time, kills, dps, level, crystals, damage}
+	"best_runs": {},  # Per-character best runs {character_id: {time, kills, dps, level, crystals, damage}}
 	"story_seen": false,  # Whether the story intro has been shown
 	"audio_combat": 100,  # Combat SFX volume (0-100)
 	"audio_ambient": 100,  # Ambient SFX volume (0-100)
@@ -377,14 +378,32 @@ func get_seed_leaderboard(seed_text: String) -> Array:
 	return data.get("seed_leaderboards", {}).get(seed_text, [])
 
 # ---- Best Run ----
-func save_best_run(run_stats: Dictionary) -> void:
+func save_best_run(run_stats: Dictionary, character_id: String = "") -> void:
 	## Save current run stats if it beats the best run (by score = kills*10 + time + crystals).
+	## Saves both globally (best_run) and per-character (best_runs).
+	var new_score = run_stats.get("kills", 0) * 10 + int(run_stats.get("time", 0.0)) + run_stats.get("crystals", 0)
+
+	# Global best run
 	var current_best = data.get("best_run", {})
 	var current_score = current_best.get("kills", 0) * 10 + int(current_best.get("time", 0.0)) + current_best.get("crystals", 0)
-	var new_score = run_stats.get("kills", 0) * 10 + int(run_stats.get("time", 0.0)) + run_stats.get("crystals", 0)
 	if new_score > current_score:
 		data["best_run"] = run_stats
-		save_game()
 
-func get_best_run() -> Dictionary:
+	# Per-character best run
+	if character_id != "":
+		if "best_runs" not in data:
+			data["best_runs"] = {}
+		var char_best = data["best_runs"].get(character_id, {})
+		var char_score = char_best.get("kills", 0) * 10 + int(char_best.get("time", 0.0)) + char_best.get("crystals", 0)
+		if new_score > char_score:
+			data["best_runs"][character_id] = run_stats
+
+	save_game()
+
+func get_best_run(character_id: String = "") -> Dictionary:
+	## Get best run stats. If character_id is provided, returns per-character best first.
+	if character_id != "":
+		var char_best = data.get("best_runs", {}).get(character_id, {})
+		if not char_best.is_empty():
+			return char_best
 	return data.get("best_run", {})

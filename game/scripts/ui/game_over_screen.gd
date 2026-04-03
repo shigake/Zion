@@ -1,6 +1,9 @@
 extends CanvasLayer
 
-## Tela de Game Over com stats essenciais da run.
+## Tela de Game Over com stats da run em 2 abas:
+##   Aba 1 — Resumo (dados principais + best run comparison)
+##   Aba 2 — Registro Dimensional (breakdown detalhado por arma, sinergia, economia)
+## PRD 28 §4 — Expanded Post-Run Stats
 
 @onready var panel: PanelContainer = $Panel
 @onready var time_label: Label = $Panel/MarginContainer/VBox/StatsRow1/TimeLabel
@@ -28,6 +31,23 @@ var _seed_row: HBoxContainer = null
 var _seed_label: Label = null
 var _seed_copy_btn: Button = null
 
+# Tab system — PRD 28 §4
+var _current_tab: int = 0  # 0 = Resumo, 1 = Registro Dimensional
+var _tab_bar: HBoxContainer = null
+var _tab_resumo_btn: Button = null
+var _tab_detail_btn: Button = null
+var _tab_hint_label: Label = null
+var _narrative_label: Label = null
+var _best_run_grid: GridContainer = null
+var _detail_container: Control = null  # StatsDetailTab instance
+var _stats_container: VBoxContainer = null  # Expanded stats (inline in tab 1)
+
+# Nodes that belong to tab 1 only (hidden when on tab 2)
+var _summary_nodes: Array[Node] = []
+# Nodes that belong to tab 2 only (hidden when on tab 1)
+var _detail_nodes: Array[Node] = []
+
+
 func _ready() -> void:
 	overlay.visible = false
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -37,6 +57,11 @@ func _ready() -> void:
 	menu_btn.pressed.connect(_on_menu)
 	screenshot_btn.pressed.connect(_take_screenshot)
 	_build_seed_row()
+	_build_tab_bar()
+	_build_narrative_label()
+	_build_best_run_section()
+	_build_detail_tab()
+
 
 func _show() -> void:
 	GameManager.end_run()
@@ -87,8 +112,17 @@ func _show() -> void:
 	if crystal_mult > 1.0:
 		crystals_label.text += " (x%.1f)" % crystal_mult
 
-	# PRD 28 §4 — Expanded post-run stats
+	# PRD 28 §4 — Expanded post-run stats (inline in tab 1)
 	_build_expanded_stats()
+
+	# PRD 28 §4 — Best run comparison arrows
+	_populate_best_run_comparison()
+
+	# PRD 28 §4 — Narrative label
+	_populate_narrative()
+
+	# PRD 28 §4 — Detail tab
+	_populate_detail_tab()
 
 	# Character sprite
 	var char_path = "res://assets/sprites/characters/%s.png" % GameManager.selected_character
@@ -223,6 +257,10 @@ func _show() -> void:
 	overlay.visible = true
 	panel.visible = true
 	GameManager.paused = true
+
+	# Default to tab 1 (Resumo)
+	_switch_tab(0)
+
 	# Gamepad: focus on Retry (retry -> screenshot -> menu cycle)
 	retry_btn.focus_mode = Control.FOCUS_ALL
 	screenshot_btn.focus_mode = Control.FOCUS_ALL
@@ -247,6 +285,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		if get_viewport(): get_viewport().set_input_as_handled()
 		_on_menu()
+		return
+	# L1/R1 or Tab to switch tabs
+	if event.is_action_pressed("ui_page_up") or event.is_action_pressed("ui_focus_prev"):
+		_switch_tab(0)
+		if get_viewport(): get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_focus_next"):
+		_switch_tab(1)
+		if get_viewport(): get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		_switch_tab(1 - _current_tab)
+		if get_viewport(): get_viewport().set_input_as_handled()
 
 func _on_menu() -> void:
 	AudioManager.play_sfx("menu_click")
@@ -254,6 +303,206 @@ func _on_menu() -> void:
 	if MultiplayerManager.is_online:
 		MultiplayerManager.disconnect_from_game()
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
+
+
+# ---------------------------------------------------------------------------
+# Tab System — PRD 28 §4
+# ---------------------------------------------------------------------------
+
+## Build tab bar with two buttons (Resumo | Registro Dimensional).
+func _build_tab_bar() -> void:
+	var vbox = $Panel/MarginContainer/VBox
+	_tab_bar = HBoxContainer.new()
+	_tab_bar.name = "TabBar"
+	_tab_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_tab_bar.add_theme_constant_override("separation", 4)
+
+	_tab_resumo_btn = Button.new()
+	_tab_resumo_btn.text = LocaleManager.tr_key("stats_summary")
+	_tab_resumo_btn.add_theme_font_size_override("font_size", 12)
+	_tab_resumo_btn.custom_minimum_size = Vector2(110, 28)
+	_tab_resumo_btn.pressed.connect(_switch_tab.bind(0))
+	_tab_bar.add_child(_tab_resumo_btn)
+
+	_tab_detail_btn = Button.new()
+	_tab_detail_btn.text = LocaleManager.tr_key("stats_details")
+	_tab_detail_btn.add_theme_font_size_override("font_size", 12)
+	_tab_detail_btn.custom_minimum_size = Vector2(140, 28)
+	_tab_detail_btn.pressed.connect(_switch_tab.bind(1))
+	_tab_bar.add_child(_tab_detail_btn)
+
+	# Insert after CharacterRow (index 1 in VBox children)
+	var char_row_idx = $Panel/MarginContainer/VBox/CharacterRow.get_index()
+	vbox.add_child(_tab_bar)
+	vbox.move_child(_tab_bar, char_row_idx + 1)
+
+	# Tab hint (L1/R1)
+	_tab_hint_label = Label.new()
+	_tab_hint_label.text = LocaleManager.tr_key("stats_tab_hint")
+	_tab_hint_label.add_theme_font_size_override("font_size", 10)
+	_tab_hint_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.7))
+	_tab_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(_tab_hint_label)
+	vbox.move_child(_tab_hint_label, char_row_idx + 2)
+
+
+## Build narrative label (lore text for the detail tab).
+func _build_narrative_label() -> void:
+	var vbox = $Panel/MarginContainer/VBox
+	_narrative_label = Label.new()
+	_narrative_label.name = "NarrativeLabel"
+	_narrative_label.add_theme_font_size_override("font_size", 11)
+	_narrative_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.9, 0.9))
+	_narrative_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_narrative_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_narrative_label.visible = false
+	vbox.add_child(_narrative_label)
+	# Position after tab hint
+	var hint_idx = _tab_hint_label.get_index()
+	vbox.move_child(_narrative_label, hint_idx + 1)
+	_detail_nodes.append(_narrative_label)
+
+
+## Build best run comparison section (shown in tab 1).
+func _build_best_run_section() -> void:
+	var vbox = $Panel/MarginContainer/VBox
+	_best_run_grid = GridContainer.new()
+	_best_run_grid.name = "BestRunComparison"
+	_best_run_grid.columns = 2
+	_best_run_grid.add_theme_constant_override("h_separation", 12)
+	_best_run_grid.add_theme_constant_override("v_separation", 2)
+	_best_run_grid.visible = false
+	vbox.add_child(_best_run_grid)
+	# Will be positioned in _show() after other elements are built
+	_summary_nodes.append(_best_run_grid)
+
+
+## Build the detail tab container (StatsDetailTab).
+func _build_detail_tab() -> void:
+	var vbox = $Panel/MarginContainer/VBox
+	var detail_script = load("res://scripts/ui/stats_detail_tab.gd")
+	_detail_container = Control.new()
+	_detail_container.set_script(detail_script)
+	_detail_container.name = "StatsDetailTab"
+	_detail_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_detail_container.visible = false
+	# Insert before UnlockLabel
+	var unlock_idx = unlock_label.get_index()
+	vbox.add_child(_detail_container)
+	vbox.move_child(_detail_container, unlock_idx)
+	_detail_nodes.append(_detail_container)
+
+
+## Switch between tab 0 (Resumo) and tab 1 (Registro Dimensional).
+func _switch_tab(idx: int) -> void:
+	_current_tab = idx
+	AudioManager.play_sfx("menu_click")
+
+	# Update tab button styles
+	var active_color := Color(1.0, 0.85, 0.3)
+	var inactive_color := Color(0.6, 0.6, 0.7)
+	_tab_resumo_btn.add_theme_color_override("font_color", active_color if idx == 0 else inactive_color)
+	_tab_detail_btn.add_theme_color_override("font_color", active_color if idx == 1 else inactive_color)
+
+	# Toggle summary nodes (tab 1)
+	var summary_visible := (idx == 0)
+	for node in _summary_nodes:
+		if is_instance_valid(node):
+			node.visible = summary_visible
+
+	# Toggle detail nodes (tab 2)
+	var detail_visible := (idx == 1)
+	for node in _detail_nodes:
+		if is_instance_valid(node):
+			node.visible = detail_visible
+
+	# StatsRow1/2, expanded stats, weapons/items/evolutions belong to tab 1
+	$Panel/MarginContainer/VBox/StatsRow1.visible = summary_visible
+	$Panel/MarginContainer/VBox/StatsRow2.visible = summary_visible
+	if _stats_container and is_instance_valid(_stats_container):
+		_stats_container.visible = summary_visible
+	weapons_title.visible = summary_visible and not GameManager.player_weapons.is_empty()
+	weapons_container.visible = summary_visible and not GameManager.player_weapons.is_empty()
+	items_title.visible = summary_visible and not GameManager.player_items.is_empty()
+	items_container.visible = summary_visible and not GameManager.player_items.is_empty()
+	evolutions_title.visible = summary_visible and not EvolutionDB.evolved_weapons.is_empty()
+	evolutions_container.visible = summary_visible and not EvolutionDB.evolved_weapons.is_empty()
+
+
+## Populate narrative label based on victory/death.
+func _populate_narrative() -> void:
+	if GameManager.is_victory:
+		_narrative_label.text = LocaleManager.tr_key("victory_lore")
+	else:
+		_narrative_label.text = LocaleManager.tr_key("death_lore")
+
+
+## Populate best run comparison (▲▼ arrows) for 5 key metrics.
+func _populate_best_run_comparison() -> void:
+	# Clear previous
+	for child in _best_run_grid.get_children():
+		child.queue_free()
+
+	var best = SaveManager.get_best_run(GameManager.selected_character)
+	if best.is_empty():
+		_best_run_grid.visible = false
+		return
+
+	var comparisons: Array[Dictionary] = [
+		{"label": LocaleManager.tr_key("kills_stat") % GameManager.total_kills, "current": GameManager.total_kills, "best": best.get("kills", 0), "higher_is_better": true},
+		{"label": LocaleManager.tr_key("level_stat") % GameManager.player_level, "current": GameManager.player_level, "best": best.get("level", 0), "higher_is_better": true},
+		{"label": LocaleManager.tr_key("crystals_earned") % GameManager.crystals_this_run, "current": GameManager.crystals_this_run, "best": best.get("crystals", 0), "higher_is_better": true},
+		{"label": LocaleManager.tr_key("stats_peak_dps"), "current": int(GameManager.dps_peak), "best": int(best.get("dps_peak", 0.0)), "higher_is_better": true},
+	]
+
+	var has_any_diff := false
+	for comp in comparisons:
+		var diff: int = comp["current"] - comp["best"]
+		if diff != 0:
+			has_any_diff = true
+			break
+
+	if not has_any_diff:
+		_best_run_grid.visible = false
+		return
+
+	_best_run_grid.visible = true
+
+	for comp in comparisons:
+		var diff: int = comp["current"] - comp["best"]
+		if diff == 0:
+			continue
+
+		var label := Label.new()
+		label.text = comp["label"]
+		label.add_theme_font_size_override("font_size", 11)
+		label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+		_best_run_grid.add_child(label)
+
+		var arrow_label := Label.new()
+		arrow_label.add_theme_font_size_override("font_size", 11)
+		arrow_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		var is_better: bool = (diff > 0) == comp["higher_is_better"]
+		if is_better:
+			arrow_label.text = "▲ +%s" % _format_number(absi(diff))
+			arrow_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.4))
+		else:
+			arrow_label.text = "▼ -%s" % _format_number(absi(diff))
+			arrow_label.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
+		_best_run_grid.add_child(arrow_label)
+
+	# Position after StatsRow2
+	var vbox = $Panel/MarginContainer/VBox
+	var stats_row2_idx = $Panel/MarginContainer/VBox/StatsRow2.get_index()
+	vbox.move_child(_best_run_grid, stats_row2_idx + 1)
+
+
+## Populate the detail tab with full run stats.
+func _populate_detail_tab() -> void:
+	if _detail_container and is_instance_valid(_detail_container):
+		var stats = GameManager.get_run_stats()
+		_detail_container.populate(stats)
 
 
 # ---------------------------------------------------------------------------
@@ -331,10 +580,8 @@ func _clear_container(container: Container) -> void:
 
 
 # ---------------------------------------------------------------------------
-# PRD 28 §4 — Expanded Post-Run Stats
+# PRD 28 §4 — Expanded Post-Run Stats (inline in Tab 1)
 # ---------------------------------------------------------------------------
-
-var _stats_container: VBoxContainer = null
 
 func _build_expanded_stats() -> void:
 	# Remove previous stats container if it exists
@@ -394,7 +641,21 @@ func _build_expanded_stats() -> void:
 	# Overkill damage
 	_add_stat_row(grid, LocaleManager.tr_key("stat_overkill"), _format_number(stats.get("overkill_damage", 0)), stats.get("overkill_damage", 0) > 5000)
 
+	# Near deaths
+	var near = stats.get("near_deaths", 0)
+	if near > 0:
+		_add_stat_row(grid, LocaleManager.tr_key("stats_near_deaths"), str(near), true)
+
+	# Favorite weapon
+	var fav = stats.get("favorite_weapon", "")
+	if fav != "":
+		_add_stat_row(grid, LocaleManager.tr_key("stats_favorite_weapon"), fav, true)
+
 	_stats_container.add_child(grid)
+
+	# Register as summary node
+	if _stats_container not in _summary_nodes:
+		_summary_nodes.append(_stats_container)
 
 	# Insert before weapons section
 	var weapons_idx = weapons_title.get_index()

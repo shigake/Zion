@@ -1,6 +1,6 @@
 # PRD 28 — Polish Pack: Sinergias, Áudio, Acessibilidade, Stats, Seeds & Tutorial
 
-**Status**: pendente
+**Status**: concluido
 **Prioridade**: alta (pré-lançamento)
 **Estimativa**: grande (minor version bump)
 

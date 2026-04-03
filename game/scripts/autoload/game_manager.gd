@@ -875,4 +875,4 @@ func end_run() -> void:
 		"damage": total_damage_dealt,
 		"highest_hit": highest_single_hit,
 		"dps_peak": dps_peak,
-	})
+	}, selected_character)
