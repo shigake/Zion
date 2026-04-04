@@ -96,6 +96,7 @@ Zion/
 │   ├── prd_44_boss_kill_freeze.md       # PRD 44: screen freeze golpe final boss — pendente
 │   ├── prd_45_enemy_ragdoll.md          # PRD 45: ragdoll de morte dos inimigos — pendente
 │   ├── prd_46_mystery_teaser.md         # PRD 46: teaser visual do Fragmentado ??? — pendente
+│   ├── prd_47_evolution_tree_callback.md # PRD 47: Parser Error _on_evolution_tree nao declarado — pendente
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
