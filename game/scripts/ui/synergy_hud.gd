@@ -697,7 +697,7 @@ func _play_next_banner() -> void:
 	_banner_container.add_child(trigger_label)
 
 	# Play SFX (reuse evolve sound with higher pitch)
-	AudioManager.play_sfx("evolve", 0.8, 1.2)
+	AudioManager.play_sfx("evolve", 0.8)
 
 	_banner_container.visible = true
 
@@ -747,7 +747,7 @@ func _play_next_banner() -> void:
 
 	# Flash effect on screen (subtle)
 	if not AccessibilityManager.reduced_flash:
-		ScreenEffects.flash(color, 0.1, 0.15)
+		ScreenEffects.flash(0.1, 0.15)
 
 	# 2.0s: Fade out
 	tween.tween_interval(GameConstants.SYNERGY_BANNER_DURATION - 1.0)
