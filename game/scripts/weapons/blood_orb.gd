@@ -72,8 +72,10 @@ class BloodOrbInstance extends Area3D:
 	var _lifetime_timer: float = 0.0
 	var _damage_timer: float = 0.0
 	var _damage_interval: float = 0.5
-	var _mesh: MeshInstance3D = null
-	var _sprite: Sprite3D = null
+	var _core_mesh: MeshInstance3D = null
+	var _shell_mesh: MeshInstance3D = null
+	var _droplet_meshes: Array = []
+	static var _shared_droplet_mesh: SphereMesh = null
 
 	func _ready() -> void:
 		add_to_group("player_summons")
@@ -88,33 +90,60 @@ class BloodOrbInstance extends Area3D:
 		shape.shape = sphere
 		add_child(shape)
 
-		# Billboard sprite
-		var sprite_path = "res://assets/sprites/weapons/blood_orb.png"
-		if ResourceLoader.exists(sprite_path):
-			_sprite = Sprite3D.new()
-			_sprite.texture = load(sprite_path)
-			_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			_sprite.pixel_size = 0.03
-			_sprite.shaded = false
-			_sprite.transparent = true
-			_sprite.name = "WeaponSprite"
-			add_child(_sprite)
-		else:
-			# Fallback procedural mesh - dark red sphere
-			_mesh = MeshInstance3D.new()
-			var sphere_mesh = SphereMesh.new()
-			sphere_mesh.radius = 0.4
-			sphere_mesh.height = 0.8
-			_mesh.mesh = sphere_mesh
-			var mat = StandardMaterial3D.new()
-			mat.albedo_color = Color(0.6, 0.05, 0.1, 0.8)
-			mat.emission_enabled = true
-			mat.emission = Color(0.8, 0.1, 0.15)
-			mat.emission_energy_multiplier = 3.0
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			_mesh.material_override = mat
-			add_child(_mesh)
+		# --- Full 3D blood orb (no Sprite3D) ---
+		# Layer 1: Core sphere — deep blood-red with emission
+		_core_mesh = MeshInstance3D.new()
+		var core_sm = SphereMesh.new()
+		core_sm.radius = 0.32
+		core_sm.height = 0.64
+		core_sm.radial_segments = 10
+		core_sm.rings = 5
+		_core_mesh.mesh = core_sm
+		var core_mat = StandardMaterial3D.new()
+		core_mat.albedo_color = Color(0.55, 0.04, 0.08)
+		core_mat.metallic = 0.3
+		core_mat.roughness = 0.2
+		core_mat.emission_enabled = true
+		core_mat.emission = Color(0.9, 0.05, 0.1)
+		core_mat.emission_energy_multiplier = 1.5
+		_core_mesh.material_override = core_mat
+		add_child(_core_mesh)
+
+		# Layer 2: Translucent shell — slow rotating outer layer
+		_shell_mesh = MeshInstance3D.new()
+		var shell_sm = SphereMesh.new()
+		shell_sm.radius = 0.44
+		shell_sm.height = 0.88
+		shell_sm.radial_segments = 8
+		shell_sm.rings = 4
+		_shell_mesh.mesh = shell_sm
+		var shell_mat = StandardMaterial3D.new()
+		shell_mat.albedo_color = Color(0.7, 0.1, 0.15, 0.22)
+		shell_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		shell_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		shell_mat.emission_enabled = true
+		shell_mat.emission = Color(0.8, 0.1, 0.1)
+		shell_mat.emission_energy_multiplier = 0.5
+		_shell_mesh.material_override = shell_mat
+		add_child(_shell_mesh)
+
+		# Layer 3: Orbiting droplets (4 small spheres)
+		if not _shared_droplet_mesh:
+			_shared_droplet_mesh = SphereMesh.new()
+			_shared_droplet_mesh.radius = 0.05
+			_shared_droplet_mesh.height = 0.10
+			var dm = StandardMaterial3D.new()
+			dm.albedo_color = Color(0.55, 0.04, 0.08)
+			dm.emission_enabled = true
+			dm.emission = Color(0.9, 0.05, 0.1)
+			dm.emission_energy_multiplier = 2.0
+			dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			_shared_droplet_mesh.surface_set_material(0, dm)
+		for i in range(4):
+			var droplet_mi = MeshInstance3D.new()
+			droplet_mi.mesh = _shared_droplet_mesh
+			add_child(droplet_mi)
+			_droplet_meshes.append(droplet_mi)
 
 	var _trail_timer: float = 0.0
 
@@ -146,16 +175,24 @@ class BloodOrbInstance extends Area3D:
 		)
 		global_position = orbit_pos
 
-		# Pulse visual — heartbeat pattern + alpha glow oscillation
+		# Heartbeat pulse on core
 		var heartbeat = abs(sin(_lifetime_timer * 5.0)) * 0.15
-		var glow_alpha = 0.75 + sin(_lifetime_timer * 3.5) * 0.25
-		if _mesh:
-			var pulse = 1.0 + heartbeat
-			_mesh.scale = Vector3(pulse, pulse, pulse)
-		if _sprite:
-			var pulse = 1.0 + heartbeat
-			_sprite.scale = Vector3(pulse, pulse, pulse)
-			_sprite.modulate = Color(1.0, 0.85 + sin(_lifetime_timer * 4.0) * 0.15, 0.9, glow_alpha)
+		var pulse = 1.0 + heartbeat
+		if _core_mesh:
+			_core_mesh.scale = Vector3(pulse, pulse, pulse)
+
+		# Slow rotation on shell
+		if _shell_mesh:
+			_shell_mesh.rotation.y += 0.8 * delta
+
+		# Orbiting droplets around the orb
+		for i in range(_droplet_meshes.size()):
+			var dm = _droplet_meshes[i]
+			if is_instance_valid(dm):
+				var d_angle = _lifetime_timer * 3.0 + i * TAU / 4.0
+				var d_radius = 0.55 + sin(_lifetime_timer * 2.0 + i) * 0.1
+				var d_y = sin(_lifetime_timer * 2.5 + i * 1.5) * 0.15
+				dm.position = Vector3(cos(d_angle) * d_radius, d_y, sin(d_angle) * d_radius)
 
 		# Dark trail particles (reduced frequency to avoid node buildup)
 		_trail_timer += delta
@@ -216,12 +253,12 @@ class BloodOrbInstance extends Area3D:
 
 		var wisp = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
-		sphere.radius = 0.03
-		sphere.height = 0.06
+		sphere.radius = 0.06
+		sphere.height = 0.12
 		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.8, 0.1, 0.15, 0.7)
+		mat.albedo_color = Color(0.2, 1.0, 0.3, 0.7)
 		mat.emission_enabled = true
-		mat.emission = Color(0.9, 0.1, 0.2)
+		mat.emission = Color(0.3, 1.0, 0.4)
 		mat.emission_energy_multiplier = 3.0
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

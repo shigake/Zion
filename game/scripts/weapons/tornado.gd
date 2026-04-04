@@ -73,7 +73,7 @@ class TornadoInstance extends Area3D:
 	var _damage_interval: float = 0.5
 	var _pull_strength: float = 3.0
 	var _mesh: MeshInstance3D = null
-	var _sprite: Sprite3D = null
+	var _ribbon_mesh: MeshInstance3D = null
 
 	func _ready() -> void:
 		add_to_group("player_summons")
@@ -88,34 +88,44 @@ class TornadoInstance extends Area3D:
 		shape.shape = sphere
 		add_child(shape)
 
-		# Billboard sprite
-		var sprite_path = "res://assets/sprites/weapons/tornado.png"
-		if ResourceLoader.exists(sprite_path):
-			_sprite = Sprite3D.new()
-			_sprite.texture = load(sprite_path)
-			_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			_sprite.pixel_size = 0.04
-			_sprite.shaded = false
-			_sprite.transparent = true
-			_sprite.name = "WeaponSprite"
-			add_child(_sprite)
-		else:
-			# Fallback procedural mesh - tall cone
-			_mesh = MeshInstance3D.new()
-			var cone = CylinderMesh.new()
-			cone.top_radius = 0.05
-			cone.bottom_radius = 0.8
-			cone.height = 2.0
-			_mesh.mesh = cone
-			var mat = StandardMaterial3D.new()
-			mat.albedo_color = Color(0.5, 0.8, 1.0, 0.5)
-			mat.emission_enabled = true
-			mat.emission = Color(0.4, 0.7, 1.0)
-			mat.emission_energy_multiplier = 2.0
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			_mesh.material_override = mat
-			add_child(_mesh)
+		# --- Full 3D procedural vortex (no Sprite3D) ---
+		# Layer 1: Main cone — outer vortex
+		_mesh = MeshInstance3D.new()
+		var cone1 = CylinderMesh.new()
+		cone1.top_radius = 0.08
+		cone1.bottom_radius = area_radius * 0.6
+		cone1.height = 2.2
+		cone1.radial_segments = 10
+		_mesh.mesh = cone1
+		_mesh.position.y = 1.1
+		var mat1 = StandardMaterial3D.new()
+		mat1.albedo_color = Color(0.5, 0.8, 1.0, 0.28)
+		mat1.emission_enabled = true
+		mat1.emission = Color(0.4, 0.7, 1.0)
+		mat1.emission_energy_multiplier = 2.0
+		mat1.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat1.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mesh.material_override = mat1
+		add_child(_mesh)
+
+		# Layer 2: Inner ribbon — counter-rotating for spiral illusion
+		_ribbon_mesh = MeshInstance3D.new()
+		var cone2 = CylinderMesh.new()
+		cone2.top_radius = 0.12
+		cone2.bottom_radius = area_radius * 0.35
+		cone2.height = 1.4
+		cone2.radial_segments = 8
+		_ribbon_mesh.mesh = cone2
+		_ribbon_mesh.position.y = 0.7
+		var mat2 = StandardMaterial3D.new()
+		mat2.albedo_color = Color(0.6, 0.9, 1.0, 0.18)
+		mat2.emission_enabled = true
+		mat2.emission = Color(0.55, 0.85, 1.0)
+		mat2.emission_energy_multiplier = 1.5
+		mat2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat2.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_ribbon_mesh.material_override = mat2
+		add_child(_ribbon_mesh)
 
 	func _process(delta: float) -> void:
 		if not is_inside_tree():
@@ -140,16 +150,14 @@ class TornadoInstance extends Area3D:
 		)
 		global_position = orbit_pos
 
-		# Spin visual + scale pulse (breathing effect) + glow modulate
+		# Spin visual: main cone rotates forward, ribbon counter-rotates for vortex illusion
 		var pulse = 1.0 + sin(_lifetime_timer * 3.0) * 0.15
-		var glow_alpha = 0.85 + sin(_lifetime_timer * 4.5) * 0.15
 		if _mesh:
-			_mesh.rotation.y += 8.0 * delta
+			_mesh.rotation.y += 12.0 * delta
 			_mesh.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
-		if _sprite:
-			_sprite.rotation.y += 8.0 * delta
-			_sprite.scale = Vector3(pulse, 1.0 + sin(_lifetime_timer * 2.0) * 0.08, pulse)
-			_sprite.modulate = Color(0.9 + sin(_lifetime_timer * 5.0) * 0.1, 0.95, 1.0, glow_alpha)
+		if _ribbon_mesh:
+			_ribbon_mesh.rotation.y -= 8.0 * delta
+			_ribbon_mesh.scale = Vector3(pulse * 0.9, 1.0 + sin(_lifetime_timer * 2.5) * 0.06, pulse * 0.9)
 
 		# Spawn vortex trail particles
 		if Engine.get_frames_per_second() > 35:
@@ -198,8 +206,8 @@ class TornadoInstance extends Area3D:
 	func _ensure_shared_meshes() -> void:
 		if not _shared_sphere_mesh:
 			_shared_sphere_mesh = SphereMesh.new()
-			_shared_sphere_mesh.radius = 0.06
-			_shared_sphere_mesh.height = 0.12
+			_shared_sphere_mesh.radius = 0.10
+			_shared_sphere_mesh.height = 0.20
 			var mat = StandardMaterial3D.new()
 			mat.albedo_color = Color(0.6, 0.85, 1.0, 0.6)
 			mat.emission_enabled = true
@@ -210,7 +218,7 @@ class TornadoInstance extends Area3D:
 			_shared_sphere_mesh.surface_set_material(0, mat)
 		if not _shared_box_mesh:
 			_shared_box_mesh = BoxMesh.new()
-			_shared_box_mesh.size = Vector3(0.04, 0.04, 0.04)
+			_shared_box_mesh.size = Vector3(0.08, 0.08, 0.08)
 			var dmat = StandardMaterial3D.new()
 			dmat.albedo_color = Color(0.3, 0.25, 0.2, 0.5)
 			dmat.emission_enabled = true

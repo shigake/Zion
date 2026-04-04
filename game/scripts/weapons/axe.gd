@@ -1,6 +1,6 @@
 extends Node3D
 
-## Machado Viking — machado boomerang que voa ate o inimigo e volta.
+## Machado Viking — machado boomerang que voa ate o inimigo e volta. Modelo 3D completo (sem sprite).
 
 var attack_timer: float = 0.0
 var is_flying: bool = false
@@ -25,38 +25,19 @@ func _ready() -> void:
 	axe_mesh.visible = false
 	axe_area.monitoring = false
 	axe_area.body_entered.connect(_on_body_entered)
-	# Note: axe_mesh.mesh is set to null in _build_axe_model() then rebuilt procedurally;
-	# the procedural model is hidden when _axe_sprite exists (line 138)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/axe_slash.png"
 	if ResourceLoader.exists(_slash_path2):
 		_slash_tex = load(_slash_path2)
-	# Build procedural axe model (blade + handle)
+	# Build redesigned 3D axe model (no Sprite3D)
 	_build_axe_model()
-	_setup_billboard_sprite()
-	# Fire trail for flight
+	# Fire trail for flight (wider per PRD 54)
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(1.0, 0.5, 0.1, 0.8)
 	_trail.trail_color_tip = Color(1.0, 0.2, 0.0, 0.9)
 	_trail.max_points = 16
-	_trail.trail_width = 0.15
+	_trail.trail_width = 0.20
 	axe_mesh.add_child(_trail)
-
-var _axe_sprite: Sprite3D = null
-
-func _setup_billboard_sprite() -> void:
-	var sprite_path = "res://assets/sprites/projectiles/axe_thrown.png"
-	if ResourceLoader.exists(sprite_path):
-		_axe_sprite = Sprite3D.new()
-		_axe_sprite.texture = load(sprite_path)
-		_axe_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		_axe_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		_axe_sprite.pixel_size = 0.04
-		_axe_sprite.shaded = false
-		_axe_sprite.transparent = true
-		_axe_sprite.name = "ProjectileSprite"
-		_axe_sprite.visible = false
-		add_child(_axe_sprite)
 
 func _get_player_node() -> Node3D:
 	var candidate = get_parent().get_parent() if get_parent() else null
@@ -143,9 +124,6 @@ func _throw(level: int) -> void:
 
 	axe_mesh.visible = true
 	axe_area.monitoring = true
-	if _axe_sprite:
-		_axe_sprite.visible = true
-		axe_mesh.visible = false
 
 func _update_flight(delta: float, level: int) -> void:
 	fly_timer += delta
@@ -183,18 +161,16 @@ func _update_flight(delta: float, level: int) -> void:
 		axe_area.global_position = target_pos
 		axe_mesh.global_position = target_pos
 
-	# Spin the axe mesh (tumbling throw on Z axis)
-	axe_mesh.rotation.z += delta * 15.0
-	# Keep sprite position in sync with axe mesh
-	if _axe_sprite:
-		_axe_sprite.global_position = axe_mesh.global_position
+	# Spin the axe mesh — outward spins one way, return spins the other
+	if not returning:
+		axe_mesh.rotation.z += delta * 15.0
+	else:
+		axe_mesh.rotation.z -= delta * 15.0
 
 func _end_flight() -> void:
 	is_flying = false
 	axe_mesh.visible = false
 	axe_area.monitoring = false
-	if _axe_sprite:
-		_axe_sprite.visible = false
 	hit_enemies_out.clear()
 	hit_enemies_back.clear()
 
@@ -227,40 +203,68 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 	WeaponVFX.spawn_slash_trail(self, _slash_tex, pos)
 
 func _build_axe_model() -> void:
-	## Procedural axe: metal blade + wood handle with fire glow on blade.
+	## Redesigned Viking axe: PrismMesh blade + long handle + metal cap + glowing rune.
 	axe_mesh.mesh = null  # Clear any default mesh
 
-	# -- Blade material (metal + orange fire emission) --
+	# -- Blade material (cold steel with fire emission) --
 	var blade_mat = StandardMaterial3D.new()
-	blade_mat.albedo_color = Color(0.7, 0.7, 0.75)
-	blade_mat.metallic = 0.8
-	blade_mat.roughness = 0.3
+	blade_mat.albedo_color = Color(0.55, 0.52, 0.50)
+	blade_mat.metallic = 0.85
+	blade_mat.roughness = 0.35
 	blade_mat.emission_enabled = true
-	blade_mat.emission = Color(1.0, 0.5, 0.1)
-	blade_mat.emission_energy_multiplier = 0.8
+	blade_mat.emission = Color(0.9, 0.45, 0.1)
+	blade_mat.emission_energy_multiplier = 0.4
 
-	# -- Handle material (wood brown) --
+	# -- Handle material (Nordic dark wood) --
 	var handle_mat = StandardMaterial3D.new()
-	handle_mat.albedo_color = Color(0.45, 0.3, 0.15)
+	handle_mat.albedo_color = Color(0.28, 0.16, 0.06)
 	handle_mat.metallic = 0.0
-	handle_mat.roughness = 0.8
+	handle_mat.roughness = 0.9
 
-	# Blade mesh
-	var blade_mesh = BoxMesh.new()
-	blade_mesh.size = Vector3(0.02, 0.2, 0.15)
+	# -- Rune material (glowing orange inscription) --
+	var rune_mat = StandardMaterial3D.new()
+	rune_mat.albedo_color = Color(1.0, 0.5, 0.1)
+	rune_mat.emission_enabled = true
+	rune_mat.emission = Color(1.0, 0.4, 0.05)
+	rune_mat.emission_energy_multiplier = 0.8
+	rune_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+	# --- Blade (PrismMesh — triangular, aggressive shape) ---
 	var blade_mi = MeshInstance3D.new()
+	var blade_mesh = PrismMesh.new()
+	blade_mesh.size = Vector3(0.18, 0.42, 0.06)
 	blade_mi.mesh = blade_mesh
 	blade_mi.material_override = blade_mat
-	blade_mi.position = Vector3(0, 0.1, 0)  # Offset blade above center
+	blade_mi.position = Vector3(0, 0.05, 0)
 	axe_mesh.add_child(blade_mi)
 
-	# Handle mesh
-	var handle_mesh = CylinderMesh.new()
-	handle_mesh.top_radius = 0.02
-	handle_mesh.bottom_radius = 0.02
-	handle_mesh.height = 0.25
+	# --- Handle (longer, thicker wooden cylinder) ---
 	var handle_mi = MeshInstance3D.new()
+	var handle_mesh = CylinderMesh.new()
+	handle_mesh.top_radius = 0.025
+	handle_mesh.bottom_radius = 0.03
+	handle_mesh.height = 0.65
+	handle_mesh.radial_segments = 6
 	handle_mi.mesh = handle_mesh
 	handle_mi.material_override = handle_mat
-	handle_mi.position = Vector3(0, -0.05, 0)  # Handle below blade
+	handle_mi.position = Vector3(0, -0.28, 0)
 	axe_mesh.add_child(handle_mi)
+
+	# --- Metal cap (pommel adornment on top) ---
+	var cap_mi = MeshInstance3D.new()
+	var cap_mesh = SphereMesh.new()
+	cap_mesh.radius = 0.04
+	cap_mesh.height = 0.08
+	cap_mi.mesh = cap_mesh
+	cap_mi.material_override = blade_mat
+	cap_mi.position = Vector3(0, 0.28, 0)
+	axe_mesh.add_child(cap_mi)
+
+	# --- Rune detail (glowing inscription on blade) ---
+	var rune_mi = MeshInstance3D.new()
+	var rune_mesh = BoxMesh.new()
+	rune_mesh.size = Vector3(0.03, 0.12, 0.08)
+	rune_mi.mesh = rune_mesh
+	rune_mi.material_override = rune_mat
+	rune_mi.position = Vector3(0, 0.05, 0.04)
+	axe_mesh.add_child(rune_mi)

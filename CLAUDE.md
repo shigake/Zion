@@ -97,13 +97,13 @@ Zion/
 │   ├── prd_45_enemy_ragdoll.md          # PRD 45: ragdoll de morte dos inimigos — concluido
 │   ├── prd_46_mystery_teaser.md         # PRD 46: teaser visual do Fragmentado ??? — concluido
 │   ├── prd_47_evolution_tree_callback.md # PRD 47: Parser Error _on_evolution_tree nao declarado — concluido
-│   ├── prd_48_garrafa_veneno_3d.md      # PRD 48: Garrafa de Veneno efeito 3D sem pixel art — pendente
-│   ├── prd_49_tornado_3d.md             # PRD 49: Tornado efeito 3D sem pixel art — pendente
-│   ├── prd_50_totem_3d.md               # PRD 50: Totem Eletrico modelo 3D sem pixel art — pendente
-│   ├── prd_51_orbe_sangue_3d.md         # PRD 51: Orbe de Sangue modelo 3D sem pixel art — pendente
-│   ├── prd_52_lanca_3d.md               # PRD 52: Lanca modelo 3D sem pixel art — pendente
-│   ├── prd_53_cajado_gelo_3d.md         # PRD 53: Cajado de Gelo projetil 3D sem pixel art — pendente
-│   ├── prd_54_machado_3d.md             # PRD 54: Machado Viking modelo 3D completo sem sprite — pendente
+│   ├── prd_48_garrafa_veneno_3d.md      # PRD 48: Garrafa de Veneno efeito 3D sem pixel art — concluido
+│   ├── prd_49_tornado_3d.md             # PRD 49: Tornado efeito 3D sem pixel art — concluido
+│   ├── prd_50_totem_3d.md               # PRD 50: Totem Eletrico modelo 3D sem pixel art — concluido
+│   ├── prd_51_orbe_sangue_3d.md         # PRD 51: Orbe de Sangue modelo 3D sem pixel art — concluido
+│   ├── prd_52_lanca_3d.md               # PRD 52: Lanca modelo 3D sem pixel art — concluido
+│   ├── prd_53_cajado_gelo_3d.md         # PRD 53: Cajado de Gelo projetil 3D sem pixel art — concluido
+│   ├── prd_54_machado_3d.md             # PRD 54: Machado Viking modelo 3D completo sem sprite — concluido
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -244,7 +244,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~90% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 850+ linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 54 PRDs (47 concluidos, 7 pendentes — PRDs 48-54: conversao 3D armas AoE), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD — todos implementados.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~95% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 850+ linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 54 PRDs (todos concluidos), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD — todos implementados.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais (ADR-001 a ADR-014).
 

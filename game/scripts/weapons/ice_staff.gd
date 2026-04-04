@@ -195,7 +195,8 @@ func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
 	crystal_mat.albedo_color = Color(0.4, 0.75, 1.0, 0.5)
 	crystal_mat.emission_enabled = true
 	crystal_mat.emission = Color(0.3, 0.7, 1.0)
-	crystal_mat.emission_energy_multiplier = 1.2
+	crystal_mat.emission = Color(0.4, 0.8, 1.0)
+	crystal_mat.emission_energy_multiplier = 0.8
 
 	if not is_inside_tree():
 		return
@@ -210,8 +211,8 @@ func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
 	for i in range(num_crystals):
 		var crystal = MeshInstance3D.new()
 		var mesh = BoxMesh.new()
-		var h = randf_range(0.15, 0.35)
-		var w = randf_range(0.03, 0.06)
+		var h = randf_range(0.2, 0.5)
+		var w = randf_range(0.04, 0.10)
 		mesh.size = Vector3(w, h, w)
 		crystal.mesh = mesh
 		crystal.material_override = crystal_mat
@@ -247,7 +248,7 @@ func _spawn_frost_mist(pos: Vector3, duration: float) -> void:
 	if not scene:
 		return
 	var mist = GPUParticles3D.new()
-	mist.amount = 12
+	mist.amount = 16
 	mist.lifetime = 1.0
 	mist.one_shot = false
 	mist.emitting = true
@@ -268,7 +269,8 @@ func _spawn_frost_mist(pos: Vector3, duration: float) -> void:
 
 	var proc_mat = ParticleProcessMaterial.new()
 	proc_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	proc_mat.emission_sphere_radius = 1.5
+	var freeze_radius_est = 3.0  # Base freeze radius estimate
+	proc_mat.emission_sphere_radius = freeze_radius_est * 0.8
 	proc_mat.direction = Vector3(0, 0.1, 0)
 	proc_mat.spread = 180.0
 	proc_mat.initial_velocity_min = 0.1

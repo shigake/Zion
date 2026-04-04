@@ -71,66 +71,98 @@ func _throw_bottle(level: int) -> void:
 	pool.name = "PoisonPool"
 	pool.position = target_pos
 
-	# Visual — billboard sprite or bubbling toxic slime pool fallback
+	# Visual — full 3D procedural (no Sprite3D)
 	var pool_radius = 2.0 + (level - 1) * 0.3
 
-	# Try billboard sprite for poison cloud
-	var sprite_path = "res://assets/sprites/projectiles/poison_cloud.png"
-	if ResourceLoader.exists(sprite_path):
-		var sprite = Sprite3D.new()
-		sprite.texture = load(sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.02
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.name = "ProjectileSprite"
-		sprite.position = Vector3(0, 0.5, 0)
-		pool.add_child(sprite)
+	# --- Puddle disc (CylinderMesh flat on ground) ---
+	var puddle_mi = MeshInstance3D.new()
+	puddle_mi.name = "PuddleDisc"
+	var disc = CylinderMesh.new()
+	disc.top_radius = pool_radius
+	disc.bottom_radius = pool_radius
+	disc.height = 0.04
+	puddle_mi.mesh = disc
+	puddle_mi.position = Vector3(0, 0.02, 0)
+	var puddle_mat = StandardMaterial3D.new()
+	puddle_mat.albedo_color = Color(0.1, 0.6, 0.15, 0.85)
+	puddle_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	puddle_mat.emission_enabled = true
+	puddle_mat.emission = Color(0.15, 0.8, 0.1)
+	puddle_mat.emission_energy_multiplier = 1.5
+	puddle_mat.roughness = 0.3
+	puddle_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Procedural noise texture on roughness for toxic surface detail
+	var noise_tex = NoiseTexture2D.new()
+	var noise = FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	noise.frequency = 2.5
+	noise_tex.noise = noise
+	noise_tex.width = 64
+	noise_tex.height = 64
+	puddle_mat.roughness_texture = noise_tex
+	puddle_mi.material_override = puddle_mat
+	pool.add_child(puddle_mi)
 
-	# Puddle sprite laid flat on ground
-	var puddle_path = "res://assets/sprites/effects/poison_puddle.png"
-	if ResourceLoader.exists(puddle_path):
-		var puddle_sprite = Sprite3D.new()
-		puddle_sprite.texture = load(puddle_path)
-		puddle_sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
-		puddle_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		puddle_sprite.pixel_size = pool_radius * 0.06
-		puddle_sprite.shaded = false
-		puddle_sprite.transparent = true
-		puddle_sprite.rotation.x = -PI / 2.0  # Flat on ground
-		puddle_sprite.position.y = 0.05
-		puddle_sprite.name = "PuddleSprite"
-		pool.add_child(puddle_sprite)
-	else:
-		# Fallback: mesh procedural
-		var mesh_inst = MeshInstance3D.new()
-		var disc = CylinderMesh.new()
-		disc.top_radius = pool_radius
-		disc.bottom_radius = pool_radius
-		disc.height = 0.08
-		mesh_inst.mesh = disc
-		mesh_inst.position = Vector3(0, 0.04, 0)
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.02, 0.18, 0.01, 0.85)
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.emission_enabled = true
-		mat.emission = Color(0.1, 0.7, 0.03)
-		mat.emission_energy_multiplier = 1.5
-		mesh_inst.material_override = mat
-		pool.add_child(mesh_inst)
+	# Pulsing animation on puddle disc
+	var pulse_tw = pool.create_tween().set_loops()
+	pulse_tw.tween_property(puddle_mi, "scale", Vector3(1.08, 1.0, 1.08), 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tw.tween_property(puddle_mi, "scale", Vector3(0.95, 1.0, 0.95), 0.8).set_trans(Tween.TRANS_SINE)
 
-	# Pulsing animation na poca
-	var puddle_node = pool.get_node_or_null("PuddleSprite")
-	if puddle_node:
-		var tween = pool.create_tween().set_loops()
-		tween.tween_property(puddle_node, "scale", Vector3(1.08, 1.08, 1.08), 0.8).set_trans(Tween.TRANS_SINE)
-		tween.tween_property(puddle_node, "scale", Vector3(0.95, 0.95, 0.95), 0.8).set_trans(Tween.TRANS_SINE)
+	# --- Toxic cloud (GPUParticles3D stationary, replaces billboard sprite) ---
+	var toxic_cloud = GPUParticles3D.new()
+	toxic_cloud.name = "ToxicCloud"
+	toxic_cloud.amount = 18
+	toxic_cloud.lifetime = 2.0
+	toxic_cloud.position = Vector3(0, 0.3, 0)
+	var cloud_proc = ParticleProcessMaterial.new()
+	cloud_proc.direction = Vector3(0, 1, 0)
+	cloud_proc.initial_velocity_min = 0.08
+	cloud_proc.initial_velocity_max = 0.25
+	cloud_proc.spread = 60.0
+	cloud_proc.gravity = Vector3(0, 0.15, 0)
+	cloud_proc.scale_min = 0.6
+	cloud_proc.scale_max = 1.4
+	cloud_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	cloud_proc.emission_sphere_radius = pool_radius * 0.5
+	cloud_proc.damping_min = 0.8
+	cloud_proc.damping_max = 2.0
+	var cloud_scale_curve = CurveTexture.new()
+	var csc = Curve.new()
+	csc.add_point(Vector2(0.0, 0.0))
+	csc.add_point(Vector2(0.15, 0.8))
+	csc.add_point(Vector2(0.5, 1.0))
+	csc.add_point(Vector2(0.85, 0.7))
+	csc.add_point(Vector2(1.0, 0.0))
+	cloud_scale_curve.curve = csc
+	cloud_proc.scale_curve = cloud_scale_curve
+	# Green gradient color ramp
+	var cloud_color = GradientTexture1D.new()
+	var cloud_grad = Gradient.new()
+	cloud_grad.set_color(0, Color(0.15, 0.8, 0.1, 0.45))
+	cloud_grad.set_color(1, Color(0.05, 0.4, 0.02, 0.0))
+	cloud_color.gradient = cloud_grad
+	cloud_proc.color_ramp = cloud_color
+	toxic_cloud.process_material = cloud_proc
+	var cloud_mesh = SphereMesh.new()
+	cloud_mesh.radius = 0.12
+	cloud_mesh.height = 0.24
+	cloud_mesh.radial_segments = 6
+	cloud_mesh.rings = 3
+	var cloud_mesh_mat = StandardMaterial3D.new()
+	cloud_mesh_mat.albedo_color = Color(0.12, 0.7, 0.08, 0.5)
+	cloud_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	cloud_mesh_mat.emission_enabled = true
+	cloud_mesh_mat.emission = Color(0.1, 0.65, 0.05)
+	cloud_mesh_mat.emission_energy_multiplier = 1.2
+	cloud_mesh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	cloud_mesh.surface_set_material(0, cloud_mesh_mat)
+	toxic_cloud.draw_pass_1 = cloud_mesh
+	pool.add_child(toxic_cloud)
 
-	# Bubbles rising from pool surface
+	# --- Bubbles (reduced from 20 to 12, larger radius) ---
 	var bubbles = GPUParticles3D.new()
 	bubbles.name = "Bubbles"
-	bubbles.amount = 20
+	bubbles.amount = 12
 	bubbles.lifetime = 1.2
 	bubbles.position = Vector3(0, 0.08, 0)
 	var bubble_mat = ParticleProcessMaterial.new()
@@ -139,13 +171,12 @@ func _throw_bottle(level: int) -> void:
 	bubble_mat.initial_velocity_max = 1.0
 	bubble_mat.spread = 50.0
 	bubble_mat.gravity = Vector3(0, -0.3, 0)
-	bubble_mat.scale_min = 0.03
-	bubble_mat.scale_max = 0.08
+	bubble_mat.scale_min = 0.05
+	bubble_mat.scale_max = 0.12
 	bubble_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
 	bubble_mat.emission_sphere_radius = pool_radius * 0.85
 	bubble_mat.damping_min = 0.5
 	bubble_mat.damping_max = 1.5
-	# Bubble scale curve — grow then pop
 	var bubble_scale_curve = CurveTexture.new()
 	var bcurve = Curve.new()
 	bcurve.add_point(Vector2(0.0, 0.3))
@@ -156,8 +187,8 @@ func _throw_bottle(level: int) -> void:
 	bubble_mat.scale_curve = bubble_scale_curve
 	bubbles.process_material = bubble_mat
 	var bubble_mesh = SphereMesh.new()
-	bubble_mesh.radius = 0.5
-	bubble_mesh.height = 1.0
+	bubble_mesh.radius = 0.08
+	bubble_mesh.height = 0.16
 	var bubble_mesh_mat = StandardMaterial3D.new()
 	bubble_mesh_mat.albedo_color = Color(0.1, 0.85, 0.05, 0.55)
 	bubble_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -165,50 +196,9 @@ func _throw_bottle(level: int) -> void:
 	bubble_mesh_mat.emission_enabled = true
 	bubble_mesh_mat.emission = Color(0.15, 0.9, 0.05)
 	bubble_mesh_mat.emission_energy_multiplier = 0.6
-	bubble_mesh.material = bubble_mesh_mat
+	bubble_mesh.surface_set_material(0, bubble_mesh_mat)
 	bubbles.draw_pass_1 = bubble_mesh
 	pool.add_child(bubbles)
-
-	# Vapors — rising toxic mist
-	var vapors = GPUParticles3D.new()
-	vapors.name = "Vapors"
-	vapors.amount = 14
-	vapors.lifetime = 2.0
-	vapors.position = Vector3(0, 0.1, 0)
-	var vapor_mat = ParticleProcessMaterial.new()
-	vapor_mat.direction = Vector3(0, 1, 0)
-	vapor_mat.initial_velocity_min = 0.15
-	vapor_mat.initial_velocity_max = 0.35
-	vapor_mat.spread = 40.0
-	vapor_mat.gravity = Vector3(0, -0.05, 0)
-	vapor_mat.scale_min = 0.4
-	vapor_mat.scale_max = 1.2
-	vapor_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	vapor_mat.emission_sphere_radius = pool_radius * 0.7
-	vapor_mat.damping_min = 0.3
-	vapor_mat.damping_max = 0.8
-	var vapor_scale_curve = CurveTexture.new()
-	var curve = Curve.new()
-	curve.add_point(Vector2(0.0, 0.0))
-	curve.add_point(Vector2(0.15, 0.6))
-	curve.add_point(Vector2(0.4, 1.0))
-	curve.add_point(Vector2(0.7, 0.8))
-	curve.add_point(Vector2(1.0, 0.0))
-	vapor_scale_curve.curve = curve
-	vapor_mat.scale_curve = vapor_scale_curve
-	vapors.process_material = vapor_mat
-	var vapor_mesh = SphereMesh.new()
-	vapor_mesh.radius = 0.5
-	vapor_mesh.height = 1.0
-	var vapor_mesh_mat = StandardMaterial3D.new()
-	vapor_mesh_mat.albedo_color = Color(0.08, 0.5, 0.03, 0.12)
-	vapor_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	vapor_mesh_mat.emission_enabled = true
-	vapor_mesh_mat.emission = Color(0.1, 0.6, 0.03)
-	vapor_mesh_mat.emission_energy_multiplier = 0.4
-	vapor_mesh.material = vapor_mesh_mat
-	vapors.draw_pass_1 = vapor_mesh
-	pool.add_child(vapors)
 
 	# Damage area
 	var area = Area3D.new()

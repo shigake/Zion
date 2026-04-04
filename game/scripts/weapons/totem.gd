@@ -46,19 +46,44 @@ func _place_totem(level: int) -> void:
 	totem.name = "Totem"
 	totem.global_position = player_pos
 
-	# Visual: pixel art sprite billboard
-	var sprite_path = "res://assets/sprites/weapons/totem.png"
-	if ResourceLoader.exists(sprite_path):
-		var sprite = Sprite3D.new()
-		sprite.texture = load(sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.06
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.position.y = 0.7
-		sprite.name = "TotemSprite"
-		totem.add_child(sprite)
+	# --- Full 3D procedural totem (no Sprite3D) ---
+	# Base stake (wooden pole)
+	var stake_mi = MeshInstance3D.new()
+	var stake_mesh = CylinderMesh.new()
+	stake_mesh.top_radius = 0.06
+	stake_mesh.bottom_radius = 0.10
+	stake_mesh.height = 0.6
+	stake_mesh.radial_segments = 6
+	stake_mi.mesh = stake_mesh
+	stake_mi.position.y = 0.3
+	var stake_mat = StandardMaterial3D.new()
+	stake_mat.albedo_color = Color(0.35, 0.2, 0.08)
+	stake_mat.roughness = 0.9
+	stake_mat.metallic = 0.0
+	stake_mi.material_override = stake_mat
+	stake_mi.name = "TotemStake"
+	totem.add_child(stake_mi)
+
+	# Central orb (electric crystal — pulsing)
+	var orb_mi = MeshInstance3D.new()
+	var orb_mesh = SphereMesh.new()
+	orb_mesh.radius = 0.22
+	orb_mesh.height = 0.44
+	orb_mesh.radial_segments = 8
+	orb_mesh.rings = 4
+	orb_mi.mesh = orb_mesh
+	orb_mi.position.y = 0.75
+	var orb_mat = StandardMaterial3D.new()
+	orb_mat.albedo_color = Color(0.3, 0.7, 1.0, 0.85)
+	orb_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	orb_mat.emission_enabled = true
+	orb_mat.emission = Color(0.4, 0.8, 1.0)
+	orb_mat.emission_energy_multiplier = 2.0
+	orb_mat.metallic = 0.5
+	orb_mat.roughness = 0.2
+	orb_mi.material_override = orb_mat
+	orb_mi.name = "TotemOrb"
+	totem.add_child(orb_mi)
 
 	# Damage area
 	var area = Area3D.new()
@@ -73,23 +98,53 @@ func _place_totem(level: int) -> void:
 	area.add_child(shape)
 	totem.add_child(area)
 
-	# -- Electric zap sprite (pulsing around totem) --
-	var zap_sprite_path = "res://assets/sprites/projectiles/lightning_bolt.png"
-	if ResourceLoader.exists(zap_sprite_path):
-		var zap_tex = load(zap_sprite_path)
-		for i in range(3):
-			var zap = Sprite3D.new()
-			zap.texture = zap_tex
-			zap.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			zap.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			zap.pixel_size = 0.03
-			zap.shaded = false
-			zap.transparent = true
-			zap.modulate = Color(0.5, 0.9, 1.0, 0.6)
-			var angle = i * TAU / 3.0
-			zap.position = Vector3(cos(angle) * area_radius * 0.5, 0.5, sin(angle) * area_radius * 0.5)
-			zap.name = "ZapSprite_%d" % i
-			totem.add_child(zap)
+	# --- Electric arcs (3D procedural zigzag lines orbiting totem) ---
+	var arc_mat = StandardMaterial3D.new()
+	arc_mat.albedo_color = Color(0.4, 0.85, 1.0, 0.8)
+	arc_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	arc_mat.emission_enabled = true
+	arc_mat.emission = Color(0.5, 0.9, 1.0)
+	arc_mat.emission_energy_multiplier = 3.0
+	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	arc_mat.no_depth_test = true
+	for i in range(3):
+		var arc_mi = MeshInstance3D.new()
+		# Create zigzag arc mesh (6 segments of small boxes)
+		var arc_parent = Node3D.new()
+		arc_parent.name = "ArcParent_%d" % i
+		var angle = i * TAU / 3.0
+		arc_parent.position = Vector3(cos(angle) * area_radius * 0.5, 0.5, sin(angle) * area_radius * 0.5)
+		for j in range(6):
+			var seg = MeshInstance3D.new()
+			var seg_mesh = BoxMesh.new()
+			seg_mesh.size = Vector3(0.03, 0.12, 0.03)
+			seg.mesh = seg_mesh
+			seg.material_override = arc_mat
+			seg.position = Vector3(randf_range(-0.06, 0.06), j * 0.12 - 0.3, randf_range(-0.06, 0.06))
+			seg.rotation.z = randf_range(-0.5, 0.5)
+			seg.name = "ArcSeg_%d" % j
+			arc_parent.add_child(seg)
+		totem.add_child(arc_parent)
+
+	# --- Area ring (flat torus showing damage radius) ---
+	var ring_mi = MeshInstance3D.new()
+	var ring_mesh = TorusMesh.new()
+	ring_mesh.inner_radius = area_radius - 0.05
+	ring_mesh.outer_radius = area_radius
+	ring_mesh.ring_segments = 6
+	ring_mesh.rings = 24
+	ring_mi.mesh = ring_mesh
+	ring_mi.position.y = 0.02
+	var ring_mat = StandardMaterial3D.new()
+	ring_mat.albedo_color = Color(0.3, 0.7, 1.0, 0.12)
+	ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring_mat.emission_enabled = true
+	ring_mat.emission = Color(0.4, 0.8, 1.0)
+	ring_mat.emission_energy_multiplier = 0.5
+	ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ring_mi.material_override = ring_mat
+	ring_mi.name = "AreaRing"
+	totem.add_child(ring_mi)
 
 	# Attach damage script behavior via timer
 	var damage = int(WeaponDB.get_damage("totem", level))
