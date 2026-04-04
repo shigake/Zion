@@ -128,6 +128,10 @@ func _die() -> void:
 	super._die()
 
 func _spawn_crystal_shower() -> void:
+	if not is_inside_tree():
+		return
+	# Cachear posicao antes de qualquer chamada deferred que possa remover o no
+	var my_pos := global_position
 	var crystal_scene = preload("res://scenes/crystal_pickup.tscn")
 	for i in range(crystal_drop_count):
 		var crystal = crystal_scene.instantiate()
@@ -135,11 +139,11 @@ func _spawn_crystal_shower() -> void:
 		var angle = (float(i) / crystal_drop_count) * TAU + randf_range(-0.3, 0.3)
 		var dist = randf_range(0.5, 2.0)
 		var offset = Vector3(cos(angle) * dist, 0.3, sin(angle) * dist)
-		crystal.global_position = global_position + offset
+		crystal.position = my_pos + offset
 		crystal.crystal_value = randi_range(2, 5)
 		get_tree().current_scene.call_deferred("add_child", crystal)
 	# Efeito visual de explosao dourada
-	ParticleFactory.spawn_death_particles(global_position + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 20)
-	ParticleFactory.spawn_death_particles(global_position + Vector3(0, 0.8, 0), Color(1.0, 0.95, 0.5), 15)
+	ParticleFactory.spawn_death_particles(my_pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 20)
+	ParticleFactory.spawn_death_particles(my_pos + Vector3(0, 0.8, 0), Color(1.0, 0.95, 0.5), 15)
 	ScreenEffects.shake(0.12)
 	AudioManager.play_sfx("level_up")

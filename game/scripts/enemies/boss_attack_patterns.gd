@@ -31,6 +31,8 @@ static func circle_aoe(
 	tween.tween_interval(telegraph_time * 0.3)
 	# Dano
 	tween.tween_callback(func():
+		if not is_instance_valid(scene):
+			return
 		_apply_circle_damage(scene, center, radius, damage)
 		ScreenEffects.shake(0.15)
 		ParticleFactory.spawn_explosion_particles(center, radius * 0.5)
@@ -56,7 +58,7 @@ static func _create_circle_indicator(center: Vector3, radius: float, color: Colo
 	mat.no_depth_test = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mesh_inst.material_override = mat
-	mesh_inst.global_position = center + Vector3(0, 0.1, 0)
+	mesh_inst.position = center + Vector3(0, 0.1, 0)
 	return mesh_inst
 
 static func _apply_circle_damage(scene: Node, center: Vector3, radius: float, damage: int) -> void:
@@ -89,6 +91,8 @@ static func cone_aoe(
 	tween.tween_property(indicator, "modulate:a", 0.8, telegraph_time * 0.7)
 	tween.tween_interval(telegraph_time * 0.3)
 	tween.tween_callback(func():
+		if not is_instance_valid(scene):
+			return
 		_apply_cone_damage(origin, direction.normalized(), length, angle_degrees, damage)
 		ScreenEffects.shake(0.12)
 		AudioManager.play_sfx("boss_attack")
@@ -113,7 +117,7 @@ static func _create_cone_indicator(origin: Vector3, direction: Vector3, length: 
 	mat.no_depth_test = true
 	mesh_inst.material_override = mat
 	# Posiciona e rotaciona no chao
-	mesh_inst.global_position = origin + Vector3(0, 0.1, 0)
+	mesh_inst.position = origin + Vector3(0, 0.1, 0)
 	# Deita o cone no plano XZ apontando na direcao
 	mesh_inst.rotation.x = PI / 2.0
 	var angle_y = atan2(-direction.z, direction.x) - PI / 2.0
