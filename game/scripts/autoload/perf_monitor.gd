@@ -41,6 +41,9 @@ var _fps_history: Array[float] = []
 var _frame_time_history: Array[float] = []
 var _history_index: int = 0
 var _history_count: int = 0  # tracks how many slots have been written
+## Running sums — O(1) average calculation (no per-frame loop)
+var _fps_running_sum: float = 0.0
+var _ft_running_sum: float = 0.0
 
 ## Metricas atuais
 var current_fps: float = 60.0
@@ -81,6 +84,9 @@ func _ready() -> void:
 	_fps_history.fill(60.0)
 	_frame_time_history.resize(MOVING_AVG_WINDOW)
 	_frame_time_history.fill(16.6)
+	# Initialize running sums to match pre-filled buffers
+	_fps_running_sum = 60.0 * MOVING_AVG_WINDOW
+	_ft_running_sum = 16.6 * MOVING_AVG_WINDOW
 	LogManager.info("Perf", "PerfMonitor inicializado — auto_adjust=%s" % str(auto_adjust_enabled))
 
 
@@ -220,21 +226,19 @@ func _count_active_particles() -> int:
 # ===========================================================================
 
 func _update_moving_averages() -> void:
-	# Ring buffer insert — O(1), no array shifting
+	# Ring buffer insert with O(1) running sum — no per-frame loop over 60 items
+	var old_fps := _fps_history[_history_index]
+	var old_ft := _frame_time_history[_history_index]
 	_fps_history[_history_index] = current_fps
 	_frame_time_history[_history_index] = current_frame_time_ms
+	# Incremental sum: subtract outgoing, add incoming
+	_fps_running_sum += current_fps - old_fps
+	_ft_running_sum += current_frame_time_ms - old_ft
 	_history_index = (_history_index + 1) % MOVING_AVG_WINDOW
 	if _history_count < MOVING_AVG_WINDOW:
 		_history_count += 1
-
-	# Calcular medias over filled portion
-	var fps_sum := 0.0
-	var ft_sum := 0.0
-	for i in range(_history_count):
-		fps_sum += _fps_history[i]
-		ft_sum += _frame_time_history[i]
-	avg_fps = fps_sum / _history_count
-	avg_frame_time_ms = ft_sum / _history_count
+	avg_fps = _fps_running_sum / _history_count
+	avg_frame_time_ms = _ft_running_sum / _history_count
 
 
 # ===========================================================================

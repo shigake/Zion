@@ -1,6 +1,7 @@
 extends Node3D
 
 ## Orbe de Sangue — invoca orbe que drena vida dos inimigos e cura o jogador.
+## Otimizado: shared static meshes para todos efeitos visuais (zero alocacao per-frame).
 
 var summon_timer: float = 0.0
 var _active_orbs: Array = []
@@ -75,13 +76,79 @@ class BloodOrbInstance extends Area3D:
 	var _core_mesh: MeshInstance3D = null
 	var _shell_mesh: MeshInstance3D = null
 	var _droplet_meshes: Array = []
+	var _trail_particles: GPUParticles3D = null
+
+	# Shared static meshes — created once, reused by all orb instances (zero per-frame allocation)
 	static var _shared_droplet_mesh: SphereMesh = null
+	static var _shared_wisp_mesh: SphereMesh = null
+	static var _shared_drain_mesh: SphereMesh = null
+	static var _shared_heal_mesh: SphereMesh = null
+
+	static func _ensure_shared_meshes() -> void:
+		if not _shared_droplet_mesh:
+			_shared_droplet_mesh = SphereMesh.new()
+			_shared_droplet_mesh.radius = 0.05
+			_shared_droplet_mesh.height = 0.10
+			var dm = StandardMaterial3D.new()
+			dm.albedo_color = Color(0.55, 0.04, 0.08)
+			dm.emission_enabled = true
+			dm.emission = Color(0.9, 0.05, 0.1)
+			dm.emission_energy_multiplier = 2.0
+			dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			_shared_droplet_mesh.surface_set_material(0, dm)
+
+		if not _shared_wisp_mesh:
+			_shared_wisp_mesh = SphereMesh.new()
+			_shared_wisp_mesh.radius = 0.06
+			_shared_wisp_mesh.height = 0.12
+			_shared_wisp_mesh.radial_segments = 4
+			_shared_wisp_mesh.rings = 2
+			var wm = StandardMaterial3D.new()
+			wm.albedo_color = Color(0.2, 1.0, 0.3, 0.7)
+			wm.emission_enabled = true
+			wm.emission = Color(0.3, 1.0, 0.4)
+			wm.emission_energy_multiplier = 3.0
+			wm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			wm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			_shared_wisp_mesh.surface_set_material(0, wm)
+
+		if not _shared_drain_mesh:
+			_shared_drain_mesh = SphereMesh.new()
+			_shared_drain_mesh.radius = 0.08
+			_shared_drain_mesh.height = 0.16
+			_shared_drain_mesh.radial_segments = 4
+			_shared_drain_mesh.rings = 2
+			var drm = StandardMaterial3D.new()
+			drm.albedo_color = Color(0.8, 0.05, 0.1, 0.9)
+			drm.emission_enabled = true
+			drm.emission = Color(1.0, 0.1, 0.15)
+			drm.emission_energy_multiplier = 4.0
+			drm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			drm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			drm.no_depth_test = true
+			_shared_drain_mesh.surface_set_material(0, drm)
+
+		if not _shared_heal_mesh:
+			_shared_heal_mesh = SphereMesh.new()
+			_shared_heal_mesh.radius = 0.15
+			_shared_heal_mesh.height = 0.05
+			_shared_heal_mesh.radial_segments = 6
+			_shared_heal_mesh.rings = 1
+			var hm = StandardMaterial3D.new()
+			hm.albedo_color = Color(0.2, 0.9, 0.3, 0.6)
+			hm.emission_enabled = true
+			hm.emission = Color(0.3, 1.0, 0.4)
+			hm.emission_energy_multiplier = 5.0
+			hm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			hm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			_shared_heal_mesh.surface_set_material(0, hm)
 
 	func _ready() -> void:
 		add_to_group("player_summons")
 		collision_layer = 8  # PlayerAttacks
 		collision_mask = 2   # Enemies
 		_orbit_angle = randf() * TAU
+		_ensure_shared_meshes()
 
 		# Collision shape
 		var shape = CollisionShape3D.new()
@@ -128,24 +195,53 @@ class BloodOrbInstance extends Area3D:
 		add_child(_shell_mesh)
 
 		# Layer 3: Orbiting droplets (4 small spheres)
-		if not _shared_droplet_mesh:
-			_shared_droplet_mesh = SphereMesh.new()
-			_shared_droplet_mesh.radius = 0.05
-			_shared_droplet_mesh.height = 0.10
-			var dm = StandardMaterial3D.new()
-			dm.albedo_color = Color(0.55, 0.04, 0.08)
-			dm.emission_enabled = true
-			dm.emission = Color(0.9, 0.05, 0.1)
-			dm.emission_energy_multiplier = 2.0
-			dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			_shared_droplet_mesh.surface_set_material(0, dm)
 		for i in range(4):
 			var droplet_mi = MeshInstance3D.new()
 			droplet_mi.mesh = _shared_droplet_mesh
 			add_child(droplet_mi)
 			_droplet_meshes.append(droplet_mi)
 
-	var _trail_timer: float = 0.0
+		# Layer 4: Dark trail — GPUParticles3D (replaces per-frame MeshInstance3D spawning)
+		_trail_particles = GPUParticles3D.new()
+		_trail_particles.amount = 6
+		_trail_particles.lifetime = 0.5
+		_trail_particles.emitting = true
+		_trail_particles.one_shot = false
+		_trail_particles.explosiveness = 0.0
+
+		var tp_mat = ParticleProcessMaterial.new()
+		tp_mat.direction = Vector3(0, -1, 0)
+		tp_mat.spread = 60.0
+		tp_mat.initial_velocity_min = 0.3
+		tp_mat.initial_velocity_max = 0.8
+		tp_mat.gravity = Vector3(0, -0.8, 0)
+		tp_mat.scale_min = 0.03
+		tp_mat.scale_max = 0.06
+		tp_mat.color = Color(0.5, 0.0, 0.05, 0.5)
+		var tp_scale_curve = CurveTexture.new()
+		var tp_curve = Curve.new()
+		tp_curve.add_point(Vector2(0.0, 1.0))
+		tp_curve.add_point(Vector2(0.6, 0.6))
+		tp_curve.add_point(Vector2(1.0, 0.0))
+		tp_scale_curve.curve = tp_curve
+		tp_mat.scale_curve = tp_scale_curve
+		_trail_particles.process_material = tp_mat
+
+		var tp_draw = SphereMesh.new()
+		tp_draw.radius = 0.04
+		tp_draw.height = 0.08
+		tp_draw.radial_segments = 4
+		tp_draw.rings = 2
+		var tp_draw_mat = StandardMaterial3D.new()
+		tp_draw_mat.albedo_color = Color(0.5, 0.0, 0.05, 0.5)
+		tp_draw_mat.emission_enabled = true
+		tp_draw_mat.emission = Color(0.6, 0.05, 0.1)
+		tp_draw_mat.emission_energy_multiplier = 3.0
+		tp_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		tp_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		tp_draw.surface_set_material(0, tp_draw_mat)
+		_trail_particles.draw_pass_1 = tp_draw
+		add_child(_trail_particles)
 
 	func _process(delta: float) -> void:
 		if not is_inside_tree():
@@ -194,12 +290,6 @@ class BloodOrbInstance extends Area3D:
 				var d_y = sin(_lifetime_timer * 2.5 + i * 1.5) * 0.15
 				dm.position = Vector3(cos(d_angle) * d_radius, d_y, sin(d_angle) * d_radius)
 
-		# Dark trail particles (reduced frequency to avoid node buildup)
-		_trail_timer += delta
-		if _trail_timer >= 0.25 and Engine.get_frames_per_second() > 35:
-			_trail_timer = 0.0
-			_spawn_dark_trail()
-
 		# Damage tick
 		_damage_timer += delta
 		if _damage_timer >= _damage_interval:
@@ -221,10 +311,10 @@ class BloodOrbInstance extends Area3D:
 			body.call_deferred("take_damage", damage, "dark")
 			total_damage_dealt += damage
 
-			# Red drain line from enemy to orb
+			# Red drain line from enemy to orb (shared mesh, throttled)
 			_spawn_drain_line(body.global_position)
 
-			# Dark drain visual
+			# Dark drain wisp (shared mesh)
 			_spawn_drain_wisps(body.global_position)
 
 		# Lifesteal heal with visual feedback
@@ -247,23 +337,12 @@ class BloodOrbInstance extends Area3D:
 		# Skip wisps if drain line throttle is active (avoid double visual spam)
 		if _drain_line_throttle > 0.15:
 			return
-		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+		var scene = get_tree().current_scene
 		if not scene:
 			return
 
 		var wisp = MeshInstance3D.new()
-		var sphere = SphereMesh.new()
-		sphere.radius = 0.06
-		sphere.height = 0.12
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.2, 1.0, 0.3, 0.7)
-		mat.emission_enabled = true
-		mat.emission = Color(0.3, 1.0, 0.4)
-		mat.emission_energy_multiplier = 3.0
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		sphere.surface_set_material(0, mat)
-		wisp.mesh = sphere
+		wisp.mesh = _shared_wisp_mesh  # Shared mesh — zero material allocation
 		scene.add_child(wisp)
 		wisp.global_position = from_pos + Vector3(0, 0.5, 0)
 
@@ -282,28 +361,15 @@ class BloodOrbInstance extends Area3D:
 		if _drain_line_throttle > 0.0:
 			return
 		_drain_line_throttle = 0.3
-		# Spawn 2-3 blood droplets flying from enemy to orb (reduced from 3-5)
+		# Spawn 2 blood droplets flying from enemy to orb (shared mesh, no per-spawn material)
 		var start = from_pos + Vector3(0, 0.5, 0)
 		var target = global_position
-		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+		var scene = get_tree().current_scene
 		if not scene:
 			return
-		var count = randi_range(2, 3)
-		for i in range(count):
+		for i in range(2):
 			var droplet = MeshInstance3D.new()
-			var sphere = SphereMesh.new()
-			sphere.radius = 0.08
-			sphere.height = 0.16
-			droplet.mesh = sphere
-			var mat = StandardMaterial3D.new()
-			mat.albedo_color = Color(0.8, 0.05, 0.1, 0.9)
-			mat.emission_enabled = true
-			mat.emission = Color(1.0, 0.1, 0.15)
-			mat.emission_energy_multiplier = 4.0
-			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			mat.no_depth_test = true
-			droplet.material_override = mat
+			droplet.mesh = _shared_drain_mesh  # Shared mesh — zero material allocation
 			scene.add_child(droplet)
 			# Posicao inicial com offset aleatorio
 			var offset = Vector3(randf_range(-0.3, 0.3), randf_range(-0.2, 0.2), randf_range(-0.3, 0.3))
@@ -323,20 +389,9 @@ class BloodOrbInstance extends Area3D:
 		var scene = get_tree().current_scene
 		if not scene:
 			return
-		# Green-red heal ring expanding from orb
+		# Green-red heal ring expanding from orb (shared mesh)
 		var ring = MeshInstance3D.new()
-		var torus = SphereMesh.new()
-		torus.radius = 0.15
-		torus.height = 0.05
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.2, 0.9, 0.3, 0.6)
-		mat.emission_enabled = true
-		mat.emission = Color(0.3, 1.0, 0.4)
-		mat.emission_energy_multiplier = 5.0
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		torus.surface_set_material(0, mat)
-		ring.mesh = torus
+		ring.mesh = _shared_heal_mesh  # Shared mesh — zero material allocation
 		scene.add_child(ring)
 		ring.global_position = global_position
 		var htw = ring.create_tween()
@@ -344,31 +399,3 @@ class BloodOrbInstance extends Area3D:
 		htw.tween_property(ring, "scale", Vector3(5.0, 1.0, 5.0), 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		htw.tween_property(ring, "scale:y", 0.01, 0.4)
 		htw.chain().tween_callback(ring.queue_free)
-
-	func _spawn_dark_trail() -> void:
-		if not is_inside_tree():
-			return
-		var scene = get_tree().current_scene
-		if not scene:
-			return
-		var trail = MeshInstance3D.new()
-		var sphere = SphereMesh.new()
-		sphere.radius = 0.04
-		sphere.height = 0.08
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.5, 0.0, 0.05, 0.5)
-		mat.emission_enabled = true
-		mat.emission = Color(0.6, 0.05, 0.1)
-		mat.emission_energy_multiplier = 3.0
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		sphere.surface_set_material(0, mat)
-		trail.mesh = sphere
-		scene.add_child(trail)
-		trail.global_position = global_position + Vector3(randf_range(-0.15, 0.15), randf_range(-0.1, 0.1), randf_range(-0.15, 0.15))
-		# Float down and fade
-		var tween = trail.create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(trail, "global_position:y", trail.global_position.y - 0.4, 0.4)
-		tween.tween_property(trail, "scale", Vector3(0.01, 0.01, 0.01), 0.4)
-		tween.chain().tween_callback(trail.queue_free)

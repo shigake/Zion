@@ -1,6 +1,7 @@
 extends Node3D
 
 ## Tornado — invoca vortex que orbita o jogador e puxa inimigos proximos (dano de gelo).
+## Otimizado: GPUParticles3D no lugar de MeshInstance3D per-frame.
 
 var summon_timer: float = 0.0
 var _active_tornados: Array = []
@@ -74,6 +75,8 @@ class TornadoInstance extends Area3D:
 	var _pull_strength: float = 3.0
 	var _mesh: MeshInstance3D = null
 	var _ribbon_mesh: MeshInstance3D = null
+	var _vortex_particles: GPUParticles3D = null
+	var _debris_particles: GPUParticles3D = null
 
 	func _ready() -> void:
 		add_to_group("player_summons")
@@ -127,6 +130,100 @@ class TornadoInstance extends Area3D:
 		_ribbon_mesh.material_override = mat2
 		add_child(_ribbon_mesh)
 
+		# Layer 3: Vortex particles — GPUParticles3D (one-time setup, zero per-frame allocation)
+		_vortex_particles = GPUParticles3D.new()
+		_vortex_particles.amount = 10
+		_vortex_particles.lifetime = 0.6
+		_vortex_particles.emitting = true
+		_vortex_particles.one_shot = false
+		_vortex_particles.explosiveness = 0.0
+		_vortex_particles.position.y = 0.5
+
+		var vp_mat = ParticleProcessMaterial.new()
+		vp_mat.direction = Vector3(0, 1, 0)
+		vp_mat.spread = 180.0
+		vp_mat.initial_velocity_min = 1.5
+		vp_mat.initial_velocity_max = 3.0
+		vp_mat.gravity = Vector3(0, 2.0, 0)
+		vp_mat.scale_min = 0.06
+		vp_mat.scale_max = 0.14
+		vp_mat.color = Color(0.6, 0.85, 1.0, 0.6)
+		# Radial velocity for spiral outward effect
+		vp_mat.radial_velocity_min = 2.0
+		vp_mat.radial_velocity_max = 4.0
+		vp_mat.damping_min = 1.0
+		vp_mat.damping_max = 2.0
+		# Fade out over lifetime via scale curve
+		var scale_curve = CurveTexture.new()
+		var curve = Curve.new()
+		curve.add_point(Vector2(0.0, 1.0))
+		curve.add_point(Vector2(0.7, 0.8))
+		curve.add_point(Vector2(1.0, 0.0))
+		scale_curve.curve = curve
+		vp_mat.scale_curve = scale_curve
+		_vortex_particles.process_material = vp_mat
+
+		# Draw pass: small unshaded sphere
+		var vp_draw = SphereMesh.new()
+		vp_draw.radius = 0.10
+		vp_draw.height = 0.20
+		vp_draw.radial_segments = 4
+		vp_draw.rings = 2
+		var vp_draw_mat = StandardMaterial3D.new()
+		vp_draw_mat.albedo_color = Color(0.6, 0.85, 1.0, 0.6)
+		vp_draw_mat.emission_enabled = true
+		vp_draw_mat.emission = Color(0.5, 0.8, 1.0)
+		vp_draw_mat.emission_energy_multiplier = 4.0
+		vp_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		vp_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		vp_draw.surface_set_material(0, vp_draw_mat)
+		_vortex_particles.draw_pass_1 = vp_draw
+		add_child(_vortex_particles)
+
+		# Layer 4: Debris particles — GPUParticles3D (brownish bits rising)
+		_debris_particles = GPUParticles3D.new()
+		_debris_particles.amount = 5
+		_debris_particles.lifetime = 0.7
+		_debris_particles.emitting = true
+		_debris_particles.one_shot = false
+		_debris_particles.explosiveness = 0.0
+		_debris_particles.position.y = 0.2
+
+		var dp_mat = ParticleProcessMaterial.new()
+		dp_mat.direction = Vector3(0, 1, 0)
+		dp_mat.spread = 120.0
+		dp_mat.initial_velocity_min = 1.0
+		dp_mat.initial_velocity_max = 2.0
+		dp_mat.gravity = Vector3(0, 1.5, 0)
+		dp_mat.angular_velocity_min = -180.0
+		dp_mat.angular_velocity_max = 180.0
+		dp_mat.scale_min = 0.05
+		dp_mat.scale_max = 0.10
+		dp_mat.color = Color(0.3, 0.25, 0.2, 0.5)
+		dp_mat.radial_velocity_min = 0.5
+		dp_mat.radial_velocity_max = 1.5
+		var dp_scale_curve = CurveTexture.new()
+		var dp_curve = Curve.new()
+		dp_curve.add_point(Vector2(0.0, 0.8))
+		dp_curve.add_point(Vector2(0.5, 1.0))
+		dp_curve.add_point(Vector2(1.0, 0.0))
+		dp_scale_curve.curve = dp_curve
+		dp_mat.scale_curve = dp_scale_curve
+		_debris_particles.process_material = dp_mat
+
+		var dp_draw = BoxMesh.new()
+		dp_draw.size = Vector3(0.08, 0.08, 0.08)
+		var dp_draw_mat = StandardMaterial3D.new()
+		dp_draw_mat.albedo_color = Color(0.3, 0.25, 0.2, 0.5)
+		dp_draw_mat.emission_enabled = true
+		dp_draw_mat.emission = Color(0.2, 0.15, 0.1)
+		dp_draw_mat.emission_energy_multiplier = 1.0
+		dp_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		dp_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		dp_draw.surface_set_material(0, dp_draw_mat)
+		_debris_particles.draw_pass_1 = dp_draw
+		add_child(_debris_particles)
+
 	func _process(delta: float) -> void:
 		if not is_inside_tree():
 			return
@@ -158,10 +255,6 @@ class TornadoInstance extends Area3D:
 		if _ribbon_mesh:
 			_ribbon_mesh.rotation.y -= 8.0 * delta
 			_ribbon_mesh.scale = Vector3(pulse * 0.9, 1.0 + sin(_lifetime_timer * 2.5) * 0.06, pulse * 0.9)
-
-		# Spawn vortex trail particles
-		if Engine.get_frames_per_second() > 35:
-			_spawn_vortex_particles()
 
 		# Damage tick
 		_damage_timer += delta
@@ -198,71 +291,3 @@ class TornadoInstance extends Area3D:
 		# Screen shake if vortex is hitting many enemies
 		if hit_count >= 3:
 			ScreenEffects.shake(0.08)
-
-	# Shared meshes/materials for vortex particles (avoid creating per frame)
-	static var _shared_sphere_mesh: SphereMesh = null
-	static var _shared_box_mesh: BoxMesh = null
-
-	func _ensure_shared_meshes() -> void:
-		if not _shared_sphere_mesh:
-			_shared_sphere_mesh = SphereMesh.new()
-			_shared_sphere_mesh.radius = 0.10
-			_shared_sphere_mesh.height = 0.20
-			var mat = StandardMaterial3D.new()
-			mat.albedo_color = Color(0.6, 0.85, 1.0, 0.6)
-			mat.emission_enabled = true
-			mat.emission = Color(0.5, 0.8, 1.0)
-			mat.emission_energy_multiplier = 4.0
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			_shared_sphere_mesh.surface_set_material(0, mat)
-		if not _shared_box_mesh:
-			_shared_box_mesh = BoxMesh.new()
-			_shared_box_mesh.size = Vector3(0.08, 0.08, 0.08)
-			var dmat = StandardMaterial3D.new()
-			dmat.albedo_color = Color(0.3, 0.25, 0.2, 0.5)
-			dmat.emission_enabled = true
-			dmat.emission = Color(0.2, 0.15, 0.1)
-			dmat.emission_energy_multiplier = 1.0
-			dmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			dmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			_shared_box_mesh.surface_set_material(0, dmat)
-
-	func _spawn_vortex_particles() -> void:
-		if not is_inside_tree():
-			return
-		# Reduced spawn rate: every 4 frames instead of 2 (still looks good)
-		if Engine.get_process_frames() % 4 != 0:
-			return
-		var scene = get_tree().current_scene
-		if not scene:
-			return
-		_ensure_shared_meshes()
-		# Ice/wind particle spiraling around tornado (shared mesh)
-		var particle = MeshInstance3D.new()
-		particle.mesh = _shared_sphere_mesh
-		scene.add_child(particle)
-		var angle = randf() * TAU
-		var p_offset = Vector3(cos(angle) * 0.5, randf_range(-0.3, 1.5), sin(angle) * 0.5)
-		particle.global_position = global_position + p_offset
-		# Spiral outward and upward
-		var p_tween = particle.create_tween()
-		p_tween.set_parallel(true)
-		var end_pos = global_position + Vector3(cos(angle) * 2.0, 2.0, sin(angle) * 2.0)
-		p_tween.tween_property(particle, "global_position", end_pos, 0.5)
-		p_tween.tween_property(particle, "scale", Vector3(0.1, 0.1, 0.1), 0.5)
-		p_tween.chain().tween_callback(particle.queue_free)
-
-		# Secondary debris particle — every 8 frames (shared mesh)
-		if Engine.get_process_frames() % 8 == 0:
-			var debris = MeshInstance3D.new()
-			debris.mesh = _shared_box_mesh
-			scene.add_child(debris)
-			var d_angle = randf() * TAU
-			debris.global_position = global_position + Vector3(cos(d_angle) * 0.3, 0.1, sin(d_angle) * 0.3)
-			var dtw = debris.create_tween()
-			dtw.set_parallel(true)
-			dtw.tween_property(debris, "global_position:y", global_position.y + 2.5, 0.6)
-			dtw.tween_property(debris, "rotation", Vector3(randf() * 5.0, randf() * 5.0, randf() * 5.0), 0.6)
-			dtw.tween_property(debris, "scale", Vector3(0.01, 0.01, 0.01), 0.6)
-			dtw.chain().tween_callback(debris.queue_free)
