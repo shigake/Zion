@@ -907,12 +907,14 @@ func _start_eclipse() -> void:
 		_eclipse_original_energy = dir_light.light_energy
 		dir_light.light_energy = GameConstants.ECLIPSE_LIGHT_ENERGY
 
-	# Darken the stage by modulating the current scene
+	# Darken the stage by modulating the current scene (only if it supports modulate)
 	var root = get_tree().current_scene
-	if root:
-		_eclipse_original_modulate = root.modulate if "modulate" in root else Color.WHITE
+	if root and "modulate" in root:
+		_eclipse_original_modulate = root.modulate
 		var tween = create_tween()
 		tween.tween_property(root, "modulate", GameConstants.ECLIPSE_DARKEN_COLOR, 1.0)
+	else:
+		_eclipse_original_modulate = Color.WHITE
 
 	# Add subtle dark overlay via CanvasLayer for extra atmosphere
 	var overlay = ColorRect.new()
@@ -926,12 +928,15 @@ func _start_eclipse() -> void:
 	canvas.add_child(overlay)
 	add_child(canvas)
 
-	# Make enemies glow (brighter modulate + emission-like color)
+	# Make enemies glow via their Sprite3D child (Node3D itself has no modulate)
 	_eclipse_glowing_enemies.clear()
 	var enemies = GameManager.get_enemies()
 	for enemy in enemies:
-		if is_instance_valid(enemy) and enemy is Node3D:
-			enemy.modulate = GameConstants.ECLIPSE_ENEMY_GLOW
+		if not is_instance_valid(enemy):
+			continue
+		var sprite = enemy.get_node_or_null("EnemySprite")
+		if sprite and "modulate" in sprite:
+			sprite.modulate = GameConstants.ECLIPSE_ENEMY_GLOW
 			_eclipse_glowing_enemies.append(enemy)
 
 	# Bonus XP during eclipse (1.5x multiplier)
@@ -946,9 +951,9 @@ func _end_eclipse() -> void:
 		dir_light.light_energy = _eclipse_original_energy
 		_eclipse_original_energy = -1.0
 
-	# Restore stage modulate
+	# Restore stage modulate (only if supported)
 	var root = get_tree().current_scene
-	if root:
+	if root and "modulate" in root:
 		var tween = create_tween()
 		tween.tween_property(root, "modulate", _eclipse_original_modulate, 1.0)
 
@@ -957,10 +962,13 @@ func _end_eclipse() -> void:
 	if canvas:
 		canvas.queue_free()
 
-	# Remove enemy glow
+	# Remove enemy glow via Sprite3D child
 	for enemy in _eclipse_glowing_enemies:
-		if is_instance_valid(enemy) and enemy is Node3D:
-			enemy.modulate = Color.WHITE
+		if not is_instance_valid(enemy):
+			continue
+		var sprite = enemy.get_node_or_null("EnemySprite")
+		if sprite and "modulate" in sprite:
+			sprite.modulate = Color.WHITE
 	_eclipse_glowing_enemies.clear()
 
 	# Restore XP multiplier
