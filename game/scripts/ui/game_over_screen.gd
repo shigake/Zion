@@ -83,8 +83,9 @@ func _show() -> void:
 		LogManager.report_crash("GameOver", "Player died very fast (%.1fs)" % GameManager.game_time)
 	await get_tree().create_timer(1.0).timeout
 
-	# Title
+	# Title — header claro (GAME OVER / WIN) + lore
 	if GameManager.is_victory:
+		var header = "WIN!"
 		var all_complete := true
 		var all_stages := GameConstants.ALL_STAGES
 		for s in all_stages:
@@ -92,15 +93,15 @@ func _show() -> void:
 				all_complete = false
 				break
 		if all_complete and GameManager.game_mode == "normal":
-			title_label.text = LocaleManager.tr_key("victory_all_stages")
+			title_label.text = header + "\n" + LocaleManager.tr_key("victory_all_stages")
 		else:
 			var victory_key = "victory_lore_" + GameManager.selected_stage
 			var victory_text = LocaleManager.tr_key(victory_key)
 			if victory_text == victory_key:
 				victory_text = LocaleManager.tr_key("lore_victory")
-			title_label.text = victory_text
+			title_label.text = header + "\n" + victory_text
 	else:
-		title_label.text = LocaleManager.tr_key("lore_death")
+		title_label.text = "GAME OVER\n" + LocaleManager.tr_key("lore_death")
 
 	# Stats
 	var t = int(GameManager.game_time)

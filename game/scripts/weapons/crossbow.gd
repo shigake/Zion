@@ -92,7 +92,7 @@ func _fire(level: int) -> void:
 	# Override the default on-hit to pierce instead of destroy
 	# Disconnect default signal and reconnect with pierce behavior
 	var hit_enemies: Array = []
-	bolt.body_entered.connect(func(body: Node3D) -> void:
+	var _on_hit = func(body: Node3D) -> void:
 		if body in hit_enemies:
 			return
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
@@ -100,6 +100,11 @@ func _fire(level: int) -> void:
 			body.call_deferred("take_damage", dmg, "physical")
 			hit_enemies.append(body)
 			ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
+	bolt.body_entered.connect(_on_hit)
+	bolt.area_entered.connect(func(area: Area3D) -> void:
+		var parent = area.get_parent()
+		if parent and parent is Node3D:
+			_on_hit.call(parent)
 	)
 
 	scene_root.add_child(bolt)

@@ -16,6 +16,7 @@ var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 	_ensure_bullet_mesh()
 	_setup_billboard_sprite()
 	_spawn_muzzle_flash()
@@ -86,8 +87,15 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_inside_tree():
 		global_position += direction * speed * delta
-		# Mantem a bala na altura correta (acima do chao)
-		global_position.y = maxf(global_position.y, 0.8)
+		# Mantem a bala acima do chao mas baixa o suficiente pra acertar inimigos pequenos (slime Y=0.0-0.4)
+		global_position.y = maxf(global_position.y, 0.3)
+		# Fallback: overlap check direto (garante deteccao mesmo com body_entered falhando)
+		if not _returning and monitoring:
+			var bodies = get_overlapping_bodies()
+			for body in bodies:
+				if body.has_method("take_damage") and body.is_in_group("enemies"):
+					_on_body_entered(body)
+					return
 
 func _on_body_entered(body: Node3D) -> void:
 	if _returning or not is_inside_tree():
@@ -98,6 +106,16 @@ func _on_body_entered(body: Node3D) -> void:
 	elif body.has_method("take_damage") and body.is_in_group("players"):
 		body.call_deferred("take_damage", damage)
 	_return_to_pool()
+
+## Detecao alternativa via Area3D (Hitbox do inimigo)
+func _on_area_entered(area: Area3D) -> void:
+	if _returning or not is_inside_tree():
+		return
+	var parent = area.get_parent()
+	if parent and parent.has_method("take_damage") and parent.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = weapon_id
+		parent.call_deferred("take_damage", damage, damage_type)
+		_return_to_pool()
 
 func _return_to_pool() -> void:
 	if _returning:
@@ -124,6 +142,17 @@ func _reset_for_reuse() -> void:
 	timer = 0.0
 	_trail_counter = 0
 	visible = true
+	# Restaura collision layer/mask (podem ter sido zerados por visual-only ou outro motivo)
+	collision_layer = 8  # Layer 4: PlayerAttacks
+	collision_mask = 2   # Layer 2: Enemies
+	# Garante que processing esta ativo (prewarm pode ter desativado)
+	set_process(true)
+	set_physics_process(true)
+	# Reconecta signals se nao estiverem conectados
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
 	# Reconecta referencia do sprite (pode ter sido perdida no pool)
 	if not _sprite or not is_instance_valid(_sprite):
 		_sprite = get_node_or_null("ProjectileSprite")

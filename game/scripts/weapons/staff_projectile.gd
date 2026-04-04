@@ -15,6 +15,7 @@ var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 	if target and is_instance_valid(target):
 		direction = (target.global_position - global_position).normalized()
 	# Blue weapon trail
@@ -74,9 +75,24 @@ func _physics_process(delta: float) -> void:
 
 	global_position += direction * speed * delta
 	_update_sprite_rotation()
+	# Fallback: overlap check direto
+	if monitoring:
+		var bodies = get_overlapping_bodies()
+		for body in bodies:
+			if body.has_method("take_damage") and body.is_in_group("enemies"):
+				_on_body_entered(body)
+				return
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = "staff"
 		body.call_deferred("take_damage", damage, damage_type)
+		queue_free()
+
+## Detecao alternativa via Area3D (Hitbox do inimigo)
+func _on_area_entered(area: Area3D) -> void:
+	var parent = area.get_parent()
+	if parent and parent.has_method("take_damage") and parent.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = "staff"
+		parent.call_deferred("take_damage", damage, damage_type)
 		queue_free()

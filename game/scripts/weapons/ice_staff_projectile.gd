@@ -16,6 +16,7 @@ var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
@@ -56,6 +57,13 @@ func _physics_process(delta: float) -> void:
 
 	if is_inside_tree():
 		global_position += direction * speed * delta
+		# Fallback: overlap check direto
+		if not _returning and monitoring:
+			var bodies = get_overlapping_bodies()
+			for body in bodies:
+				if body.has_method("take_damage") and body.is_in_group("enemies"):
+					_on_body_entered(body)
+					return
 
 func _on_body_entered(body: Node3D) -> void:
 	if _returning:
@@ -64,6 +72,15 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "ice_staff"
 		body.call_deferred("take_damage", damage, damage_type)
 		# Don't free here — ice_staff.gd handles freeze_area via signal
+
+## Detecao alternativa via Area3D (Hitbox do inimigo)
+func _on_area_entered(area: Area3D) -> void:
+	if _returning:
+		return
+	var parent = area.get_parent()
+	if parent and parent.has_method("take_damage") and parent.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = "ice_staff"
+		parent.call_deferred("take_damage", damage, damage_type)
 
 func _return_to_pool() -> void:
 	if _returning:
@@ -85,6 +102,11 @@ func _reset_for_reuse() -> void:
 	monitoring = true
 	timer = 0.0
 	rotation = Vector3.ZERO
+	# Reconecta signals se nao estiverem conectados
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
 	# Reconecta referencia do sprite (pode ter sido perdida no pool)
 	if not _sprite:
 		_sprite = get_node_or_null("ProjectileSprite")

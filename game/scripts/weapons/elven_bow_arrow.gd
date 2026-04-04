@@ -17,6 +17,7 @@ var _sprite: Sprite3D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
@@ -107,3 +108,10 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "elven_bow"
 		body.call_deferred("take_damage", damage, damage_type)
 		# Nao faz queue_free — perfura todos os inimigos
+
+## Detecao alternativa via Area3D (Hitbox do inimigo)
+func _on_area_entered(area: Area3D) -> void:
+	var parent = area.get_parent()
+	if parent and parent.has_method("take_damage") and parent.is_in_group("enemies"):
+		GameManager._last_attacking_weapon = "elven_bow"
+		parent.call_deferred("take_damage", damage, damage_type)

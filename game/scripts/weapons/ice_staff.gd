@@ -91,7 +91,7 @@ func _fire(level: int) -> void:
 	bullet.weapon_id = "ice_staff"
 
 	# Override behavior: on hit, freeze area
-	bullet.body_entered.connect(func(body: Node3D) -> void:
+	var _ice_hit = func(body: Node3D) -> void:
 		if not is_instance_valid(bullet) or not bullet.is_inside_tree():
 			return
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
@@ -100,6 +100,11 @@ func _fire(level: int) -> void:
 			body.call_deferred("take_damage", dmg, "ice")
 			_freeze_area(hit_pos, level)
 			bullet.queue_free()
+	bullet.body_entered.connect(_ice_hit, CONNECT_ONE_SHOT)
+	bullet.area_entered.connect(func(area: Area3D) -> void:
+		var parent = area.get_parent()
+		if parent and parent is Node3D:
+			_ice_hit.call(parent)
 	, CONNECT_ONE_SHOT)
 
 	scene_root.add_child(bullet)
