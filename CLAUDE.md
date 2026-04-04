@@ -93,6 +93,9 @@ Zion/
 │   ├── prd_42_boss_dialogues_ingame.md  # PRD 42: dialogos bosses in-game — concluido
 │   ├── prd_42_pickup_bugs_and_perf.md   # PRD 42: bugs pickup e performance — concluido
 │   ├── prd_43_chest_spawn_crash.md      # PRD 43: crash spawn baus — concluido
+│   ├── prd_44_boss_kill_freeze.md       # PRD 44: screen freeze golpe final boss — pendente
+│   ├── prd_45_enemy_ragdoll.md          # PRD 45: ragdoll de morte dos inimigos — pendente
+│   ├── prd_46_mystery_teaser.md         # PRD 46: teaser visual do Fragmentado ??? — pendente
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
