@@ -108,10 +108,9 @@ func _deactivate() -> void:
 
 func _restore_individual_visuals_batched() -> void:
 	## Re-show the individual sprites in batches to avoid frame stutter.
-	## Uses enemy's cached sprite when available (EnemyBase3D._get_cached_sprite).
+	## Enemies spawned while MultiMesh was active may lack sprite nodes —
+	## create them lazily here using the pre-cached textures.
 	var enemies = GameManager.get_enemies()
-	var batch_size := 15
-	var idx := 0
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
@@ -120,23 +119,24 @@ func _restore_individual_visuals_batched() -> void:
 			var cached = enemy._get_cached_sprite()
 			if cached:
 				cached.visible = true
-				idx += 1
 				continue
+			# No sprite node exists (spawned during MultiMesh mode) — create it now.
+			# Textures are already cached from loading screen, so this is fast (no disk I/O).
+			enemy._cached_enemy_sprite_checked = false  # Reset cache so _apply_sprite can set it
+			enemy._apply_sprite()
+			continue
 		# Fallback: check nodes directly
 		var sprite_node = enemy.get_node_or_null("EnemySprite")
 		if sprite_node:
 			sprite_node.visible = true
-			idx += 1
 			continue
 		var proc_model = enemy.get_node_or_null("ProceduralModel")
 		if proc_model:
 			proc_model.visible = true
-			idx += 1
 			continue
 		var mesh_node = enemy.get_node_or_null("Mesh")
 		if mesh_node:
 			mesh_node.visible = true
-			idx += 1
 
 func _update_transforms() -> void:
 	if not _multimesh or not _multimesh_instance or not is_instance_valid(_multimesh_instance):

@@ -95,6 +95,12 @@ func get_bestiary_id() -> String:
 
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
+	var is_boss := enemy_type.begins_with("Boss")
+	# Performance: when MultiMesh is active (50+ enemies), non-boss sprites are hidden anyway.
+	# Skip creating individual Sprite3D nodes — saves load() + node creation per enemy.
+	if not is_boss and MultiMeshManager._active:
+		mesh.visible = false
+		return
 	var stage = GameManager.selected_stage
 	var cache_key = "%s_%s" % [enemy_type, stage]
 	var sprite_path: String
@@ -105,25 +111,12 @@ func _apply_sprite() -> void:
 			_apply_procedural_model()
 			return
 	else:
-		var snake_type = enemy_type.to_snake_case()
-		sprite_path = "res://assets/sprites/enemies/%s.png" % snake_type
-		if STAGE_ENEMY_SPRITES.has(stage):
-			var stage_map = STAGE_ENEMY_SPRITES[stage]
-			if stage_map.has(enemy_type):
-				var themed_path = "res://assets/sprites/enemies/%s/%s.png" % [stage, stage_map[enemy_type]]
-				if ResourceLoader.exists(themed_path):
-					sprite_path = themed_path
-		if not ResourceLoader.exists(sprite_path):
-			var boss_sprite = "res://assets/sprites/bosses/%s.png" % snake_type
-			if ResourceLoader.exists(boss_sprite):
-				sprite_path = boss_sprite
-			else:
-				sprite_path = "res://assets/sprites/enemies/slime.png"
-		if not ResourceLoader.exists(sprite_path):
-			_sprite_path_cache[cache_key] = ""
+		# Resolve path once — try candidates in priority order, stop at first hit
+		sprite_path = _resolve_sprite_path(enemy_type, stage)
+		_sprite_path_cache[cache_key] = sprite_path
+		if sprite_path.is_empty():
 			_apply_procedural_model()
 			return
-		_sprite_path_cache[cache_key] = sprite_path
 	var tex: Texture2D
 	if _sprite_cache.has(sprite_path):
 		tex = _sprite_cache[sprite_path]
@@ -139,13 +132,12 @@ func _apply_sprite() -> void:
 	for child in get_children():
 		if child is MeshInstance3D and child != mesh:
 			child.visible = false
-	# Walk spritesheets disabled — static sprites with walk bob look better
-	# Fallback: static Sprite3D
+	# Static Sprite3D billboard
 	var sprite = Sprite3D.new()
 	sprite.texture = tex
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sprite.pixel_size = 0.07 if enemy_type.begins_with("Boss") else 0.05
+	sprite.pixel_size = 0.07 if is_boss else 0.05
 	sprite.shaded = false
 	sprite.transparent = true
 	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
@@ -154,7 +146,7 @@ func _apply_sprite() -> void:
 	add_child(sprite)
 	_sprite_base_scale = sprite.scale
 	# Boss aura glow + floating name label
-	if enemy_type.begins_with("Boss"):
+	if is_boss:
 		var aura = Sprite3D.new()
 		aura.texture = tex
 		aura.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -173,7 +165,30 @@ func _apply_sprite() -> void:
 		label.position = sprite.position + Vector3(0, 1.2, 0)
 		label.name = "BossLabel"
 		add_child(label)
-	LogManager.debug("Enemy", "Sprite loaded: %s for %s" % [sprite_path, enemy_type])
+
+## Resolve sprite path efficiently — single-pass with minimal ResourceLoader.exists() calls
+static func _resolve_sprite_path(enemy_type: String, stage: String) -> String:
+	var snake_type = enemy_type.to_snake_case()
+	# Priority 1: themed sprite for this stage
+	if STAGE_ENEMY_SPRITES.has(stage):
+		var stage_map: Dictionary = STAGE_ENEMY_SPRITES[stage]
+		if stage_map.has(enemy_type):
+			var themed_path = "res://assets/sprites/enemies/%s/%s.png" % [stage, stage_map[enemy_type]]
+			if ResourceLoader.exists(themed_path):
+				return themed_path
+	# Priority 2: generic enemy sprite
+	var generic_path = "res://assets/sprites/enemies/%s.png" % snake_type
+	if ResourceLoader.exists(generic_path):
+		return generic_path
+	# Priority 3: boss sprite
+	var boss_path = "res://assets/sprites/bosses/%s.png" % snake_type
+	if ResourceLoader.exists(boss_path):
+		return boss_path
+	# Priority 4: fallback slime
+	var fallback = "res://assets/sprites/enemies/slime.png"
+	if ResourceLoader.exists(fallback):
+		return fallback
+	return ""
 
 func _apply_stage_behavior() -> void:
 	var stage = GameManager.selected_stage

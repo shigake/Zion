@@ -51,10 +51,24 @@ var _cached_skin_stage: String = ""
 func _ready() -> void:
 	rng.randomize()
 	_cache_stage_skin()
-	# Pre-warm ObjectPool with common enemies to avoid first-spawn stutters
-	ObjectPool.prewarm(slime_scene, 10)
-	ObjectPool.prewarm(bat_scene, 5)
+	# Pre-warm ObjectPool with ALL enemy types to avoid first-spawn stutters.
+	# Loading screen already prewarms, but spawner adds extras for in-game pool.
+	ObjectPool.prewarm(slime_scene, 15)
+	ObjectPool.prewarm(bat_scene, 10)
+	ObjectPool.prewarm(skeleton_scene, 8)
+	ObjectPool.prewarm(ghost_scene, 5)
+	ObjectPool.prewarm(zombie_scene, 5)
+	ObjectPool.prewarm(slime_big_scene, 5)
 	ObjectPool.prewarm(skeleton_scene, 5)
+	ObjectPool.prewarm(bomber_scene, 3)
+	ObjectPool.prewarm(tank_scene, 3)
+	ObjectPool.prewarm(swarm_scene, 3)
+	# Cemetery ghost variants
+	if GameManager.selected_stage == "cemetery" or GameManager.selected_stage == "":
+		ObjectPool.prewarm(ghost_white_scene, 5)
+		ObjectPool.prewarm(ghost_green_scene, 5)
+		ObjectPool.prewarm(ghost_blue_scene, 5)
+		ObjectPool.prewarm(ghost_red_scene, 5)
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:

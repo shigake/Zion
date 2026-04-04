@@ -14,7 +14,7 @@ var _load_complete: bool = false
 var _waiting_for_input: bool = false
 var _prewarm_done: bool = false
 var _prewarm_step: int = 0
-var _total_prewarm_steps: int = 7
+var _total_prewarm_steps: int = 8
 var _fade_alpha: float = 0.0
 
 # — UI refs (criados programaticamente) —
@@ -104,16 +104,46 @@ const TIPS: Array = [
 ]
 
 # — Scenes to pre-warm in ObjectPool —
+# All real enemy scenes that actually exist in the game (matched to enemy_spawner.gd)
 const PREWARM_ENEMIES: Array = [
 	"res://scenes/enemies/slime.tscn",
 	"res://scenes/enemies/bat.tscn",
 	"res://scenes/enemies/skeleton.tscn",
 	"res://scenes/enemies/ghost.tscn",
 	"res://scenes/enemies/zombie_runner.tscn",
-	"res://scenes/enemies/spider.tscn",
-	"res://scenes/enemies/mushroom.tscn",
-	"res://scenes/enemies/wolf.tscn",
+	"res://scenes/enemies/slime_big.tscn",
+	"res://scenes/enemies/skeleton_archer.tscn",
+	"res://scenes/enemies/bomber.tscn",
+	"res://scenes/enemies/tank.tscn",
+	"res://scenes/enemies/swarm.tscn",
+	"res://scenes/enemies/mimic.tscn",
+	"res://scenes/enemies/tooth_fairy.tscn",
+	# Ghost variants (cemetery)
+	"res://scenes/enemies/ghost_white.tscn",
+	"res://scenes/enemies/ghost_green.tscn",
+	"res://scenes/enemies/ghost_blue.tscn",
+	"res://scenes/enemies/ghost_red.tscn",
 ]
+
+# Per-enemy prewarm counts — more for common early enemies, less for rare/late ones
+const PREWARM_ENEMY_COUNTS: Dictionary = {
+	"res://scenes/enemies/slime.tscn": 20,
+	"res://scenes/enemies/bat.tscn": 15,
+	"res://scenes/enemies/skeleton.tscn": 12,
+	"res://scenes/enemies/ghost.tscn": 10,
+	"res://scenes/enemies/zombie_runner.tscn": 10,
+	"res://scenes/enemies/slime_big.tscn": 8,
+	"res://scenes/enemies/skeleton_archer.tscn": 8,
+	"res://scenes/enemies/bomber.tscn": 8,
+	"res://scenes/enemies/tank.tscn": 5,
+	"res://scenes/enemies/swarm.tscn": 5,
+	"res://scenes/enemies/mimic.tscn": 3,
+	"res://scenes/enemies/tooth_fairy.tscn": 3,
+	"res://scenes/enemies/ghost_white.tscn": 5,
+	"res://scenes/enemies/ghost_green.tscn": 5,
+	"res://scenes/enemies/ghost_blue.tscn": 5,
+	"res://scenes/enemies/ghost_red.tscn": 5,
+}
 
 const PREWARM_PICKUPS: Array = [
 	"res://scenes/xp_gem.tscn",
@@ -123,9 +153,9 @@ const PREWARM_PICKUPS: Array = [
 ]
 
 const PREWARM_COUNTS: Dictionary = {
-	"enemy": 15,       # was 10 — more enemies pre-pooled
-	"pickup": 25,      # was 15 — more pickups pre-pooled
-	"projectile": 12,  # was 8 — more projectiles pre-pooled
+	"enemy": 10,       # Fallback count for any enemy not in PREWARM_ENEMY_COUNTS
+	"pickup": 30,      # More pickups pre-pooled
+	"projectile": 15,  # More projectiles pre-pooled
 }
 
 func _ready() -> void:
@@ -206,49 +236,55 @@ func _do_prewarm_step() -> void:
 		0:
 			_prewarm_object_pool()
 			_prewarm_step += 1
-			_update_progress(0.65, "Pre-aquecendo object pool...")
+			_update_progress(0.63, "Pre-aquecendo object pool...")
 			call_deferred("_do_prewarm_step")
 		1:
-			_prewarm_projectiles()
+			_prewarm_sprite_textures()
 			_prewarm_step += 1
-			_update_progress(0.72, "Carregando projeteis...")
+			_update_progress(0.72, "Carregando sprites...")
 			call_deferred("_do_prewarm_step")
 		2:
-			_prewarm_shaders()
+			_prewarm_projectiles()
 			_prewarm_step += 1
-			_update_progress(0.80, "Compilando shaders...")
+			_update_progress(0.78, "Carregando projeteis...")
 			call_deferred("_do_prewarm_step")
 		3:
+			_prewarm_shaders()
+			_prewarm_step += 1
+			_update_progress(0.83, "Compilando shaders...")
+			call_deferred("_do_prewarm_step")
+		4:
 			_prewarm_multimesh()
 			_prewarm_step += 1
 			_update_progress(0.87, "Inicializando MultiMesh...")
 			call_deferred("_do_prewarm_step")
-		4:
+		5:
 			_prewarm_audio()
 			_prewarm_step += 1
-			_update_progress(0.90, "Carregando audio...")
+			_update_progress(0.91, "Carregando audio...")
 			call_deferred("_do_prewarm_step")
-		5:
+		6:
 			_prewarm_materials()
 			_prewarm_step += 1
 			_update_progress(0.96, "Compilando materiais...")
 			call_deferred("_do_prewarm_step")
-		6:
+		7:
 			_prewarm_step += 1
 			_update_progress(1.0, "Pronto!")
 			_prewarm_done = true
 
 func _prewarm_object_pool() -> void:
 	LogManager.info("Loading", "Pre-warming object pool...")
-	# Pre-warm inimigos base
+	# Pre-warm inimigos — per-enemy counts for better coverage
 	for scene_path in PREWARM_ENEMIES:
 		if not ResourceLoader.exists(scene_path):
 			continue
 		var scene = load(scene_path)
 		if scene == null:
 			continue
+		var count = PREWARM_ENEMY_COUNTS.get(scene_path, PREWARM_COUNTS["enemy"])
 		var instances: Array = []
-		for i in range(PREWARM_COUNTS["enemy"]):
+		for i in range(count):
 			var inst = ObjectPool.get_instance(scene)
 			instances.append(inst)
 		# Devolve ao pool
@@ -268,6 +304,62 @@ func _prewarm_object_pool() -> void:
 			instances.append(inst)
 		for inst in instances:
 			ObjectPool.return_instance(inst, scene_path)
+
+func _prewarm_sprite_textures() -> void:
+	## Pre-load ALL enemy sprite textures into EnemyBase3D._sprite_cache
+	## so that no load() call happens during gameplay.
+	## This is the #1 cause of spawn stuttering.
+	LogManager.info("Loading", "Pre-loading enemy sprite textures...")
+	var stage_id = _get_stage_id()
+	# Base enemy types that the spawner can create
+	var enemy_types: Array = [
+		"Slime", "Bat", "Skeleton", "Ghost", "ZombieRunner",
+		"SlimeBig", "SkeletonArcher", "Bomber", "Tank", "Swarm",
+		"Mimic", "ToothFairy",
+		"GhostWhite", "GhostGreen", "GhostBlue", "GhostRed",
+	]
+	var loaded_count := 0
+	for enemy_type in enemy_types:
+		var snake_type = enemy_type.to_snake_case()
+		var sprite_path := ""
+		# Check themed sprite first (stage-specific)
+		if EnemyBase3D.STAGE_ENEMY_SPRITES.has(stage_id):
+			var stage_map: Dictionary = EnemyBase3D.STAGE_ENEMY_SPRITES[stage_id]
+			if stage_map.has(enemy_type):
+				var themed_path = "res://assets/sprites/enemies/%s/%s.png" % [stage_id, stage_map[enemy_type]]
+				if ResourceLoader.exists(themed_path):
+					sprite_path = themed_path
+		# Fallback to generic sprite
+		if sprite_path.is_empty():
+			var generic = "res://assets/sprites/enemies/%s.png" % snake_type
+			if ResourceLoader.exists(generic):
+				sprite_path = generic
+		if sprite_path.is_empty():
+			continue
+		# Cache the resolved path so _apply_sprite() skips ResourceLoader.exists() calls
+		var cache_key = "%s_%s" % [enemy_type, stage_id]
+		EnemyBase3D._sprite_path_cache[cache_key] = sprite_path
+		# Load texture into cache if not already cached
+		if not EnemyBase3D._sprite_cache.has(sprite_path):
+			var tex = load(sprite_path) as Texture2D
+			if tex:
+				EnemyBase3D._sprite_cache[sprite_path] = tex
+				loaded_count += 1
+	# Also preload boss sprites for the current stage
+	var boss_types: Array = [
+		"BossNecromancer", "BossDracula", "BossDemonLord", "BossLeviathan",
+		"BossAiOverlord", "BossEmperor", "BossAlienCow", "BossSingularity",
+		"BossFairyQueen", "BossSugarKing",
+	]
+	for boss_type in boss_types:
+		var snake_type = boss_type.to_snake_case()
+		var boss_path = "res://assets/sprites/bosses/%s.png" % snake_type
+		if ResourceLoader.exists(boss_path) and not EnemyBase3D._sprite_cache.has(boss_path):
+			var tex = load(boss_path) as Texture2D
+			if tex:
+				EnemyBase3D._sprite_cache[boss_path] = tex
+				loaded_count += 1
+	LogManager.info("Loading", "Pre-loaded %d sprite textures for stage '%s'" % [loaded_count, stage_id])
 
 func _prewarm_projectiles() -> void:
 	LogManager.info("Loading", "Pre-warming projectiles...")
