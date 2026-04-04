@@ -96,7 +96,10 @@ func _reset_for_reuse() -> void:
 	_returning = false
 	monitoring = true
 	timer = 0.0
-	rotation = Vector3.ZERO
+	# RESET CRITICO: limpa rotacao/escala residual da "vida anterior" no pool
+	transform.basis = Basis()
+	visible = true
+	set_physics_process(true)
 	# Reconecta signals se nao estiverem conectados
 	if not body_entered.is_connected(_on_body_entered):
 		body_entered.connect(_on_body_entered)
@@ -108,3 +111,5 @@ func _reset_for_reuse() -> void:
 	# Forca escala base (previne acumulo no pool)
 	if _sprite:
 		_sprite.scale = Vector3.ONE
+	# Forca sincronizacao da posicao antes de rodar
+	force_update_transform()

@@ -77,6 +77,15 @@ func _update_sprite_rotation() -> void:
 	var angle = atan2(-direction.z, direction.x)
 	_sprite.rotation.z = angle
 
+## Alinha o no 3D inteiro na direcao de viagem (para mesh 3D em vez de sprite).
+## Chamar 1x apos setar direction. Ponta do modelo deve apontar pra -Z.
+func _align_to_direction() -> void:
+	if direction == Vector3.ZERO:
+		return
+	var target_point = global_position + direction
+	var up = Vector3.UP if abs(direction.normalized().dot(Vector3.UP)) < 0.99 else Vector3.FORWARD
+	look_at(target_point, up)
+
 
 func _physics_process(delta: float) -> void:
 	if _returning:
@@ -137,6 +146,8 @@ func _reset_for_reuse() -> void:
 	timer = 0.0
 	_trail_counter = 0
 	visible = true
+	# RESET CRITICO: limpa rotacao/escala residual da "vida anterior" no pool
+	transform.basis = Basis()
 	# Restaura collision layer/mask (podem ter sido zerados por visual-only ou outro motivo)
 	collision_layer = 8  # Layer 4: PlayerAttacks
 	collision_mask = 2   # Layer 2: Enemies
@@ -160,5 +171,7 @@ func _reset_for_reuse() -> void:
 		_sprite.scale = Vector3.ONE
 	# Esconde mesh 3D (pode ter voltado visivel no pool)
 	_ensure_bullet_mesh()
+	# Forca sincronizacao da posicao antes de calcular rotacao visual
+	force_update_transform()
 	_update_sprite_rotation()
 	_spawn_muzzle_flash()

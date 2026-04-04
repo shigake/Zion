@@ -66,15 +66,15 @@ func _physics_process(delta: float) -> void:
 	global_position += move
 	distance_traveled += move.length()
 
-	# Atualiza rotacao do sprite durante o voo
-	_update_sprite_rotation()
+	# Rotacao do sprite so precisa atualizar quando a direcao muda (ricochete).
+	# Para voo reto, a rotacao ja foi setada no spawn via _update_sprite_rotation().
 
 	# Ricocheta uma vez apos percorrer ricochet_distance
 	if not has_ricocheted and distance_traveled >= ricochet_distance:
 		has_ricocheted = true
 		var angle = randf_range(-PI, PI)
 		direction = direction.rotated(Vector3.UP, angle).normalized()
-		_update_sprite_rotation()
+		_update_sprite_rotation()  # Recalcula rotacao apos mudanca de direcao
 		_spawn_ricochet_flash()
 
 func _spawn_ricochet_flash() -> void:

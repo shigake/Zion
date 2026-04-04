@@ -61,15 +61,16 @@ func _update_sprite_rotation() -> void:
 	_sprite.rotation.z = angle
 
 func _physics_process(delta: float) -> void:
-	# Initialize direction on first physics frame (global_position is now valid)
+	# Calcula direcao 1x no primeiro frame (global_position agora eh valida)
 	if not _direction_initialized:
 		_direction_initialized = true
+		# RESET: limpa rotacao residual de reuso anterior
+		transform.basis = Basis()
 		direction = (target_pos - global_position).normalized()
 		direction.y = 0
-		if direction.length() > 0.01:
-			look_at(global_position + direction, Vector3.UP)
 		_update_sprite_rotation()
 
+	# Movimento reto — sem manipulacao de rotacao aqui
 	global_position += direction * speed * delta
 
 	# Chegou no alvo
