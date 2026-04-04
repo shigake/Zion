@@ -814,3 +814,31 @@ const BOSS_DIALOGUE_COMBAT_DURATION = 3.0
 const BOSS_DIALOGUE_PHASE_DURATION = 5.0
 const BOSS_DIALOGUE_DEATH_DURATION = 6.0
 const BOSS_DIALOGUE_MAX_VARIANTS = 3
+
+# ==================================================================
+# BOSS KILL FREEZE (PRD 44)
+# ==================================================================
+const BOSS_KILL_FREEZE_DURATION := 0.07   # Segundos reais de pausa total (~4 frames a 60fps)
+const BOSS_KILL_FLASH_ALPHA := 0.55       # Opacidade do flash branco no kill
+const BOSS_KILL_SHAKE_AMOUNT := 18.0      # Intensidade do screen shake pos-freeze
+
+# ==================================================================
+# RAGDOLL DEATH (PRD 45)
+# ==================================================================
+const RAGDOLL_DURATION := 0.35            # Duracao total da animacao (s)
+const RAGDOLL_FLY_MIN := 0.4              # Distancia minima de voo (unidades 3D)
+const RAGDOLL_FLY_MAX := 1.2              # Distancia maxima de voo
+const RAGDOLL_SPIN_MIN := 1.2             # Rotacao minima em radianos (~70 graus)
+const RAGDOLL_SPIN_MAX := 3.5             # Rotacao maxima em radianos (~200 graus)
+const RAGDOLL_BOSS_SCALE := 1.5           # Multiplica fly_dist e spin para bosses
+
+# ==================================================================
+# MYSTERY TEASER (PRD 46)
+# ==================================================================
+const TEASER_GLOW_COLOR := Color(0.35, 0.15, 0.6)    # Roxo cristal de Zion
+const TEASER_GLOW_MAX_ALPHA := 0.18                   # Brilho maximo do pulso (sutil)
+const TEASER_PULSE_IN := 1.2                           # Segundos para atingir maximo
+const TEASER_PULSE_OUT := 1.8                          # Segundos para voltar a 0
+const TEASER_GLITCH_MIN_WAIT := 2.0                    # Minimo entre glitches (s)
+const TEASER_GLITCH_MAX_WAIT := 5.0                    # Maximo entre glitches (s)
+const TEASER_GLITCH_DURATION := 0.05                   # Duracao do glitch (~3 frames)

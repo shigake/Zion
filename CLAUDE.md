@@ -93,10 +93,10 @@ Zion/
 │   ├── prd_42_boss_dialogues_ingame.md  # PRD 42: dialogos bosses in-game — concluido
 │   ├── prd_42_pickup_bugs_and_perf.md   # PRD 42: bugs pickup e performance — concluido
 │   ├── prd_43_chest_spawn_crash.md      # PRD 43: crash spawn baus — concluido
-│   ├── prd_44_boss_kill_freeze.md       # PRD 44: screen freeze golpe final boss — pendente
-│   ├── prd_45_enemy_ragdoll.md          # PRD 45: ragdoll de morte dos inimigos — pendente
-│   ├── prd_46_mystery_teaser.md         # PRD 46: teaser visual do Fragmentado ??? — pendente
-│   ├── prd_47_evolution_tree_callback.md # PRD 47: Parser Error _on_evolution_tree nao declarado — pendente
+│   ├── prd_44_boss_kill_freeze.md       # PRD 44: screen freeze golpe final boss — concluido
+│   ├── prd_45_enemy_ragdoll.md          # PRD 45: ragdoll de morte dos inimigos — concluido
+│   ├── prd_46_mystery_teaser.md         # PRD 46: teaser visual do Fragmentado ??? — concluido
+│   ├── prd_47_evolution_tree_callback.md # PRD 47: Parser Error _on_evolution_tree nao declarado — concluido
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -237,7 +237,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~90% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 817 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 45 PRDs (45 concluidos, 0 pendentes), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD — todos implementados.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~90% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 850+ linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 47 PRDs (47 concluidos, 0 pendentes), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD — todos implementados.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais (ADR-001 a ADR-014).
 

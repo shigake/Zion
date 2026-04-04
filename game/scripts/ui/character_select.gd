@@ -234,8 +234,12 @@ func _build_character_grid() -> void:
 		var sprite_path := "res://assets/sprites/characters/%s.png" % char_id
 		if ResourceLoader.exists(sprite_path):
 			tex.texture = load(sprite_path)
+		var is_teaser := is_locked and char_id in ["mystery", "fragmentado"]
 		if is_locked:
-			tex.modulate = Color(0.2, 0.2, 0.25)
+			if is_teaser:
+				tex.modulate = Color(0, 0, 0, 0.85)  # PRD 46: silhueta preta
+			else:
+				tex.modulate = Color(0.2, 0.2, 0.25)
 		btn.add_child(tex)
 		_tile_sprites.append(tex)
 
@@ -262,7 +266,11 @@ func _build_character_grid() -> void:
 		# -- Lock icon overlay --
 		if is_locked:
 			var lock_icon := Label.new()
-			lock_icon.text = "🔒"
+			if is_teaser:
+				lock_icon.text = "◈"  # PRD 46: cristal de Zion
+				lock_icon.add_theme_color_override("font_color", Color(0.5, 0.3, 0.8, 0.7))
+			else:
+				lock_icon.text = "🔒"
 			lock_icon.add_theme_font_size_override("font_size", 14)
 			lock_icon.set_anchors_preset(Control.PRESET_CENTER)
 			lock_icon.offset_left = -10
@@ -272,10 +280,63 @@ func _build_character_grid() -> void:
 			lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			btn.add_child(lock_icon)
 
+		# -- PRD 46: Teaser glow + glitch for mystery/fragmentado --
+		if is_teaser:
+			# Pulsating glow background
+			var glow := ColorRect.new()
+			glow.name = "TeaserGlow"
+			glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+			glow.color = Color(GameConstants.TEASER_GLOW_COLOR.r, GameConstants.TEASER_GLOW_COLOR.g, GameConstants.TEASER_GLOW_COLOR.b, 0.0)
+			glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			btn.add_child(glow)
+			btn.move_child(glow, 0)  # Atras do sprite
+
+			if not AccessibilityManager.reduced_motion:
+				var pulse := create_tween()
+				pulse.set_loops()
+				pulse.tween_property(glow, "color:a", GameConstants.TEASER_GLOW_MAX_ALPHA, GameConstants.TEASER_PULSE_IN)
+				pulse.tween_property(glow, "color:a", 0.0, GameConstants.TEASER_PULSE_OUT)
+
+				# Glitch effect
+				_start_teaser_glitch(tex, name_lbl, char_id)
+
 		var idx := i
 		btn.pressed.connect(func(): _select_character(idx))
 		_grid.add_child(btn)
 		_char_buttons.append(btn)
+
+
+## PRD 46: Glitch effect for teaser characters (mystery/fragmentado)
+func _start_teaser_glitch(sprite: TextureRect, name_lbl: Label, char_id: String) -> void:
+	var glitch_tween := create_tween()
+	glitch_tween.set_loops()
+	var glitch_chars := ["▓", "░", "█", "◈", "⬡", "⟐"]
+	var original_name: String = name_lbl.text
+
+	# Espera tempo aleatorio entre glitches
+	glitch_tween.tween_interval(randf_range(GameConstants.TEASER_GLITCH_MIN_WAIT, GameConstants.TEASER_GLITCH_MAX_WAIT))
+
+	# Revela o sprite real brevemente
+	glitch_tween.tween_callback(func():
+		var offset_x := randf_range(-3.0, 3.0)
+		var offset_y := randf_range(-2.0, 2.0)
+		sprite.position.x += offset_x
+		sprite.position.y += offset_y
+		sprite.modulate = Color(1, 1, 1, 0.6)  # Semi-transparente
+		if char_id == "mystery":
+			name_lbl.text = glitch_chars[randi() % glitch_chars.size()]
+		# Agenda restauracao
+		get_tree().create_timer(GameConstants.TEASER_GLITCH_DURATION).timeout.connect(func():
+			if is_instance_valid(sprite):
+				sprite.modulate = Color(0, 0, 0, 0.85)
+				sprite.position.x -= offset_x
+				sprite.position.y -= offset_y
+			if is_instance_valid(name_lbl):
+				name_lbl.text = original_name
+		)
+	)
+	# Intervalo para o proximo ciclo
+	glitch_tween.tween_interval(GameConstants.TEASER_GLITCH_DURATION + 0.05)
 
 
 func _build_info_panel(parent: VBoxContainer) -> void:
@@ -526,7 +587,14 @@ func _update_selection() -> void:
 	_name_label.text = data.get("name", char_id).to_upper()
 	_name_label.add_theme_color_override("font_color", char_color.lightened(0.3))
 
-	_passive_label.text = data.get("passive", "")
+	# PRD 46: teaser characters show corrupted passive
+	var _is_teaser := is_locked and char_id in ["mystery", "fragmentado"]
+	if _is_teaser:
+		_passive_label.text = "[dados corrompidos]"
+		_passive_label.add_theme_color_override("font_color", Color(0.4, 0.3, 0.55))
+	else:
+		_passive_label.text = data.get("passive", "")
+		_passive_label.add_theme_color_override("font_color", Color(0.6, 0.85, 0.5))
 
 	# Weapon
 	var weapon_id: String = data.get("starting_weapon", "katana")
@@ -551,7 +619,10 @@ func _update_selection() -> void:
 		var unlock_desc = data.get("unlock_description", "???")
 		if typeof(unlock_desc) != TYPE_STRING:
 			unlock_desc = str(unlock_desc) if unlock_desc != null else "???"
-		_lock_label.text = "🔒 %s" % unlock_desc
+		if _is_teaser:
+			_lock_label.text = "◈ %s" % unlock_desc
+		else:
+			_lock_label.text = "🔒 %s" % unlock_desc
 		_lock_label.visible = true
 		_start_btn.disabled = true
 		_start_btn.text = "BLOQUEADO"

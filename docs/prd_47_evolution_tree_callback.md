@@ -1,6 +1,6 @@
 # PRD 47 — Parser Error: `_on_evolution_tree` não declarado em `main_menu.gd`
 
-**Status:** pendente  
+**Status:** concluido  
 **Prioridade:** Alta  
 **Escopo:** `game/scripts/ui/main_menu.gd` (1 arquivo, 1 linha)  
 **Tipo:** Bug — Parser Error em runtime (callback ausente)

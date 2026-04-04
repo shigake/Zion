@@ -36,6 +36,7 @@ var _frame_counter: int = 0  # Performance: stagger per-enemy work across frames
 var _cached_separation: Vector3 = Vector3.ZERO  # Cached separation vector (updated every 3rd frame)
 var _cached_enemy_sprite: Node = null  # Cached EnemySprite node reference
 var _cached_enemy_sprite_checked: bool = false  # Whether we've looked up the sprite node
+var _last_hit_direction: Vector3 = Vector3.ZERO  # PRD 45: direction of last hit for ragdoll
 
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
 static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
@@ -709,12 +710,15 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	if target and is_instance_valid(target):
 		var kb_dir = (global_position - target.global_position).normalized()
 		knockback_velocity = kb_dir * 3.5
+		_last_hit_direction = kb_dir  # PRD 45: guarda direcao para ragdoll de morte
 
 	AudioManager.play_sfx("hit")
 	if _animator:
 		_animator.play_hit()
 	_flash_white()
 	if hp <= 0:
+		if is_in_group("boss"):
+			ScreenEffects.boss_kill_freeze()  # PRD 44: freeze dramatico no kill do boss
 		call_deferred("_die")
 
 func _get_damage_color(damage_type: String) -> Color:
@@ -773,8 +777,7 @@ func _die() -> void:
 	if is_dead:
 		return
 	is_dead = true
-	# Immediately stop rendering and processing for performance
-	visible = false
+	# Stop processing but keep visible for ragdoll animation (PRD 45)
 	set_physics_process(false)
 	set_process(false)
 	AudioManager.play_sfx("kill")
@@ -840,16 +843,12 @@ func _die() -> void:
 		hitbox.set_deferred("monitorable", false)
 	collision_layer = 0
 	collision_mask = 0
-	# Death animation on sprite: flash white, scale up then shrink, fade out
+	# Death animation: ragdoll with directional fly + spin (PRD 45)
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:
-		sprite.modulate = Color(10, 10, 10)
-		var death_tween = create_tween()
-		death_tween.set_parallel(true)
-		death_tween.tween_property(sprite, "modulate", Color(1, 1, 1, 0), 0.3)
-		death_tween.tween_property(sprite, "scale", sprite.scale * 1.5, 0.15)
-		death_tween.chain().tween_property(sprite, "scale", sprite.scale * 0.1, 0.15)
-		death_tween.chain().tween_callback(queue_free)
+		sprite.modulate = Color(10, 10, 10)  # Flash branco mantido
+		visible = true  # Garantir visibilidade para ragdoll
+		_play_ragdoll_death(sprite)
 		return  # Don't queue_free immediately — tween handles it
 	if _animator:
 		_animator.play_death()
@@ -858,6 +857,50 @@ func _die() -> void:
 		tween.tween_callback(queue_free).set_delay(0.5)
 	else:
 		queue_free()
+
+## PRD 45: Ragdoll death animation — directional fly + spin + fade
+func _play_ragdoll_death(sprite: Node3D) -> void:
+	# Direcao de voo: oposta ao golpe (se nao houve hit, usa direcao aleatoria para cima)
+	var fly_dir := -_last_hit_direction if _last_hit_direction.length() > 0.01 else Vector3(randf_range(-1, 1), 1, 0).normalized()
+	fly_dir.y = absf(fly_dir.y) + 0.4  # Sempre tem componente para cima
+	fly_dir = fly_dir.normalized()
+
+	var fly_dist := randf_range(GameConstants.RAGDOLL_FLY_MIN, GameConstants.RAGDOLL_FLY_MAX)
+	var spin_sign := 1.0 if randf() > 0.5 else -1.0
+	var spin_amount := spin_sign * randf_range(GameConstants.RAGDOLL_SPIN_MIN, GameConstants.RAGDOLL_SPIN_MAX)
+
+	# Bosses voam mais longe e giram mais
+	if is_in_group("boss"):
+		fly_dist *= GameConstants.RAGDOLL_BOSS_SCALE
+		spin_amount *= GameConstants.RAGDOLL_BOSS_SCALE
+
+	# Acessibilidade: reduced motion
+	if AccessibilityManager.reduced_motion:
+		fly_dist *= 0.12
+		spin_amount = 0.0
+
+	var target_pos := sprite.position + fly_dir * fly_dist
+	var target_rot := sprite.rotation + Vector3(0, 0, spin_amount)
+	var duration := GameConstants.RAGDOLL_DURATION
+
+	# Flash branco inicial por 2 frames, depois volta ao normal antes de voar
+	await get_tree().process_frame
+	await get_tree().process_frame
+	sprite.modulate = Color(1, 1, 1, 1)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	# Voo: ease out (desacelera no final)
+	tween.tween_property(sprite, "position", target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# Rotacao: linear (continua girando)
+	tween.tween_property(sprite, "rotation", target_rot, duration).set_trans(Tween.TRANS_LINEAR)
+	# Fade: comeca depois de 30% do tempo
+	tween.tween_property(sprite, "modulate:a", 0.0, duration * 0.7).set_delay(duration * 0.3)
+	# Escala: leve stretch na direcao do voo (squash-stretch)
+	tween.tween_property(sprite, "scale", sprite.scale * Vector3(0.7, 1.3, 1.0), duration * 0.1)
+	tween.chain().tween_property(sprite, "scale", sprite.scale * Vector3(0.4, 0.4, 1.0), duration * 0.9)
+	# Cleanup
+	tween.chain().tween_callback(queue_free)
 
 func _apply_death_behavior(pos: Vector3) -> void:
 	if not is_inside_tree():

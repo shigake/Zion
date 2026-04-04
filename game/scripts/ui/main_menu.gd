@@ -785,6 +785,11 @@ func _on_credits() -> void:
 	LoadingScreen.transition_to("res://scenes/ui/credits_screen.tscn")
 
 
+func _on_evolution_tree() -> void:
+	AudioManager.play_sfx("menu_click")
+	LoadingScreen.transition_to("res://scenes/ui/evolution_tree.tscn")
+
+
 func _on_unlock_all() -> void:
 	AudioManager.play_sfx("achievement")
 	# Unlock all characters

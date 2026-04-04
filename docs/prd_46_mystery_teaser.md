@@ -1,6 +1,6 @@
 # PRD 46 — Teaser visual do Fragmentado ???
 
-**Status:** pendente  
+**Status:** concluido  
 **Prioridade:** média  
 **Escopo:** `character_select.gd`, `game_constants.gd`  
 **Tipo:** UX / retenção / narrativa  

@@ -1,6 +1,6 @@
 # PRD 44 — Screen freeze no golpe final do boss
 
-**Status:** Pendente  
+**Status:** Concluido  
 **Prioridade:** Alta  
 **Esforço estimado:** Pequeno (< 2h)  
 **Tipo:** Polish / Game feel  

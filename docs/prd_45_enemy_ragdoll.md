@@ -1,6 +1,6 @@
 # PRD 45 — Ragdoll de morte dos inimigos
 
-**Status:** pendente  
+**Status:** concluido  
 **Prioridade:** média  
 **Escopo:** `enemy_base.gd`, `game_constants.gd`  
 **Tipo:** game feel / feedback visual  

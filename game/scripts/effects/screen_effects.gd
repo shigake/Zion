@@ -134,6 +134,21 @@ func hit_freeze(duration: float = 0.05) -> void:
 	await get_tree().create_timer(duration * 0.1).timeout
 	Engine.time_scale = 1.0
 
+func boss_kill_freeze() -> void:
+	var duration: float = GameConstants.BOSS_KILL_FREEZE_DURATION
+	# Accessibility: reduced motion — pula o freeze, mantem so o flash
+	if AccessibilityManager.reduced_motion:
+		flash(0.12, GameConstants.BOSS_KILL_FLASH_ALPHA * 0.4)
+		return
+	# Pausa total + flash branco intenso
+	Engine.time_scale = 0.0
+	flash(0.12, GameConstants.BOSS_KILL_FLASH_ALPHA)
+	# Timer com process_always=true para rodar mesmo com time_scale=0
+	await get_tree().create_timer(duration, true, false, true).timeout
+	Engine.time_scale = 1.0
+	# Screen shake suave apos retomar
+	screen_shake(GameConstants.BOSS_KILL_SHAKE_AMOUNT, 0.25)
+
 func slow_motion(duration: float = 0.5, scale: float = 0.3) -> void:
 	Engine.time_scale = scale
 	await get_tree().create_timer(duration * scale).timeout
