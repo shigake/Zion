@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (46 arquivos + adr/)      # Game design documents
+├── docs/ (57 arquivos + adr/)      # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── story.md                 # Historia, lore, narrativa completa
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
