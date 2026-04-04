@@ -68,7 +68,10 @@ func _start_random_quest() -> void:
 			current_quest["target"] = GameManager.player_level + 2
 			current_quest["name"] = "Alcancar nivel %d"
 
-	current_quest["display_name"] = current_quest["icon"] + " " + current_quest["name"] % current_quest["target"]
+	var quest_text: String = current_quest["name"]
+	if "%" in quest_text:
+		quest_text = quest_text % current_quest["target"]
+	current_quest["display_name"] = current_quest["icon"] + " " + quest_text
 	quest_started.emit(current_quest)
 	LogManager.info("Quest", "Started: %s" % current_quest["display_name"])
 
