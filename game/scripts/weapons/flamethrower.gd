@@ -120,11 +120,12 @@ func _process(delta: float) -> void:
 
 	var cooldown = WeaponDB.get_cooldown("flamethrower", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
 
-	# Update burn timers
+	# Update burn timers + cleanup dead enemies
 	var to_remove: Array = []
 	for key in burning_enemies:
 		burning_enemies[key] -= delta
-		if burning_enemies[key] <= 0:
+		var e = instance_from_id(key)
+		if burning_enemies[key] <= 0 or not is_instance_valid(e):
 			to_remove.append(key)
 	for key in to_remove:
 		burning_enemies.erase(key)

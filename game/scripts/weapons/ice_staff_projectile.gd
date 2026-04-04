@@ -57,13 +57,8 @@ func _physics_process(delta: float) -> void:
 
 	if is_inside_tree():
 		global_position += direction * speed * delta
-		# Fallback: overlap check direto
-		if not _returning and monitoring:
-			var bodies = get_overlapping_bodies()
-			for body in bodies:
-				if body.has_method("take_damage") and body.is_in_group("enemies"):
-					_on_body_entered(body)
-					return
+		# Performance: confia nos signals body_entered + area_entered.
+		# Overlap check manual removido — era O(n) por projetil por frame.
 
 func _on_body_entered(body: Node3D) -> void:
 	if _returning:

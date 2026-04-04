@@ -48,6 +48,9 @@ var _cached_skin_colors: Array = []
 var _cached_skin_names: Dictionary = {}
 var _cached_skin_stage: String = ""
 
+# Boss scene cache — preload to avoid load() during gameplay
+var _boss_scene_cache: Dictionary = {}  # path -> PackedScene
+
 func _ready() -> void:
 	rng.randomize()
 	_cache_stage_skin()
@@ -392,7 +395,7 @@ func _process_boss_rush(delta: float) -> void:
 	AudioManager.play_music("boss")
 
 	var path = _get_random_boss_path(_boss_rush_stages[_boss_rush_index])
-	var boss = load(path).instantiate()
+	var boss = _get_cached_boss_scene(path).instantiate()
 	add_child(boss)
 	boss.global_position = spawn_pos
 	GameManager.enemies_alive += 1
@@ -472,6 +475,13 @@ func _spawn_miniboss() -> void:
 	GameManager.enemies_alive += 1
 	GameManager.miniboss_spawned.emit(mb_config["name"])
 
+func _get_cached_boss_scene(path: String) -> PackedScene:
+	if path in _boss_scene_cache:
+		return _boss_scene_cache[path]
+	var scene = load(path)
+	_boss_scene_cache[path] = scene
+	return scene
+
 func _get_random_boss_path(stage: String) -> String:
 	var pool = GameConstants.BOSS_POOLS.get(stage, [])
 	if pool.is_empty():
@@ -497,9 +507,9 @@ func _spawn_boss() -> void:
 
 	AudioManager.play_music("boss")
 
-	# Boss aleatorio do pool da fenda
+	# Boss aleatorio do pool da fenda (cached para evitar stutter)
 	var boss_scene_path: String = _get_random_boss_path(GameManager.selected_stage)
-	var boss_scene_res = load(boss_scene_path)
+	var boss_scene_res = _get_cached_boss_scene(boss_scene_path)
 	var boss = boss_scene_res.instantiate()
 	add_child(boss)
 	boss.global_position = spawn_pos

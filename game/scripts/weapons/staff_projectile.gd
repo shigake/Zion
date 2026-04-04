@@ -75,13 +75,8 @@ func _physics_process(delta: float) -> void:
 
 	global_position += direction * speed * delta
 	_update_sprite_rotation()
-	# Fallback: overlap check direto
-	if monitoring:
-		var bodies = get_overlapping_bodies()
-		for body in bodies:
-			if body.has_method("take_damage") and body.is_in_group("enemies"):
-				_on_body_entered(body)
-				return
+	# Performance: confia nos signals body_entered + area_entered.
+	# Overlap check manual removido — era O(n) por projetil por frame.
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):

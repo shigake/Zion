@@ -37,6 +37,8 @@ var _cached_separation: Vector3 = Vector3.ZERO  # Cached separation vector (upda
 var _cached_enemy_sprite: Node = null  # Cached EnemySprite node reference
 var _cached_enemy_sprite_checked: bool = false  # Whether we've looked up the sprite node
 var _last_hit_direction: Vector3 = Vector3.ZERO  # PRD 45: direction of last hit for ragdoll
+var _cached_boss_aura: Node = null  # Performance: cached BossAura reference
+var _boss_aura_checked: bool = false
 
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
 static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
@@ -64,6 +66,28 @@ func _ready() -> void:
 	_apply_sprite()
 	# Apply stage-themed behavior if this enemy has a themed skin
 	_apply_stage_behavior()
+
+## Pool reuse: restaura estado para inimigos reutilizados do ObjectPool
+func _reset_for_reuse() -> void:
+	is_dead = false
+	hp = max_hp
+	_hit_count = 0
+	knockback_velocity = Vector3.ZERO
+	_last_hit_direction = Vector3.ZERO
+	_entrance_invincible = false
+	visible = true
+	# Restaura collision layer (zerado em _die)
+	collision_layer = 2  # Layer 2: Enemies
+	collision_mask = 0   # Dano por contato via Area3D, nao fisica
+	# Restaura processing (prewarm pode ter desativado)
+	set_process(true)
+	set_physics_process(true)
+	# Restaura hitbox
+	if hitbox:
+		hitbox.monitoring = true
+		hitbox.monitorable = true
+		if not hitbox.body_entered.is_connected(_on_body_entered):
+			hitbox.body_entered.connect(_on_body_entered)
 
 func _get_base_enemy_type() -> String:
 	## Derive the base enemy type from the scene file path, not from `name`
@@ -413,11 +437,13 @@ func _physics_process(delta: float) -> void:
 
 	_frame_counter += 1
 
-	# Boss aura pulse (every 3rd frame)
+	# Boss aura pulse (every 3rd frame, cached reference)
 	if _frame_counter % 3 == 0:
-		var aura = get_node_or_null("BossAura")
-		if aura:
-			aura.modulate.a = 0.2 + sin(Time.get_ticks_msec() * 0.004) * 0.15
+		if not _boss_aura_checked:
+			_boss_aura_checked = true
+			_cached_boss_aura = get_node_or_null("BossAura")
+		if _cached_boss_aura:
+			_cached_boss_aura.modulate.a = 0.2 + sin(Time.get_ticks_msec() * 0.004) * 0.15
 
 	# Knockback decay
 	if knockback_velocity.length() > 0.1:

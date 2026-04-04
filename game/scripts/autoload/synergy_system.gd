@@ -235,11 +235,9 @@ func _freeze_enemy(enemy: Node3D, duration: float) -> void:
 func _fire_explosion(pos: Vector3) -> void:
 	ParticleFactory.spawn_explosion_particles(pos, 2.0)
 	ScreenEffects.shake(0.08)
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 2.5:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 20, "fire")
+	for e in GameManager.get_enemies_in_radius(pos, 2.5):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", 20, "fire")
 	synergy_procced.emit("fire_fire", 20.0)
 
 # ---- Ice + Ice: Shatter frozen enemies ----
@@ -247,26 +245,23 @@ func _fire_explosion(pos: Vector3) -> void:
 func _ice_shatter(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(0.4, 0.85, 1.0), 10)
 	ScreenEffects.shake(0.06)
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.0:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", 15, "ice")
-			# Slow nearby enemies
-			if e is EnemyBase3D:
-				var original_speed = e.speed
-				e.speed *= 0.4
-				# Restore after 2s
-				get_tree().create_timer(2.0).timeout.connect(func():
-					if is_instance_valid(e):
-						e.speed = original_speed
-				)
+	for e in GameManager.get_enemies_in_radius(pos, 3.0):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", 15, "ice")
+		# Slow nearby enemies
+		if e is EnemyBase3D:
+			var original_speed = e.speed
+			e.speed *= 0.4
+			# Restore after 2s
+			get_tree().create_timer(2.0).timeout.connect(func():
+				if is_instance_valid(e):
+					e.speed = original_speed
+			)
 	synergy_procced.emit("ice_ice", 15.0)
 
 # ---- Electric + Electric: Chain Lightning ----
 
 func _chain_lightning(start_pos: Vector3) -> void:
-	var enemies = GameManager.get_enemies()
 	var hit_enemies: Array = []
 	var current_pos = start_pos
 	var chain_range = 5.0
@@ -274,10 +269,11 @@ func _chain_lightning(start_pos: Vector3) -> void:
 	var chain_damage = 12
 
 	for _i in range(chain_count):
+		var nearby = GameManager.get_enemies_in_radius(current_pos, chain_range)
 		var closest: Node3D = null
 		var closest_dist: float = chain_range
-		for e in enemies:
-			if not is_instance_valid(e) or e in hit_enemies:
+		for e in nearby:
+			if e in hit_enemies:
 				continue
 			var dist = current_pos.distance_to(e.global_position)
 			if dist < closest_dist:
@@ -303,10 +299,9 @@ func _dark_aura_tick(pos: Vector3) -> void:
 		return
 	var radius = SYNERGY_RADIUS["dark_aura"]
 	var dmg = SYNERGY_DAMAGE["dark_aura"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "dark")
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "dark")
 	synergy_procced.emit("dark_dark", float(dmg))
 
 # ---- Fire + Ice: Steam Cloud (slow + damage) ----
@@ -317,11 +312,10 @@ func _steam_cloud_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.8, 0.8, 0.8, 0.6), 8)
 	var radius = SYNERGY_RADIUS["steam_cloud"]
 	var dmg = SYNERGY_DAMAGE["steam_cloud"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "fire")
-			_apply_speed_debuff(e, 0.6, 1.5)
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "fire")
+		_apply_speed_debuff(e, 0.6, 1.5)
 	synergy_procced.emit("fire_ice", 8.0)
 
 # ---- Electric + Ice: Conductor (massive AoE) ----
@@ -333,10 +327,9 @@ func _conductor_tick(pos: Vector3) -> void:
 	ScreenEffects.shake(0.12)
 	var radius = SYNERGY_RADIUS["conductor"]
 	var dmg = SYNERGY_DAMAGE["conductor"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "electric")
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "electric")
 	synergy_procced.emit("electric_ice", 25.0)
 
 # ---- Water + Water: Tidal Wave (knockback every 4s) ----
@@ -348,15 +341,14 @@ func _tidal_wave_tick(pos: Vector3) -> void:
 	ScreenEffects.shake(0.06)
 	var radius = SYNERGY_RADIUS["tidal_wave"]
 	var dmg = SYNERGY_DAMAGE["tidal_wave"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			var push_dir = (e.global_position - pos).normalized()
-			if push_dir.length() < 0.01:
-				push_dir = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
-			push_dir.y = 0.0
-			e.global_position += push_dir * 3.0
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "water")
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		var push_dir = (e.global_position - pos).normalized()
+		if push_dir.length() < 0.01:
+			push_dir = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
+		push_dir.y = 0.0
+		e.global_position += push_dir * 3.0
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "water")
 	synergy_procced.emit("water_water", 5.0)
 
 # ---- Water + Fire: Steam Explosion (12 damage AoE, like fire_ice but stronger) ----
@@ -369,11 +361,10 @@ func _steam_explosion_tick(pos: Vector3) -> void:
 	ScreenEffects.shake(0.08)
 	var radius = SYNERGY_RADIUS["steam_explosion"]
 	var dmg = SYNERGY_DAMAGE["steam_explosion"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "fire")
-			_apply_speed_debuff(e, 0.5, 1.5)
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "fire")
+		_apply_speed_debuff(e, 0.5, 1.5)
 	synergy_procced.emit("water_fire", 12.0)
 
 # ---- Water + Electric: Electrolysis (2x electric damage in water zones) ----
@@ -396,11 +387,10 @@ func _absolute_zero_tick(pos: Vector3) -> void:
 	ScreenEffects.shake(0.1)
 	var radius = SYNERGY_RADIUS["absolute_zero"]
 	var dmg = SYNERGY_DAMAGE["absolute_zero"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "ice")
-			_freeze_enemy(e, 2.0)
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "ice")
+		_freeze_enemy(e, 2.0)
 	synergy_procced.emit("water_ice", 8.0)
 
 # ---- Water + Dark: Abyssal Depths (40% slow aura, refreshed continuously) ----
@@ -411,18 +401,24 @@ func _abyssal_depths_tick(pos: Vector3) -> void:
 	if not _tick_synergy("abyssal_depths"):
 		return
 	var radius = SYNERGY_RADIUS["abyssal_depths"]
-	for e in GameManager.get_enemies():
-		if not is_instance_valid(e):
-			continue
-		var in_range = pos.distance_to(e.global_position) < radius
+	# Mark enemies in radius as slowed
+	var in_range_ids: Dictionary = {}
+	for e in GameManager.get_enemies_in_radius(pos, radius):
 		var eid = e.get_instance_id()
-		if in_range and e is EnemyBase3D and eid not in _abyssal_slowed_enemies:
+		in_range_ids[eid] = true
+		if e is EnemyBase3D and eid not in _abyssal_slowed_enemies:
 			_abyssal_slowed_enemies[eid] = e.speed
 			e.speed *= 0.6
-		elif not in_range and eid in _abyssal_slowed_enemies:
+	# Restore speed for enemies that left range
+	var to_remove: Array = []
+	for eid in _abyssal_slowed_enemies:
+		if eid not in in_range_ids:
+			var e = instance_from_id(eid)
 			if is_instance_valid(e):
 				e.speed = _abyssal_slowed_enemies[eid]
-			_abyssal_slowed_enemies.erase(eid)
+			to_remove.append(eid)
+	for eid in to_remove:
+		_abyssal_slowed_enemies.erase(eid)
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.1, 0), Color(0.1, 0.15, 0.3, 0.4), 3)
 	synergy_procced.emit("water_dark", 0.0)
 
@@ -434,11 +430,10 @@ func _toxic_fire_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.8, 0.5, 0.1, 0.7), 6)
 	var radius = SYNERGY_RADIUS["toxic_fire"]
 	var dmg = SYNERGY_DAMAGE["toxic_fire"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "fire")
-				e.call_deferred("take_damage", dmg, "fire")
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "fire")
+			e.call_deferred("take_damage", dmg, "fire")
 	synergy_procced.emit("fire_poison", 16.0)
 
 # ---- Ice + Dark: Shadow Freeze (freeze + life drain to player) ----
@@ -450,12 +445,11 @@ func _shadow_freeze_tick(pos: Vector3) -> void:
 	var radius = SYNERGY_RADIUS["shadow_freeze"]
 	var dmg = SYNERGY_DAMAGE["shadow_freeze"]
 	var total_damage_dealt: float = 0.0
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "ice")
-				total_damage_dealt += dmg
-			_freeze_enemy(e, 1.5)
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "ice")
+			total_damage_dealt += dmg
+		_freeze_enemy(e, 1.5)
 	if total_damage_dealt > 0.0:
 		var heal_amount = total_damage_dealt * 0.02
 		if heal_amount < 1.0:
@@ -471,11 +465,10 @@ func _toxic_shock_tick(pos: Vector3) -> void:
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.3, 0), Color(0.3, 1.0, 0.3, 0.8), 8)
 	var radius = SYNERGY_RADIUS["toxic_shock"]
 	var dmg = SYNERGY_DAMAGE["toxic_shock"]
-	for e in GameManager.get_enemies():
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < radius:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", dmg, "poison")
-			_freeze_enemy(e, 0.5)
+	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", dmg, "poison")
+		_freeze_enemy(e, 0.5)
 	synergy_procced.emit("electric_poison", 6.0)
 
 func reset() -> void:
@@ -581,12 +574,10 @@ func _execute_cross_combo(pos: Vector3, combo: Dictionary, base_damage: int) -> 
 	var combo_damage = int(base_damage * CROSS_COMBO_MULTIPLIER)
 	var combo_color: Color = combo.get("color", Color.WHITE)
 
-	# AoE damage to enemies
-	var enemies = GameManager.get_enemies()
-	for e in enemies:
-		if is_instance_valid(e) and pos.distance_to(e.global_position) < 3.5:
-			if e.has_method("take_damage"):
-				e.call_deferred("take_damage", combo_damage, "fire")
+	# AoE damage to enemies (spatial grid)
+	for e in GameManager.get_enemies_in_radius(pos, 3.5):
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", combo_damage, "fire")
 
 	# Visual effects
 	ParticleFactory.spawn_explosion_particles(pos, 3.0)

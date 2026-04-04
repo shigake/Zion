@@ -89,13 +89,8 @@ func _physics_process(delta: float) -> void:
 		global_position += direction * speed * delta
 		# Mantem a bala acima do chao mas baixa o suficiente pra acertar inimigos pequenos (slime Y=0.0-0.4)
 		global_position.y = maxf(global_position.y, 0.3)
-		# Fallback: overlap check direto (garante deteccao mesmo com body_entered falhando)
-		if not _returning and monitoring:
-			var bodies = get_overlapping_bodies()
-			for body in bodies:
-				if body.has_method("take_damage") and body.is_in_group("enemies"):
-					_on_body_entered(body)
-					return
+		# Performance: confia nos signals body_entered + area_entered.
+		# Overlap check manual removido — era O(n) por bala por frame.
 
 func _on_body_entered(body: Node3D) -> void:
 	if _returning or not is_inside_tree():

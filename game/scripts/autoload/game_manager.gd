@@ -152,6 +152,10 @@ var map_half_size: float = 95.0
 var manual_aim: bool = false
 var aim_direction: Vector3 = Vector3.ZERO
 
+# Thorns throttle — max 10 procs/sec instead of per-hit
+var _thorns_last_proc_time: float = 0.0
+const THORNS_COOLDOWN := 0.1  # seconds between procs
+
 # Accessibility toggles (synced from SaveManager on run start)
 var screen_shake_enabled: bool = true
 var damage_numbers_enabled: bool = true
@@ -446,7 +450,7 @@ func add_xp(amount: int) -> void:
 		if not players.is_empty():
 			ParticleFactory.spawn_level_up_particles(players[0].global_position)
 		if get_tree() and get_tree().current_scene:
-			load("res://scripts/stages/stage_atmosphere.gd").bloom_spike(get_tree().current_scene, 0.8, 0.5)
+			_get_stage_atmosphere().bloom_spike(get_tree().current_scene, 0.8, 0.5)
 			ScreenEffects.shake(0.1)
 
 func get_difficulty_multiplier() -> float:
@@ -466,6 +470,13 @@ func get_mp_boss_hp_mult() -> float:
 	var count = MultiplayerManager.get_player_count()
 	return GameConstants.MP_BOSS_HP_MULT[mini(count, 4)]
 
+func _thorns_can_proc() -> bool:
+	var now = Time.get_ticks_msec() / 1000.0
+	if now - _thorns_last_proc_time < THORNS_COOLDOWN:
+		return false
+	_thorns_last_proc_time = now
+	return true
+
 func take_damage(amount: int) -> void:
 	if is_game_over:
 		return
@@ -478,18 +489,18 @@ func take_damage(amount: int) -> void:
 	# Formula: reduction = armor / (armor + 50), caps around ~60% at max armor
 	var armor_reduction := perm_armor / float(perm_armor + GameConstants.ARMOR_DIMINISH_DIVISOR)
 	var reduced = maxi(1, int(amount * (1.0 - armor_reduction)))
-	# Thorns: reflect damage to nearest enemy
+	# Thorns: reflect damage to nearest enemy (throttled + spatial grid)
 	if thorns_mult > 0.0:
 		var reflected = int(reduced * thorns_mult)
-		if reflected > 0:
-			var enemies = get_enemies()
+		if reflected > 0 and _thorns_can_proc():
 			var players = get_players()
-			if not players.is_empty() and not enemies.is_empty():
+			if not players.is_empty():
 				var player_pos = players[0].global_position
+				var nearby = get_enemies_in_radius(player_pos, 6.0)
 				var nearest: Node3D = null
 				var min_dist = INF
-				for e in enemies:
-					if is_instance_valid(e) and e.has_method("take_damage"):
+				for e in nearby:
+					if e.has_method("take_damage"):
 						var d = player_pos.distance_squared_to(e.global_position)
 						if d < min_dist:
 							min_dist = d
@@ -621,8 +632,17 @@ func upgrade_item(item_id: String) -> bool:
 			return true
 	return false
 
+var _item_bonus_calc = null
+var _stage_atmosphere_script = null
+
+func _get_stage_atmosphere():
+	if not _stage_atmosphere_script:
+		_stage_atmosphere_script = load("res://scripts/stages/stage_atmosphere.gd")
+	return _stage_atmosphere_script
 func _recalculate_item_bonuses() -> void:
-	load("res://scripts/autoload/item_bonus_calculator.gd").recalculate(self, player_items)
+	if not _item_bonus_calc:
+		_item_bonus_calc = load("res://scripts/autoload/item_bonus_calculator.gd")
+	_item_bonus_calc.recalculate(self, player_items)
 
 func reset() -> void:
 	AchievementManager.reset_run()
