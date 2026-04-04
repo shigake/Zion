@@ -324,7 +324,7 @@ func _show_almost_notification(data: Dictionary) -> void:
 
 	# SFX: reuse quest_progress with higher pitch
 	if AudioManager.has_method("play_sfx"):
-		AudioManager.play_sfx("quest_progress", 1.0, 1.3)
+		AudioManager.play_sfx("quest_progress", 1.0)
 
 func _toggle_expanded() -> void:
 	_expanded_visible = not _expanded_visible

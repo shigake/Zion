@@ -204,8 +204,10 @@ func _on_mushroom_zone_entered(body: Node3D, zone: Area3D) -> void:
 			)
 
 	# Respawn after 30s
+	var zones_ref = _mushroom_zones_used
 	get_tree().create_timer(30.0).timeout.connect(func():
-		_mushroom_zones_used[zone] = false
+		if zones_ref != null:
+			zones_ref[zone] = false
 	)
 
 

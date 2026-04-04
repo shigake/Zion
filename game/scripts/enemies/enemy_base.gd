@@ -1062,13 +1062,16 @@ func play_boss_entrance() -> void:
 	entrance_tween.tween_property(self, "scale", original_scale * 1.15, 0.35).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	entrance_tween.tween_property(self, "scale", original_scale, 0.15).set_ease(Tween.EASE_IN_OUT)
 	# Ground impact particles when scale-up finishes
+	var self_ref = self
 	entrance_tween.tween_callback(func():
-		ParticleFactory.spawn_explosion_particles(global_position + Vector3(0, 0.3, 0))
-		ScreenEffects.shake(0.3)
+		if is_instance_valid(self_ref):
+			ParticleFactory.spawn_explosion_particles(self_ref.global_position + Vector3(0, 0.3, 0))
+			ScreenEffects.shake(0.3)
 	)
 	# Remove invincibility after 1 second
 	get_tree().create_timer(1.0).timeout.connect(func():
-		_entrance_invincible = false
+		if is_instance_valid(self_ref):
+			self_ref._entrance_invincible = false
 	)
 
 func _mutation_explode(pos: Vector3) -> void:
