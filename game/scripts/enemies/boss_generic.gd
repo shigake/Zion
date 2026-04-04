@@ -14,11 +14,13 @@ var attack_timer: float = 3.0
 var summon_timer: float = 5.0
 var special_timer: float = 8.0
 var _phase3_transition_done: bool = false
+var _boss_base_speed: float = 0.0
 
 func _ready() -> void:
 	super._ready()
 	add_to_group("boss")
 	enemy_color = boss_color
+	_boss_base_speed = speed
 	_load_boss_sprite()
 
 func _load_boss_sprite() -> void:
@@ -73,8 +75,8 @@ func _load_boss_sprite() -> void:
 				add_child(label)
 				return
 
-func _process(delta: float) -> void:
-	super._process(delta)
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
 	if is_dead or not is_inside_tree():
 		return
 
@@ -100,7 +102,7 @@ func _process(delta: float) -> void:
 
 	# Fury mode
 	if hp_ratio <= GameConstants.BOSS_FURY_THRESHOLD:
-		speed = base_speed * 1.5
+		speed = _boss_base_speed * 1.5
 
 	# Timers
 	attack_timer -= delta

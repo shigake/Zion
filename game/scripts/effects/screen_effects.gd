@@ -147,7 +147,7 @@ func boss_kill_freeze() -> void:
 	await get_tree().create_timer(duration, true, false, true).timeout
 	Engine.time_scale = 1.0
 	# Screen shake suave apos retomar
-	screen_shake(GameConstants.BOSS_KILL_SHAKE_AMOUNT, 0.25)
+	shake(GameConstants.BOSS_KILL_SHAKE_AMOUNT)
 
 func slow_motion(duration: float = 0.5, scale: float = 0.3) -> void:
 	Engine.time_scale = scale

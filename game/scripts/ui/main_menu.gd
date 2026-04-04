@@ -135,7 +135,7 @@ func _ready() -> void:
 	# Move before options and quit
 	buttons_container.move_child(evo_btn, shop_btn.get_index() + 1)
 	# Style like secondary buttons
-	_style_button_as_secondary(evo_btn)
+	_style_secondary_button(evo_btn)
 	# Add hover glow
 	evo_btn.mouse_entered.connect(_on_button_hover.bind(evo_btn))
 	evo_btn.mouse_exited.connect(_on_button_unhover)
