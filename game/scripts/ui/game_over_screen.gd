@@ -6,23 +6,24 @@ extends CanvasLayer
 ## PRD 28 §4 — Expanded Post-Run Stats
 
 @onready var panel: PanelContainer = $Panel
-@onready var time_label: Label = $Panel/MarginContainer/VBox/StatsRow1/TimeLabel
-@onready var level_label: Label = $Panel/MarginContainer/VBox/StatsRow1/LevelLabel
-@onready var kills_label: Label = $Panel/MarginContainer/VBox/StatsRow2/KillsLabel
-@onready var crystals_label: Label = $Panel/MarginContainer/VBox/StatsRow2/CrystalsLabel
-@onready var title_label: Label = $Panel/MarginContainer/VBox/TitleLabel
-@onready var weapons_title: Label = $Panel/MarginContainer/VBox/WeaponsTitle
-@onready var weapons_container: VBoxContainer = $Panel/MarginContainer/VBox/WeaponsContainer
-@onready var items_title: Label = $Panel/MarginContainer/VBox/ItemsTitle
-@onready var items_container: VBoxContainer = $Panel/MarginContainer/VBox/ItemsContainer
-@onready var evolutions_title: Label = $Panel/MarginContainer/VBox/EvolutionsTitle
-@onready var evolutions_container: VBoxContainer = $Panel/MarginContainer/VBox/EvolutionsContainer
-@onready var unlock_label: Label = $Panel/MarginContainer/VBox/UnlockLabel
+@onready var _content_vbox: VBoxContainer = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox
+@onready var time_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/StatsRow1/TimeLabel
+@onready var level_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/StatsRow1/LevelLabel
+@onready var kills_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/StatsRow2/KillsLabel
+@onready var crystals_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/StatsRow2/CrystalsLabel
+@onready var title_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/TitleLabel
+@onready var weapons_title: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/WeaponsTitle
+@onready var weapons_container: VBoxContainer = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/WeaponsContainer
+@onready var items_title: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/ItemsTitle
+@onready var items_container: VBoxContainer = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/ItemsContainer
+@onready var evolutions_title: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/EvolutionsTitle
+@onready var evolutions_container: VBoxContainer = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/EvolutionsContainer
+@onready var unlock_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/UnlockLabel
 @onready var screenshot_btn: Button = $Panel/MarginContainer/VBox/ButtonRow/ScreenshotButton
 @onready var retry_btn: Button = $Panel/MarginContainer/VBox/ButtonRow/RetryButton
 @onready var menu_btn: Button = $Panel/MarginContainer/VBox/ButtonRow/MenuButton
-@onready var char_icon: TextureRect = $Panel/MarginContainer/VBox/CharacterRow/CharIcon
-@onready var char_name_label: Label = $Panel/MarginContainer/VBox/CharacterRow/CharNameLabel
+@onready var char_icon: TextureRect = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/CharacterRow/CharIcon
+@onready var char_name_label: Label = $Panel/MarginContainer/VBox/ScrollContainer/ContentVBox/CharacterRow/CharNameLabel
 
 @onready var overlay: ColorRect = $Overlay
 
@@ -311,7 +312,7 @@ func _on_menu() -> void:
 
 ## Build tab bar with two buttons (Resumo | Registro Dimensional).
 func _build_tab_bar() -> void:
-	var vbox = $Panel/MarginContainer/VBox
+	var vbox = _content_vbox
 	_tab_bar = HBoxContainer.new()
 	_tab_bar.name = "TabBar"
 	_tab_bar.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -332,7 +333,7 @@ func _build_tab_bar() -> void:
 	_tab_bar.add_child(_tab_detail_btn)
 
 	# Insert after CharacterRow (index 1 in VBox children)
-	var char_row_idx = $Panel/MarginContainer/VBox/CharacterRow.get_index()
+	var char_row_idx = _content_vbox.get_node("CharacterRow").get_index()
 	vbox.add_child(_tab_bar)
 	vbox.move_child(_tab_bar, char_row_idx + 1)
 
@@ -348,7 +349,7 @@ func _build_tab_bar() -> void:
 
 ## Build narrative label (lore text for the detail tab).
 func _build_narrative_label() -> void:
-	var vbox = $Panel/MarginContainer/VBox
+	var vbox = _content_vbox
 	_narrative_label = Label.new()
 	_narrative_label.name = "NarrativeLabel"
 	_narrative_label.add_theme_font_size_override("font_size", 11)
@@ -365,7 +366,7 @@ func _build_narrative_label() -> void:
 
 ## Build best run comparison section (shown in tab 1).
 func _build_best_run_section() -> void:
-	var vbox = $Panel/MarginContainer/VBox
+	var vbox = _content_vbox
 	_best_run_grid = GridContainer.new()
 	_best_run_grid.name = "BestRunComparison"
 	_best_run_grid.columns = 2
@@ -379,7 +380,7 @@ func _build_best_run_section() -> void:
 
 ## Build the detail tab container (StatsDetailTab).
 func _build_detail_tab() -> void:
-	var vbox = $Panel/MarginContainer/VBox
+	var vbox = _content_vbox
 	var detail_script = load("res://scripts/ui/stats_detail_tab.gd")
 	_detail_container = Control.new()
 	_detail_container.set_script(detail_script)
@@ -418,8 +419,8 @@ func _switch_tab(idx: int) -> void:
 			node.visible = detail_visible
 
 	# StatsRow1/2, expanded stats, weapons/items/evolutions belong to tab 1
-	$Panel/MarginContainer/VBox/StatsRow1.visible = summary_visible
-	$Panel/MarginContainer/VBox/StatsRow2.visible = summary_visible
+	_content_vbox.get_node("StatsRow1").visible = summary_visible
+	_content_vbox.get_node("StatsRow2").visible = summary_visible
 	if _stats_container and is_instance_valid(_stats_container):
 		_stats_container.visible = summary_visible
 	weapons_title.visible = summary_visible and not GameManager.player_weapons.is_empty()
@@ -493,8 +494,8 @@ func _populate_best_run_comparison() -> void:
 		_best_run_grid.add_child(arrow_label)
 
 	# Position after StatsRow2
-	var vbox = $Panel/MarginContainer/VBox
-	var stats_row2_idx = $Panel/MarginContainer/VBox/StatsRow2.get_index()
+	var vbox = _content_vbox
+	var stats_row2_idx = _content_vbox.get_node("StatsRow2").get_index()
 	vbox.move_child(_best_run_grid, stats_row2_idx + 1)
 
 
@@ -528,7 +529,7 @@ func _take_screenshot() -> void:
 
 ## Build seed display row (added to ButtonRow parent VBox).
 func _build_seed_row() -> void:
-	var vbox = $Panel/MarginContainer/VBox
+	var vbox = _content_vbox
 	_seed_row = HBoxContainer.new()
 	_seed_row.name = "SeedRow"
 	_seed_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -589,7 +590,7 @@ func _build_expanded_stats() -> void:
 		_stats_container.queue_free()
 		_stats_container = null
 
-	var vbox = $Panel/MarginContainer/VBox
+	var vbox = _content_vbox
 	_stats_container = VBoxContainer.new()
 	_stats_container.name = "ExpandedStats"
 	_stats_container.add_theme_constant_override("separation", 2)
