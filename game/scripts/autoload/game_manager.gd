@@ -12,6 +12,7 @@ signal miniboss_spawned(boss_name: String)
 signal boss_spawned(boss_name: String)
 signal boss_died(boss_name: String)
 signal boss_phase_changed(boss_name: String, phase: int)
+signal bestiary_milestone_reached(enemy_id: String, kills: int, label: String, crystals: int)
 
 # Annulus spawning — constantes centralizadas em GameConstants
 
@@ -26,6 +27,7 @@ static func get_annulus_position(center: Vector3, min_r: float = 15.0, max_r: fl
 var game_time: float = 0.0
 var enemies_alive: int = 0
 var max_enemies: int = 200  # Default, ajustado por spawner
+var active_pickup_count: int = 0  # O(1) global counter for pickup cap enforcement
 # Cached enemy list (updated once per frame to avoid 45+ get_nodes_in_group calls)
 var _cached_enemies: Array = []
 var _enemies_cache_frame: int = -1

@@ -80,6 +80,18 @@ func _get_base_enemy_type() -> String:
 		return result
 	return name
 
+func get_bestiary_id() -> String:
+	## Returns the bestiary-compatible ID for this enemy.
+	## Themed enemies: "cemetery_zombie", Generics: "Slime", Bosses: "BossNecromancer"
+	var base_type := _get_base_enemy_type()
+	var stage := GameManager.selected_stage
+	# Check if this enemy has a themed skin in the current stage
+	if STAGE_ENEMY_SPRITES.has(stage):
+		var mapping: Dictionary = STAGE_ENEMY_SPRITES[stage]
+		if mapping.has(base_type):
+			return mapping[base_type]  # e.g. "cemetery_zombie"
+	return base_type  # e.g. "Slime" or "BossNecromancer"
+
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var stage = GameManager.selected_stage
@@ -766,8 +778,14 @@ func _die() -> void:
 	set_physics_process(false)
 	set_process(false)
 	AudioManager.play_sfx("kill")
-	# Track in bestiary
-	SaveManager.track_bestiary(name)
+	# Track in bestiary using the proper bestiary ID
+	var bestiary_id := get_bestiary_id()
+	var milestone_info := SaveManager.track_bestiary(bestiary_id)
+	if milestone_info.has("milestone_reached"):
+		GameManager.bestiary_milestone_reached.emit(
+			bestiary_id, milestone_info["milestone_reached"],
+			milestone_info["milestone_label"], milestone_info["crystals_awarded"]
+		)
 	# One Punch achievement: boss killed in 1 hit
 	if is_in_group("boss") and _hit_count <= 1:
 		AchievementManager.on_boss_killed_one_hit()

@@ -173,3 +173,91 @@ func get_all_achievements() -> Dictionary:
 
 func get_unlocked_count() -> int:
 	return SaveManager.data.get("achievements", []).size()
+
+## Returns progress data for a single achievement.
+## {id, name, current, target, percent}
+func get_progress(id: String) -> Dictionary:
+	var ach = achievements.get(id, {})
+	var ach_name = ach.get("name", id)
+	var current: int = 0
+	var target: int = 1
+
+	match id:
+		"genocide":
+			current = GameManager.total_kills
+			target = 10000
+		"collector":
+			var all_chars = CharacterDB.get_all_character_ids()
+			var unlocked = 0
+			for cid in all_chars:
+				if SaveManager.is_character_unlocked(cid):
+					unlocked += 1
+			current = unlocked
+			target = 15
+		"completionist":
+			var completed_stages = SaveManager.data.get("completed_stages", [])
+			current = completed_stages.size()
+			target = 10
+		"treasure_hunter":
+			current = _run_chests_collected
+			target = 10
+		"quest_master":
+			current = _run_quests_completed
+			target = 5
+		"boss_slayer":
+			current = _run_bosses_killed
+			target = 2
+		"matrix":
+			current = _run_dodges
+			target = 100
+		"evolved_6":
+			current = EvolutionDB.evolved_weapons.size()
+			target = 6
+		"storm":
+			var electric_evos = 0
+			for evo_id in EvolutionDB.evolved_weapons:
+				var evo = EvolutionDB.get_evolution(evo_id)
+				var weapon_id = evo.get("weapon_required", "")
+				var weapon_data = WeaponDB.get_weapon(weapon_id)
+				if weapon_data.get("damage_type", "") == "electric":
+					electric_evos += 1
+			current = electric_evos
+			target = 3
+		"lucky_day":
+			current = _run_legendary_items
+			target = 5
+		"first_walk":
+			current = mini(int(GameManager.game_time), 300)
+			target = 300
+		"speedrunner":
+			if GameManager.is_victory:
+				current = 1
+				target = 1
+			else:
+				current = mini(int(GameManager.game_time), 900)
+				target = 900
+		"pacifist":
+			if _run_attacks == 0:
+				current = mini(int(GameManager.game_time), 180)
+				target = 180
+			else:
+				current = 0
+				target = 180
+		"nobody_deserves", "one_punch", "cow_brejo", "sweet_revenge":
+			current = 0
+			target = 1
+
+	var pct = minf(1.0, float(current) / maxf(float(target), 1.0))
+	return {"id": id, "name": ach_name, "current": current, "target": target, "percent": pct}
+
+## Returns the N incomplete achievements with the highest progress percentage.
+func get_nearest_achievements(count: int = 3) -> Array[Dictionary]:
+	var incomplete: Array[Dictionary] = []
+	for id in achievements:
+		if is_unlocked(id):
+			continue
+		var progress = get_progress(id)
+		if progress["percent"] > 0.0:
+			incomplete.append(progress)
+	incomplete.sort_custom(func(a, b): return a["percent"] > b["percent"])
+	return incomplete.slice(0, count) as Array[Dictionary]

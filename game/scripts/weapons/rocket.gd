@@ -10,13 +10,19 @@ var target_pos: Vector3 = Vector3.ZERO
 var direction: Vector3 = Vector3.FORWARD
 var _sprite: Sprite3D = null
 
+var _direction_initialized: bool = false
+
 func _ready() -> void:
-	direction = (target_pos - global_position).normalized()
-	direction.y = 0
-	# Orient the missile to face travel direction
-	if direction.length() > 0.01:
-		look_at(global_position + direction, Vector3.UP)
+	# Direction is calculated in first _physics_process frame
+	# because global_position may not be set yet during add_child
 	_setup_billboard_sprite()
+
+## Called by bazooka.gd after setting target_pos and global_position.
+## Resets state for ObjectPool reuse — ensures direction is recalculated.
+func initialize() -> void:
+	_direction_initialized = false
+	visible = true
+	set_physics_process(true)
 
 func _setup_billboard_sprite() -> void:
 	# Guard: nao recria sprite se ja existe
@@ -55,6 +61,15 @@ func _update_sprite_rotation() -> void:
 	_sprite.rotation.z = angle
 
 func _physics_process(delta: float) -> void:
+	# Initialize direction on first physics frame (global_position is now valid)
+	if not _direction_initialized:
+		_direction_initialized = true
+		direction = (target_pos - global_position).normalized()
+		direction.y = 0
+		if direction.length() > 0.01:
+			look_at(global_position + direction, Vector3.UP)
+		_update_sprite_rotation()
+
 	global_position += direction * speed * delta
 
 	# Chegou no alvo

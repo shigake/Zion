@@ -84,6 +84,7 @@ func _fire(level: int) -> void:
 	rocket.explosion_radius *= GameManager.area_mult
 	scene_root.add_child(rocket)
 	rocket.global_position = player_pos + Vector3(0, 0.5, 0)
+	rocket.initialize()
 
 ## Client-only: spawns visual rocket without collision (no damage/explosion).
 func _fire_visual_only(level: int) -> void:
@@ -125,3 +126,4 @@ func _fire_visual_only(level: int) -> void:
 	rocket.set_deferred("monitoring", false)
 	scene_root.add_child(rocket)
 	rocket.global_position = player_pos + Vector3(0, 0.5, 0)
+	rocket.initialize()

@@ -222,13 +222,79 @@ func _rebuild_content() -> void:
 		main_vbox.add_child(HSeparator.new())
 
 		var evo_title = Label.new()
-		evo_title.text = "Evolucoes possiveis"
+		evo_title.text = LocaleManager.tr_key("evo_tree_possible")
 		evo_title.add_theme_font_size_override("font_size", 18)
 		evo_title.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
 		main_vbox.add_child(evo_title)
 
 		for evo in possible_evos:
 			_add_evolution_entry(main_vbox, evo)
+
+	# ---- Evolution tree (compact) ----
+	main_vbox.add_child(HSeparator.new())
+
+	var evo_tree_title = Label.new()
+	evo_tree_title.text = LocaleManager.tr_key("evo_tree_title")
+	evo_tree_title.add_theme_font_size_override("font_size", 18)
+	evo_tree_title.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
+	main_vbox.add_child(evo_tree_title)
+
+	# Compact list of all evolutions
+	for evo_id in EvolutionDB.get_all_evolution_ids():
+		var evo = EvolutionDB.get_evolution(evo_id)
+		var state = _get_evo_tree_state(evo_id)
+		var entry_hbox = HBoxContainer.new()
+		entry_hbox.add_theme_constant_override("separation", 6)
+		main_vbox.add_child(entry_hbox)
+
+		# Available indicator
+		if state == "available":
+			var star = Label.new()
+			star.text = "!"
+			star.add_theme_font_size_override("font_size", 14)
+			star.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+			entry_hbox.add_child(star)
+
+		# Name
+		var name_lbl = Label.new()
+		if state == "locked":
+			name_lbl.text = "???"
+			name_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		else:
+			name_lbl.text = evo.get("name", evo_id.capitalize())
+			match state:
+				"discovered":
+					name_lbl.add_theme_color_override("font_color", Color(0.6, 0.85, 1.0))
+				"available":
+					name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+				"evolved":
+					name_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+		name_lbl.add_theme_font_size_override("font_size", 13)
+		entry_hbox.add_child(name_lbl)
+
+		# Recipe with current levels
+		if state != "locked":
+			var weapon_id = evo.get("weapon_required", "")
+			var item_id = evo.get("item_required", "")
+			var weapon_data = WeaponDB.get_weapon(weapon_id)
+			var item_data = ItemDB.get_item(item_id)
+			var wname = weapon_data.get("name", weapon_id.capitalize()) if not weapon_data.is_empty() else weapon_id.capitalize()
+			var iname = item_data.get("name", item_id.capitalize()) if not item_data.is_empty() else item_id.capitalize()
+			var wlv = GameManager.get_weapon_level(weapon_id)
+			var ilv = GameManager.get_item_level(item_id)
+
+			var recipe_lbl = Label.new()
+			recipe_lbl.text = "(%s %d/6 + %s %d/3)" % [wname, wlv, iname, ilv]
+			recipe_lbl.add_theme_font_size_override("font_size", 11)
+			recipe_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
+			entry_hbox.add_child(recipe_lbl)
+
+		if state == "evolved":
+			var check = Label.new()
+			check.text = "[OK]"
+			check.add_theme_font_size_override("font_size", 11)
+			check.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+			entry_hbox.add_child(check)
 
 func _add_weapon_entry(parent: Control, w: Dictionary) -> void:
 	var weapon_id: String = w["id"]
@@ -452,3 +518,18 @@ func _add_evolution_entry(parent: Control, evo: Dictionary) -> void:
 	item_bg.bg_color = Color(0.15, 0.15, 0.15)
 	item_bar.add_theme_stylebox_override("background", item_bg)
 	bars_hbox.add_child(item_bar)
+
+func _get_evo_tree_state(evo_id: String) -> String:
+	## Returns evolution state: "locked", "discovered", "available", "evolved"
+	if evo_id in EvolutionDB.evolved_weapons:
+		return "evolved"
+	var evo = EvolutionDB.get_evolution(evo_id)
+	if not evo.is_empty():
+		var weapon_level = GameManager.get_weapon_level(evo["weapon_required"])
+		var item_level = GameManager.get_item_level(evo["item_required"])
+		if weapon_level >= 6 and item_level >= 3:
+			return "available"
+	var history = SaveManager.data.get("evolution_history", {})
+	if evo_id in history:
+		return "discovered"
+	return "locked"

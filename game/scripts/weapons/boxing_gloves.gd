@@ -36,7 +36,7 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		punch_mesh.get_parent().add_child(sprite)
+		punch_area.add_child(sprite)
 	# Short punch trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(1.0, 0.3, 0.2, 0.7)

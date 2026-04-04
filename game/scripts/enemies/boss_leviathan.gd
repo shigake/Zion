@@ -6,6 +6,7 @@ extends EnemyBase3D
 ## Fase 3 (25-0%): Rage total. Tentacle slam (area 5.0), barrage constante, spawna jellyfish (ghosts)
 
 var phase: int = 1
+var _phase3_transition_done: bool = false
 var summon_timer: float = 0.0
 var attack_timer: float = 0.0
 var vortex_timer: float = 0.0
@@ -51,6 +52,9 @@ func _physics_process(delta: float) -> void:
 		AudioManager.play_sfx("boss_phase")
 		ScreenEffects.shake(0.2)
 		GameManager.boss_phase_changed.emit(name, phase)
+		if phase == 3 and not _phase3_transition_done:
+			_phase3_transition_done = true
+			ScreenEffects.boss_phase3_transition(global_position, enemy_color)
 
 	# Fury phase (HP < 10%)
 	if hp < max_hp * 0.1 and not _fury_active:

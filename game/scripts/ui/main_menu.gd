@@ -125,6 +125,23 @@ func _ready() -> void:
 		multi_btn.disabled = true
 		multi_btn.modulate.a = 0.5
 
+	# Evolution tree button (PRD 40) — added dynamically after shop
+	var evo_btn = Button.new()
+	evo_btn.name = "EvoTreeButton"
+	evo_btn.text = LocaleManager.tr_key("evo_tree_title")
+	evo_btn.custom_minimum_size = shop_btn.custom_minimum_size
+	evo_btn.pressed.connect(_on_evolution_tree)
+	buttons_container.add_child(evo_btn)
+	# Move before options and quit
+	buttons_container.move_child(evo_btn, shop_btn.get_index() + 1)
+	# Style like secondary buttons
+	_style_button_as_secondary(evo_btn)
+	# Add hover glow
+	evo_btn.mouse_entered.connect(_on_button_hover.bind(evo_btn))
+	evo_btn.mouse_exited.connect(_on_button_unhover)
+	evo_btn.focus_entered.connect(_on_button_hover.bind(evo_btn))
+	evo_btn.focus_exited.connect(_on_button_unhover)
+
 	# Debug: unlock all button (for testing)
 	var unlock_btn = Button.new()
 	unlock_btn.text = "🔓 Desbloquear Tudo"

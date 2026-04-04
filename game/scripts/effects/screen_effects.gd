@@ -533,7 +533,12 @@ func boss_phase3_transition(boss_position: Vector3, boss_color: Color) -> void:
 
 	# SFX
 	AudioManager.play_sfx("boss_phase")
-	AudioManager.start_ducking("phase3_transition")
+	# Cinematic ducking during phase 3 transition (PRD 38)
+	AudioManager.push_duck(
+		AudioManager.DuckPriority.CINEMATIC,
+		GameConstants.DUCK_CINEMATIC_MUSIC_DB,
+		GameConstants.DUCK_CINEMATIC_SFX_DB
+	)
 
 	# Gamepad rumble
 	Input.start_joy_vibration(0, GameConstants.BOSS_P3_RUMBLE_WEAK, GameConstants.BOSS_P3_RUMBLE_STRONG, GameConstants.BOSS_P3_RUMBLE_DURATION)
@@ -583,7 +588,7 @@ func _phase3_restore_timescale() -> void:
 	var restore_tween = create_tween()
 	restore_tween.tween_method(func(v): Engine.time_scale = v, GameConstants.BOSS_P3_SLOW_MO_SCALE, 1.0, 0.2)
 	await restore_tween.finished
-	AudioManager.stop_ducking()
+	AudioManager.pop_duck(AudioManager.DuckPriority.CINEMATIC)
 
 func _show_phase3_title() -> void:
 	if not _vignette_canvas:

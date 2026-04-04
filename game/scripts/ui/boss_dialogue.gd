@@ -1,8 +1,9 @@
 extends CanvasLayer
 
-## Boss dialogue overlay — shows intro, phase change, and death lines for Sentinelas.
+## Boss dialogue overlay — shows intro, phase change, combat, and death lines for Sentinelas.
 ## Uses typewriter effect and boss-themed border colors.
 ## Text sourced from LocaleManager for i18n support.
+## PRD 42: Full narrative arcs with periodic combat dialogue and random variants.
 
 const BOSS_KEY_MAP := {
 	"BossNecromancer": "necromancer",
@@ -87,6 +88,17 @@ const STAGE_BOSS_MAP := {
 	"sugar_king": "candy",
 }
 
+## Main Sentinelas that have full combat dialogue arcs (PRD 42)
+const SENTINELA_KEYS := [
+	"necromancer", "fairy_queen", "alien_cow", "ai_overlord", "demon_lord",
+	"leviathan", "emperor", "singularity", "dracula", "sugar_king",
+]
+
+## Number of combat lines per phase for each Sentinela
+const COMBAT_LINES_P1 := 3
+const COMBAT_LINES_P2 := 3
+const COMBAT_LINES_P3 := 2
+
 var _panel: PanelContainer
 var _title_label: Label
 var _body_label: Label
@@ -95,6 +107,13 @@ var _visible: bool = false
 var _typewriter_tween: Tween = null
 var _full_text: String = ""
 var _stylebox: StyleBoxFlat
+
+# Combat dialogue state (PRD 42)
+var _boss_active: bool = false
+var _current_boss_key: String = ""
+var _current_boss_phase: int = 1
+var _combat_dialogue_timer: float = 0.0
+var _combat_dialogue_indices: Dictionary = {}  # phase -> next index
 
 func _ready() -> void:
 	layer = 8
@@ -167,21 +186,59 @@ func _ready() -> void:
 	GameManager.boss_died.connect(_on_boss_died)
 	GameManager.boss_phase_changed.connect(_on_boss_phase_changed)
 
+func _process(delta: float) -> void:
+	if not _boss_active or _current_boss_key.is_empty():
+		return
+	# Only tick combat timer for Sentinelas with full dialogue arcs
+	if _current_boss_key not in SENTINELA_KEYS:
+		return
+	# Don't interrupt an active dialogue
+	if _visible:
+		return
+	_combat_dialogue_timer -= delta
+	if _combat_dialogue_timer <= 0.0:
+		_show_combat_dialogue()
+		_combat_dialogue_timer = randf_range(
+			GameConstants.BOSS_DIALOGUE_COMBAT_INTERVAL_MIN,
+			GameConstants.BOSS_DIALOGUE_COMBAT_INTERVAL_MAX
+		)
+
 func _on_boss_spawned(boss_name: String) -> void:
 	var key = _get_boss_key(boss_name)
 	if key.is_empty():
 		return
+	# Activate combat dialogue tracking
+	_boss_active = true
+	_current_boss_key = key
+	_current_boss_phase = 1
+	_combat_dialogue_indices = {1: 0, 2: 0, 3: 0}
+	# Initial delay before first combat line (intro plays first)
+	_combat_dialogue_timer = GameConstants.BOSS_DIALOGUE_INTRO_DURATION + randf_range(
+		GameConstants.BOSS_DIALOGUE_COMBAT_INTERVAL_MIN,
+		GameConstants.BOSS_DIALOGUE_COMBAT_INTERVAL_MAX
+	)
 	var title = _get_boss_title(key)
-	var text = LocaleManager.tr_key("boss_intro_" + key)
-	_show_dialogue(title, text, key)
+	var text: String
+	if key in SENTINELA_KEYS:
+		text = _get_random_variant("boss_intro_" + key)
+	else:
+		text = LocaleManager.tr_key("boss_intro_" + key)
+	_show_dialogue(title, text, key, GameConstants.BOSS_DIALOGUE_INTRO_DURATION)
 
 func _on_boss_died(boss_name: String) -> void:
 	var key = _get_boss_key(boss_name)
 	if key.is_empty():
 		return
+	# Stop combat dialogue
+	_boss_active = false
+	_current_boss_key = ""
 	var title = _get_boss_title(key)
-	var text = LocaleManager.tr_key("boss_death_" + key)
-	_show_dialogue(title, text, key)
+	var text: String
+	if key in SENTINELA_KEYS:
+		text = _get_random_variant("boss_death_" + key)
+	else:
+		text = LocaleManager.tr_key("boss_death_" + key)
+	_show_dialogue(title, text, key, GameConstants.BOSS_DIALOGUE_DEATH_DURATION)
 
 func _on_boss_phase_changed(boss_name: String, phase: int) -> void:
 	if phase < 2:
@@ -189,12 +246,64 @@ func _on_boss_phase_changed(boss_name: String, phase: int) -> void:
 	var key = _get_boss_key(boss_name)
 	if key.is_empty():
 		return
-	var locale_key = "boss_phase" + str(phase) + "_" + key
+	# Update tracked phase for combat dialogue
+	_current_boss_phase = phase
+	# Reset combat timer so phase transition dialogue plays first
+	_combat_dialogue_timer = GameConstants.BOSS_DIALOGUE_PHASE_DURATION + randf_range(
+		GameConstants.BOSS_DIALOGUE_COMBAT_INTERVAL_MIN * 0.5,
+		GameConstants.BOSS_DIALOGUE_COMBAT_INTERVAL_MAX * 0.5
+	)
+	var locale_key: String
+	if key in SENTINELA_KEYS:
+		# Sentinelas have dedicated phase transition lines
+		locale_key = "boss_phase%d_" % phase + key
+	else:
+		locale_key = "boss_phase" + str(phase) + "_" + key
 	var text = LocaleManager.tr_key(locale_key)
 	if text == locale_key:
 		return  # No translation found
 	var title = _get_boss_title(key)
-	_show_dialogue(title, text, key)
+	_show_dialogue(title, text, key, GameConstants.BOSS_DIALOGUE_PHASE_DURATION)
+
+func _show_combat_dialogue() -> void:
+	if _current_boss_key.is_empty() or not _boss_active:
+		return
+	var phase = _current_boss_phase
+	var idx = _combat_dialogue_indices.get(phase, 0)
+	var max_lines: int
+	match phase:
+		1: max_lines = COMBAT_LINES_P1
+		2: max_lines = COMBAT_LINES_P2
+		3: max_lines = COMBAT_LINES_P3
+		_: max_lines = COMBAT_LINES_P1
+	if idx >= max_lines:
+		# All lines for this phase already shown; wrap around
+		idx = 0
+		_combat_dialogue_indices[phase] = 0
+	# Key format: boss_combat_p1_necromancer_1 (1-indexed)
+	var line_num = idx + 1
+	var locale_key = "boss_combat_p%d_%s_%d" % [phase, _current_boss_key, line_num]
+	var text = LocaleManager.tr_key(locale_key)
+	if text == locale_key:
+		return  # No translation for this combat line
+	_combat_dialogue_indices[phase] = idx + 1
+	var title = _get_boss_title(_current_boss_key)
+	_show_dialogue(title, text, _current_boss_key, GameConstants.BOSS_DIALOGUE_COMBAT_DURATION)
+
+## Returns a random variant translation. Tries _1, _2, _3 etc up to max variants.
+func _get_random_variant(base_key: String) -> String:
+	var max_v = GameConstants.BOSS_DIALOGUE_MAX_VARIANTS
+	# Collect valid variants
+	var variants: Array[String] = []
+	for i in range(1, max_v + 1):
+		var key = "%s_%d" % [base_key, i]
+		var text = LocaleManager.tr_key(key)
+		if text != key:
+			variants.append(text)
+	if variants.is_empty():
+		# Fallback to non-variant key
+		return LocaleManager.tr_key(base_key)
+	return variants[randi() % variants.size()]
 
 func _get_boss_key(boss_name: String) -> String:
 	var clean = boss_name.split("@")[0].strip_edges().replace(" ", "")
@@ -208,7 +317,7 @@ func _get_boss_title(key: String) -> String:
 		return ""
 	return LocaleManager.tr_key("boss_" + stage)
 
-func _show_dialogue(title: String, text: String, boss_key: String) -> void:
+func _show_dialogue(title: String, text: String, boss_key: String, duration: float = 4.0) -> void:
 	# Update border color per boss
 	var border_color = BOSS_COLORS.get(boss_key, Color(0.8, 0.2, 0.2, 0.7))
 	_stylebox.border_color = border_color
@@ -219,8 +328,16 @@ func _show_dialogue(title: String, text: String, boss_key: String) -> void:
 	_body_label.text = ""
 	_panel.visible = true
 	_visible = true
-	_dismiss_timer.wait_time = 4.0
+	_dismiss_timer.wait_time = duration
 	_dismiss_timer.start()
+
+	# Duck music and SFX while dialogue is visible (PRD 38)
+	AudioManager.push_duck(
+		AudioManager.DuckPriority.VOICE,
+		GameConstants.DUCK_VOICE_MUSIC_DB,
+		GameConstants.DUCK_VOICE_SFX_DB,
+		duration + 0.5
+	)
 
 	# Fade-in
 	_panel.modulate = Color(1, 1, 1, 0)
@@ -237,10 +354,10 @@ func _start_typewriter(text: String) -> void:
 	_body_label.visible_characters = 0
 	_body_label.text = text
 	var char_count = text.length()
-	var duration = char_count * 0.03  # 30ms per character
-	duration = clampf(duration, 0.5, 3.0)
+	var tw_duration = char_count * 0.03  # 30ms per character
+	tw_duration = clampf(tw_duration, 0.5, 3.0)
 	_typewriter_tween = create_tween()
-	_typewriter_tween.tween_property(_body_label, "visible_characters", char_count, duration)
+	_typewriter_tween.tween_property(_body_label, "visible_characters", char_count, tw_duration)
 
 func _dismiss() -> void:
 	if not _visible:
@@ -249,6 +366,8 @@ func _dismiss() -> void:
 	_dismiss_timer.stop()
 	if _typewriter_tween and _typewriter_tween.is_valid():
 		_typewriter_tween.kill()
+	# Restore audio levels (PRD 38)
+	AudioManager.pop_duck(AudioManager.DuckPriority.VOICE)
 	var tween = create_tween()
 	tween.tween_property(_panel, "modulate", Color(1, 1, 1, 0), 0.25)
 	tween.tween_callback(func(): _panel.visible = false)

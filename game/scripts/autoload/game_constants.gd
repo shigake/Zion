@@ -701,3 +701,116 @@ const HUD_ICON_LARGE_MAX = 4
 const HUD_ICON_MEDIUM_MAX = 6
 const HUD_ICON_SEPARATION = 6
 const HUD_ICON_MAX_PER_ROW = 9
+
+# ==================================================================
+# BOSS PHASE 3 TRANSITION (PRD 36)
+# ==================================================================
+const BOSS_P3_SLOW_MO_SCALE = 0.15
+const BOSS_P3_SLOW_MO_DURATION = 1.3
+const BOSS_P3_ZOOM_AMOUNT = 20.0
+const BOSS_P3_SHAKE_1 = 0.3
+const BOSS_P3_SHAKE_2 = 0.5
+const BOSS_P3_SHAKE_3 = 0.7
+const BOSS_P3_FLASH_ALPHA = 0.15
+const BOSS_P3_PARTICLES_1 = 20
+const BOSS_P3_PARTICLES_2 = 30
+const BOSS_P3_TITLE_SCALE_OVERSHOOT = 1.3
+const BOSS_P3_RUMBLE_WEAK = 1.0
+const BOSS_P3_RUMBLE_STRONG = 1.0
+const BOSS_P3_RUMBLE_DURATION = 0.4
+
+# ==================================================================
+# SYNERGY HUD ICONS (PRD 37)
+# ==================================================================
+const SYNERGY_ICON_SIZE_LARGE = 48
+const SYNERGY_ICON_SIZE_MEDIUM = 40
+const SYNERGY_ICON_SIZE_SMALL = 36
+const SYNERGY_ICON_LARGE_MAX = 3
+const SYNERGY_ICON_MEDIUM_MAX = 6
+const SYNERGY_TOOLTIP_WIDTH = 280
+const SYNERGY_TOOLTIP_FADE_IN = 0.15
+const SYNERGY_TOOLTIP_FADE_OUT = 0.1
+const SYNERGY_BANNER_WIDTH = 400
+const SYNERGY_BANNER_HEIGHT = 80
+const SYNERGY_BANNER_DURATION = 2.5
+const SYNERGY_BANNER_SLIDE_TIME = 0.3
+const SYNERGY_PROC_FLASH_DURATION = 0.3
+const SYNERGY_COOLDOWN_ARC_COLOR = Color(1, 1, 1, 0.4)
+
+# ==================================================================
+# AUDIO DUCKING (PRD 38)
+# ==================================================================
+const DUCK_VOICE_MUSIC_DB = -18.0
+const DUCK_VOICE_SFX_DB = -8.0
+const DUCK_CINEMATIC_MUSIC_DB = -15.0
+const DUCK_CINEMATIC_SFX_DB = -6.0
+const DUCK_BOSS_AMBIENT_DB = -10.0
+const DUCK_TRANSITION_TIME = 0.3
+const DUCK_RESTORE_TIME = 0.5
+const AUDIO_BUS_LIMITS = {
+	"Combat": 8, "Pickup": 4, "Ambient": 2, "UI_Audio": 2, "Voice": 1
+}
+const AUDIO_ENEMY_THRESHOLD_LOW = 20
+const AUDIO_ENEMY_THRESHOLD_MED = 50
+const AUDIO_ENEMY_THRESHOLD_HIGH = 100
+const AUDIO_ENEMY_DUCK_LOW = -3.0
+const AUDIO_ENEMY_DUCK_MED = -6.0
+const AUDIO_ENEMY_DUCK_HIGH = -9.0
+const MASTER_COMPRESSOR_THRESHOLD = -6.0
+const MASTER_COMPRESSOR_RATIO = 4.0
+const MASTER_COMPRESSOR_ATTACK_US = 20000.0
+const MASTER_COMPRESSOR_RELEASE_MS = 200.0
+
+# ==================================================================
+# ACHIEVEMENT TRACKER HUD (PRD 39)
+# ==================================================================
+const ACH_TRACKER_MAX_VISIBLE = 3
+const ACH_TRACKER_WIDTH = 260
+const ACH_TRACKER_ITEM_HEIGHT = 24
+const ACH_TRACKER_BAR_WIDTH = 80
+const ACH_TRACKER_BAR_HEIGHT = 6
+const ACH_TRACKER_UPDATE_INTERVAL = 1.0
+const ACH_TRACKER_LERP_SPEED = 4.0
+const ACH_ALMOST_THRESHOLD = 0.90
+const ACH_ALMOST_NOTIFICATION_DURATION = 2.0
+const ACH_TRACKER_BG_ALPHA = 0.6
+const ACH_TRACKER_FONT_SIZE_NAME = 11
+const ACH_TRACKER_FONT_SIZE_PROGRESS = 10
+const ACH_EXPANDED_BG_ALPHA = 0.7
+
+# ==================================================================
+# EVOLUTION TREE (PRD 40)
+# ==================================================================
+const EVO_TREE_CARD_WIDTH = 140
+const EVO_TREE_CARD_HEIGHT = 180
+const EVO_TREE_COLUMNS = 4
+const EVO_TREE_ICON_WEAPON_SIZE = 32
+const EVO_TREE_ICON_EVOLUTION_SIZE = 48
+const EVO_TREE_DETAIL_WIDTH = 280
+const EVO_TREE_AVAILABLE_PULSE_SPEED = 2.0
+const EVO_TREE_AVAILABLE_PULSE_ALPHA_MIN = 0.6
+const EVO_TREE_AVAILABLE_PULSE_ALPHA_MAX = 1.0
+const EVO_AVAILABLE_NOTIFICATION_DURATION = 3.0
+
+# ==================================================================
+# BESTIARY MILESTONES (PRD 41)
+# ==================================================================
+const BESTIARY_MILESTONE_KILLS = [10, 50, 100, 500, 1000]
+const BESTIARY_MILESTONE_CRYSTALS = [5, 15, 30, 75, 150]
+const BESTIARY_MILESTONE_LABELS = ["Identificado", "Estudado", "Compreendido", "Dominado", "Exterminado"]
+const BESTIARY_CARD_SIZE = Vector2(130, 160)
+const BESTIARY_CARD_EXPANDED_WIDTH = 380
+const BESTIARY_SPRITE_SIZE = 64
+const BESTIARY_NOTIFICATION_DURATION = 2.5
+const BESTIARY_STAR_SIZE = 12
+
+# ==================================================================
+# BOSS DIALOGUE SYSTEM (PRD 42)
+# ==================================================================
+const BOSS_DIALOGUE_COMBAT_INTERVAL_MIN = 20.0
+const BOSS_DIALOGUE_COMBAT_INTERVAL_MAX = 30.0
+const BOSS_DIALOGUE_INTRO_DURATION = 4.0
+const BOSS_DIALOGUE_COMBAT_DURATION = 3.0
+const BOSS_DIALOGUE_PHASE_DURATION = 5.0
+const BOSS_DIALOGUE_DEATH_DURATION = 6.0
+const BOSS_DIALOGUE_MAX_VARIANTS = 3

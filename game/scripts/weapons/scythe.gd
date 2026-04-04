@@ -23,12 +23,13 @@ func _ready() -> void:
 	if ResourceLoader.exists(_slash_path2):
 		_slash_tex = load(_slash_path2)
 	# Weapon trail — darker purple with ghostly wisps, slower fade
+	# Trail attached to scythe_area so it orbits with the weapon
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(0.45, 0.1, 0.65, 0.7)
 	_trail.max_points = 25
 	_trail.trail_width = 0.18
-	scythe_mesh.add_child(_trail)
-	# Billboard sprite
+	scythe_area.add_child(_trail)
+	# Billboard sprite — attached to scythe_area (the orbiting node)
 	var _sprite_path = "res://assets/sprites/weapons/scythe.png"
 	if ResourceLoader.exists(_sprite_path):
 		scythe_mesh.visible = false
@@ -40,7 +41,7 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		scythe_mesh.get_parent().add_child(sprite)
+		scythe_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

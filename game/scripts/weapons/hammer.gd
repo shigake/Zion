@@ -34,7 +34,7 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		slam_mesh.get_parent().add_child(sprite)
+		slam_area.add_child(sprite)
 	# Brief slam trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(0.7, 0.45, 0.2, 0.7)

@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (36 arquivos + adr/)      # Game design documents
+├── docs/ (46 arquivos + adr/)      # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── story.md                 # Historia, lore, narrativa completa
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
@@ -80,9 +80,19 @@ Zion/
 │   ├── prd_30_melee_auto_aim.md         # PRD 30: auto-aim para armas melee — concluido
 │   ├── prd_31_hud_icon_overflow.md      # PRD 31: icones de armas/itens estourando o HUD — concluido
 │   ├── prd_32_worldbar_polish.md        # PRD 32: barras HP/XP world-space: verde fixo, azul, polish visual — concluido
-│   ├── prd_33_lance_double_anim.md      # PRD 33: lanca com animacao duplicada — pendente
-│   ├── prd_34_katana_bigger_visual.md   # PRD 34: katana maior e mais visivel — pendente
-│   ├── prd_35_bazooka_not_working.md    # PRD 35: bazuca nao funciona — pendente
+│   ├── prd_33_lance_double_anim.md      # PRD 33: lanca com animacao duplicada — concluido
+│   ├── prd_34_katana_bigger_visual.md   # PRD 34: katana maior e mais visivel — concluido
+│   ├── prd_35_bazooka_not_working.md    # PRD 35: bazuca nao funciona — concluido
+│   ├── prd_36_boss_phase3_transition.md # PRD 36: transicao epica fase 3 bosses — concluido
+│   ├── prd_37_synergy_icons_hud.md      # PRD 37: icones de sinergia no HUD — concluido
+│   ├── prd_37_melee_anim_fix.md         # PRD 37: fix animacao melee — concluido
+│   ├── prd_38_audio_ducking_buses.md    # PRD 38: audio ducking 5 buses — concluido
+│   ├── prd_39_achievement_progress_hud.md # PRD 39: progresso achievements no HUD — concluido
+│   ├── prd_40_evolution_tree.md         # PRD 40: arvore de evolucao visual — concluido
+│   ├── prd_41_bestiary_tracking.md      # PRD 41: bestiario com tracking — concluido
+│   ├── prd_42_boss_dialogues_ingame.md  # PRD 42: dialogos bosses in-game — concluido
+│   ├── prd_42_pickup_bugs_and_perf.md   # PRD 42: bugs pickup e performance — concluido
+│   ├── prd_43_chest_spawn_crash.md      # PRD 43: crash spawn baus — concluido
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -223,7 +233,7 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~95%. FASE B (gameplay) ~96%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~95% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal. FASE E (infra) ~85% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 712 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 35 PRDs (32 concluidos, 3 pendentes), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala.
+Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~90% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 817 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 45 PRDs (45 concluidos, 0 pendentes), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD — todos implementados.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais (ADR-001 a ADR-014).
 

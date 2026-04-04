@@ -49,7 +49,7 @@ func _ready() -> void:
 		sprite_l.shaded = false
 		sprite_l.transparent = true
 		sprite_l.name = "WeaponSprite"
-		slash_mesh_l.get_parent().add_child(sprite_l)
+		slash_area_l.add_child(sprite_l)
 		slash_mesh_r.visible = false
 		var sprite_r = Sprite3D.new()
 		sprite_r.texture = load(_sprite_path)
@@ -59,7 +59,7 @@ func _ready() -> void:
 		sprite_r.shaded = false
 		sprite_r.transparent = true
 		sprite_r.name = "WeaponSprite"
-		slash_mesh_r.get_parent().add_child(sprite_r)
+		slash_area_r.add_child(sprite_r)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

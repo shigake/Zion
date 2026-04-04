@@ -1,6 +1,6 @@
 # PRD 35 — Bazuca nao esta funcionando
 
-**Status**: pendente
+**Status**: concluido
 **Prioridade**: alta (arma completamente quebrada)
 **Tipo**: bugfix
 **Impacto**: bazooka.gd + rocket.gd — arma do Engenheiro

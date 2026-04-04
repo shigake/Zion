@@ -56,6 +56,9 @@ var _chest_arrows: Dictionary = {}  # chest_instance_id -> Label
 var _quest_label: Label = null
 var _quest_progress_bar: ProgressBar = null
 
+# Achievement tracker
+var _achievement_tracker: Control = null
+
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
 	GameManager.game_over.connect(_on_game_over)
@@ -257,6 +260,38 @@ func _ready() -> void:
 	QuestManager.quest_completed.connect(_on_quest_completed)
 	QuestManager.quest_progress.connect(_on_quest_progress)
 
+	# Bestiary milestone notification
+	GameManager.bestiary_milestone_reached.connect(_on_bestiary_milestone)
+
+	# Achievement progress tracker (top-left, below quest area)
+	var ach_tracker_script = preload("res://scripts/ui/achievement_tracker.gd")
+	_achievement_tracker = Control.new()
+	_achievement_tracker.set_script(ach_tracker_script)
+	_achievement_tracker.name = "AchievementTracker"
+	add_child(_achievement_tracker)
+
+	# Evolution available notification (PRD 40)
+	_evo_notify_label = Label.new()
+	_evo_notify_label.name = "EvoNotifyLabel"
+	_evo_notify_label.text = ""
+	_evo_notify_label.visible = false
+	_evo_notify_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_evo_notify_label.add_theme_font_size_override("font_size", 16)
+	_evo_notify_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	_evo_notify_label.add_theme_constant_override("outline_size", 2)
+	_evo_notify_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
+	_evo_notify_label.anchor_left = 0.25
+	_evo_notify_label.anchor_right = 0.75
+	_evo_notify_label.anchor_top = 0.15
+	_evo_notify_label.anchor_bottom = 0.2
+	add_child(_evo_notify_label)
+
+# Evolution available notification (PRD 40)
+var _evo_notify_label: Label = null
+var _evo_notify_timer: float = 0.0
+var _evo_check_timer: float = 0.0
+var _last_evo_available: String = ""
+
 var _slow_update_timer: float = 0.0
 const SLOW_UPDATE_INTERVAL: float = 0.2  # 5x per second for non-critical UI
 
@@ -282,6 +317,7 @@ func _process(delta: float) -> void:
 
 	_update_synergies(delta)
 	_update_chest_arrows()
+	_update_evo_notification(delta)
 	# Check achievements every 10s
 	achievement_check_timer += delta
 	if achievement_check_timer >= 10.0:
@@ -818,5 +854,89 @@ func _on_quest_progress(quest: Dictionary, current: int, target: int) -> void:
 		_quest_progress_bar.value = current
 	if _quest_label and quest.has("display_name"):
 		_quest_label.text = "%s (%d/%d)" % [quest["display_name"], current, target]
+
+# --------------- Bestiary milestone notification ---------------
+
+func _on_bestiary_milestone(enemy_id: String, _kills: int, label: String, crystals: int) -> void:
+	## Show a slide-in notification when a bestiary milestone is reached.
+	var display_name := enemy_id.replace("_", " ").capitalize()
+	var panel = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.15, 0.9)
+	style.set_corner_radius_all(6)
+	style.set_border_width_all(1)
+	style.border_color = Color(0.6, 0.5, 0.2, 0.8)
+	style.set_content_margin_all(8)
+	panel.add_theme_stylebox_override("panel", style)
+	panel.anchor_left = 0.0
+	panel.anchor_top = 0.35
+	panel.offset_left = -300.0  # Start offscreen
+	panel.offset_top = 0.0
+	panel.offset_right = 0.0
+	panel.offset_bottom = 0.0
+	panel.size = Vector2(280, 0)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	panel.add_child(vbox)
+
+	var title_lbl = Label.new()
+	title_lbl.text = "Bestiario atualizado!"
+	title_lbl.add_theme_font_size_override("font_size", 13)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	vbox.add_child(title_lbl)
+
+	var name_lbl = Label.new()
+	name_lbl.text = "%s — \"%s\" (%d)" % [display_name, label, _kills]
+	name_lbl.add_theme_font_size_override("font_size", 11)
+	name_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(name_lbl)
+
+	var reward_lbl = Label.new()
+	reward_lbl.text = "+%d cristais | Novo desbloqueio!" % crystals
+	reward_lbl.add_theme_font_size_override("font_size", 10)
+	reward_lbl.add_theme_color_override("font_color", Color(0.5, 0.8, 0.4))
+	vbox.add_child(reward_lbl)
+
+	add_child(panel)
+	AudioManager.play_sfx("chest_open")  # Reuse chest_open SFX for milestone
+
+	# Slide-in animation
+	var tween = create_tween()
+	tween.tween_property(panel, "offset_left", 10.0, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_interval(GameConstants.BESTIARY_NOTIFICATION_DURATION)
+	tween.tween_property(panel, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(panel.queue_free)
+
+func _update_evo_notification(delta: float) -> void:
+	# Fade out active notification
+	if _evo_notify_timer > 0:
+		_evo_notify_timer -= delta
+		if _evo_notify_timer <= 0.5:
+			if _evo_notify_label:
+				_evo_notify_label.modulate.a = _evo_notify_timer / 0.5
+		if _evo_notify_timer <= 0:
+			if _evo_notify_label:
+				_evo_notify_label.visible = false
+				_evo_notify_label.modulate.a = 1.0
+
+	# Check for newly available evolutions every 2 seconds
+	_evo_check_timer += delta
+	if _evo_check_timer < 2.0:
+		return
+	_evo_check_timer = 0.0
+
+	var available_evo_id = EvolutionDB.check_evolution_available()
+	if available_evo_id != "" and available_evo_id != _last_evo_available:
+		_last_evo_available = available_evo_id
+		var evo = EvolutionDB.get_evolution(available_evo_id)
+		var evo_name = evo.get("name", available_evo_id.capitalize())
+		if _evo_notify_label:
+			_evo_notify_label.text = LocaleManager.tr_key("evo_available_now") % evo_name
+			_evo_notify_label.visible = true
+			_evo_notify_label.modulate.a = 1.0
+			_evo_notify_timer = GameConstants.EVO_AVAILABLE_NOTIFICATION_DURATION
+		AudioManager.play_sfx("level_up", -0.2)
 
 ## Multiplayer setup/migration/reconnection — delegated to HUDMultiplayer

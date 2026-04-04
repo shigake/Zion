@@ -1,6 +1,6 @@
 # PRD 34 — Katana (espada de samurai) maior e mais visivel durante ataque
 
-**Status**: pendente
+**Status**: concluido
 **Prioridade**: media (afeta feedback visual do Ronin)
 **Tipo**: enhancement
 **Impacto**: katana.gd — arma principal do Ronin

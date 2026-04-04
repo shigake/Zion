@@ -40,7 +40,7 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		slash_mesh.get_parent().add_child(sprite)
+		slash_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

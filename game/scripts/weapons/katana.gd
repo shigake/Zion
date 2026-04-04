@@ -26,8 +26,8 @@ func _ready() -> void:
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(1.0, 1.0, 1.0, 0.8)
 	_trail.trail_color_tip = Color(0.6, 0.8, 1.0, 0.9)
-	_trail.max_points = 14
-	_trail.trail_width = 0.2
+	_trail.max_points = 18
+	_trail.trail_width = 0.35  # PRD 34: thicker, more visible trail
 	slash_mesh.add_child(_trail)
 	# Billboard sprite
 	var _sprite_path = "res://assets/sprites/weapons/katana.png"
@@ -37,11 +37,11 @@ func _ready() -> void:
 		sprite.texture = load(_sprite_path)
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
+		sprite.pixel_size = 0.045  # PRD 34: larger katana visual
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		slash_mesh.get_parent().add_child(sprite)
+		slash_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

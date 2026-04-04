@@ -1,6 +1,6 @@
 # PRD 42 — Pickups corrompidos, erro de classe e performance
 
-**Status:** Pendente
+**Status:** concluido
 **Prioridade:** Alta
 **Escopo:** `scripts/xp_gem.gd`, `scripts/crystal_pickup.gd`, `scripts/enemies/boss_generic.gd`, `docs/`
 

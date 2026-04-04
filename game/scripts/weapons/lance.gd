@@ -12,9 +12,10 @@ var attack_duration: float = 0.25
 
 var _trail: Node3D = null
 var _slash_tex: Texture2D = null
+var _weapon_sprite: Sprite3D = null
 
 func _ready() -> void:
-	thrust_mesh.visible = true
+	thrust_mesh.visible = false
 	thrust_area.body_entered.connect(_on_body_entered)
 	# Load slash trail sprite
 	var _slash_path2 = "res://assets/sprites/effects/slashes/lance_thrust.png"
@@ -26,7 +27,7 @@ func _ready() -> void:
 	_trail.max_points = 20
 	_trail.trail_width = 0.35
 	thrust_mesh.add_child(_trail)
-	# Billboard sprite
+	# Billboard sprite — attached to thrust_area so it moves with the thrust
 	var _sprite_path = "res://assets/sprites/weapons/lance.png"
 	if ResourceLoader.exists(_sprite_path):
 		var sprite = Sprite3D.new()
@@ -37,7 +38,9 @@ func _ready() -> void:
 		sprite.shaded = false
 		sprite.transparent = true
 		sprite.name = "WeaponSprite"
-		thrust_mesh.get_parent().add_child(sprite)
+		sprite.visible = false  # Hidden until attack
+		thrust_area.add_child(sprite)
+		_weapon_sprite = sprite
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():
@@ -63,6 +66,8 @@ func _process(delta: float) -> void:
 			is_attacking = false
 			thrust_mesh.visible = false
 			thrust_area.monitoring = false
+			if _weapon_sprite:
+				_weapon_sprite.visible = false
 	else:
 		attack_timer -= delta
 		if attack_timer <= 0:
@@ -74,7 +79,12 @@ func _attack(level: int) -> void:
 		return
 	is_attacking = true
 	attack_anim_timer = attack_duration
-	thrust_mesh.visible = true
+	# Only show thrust_mesh if no sprite exists (fallback)
+	if _weapon_sprite:
+		_weapon_sprite.visible = true
+		thrust_mesh.visible = false
+	else:
+		thrust_mesh.visible = true
 	thrust_area.monitoring = true
 
 	# Auto-aim toward nearest enemy (instinto dimensional)

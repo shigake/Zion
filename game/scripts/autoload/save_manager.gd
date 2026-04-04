@@ -29,6 +29,7 @@ var data: Dictionary = {
 	"screen_shake_enabled": true,  # PRD 28 §3 — Screen shake toggle
 	"damage_numbers_enabled": true,  # PRD 28 §3 — Damage numbers toggle
 	"manual_aim": false,  # PRD 28 §3 — Manual aim (right stick) toggle
+	"evolution_history": {},  # PRD 40 — {evo_id: {times: int, first_date: String}}
 }
 
 func _ready() -> void:
@@ -323,7 +324,8 @@ func unlock_stage(stage_id: String) -> void:
 		save_game()
 
 # ---- Bestiary ----
-func track_bestiary(enemy_name: String) -> void:
+func track_bestiary(enemy_name: String) -> Dictionary:
+	## Track a kill in the bestiary. Returns milestone info if a new milestone was reached.
 	if "bestiary" not in data:
 		data["bestiary"] = {}
 	if enemy_name in data["bestiary"]:
@@ -332,8 +334,37 @@ func track_bestiary(enemy_name: String) -> void:
 		data["bestiary"][enemy_name] = {
 			"kills": 1,
 			"first_seen": Time.get_date_string_from_system(),
+			"milestones_claimed": [],
 		}
+	# Ensure milestones_claimed exists (migration for old saves)
+	if "milestones_claimed" not in data["bestiary"][enemy_name]:
+		data["bestiary"][enemy_name]["milestones_claimed"] = []
+	var entry: Dictionary = data["bestiary"][enemy_name]
+	var kills: int = entry["kills"]
+	var result: Dictionary = {}
+	# Check milestones
+	var milestone_kills: Array = GameConstants.BESTIARY_MILESTONE_KILLS
+	var milestone_crystals: Array = GameConstants.BESTIARY_MILESTONE_CRYSTALS
+	var milestone_labels: Array = GameConstants.BESTIARY_MILESTONE_LABELS
+	for i in range(milestone_kills.size()):
+		var threshold: int = milestone_kills[i]
+		if kills >= threshold and threshold not in entry["milestones_claimed"]:
+			entry["milestones_claimed"].append(threshold)
+			var crystals_award: int = milestone_crystals[i]
+			data["crystals"] += crystals_award
+			result = {
+				"milestone_reached": threshold,
+				"milestone_label": milestone_labels[i],
+				"crystals_awarded": crystals_award,
+			}
+			# Don't break — claim all milestones at once (e.g. if old save had 500 kills but no milestones)
 	save_game()
+	return result
+
+func get_bestiary_milestone_count(enemy_name: String) -> int:
+	## Returns how many milestones have been claimed for this enemy.
+	var entry = data.get("bestiary", {}).get(enemy_name, {})
+	return entry.get("milestones_claimed", []).size()
 
 func get_bestiary() -> Dictionary:
 	return data.get("bestiary", {})

@@ -33,9 +33,12 @@ func _spawn_chest() -> void:
 	var spawn_pos = player_pos + Vector3(cos(angle), 0, sin(angle)) * dist
 	spawn_pos.y = 0.3
 
+	var scene = get_tree().current_scene
+	if not is_instance_valid(scene):
+		return
 	var chest = _create_chest_node()
+	scene.add_child(chest)
 	chest.global_position = spawn_pos
-	get_tree().current_scene.add_child(chest)
 	_active_chests.append(chest)
 	chest_spawned.emit(chest)
 	AudioManager.play_sfx("chest_open")

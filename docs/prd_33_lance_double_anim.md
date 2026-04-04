@@ -1,6 +1,6 @@
 # PRD 33 — Lanca com animacao duplicada no ataque
 
-**Status**: pendente
+**Status**: concluido
 **Prioridade**: alta (bug visual que afeta gameplay)
 **Tipo**: bugfix
 **Impacto**: lanca (lance.gd) — arma do Gladiador

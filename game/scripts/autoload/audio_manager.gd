@@ -113,6 +113,35 @@ enum DuckPriority { NONE, LEVEL_UP, BOSS_SFX, CINEMATIC, VOICE }
 var _duck_stack: Array[Dictionary] = []  # {priority, music_db, sfx_db, duration}
 var _current_duck_priority: int = 0  # DuckPriority value
 
+# SFX Priority system (PRD 38) — higher number = higher priority
+enum SFXPriority { PICKUP = 0, ENEMY_HIT = 1, ENEMY_DEATH = 2, PLAYER_ATTACK = 3, PLAYER_HIT = 4, BOSS_ATTACK = 5, BOSS_PHASE = 6 }
+
+# Map SFX names to their priority level
+var _sfx_priority_map: Dictionary = {
+	"collect_xp": SFXPriority.PICKUP, "collect_crystal": SFXPriority.PICKUP,
+	"heal": SFXPriority.PICKUP, "chest_open": SFXPriority.PICKUP,
+	"portal_hum": SFXPriority.PICKUP,
+	"hit": SFXPriority.ENEMY_HIT, "enemy_growl": SFXPriority.ENEMY_HIT,
+	"kill": SFXPriority.ENEMY_DEATH,
+	"sword_slash": SFXPriority.PLAYER_ATTACK, "axe_chop": SFXPriority.PLAYER_ATTACK,
+	"scythe_swoosh": SFXPriority.PLAYER_ATTACK, "whip_crack": SFXPriority.PLAYER_ATTACK,
+	"hammer_slam": SFXPriority.PLAYER_ATTACK, "lance_thrust": SFXPriority.PLAYER_ATTACK,
+	"punch_hit": SFXPriority.PLAYER_ATTACK, "gun_shot": SFXPriority.PLAYER_ATTACK,
+	"bow_release": SFXPriority.PLAYER_ATTACK, "magic_cast": SFXPriority.PLAYER_ATTACK,
+	"explosion": SFXPriority.PLAYER_ATTACK, "electric_zap": SFXPriority.PLAYER_ATTACK,
+	"poison_splash": SFXPriority.PLAYER_ATTACK, "boomerang": SFXPriority.PLAYER_ATTACK,
+	"tornado": SFXPriority.PLAYER_ATTACK, "chain_whip": SFXPriority.PLAYER_ATTACK,
+	"blood_orb": SFXPriority.PLAYER_ATTACK, "summon_pop": SFXPriority.PLAYER_ATTACK,
+	"fire_whoosh": SFXPriority.PLAYER_ATTACK, "dash": SFXPriority.PLAYER_ATTACK,
+	"player_hurt": SFXPriority.PLAYER_HIT,
+	"boss_attack": SFXPriority.BOSS_ATTACK, "boss_roar": SFXPriority.BOSS_ATTACK,
+	"boss_death": SFXPriority.BOSS_ATTACK,
+	"boss_phase": SFXPriority.BOSS_PHASE,
+}
+
+# Track active SFX with priority for eviction (PRD 38)
+var _active_sfx_slots: Array[Dictionary] = []  # {player, priority, time_started}
+
 # Distance-based attenuation
 const ATTENUATION_RADIUS: float = 15.0
 
@@ -252,10 +281,11 @@ func play_sfx(sfx_name: String, volume_mult: float = 1.0) -> void:
 	_sfx_last_played[sfx_name] = now_ms
 	_category_cooldowns[cooldown_key] = now_ms
 
-	# Category limit check
+	# Category limit check (multiplayer-aware — PRD 38)
 	if category in _category_limits:
 		var active = _count_active_in_category(category)
-		if active >= _category_limits[category]:
+		var limit = _get_bus_limit(category)
+		if active >= limit:
 			return  # Too many sounds in this category
 
 	# Hit sound volume normalization — prevent clipping when many enemies die at once
@@ -264,6 +294,10 @@ func play_sfx(sfx_name: String, volume_mult: float = 1.0) -> void:
 		"bow_release", "explosion", "electric_zap"]
 	if sfx_name in _hit_sfx_names:
 		volume_mult *= _get_hit_volume_multiplier()
+		# Dynamic volume reduction based on enemy count (PRD 38)
+		var enemy_mod_db = get_enemy_volume_modifier()
+		if enemy_mod_db < 0.0:
+			volume_mult *= db_to_linear(enemy_mod_db)
 
 	# Try to load the audio file
 	var stream = _load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
@@ -577,6 +611,143 @@ func get_enemy_volume_modifier() -> float:
 		return GameConstants.AUDIO_ENEMY_DUCK_MED
 	else:
 		return GameConstants.AUDIO_ENEMY_DUCK_HIGH
+
+# ---- Multiplayer Audio Limiter (PRD 38) ----
+
+func _get_bus_limit(bus_name: String) -> int:
+	var base = GameConstants.AUDIO_BUS_LIMITS.get(bus_name, 8)
+	var player_count = MultiplayerManager.get_player_count() if MultiplayerManager else 1
+	if player_count <= 1:
+		return base
+	return maxi(2, base - (player_count - 1))
+
+# ---- SFX Priority System (PRD 38) ----
+
+func play_sfx_prioritized(sfx_name: String, priority: int = -1, volume_mult: float = 1.0) -> void:
+	## Play SFX with priority-based eviction when bus is full.
+	## If priority is -1, auto-detect from _sfx_priority_map.
+	if priority == -1:
+		priority = _sfx_priority_map.get(sfx_name, SFXPriority.ENEMY_HIT)
+
+	if sfx_name not in _valid_sfx:
+		LogManager.warn("Audio", "Unknown SFX: " + sfx_name)
+		return
+
+	var category: String = _sfx_categories.get(sfx_name, "SFX")
+	var now_ms = Time.get_ticks_msec()
+
+	# Cooldown checks
+	var cooldown_key = sfx_name + "_" + category
+	if cooldown_key in _category_cooldowns:
+		if now_ms - _category_cooldowns[cooldown_key] < CATEGORY_COOLDOWN_MS:
+			return
+	if sfx_name in _sfx_last_played:
+		if now_ms - _sfx_last_played[sfx_name] < SFX_COOLDOWN_MS:
+			return
+	_sfx_last_played[sfx_name] = now_ms
+	_category_cooldowns[cooldown_key] = now_ms
+
+	# Clean up finished slots
+	_active_sfx_slots = _active_sfx_slots.filter(func(s): return s["player"].playing)
+
+	# Check bus limit (multiplayer-aware)
+	var bus_limit = _get_bus_limit(category)
+	var active_in_bus = _active_sfx_slots.filter(func(s): return s["player"].bus == category)
+
+	if active_in_bus.size() >= bus_limit:
+		# Find lowest priority, oldest sound in this bus
+		var lowest = null
+		for slot in active_in_bus:
+			if lowest == null or slot["priority"] < lowest["priority"] or \
+				(slot["priority"] == lowest["priority"] and slot["time_started"] < lowest["time_started"]):
+				lowest = slot
+		if lowest and lowest["priority"] < priority:
+			lowest["player"].stop()
+			_active_sfx_slots.erase(lowest)
+		else:
+			return  # Cannot evict — drop this sound
+
+	# Apply enemy volume modifier for combat sounds
+	var _hit_sfx_names = ["hit", "kill", "sword_slash", "axe_chop", "scythe_swoosh",
+		"whip_crack", "hammer_slam", "lance_thrust", "punch_hit", "gun_shot",
+		"bow_release", "explosion", "electric_zap"]
+	if sfx_name in _hit_sfx_names:
+		volume_mult *= _get_hit_volume_multiplier()
+		var enemy_mod_db = get_enemy_volume_modifier()
+		if enemy_mod_db < 0.0:
+			volume_mult *= db_to_linear(enemy_mod_db)
+
+	var stream = _load_audio("res://assets/audio/sfx/" + sfx_name, [".wav", ".ogg", ".mp3"])
+	if stream == null:
+		return
+
+	var player = _get_available_sfx_player()
+	if player == null:
+		return
+
+	player.bus = category if AudioServer.get_bus_index(category) != -1 else "SFX"
+	player.stream = stream
+	player.volume_db = linear_to_db(maxf(sfx_volume * master_volume * volume_mult, 0.0001))
+	player.play()
+
+	_active_sfx_slots.append({"player": player, "priority": priority, "time_started": now_ms})
+
+# ---- Ambient Crossfade (PRD 38) ----
+
+var _ambient_player: AudioStreamPlayer = null
+var _ambient_player_fade: AudioStreamPlayer = null
+
+func _setup_ambient_players() -> void:
+	_ambient_player = AudioStreamPlayer.new()
+	_ambient_player.name = "AmbientPlayer"
+	_ambient_player.bus = "Ambient"
+	add_child(_ambient_player)
+	_ambient_player_fade = AudioStreamPlayer.new()
+	_ambient_player_fade.name = "AmbientPlayerFade"
+	_ambient_player_fade.bus = "Ambient"
+	add_child(_ambient_player_fade)
+
+func crossfade_ambient(new_ambient: String, duration: float = 1.5) -> void:
+	## Crossfade ambient sound to a new track. Smooth overlap transition.
+	if not _ambient_player:
+		_setup_ambient_players()
+
+	var stream = _load_audio("res://assets/audio/sfx/environment/" + new_ambient, [".ogg", ".wav", ".mp3"])
+	if stream == null:
+		stream = _load_audio("res://assets/audio/sfx/" + new_ambient, [".ogg", ".wav", ".mp3"])
+	if stream == null:
+		LogManager.debug("Audio", "Ambient (no file): " + new_ambient)
+		return
+
+	var half = duration * 0.5
+
+	# Move current ambient to fade player
+	if _ambient_player.playing:
+		_ambient_player_fade.stream = _ambient_player.stream
+		_ambient_player_fade.volume_db = _ambient_player.volume_db
+		_ambient_player_fade.play(_ambient_player.get_playback_position())
+		_ambient_player.stop()
+		# Fade out old
+		var fade_out = create_tween()
+		fade_out.tween_property(_ambient_player_fade, "volume_db", -60.0, half)
+		fade_out.tween_callback(func(): _ambient_player_fade.stop())
+
+	# Enable looping
+	if stream is AudioStreamMP3:
+		stream.loop = true
+	elif stream is AudioStreamOggVorbis:
+		stream.loop = true
+	elif stream is AudioStreamWAV:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+
+	# Fade in new
+	_ambient_player.stream = stream
+	_ambient_player.volume_db = -60.0
+	_ambient_player.play()
+	var fade_in = create_tween()
+	var target_db = linear_to_db(maxf(ambient_volume * master_volume, 0.0001))
+	fade_in.tween_property(_ambient_player, "volume_db", target_db, half).set_delay(half * 0.5)
+	LogManager.info("Audio", "Ambient crossfade: " + new_ambient)
 
 # ---- Integration points ----
 # Call AudioManager.play_sfx("hit") when an enemy is hit

@@ -10,6 +10,30 @@ signal synergy_procced(synergy_name: String, damage: float)
 var active_synergies: Array[String] = []
 var _prev_active_synergies: Array[String] = []
 
+# Proc/damage tracking for HUD stats (PRD 37)
+var synergy_proc_counts: Dictionary = {}  # synergy_name -> int
+var synergy_total_damage: Dictionary = {}  # synergy_name -> float
+var _synergy_first_proc_time: Dictionary = {}  # synergy_name -> float (Engine.get_process_frames based time)
+
+func _on_synergy_procced_tracking(synergy_name: String, damage: float) -> void:
+	synergy_proc_counts[synergy_name] = synergy_proc_counts.get(synergy_name, 0) + 1
+	synergy_total_damage[synergy_name] = synergy_total_damage.get(synergy_name, 0.0) + damage
+	if synergy_name not in _synergy_first_proc_time:
+		_synergy_first_proc_time[synergy_name] = Time.get_ticks_msec() / 1000.0
+
+func get_synergy_dps(synergy_name: String) -> float:
+	var total_dmg = synergy_total_damage.get(synergy_name, 0.0)
+	if total_dmg <= 0.0:
+		return 0.0
+	var first_time = _synergy_first_proc_time.get(synergy_name, 0.0)
+	var elapsed = (Time.get_ticks_msec() / 1000.0) - first_time
+	if elapsed < 1.0:
+		return total_dmg
+	return total_dmg / elapsed
+
+func _ready() -> void:
+	synergy_procced.connect(_on_synergy_procced_tracking)
+
 const SYNERGY_INFO := {
 	"fire_fire": {"icon_symbol": "🔥", "name": "Explosion", "effect": "20% chance de explosao ao matar", "trigger": "Fogo + Fogo (2 armas de fogo)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 0.6, 0.1)},
 	"ice_ice": {"icon_symbol": "❄", "name": "Shatter", "effect": "Inimigos congelados explodem em estilhacos", "trigger": "Gelo + Gelo (2 armas de gelo)", "cooldown": 0.0, "type": "base", "color": Color(0.4, 0.9, 1.0)},
@@ -459,6 +483,9 @@ func reset() -> void:
 	_prev_active_synergies.clear()
 	_synergy_timers.clear()
 	_electrolysis_active = false
+	synergy_proc_counts.clear()
+	synergy_total_damage.clear()
+	_synergy_first_proc_time.clear()
 	# Restore speeds of abyssal-slowed enemies
 	for eid in _abyssal_slowed_enemies:
 		var e = instance_from_id(eid)

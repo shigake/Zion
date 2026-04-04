@@ -131,6 +131,21 @@ func evolve_weapon(evo_id: String) -> void:
 	if evo_id in evolved_weapons:
 		return
 	evolved_weapons.append(evo_id)
+	_track_evolution_history(evo_id)
+
+func _track_evolution_history(evo_id: String) -> void:
+	## Record evolution in persistent history (SaveManager).
+	if "evolution_history" not in SaveManager.data:
+		SaveManager.data["evolution_history"] = {}
+	var history: Dictionary = SaveManager.data["evolution_history"]
+	if evo_id in history:
+		history[evo_id]["times"] = history[evo_id].get("times", 0) + 1
+	else:
+		history[evo_id] = {
+			"times": 1,
+			"first_date": Time.get_date_string_from_system(),
+		}
+	SaveManager.save_game()
 
 func reset() -> void:
 	evolved_weapons.clear()
