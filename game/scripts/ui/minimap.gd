@@ -19,6 +19,8 @@ const COLOR_ITEM := Color(1.0, 0.85, 0.1, 0.9)
 const COLOR_ALLY := Color(0.2, 0.85, 0.4, 0.9)
 const COLOR_BOSS := Color(1.0, 0.1, 0.5, 1.0)
 const COLOR_BOUNDARY := Color(0.4, 0.5, 0.6, 0.3)
+const COLOR_CHEST := Color(1.0, 0.75, 0.1, 1.0)    # Dourado intenso (baús)
+const COLOR_MERCHANT := Color(0.4, 0.85, 1.0, 1.0)  # Ciano azulado (mercador)
 
 var _hex_points: PackedVector2Array = PackedVector2Array()
 var _update_timer: float = 0.0
@@ -28,6 +30,8 @@ var _enemy_dots: PackedVector2Array = PackedVector2Array()
 var _item_dots: PackedVector2Array = PackedVector2Array()
 var _ally_dots: PackedVector2Array = PackedVector2Array()
 var _boss_dots: PackedVector2Array = PackedVector2Array()
+var _chest_dots: PackedVector2Array = PackedVector2Array()
+var _merchant_dot: Vector2 = Vector2.INF
 
 func _ready() -> void:
 	# Gera os 6 pontos do hexagono (flat-top)
@@ -58,6 +62,8 @@ func _refresh_dots() -> void:
 	_item_dots.clear()
 	_ally_dots.clear()
 	_boss_dots.clear()
+	_chest_dots.clear()
+	_merchant_dot = Vector2.INF
 
 	# Inimigos
 	var enemies = GameManager.get_enemies()
@@ -94,6 +100,21 @@ func _refresh_dots() -> void:
 		var dot = _world_to_minimap(g.global_position, player_pos)
 		if dot != Vector2.INF:
 			_item_dots.append(dot)
+
+	# Baús (ChestManager)
+	var chests = ChestManager.get_active_chests()
+	for c in chests:
+		if not is_instance_valid(c):
+			continue
+		var dot = _world_to_minimap(c.global_position, player_pos)
+		if dot != Vector2.INF:
+			_chest_dots.append(dot)
+
+	# Mercador (event aleatório)
+	var merchant_nodes = get_tree().get_nodes_in_group("merchant")
+	if not merchant_nodes.is_empty() and is_instance_valid(merchant_nodes[0]):
+		var dot = _world_to_minimap(merchant_nodes[0].global_position, player_pos)
+		_merchant_dot = dot
 
 	# Aliados (multiplayer)
 	if MultiplayerManager.is_online:
@@ -177,6 +198,25 @@ func _draw() -> void:
 	# Dots: itens
 	for dot in _item_dots:
 		draw_circle(center + dot, DOT_RADIUS * 0.8, COLOR_ITEM)
+
+	# Dots: baús (quadrado pequeno para destacar dos itens)
+	for dot in _chest_dots:
+		var r = DOT_RADIUS * 1.4
+		draw_rect(Rect2(center + dot - Vector2(r, r), Vector2(r * 2, r * 2)), COLOR_CHEST)
+		draw_rect(Rect2(center + dot - Vector2(r, r), Vector2(r * 2, r * 2)), Color(1, 1, 1, 0.5), false, 1.0)
+
+	# Dot: mercador (diamante — quadrado rotacionado 45°)
+	if _merchant_dot != Vector2.INF:
+		var mp = center + _merchant_dot
+		var r = DOT_RADIUS * 1.8
+		var diamond = PackedVector2Array([
+			mp + Vector2(0, -r),
+			mp + Vector2(r, 0),
+			mp + Vector2(0, r),
+			mp + Vector2(-r, 0)
+		])
+		draw_colored_polygon(diamond, COLOR_MERCHANT)
+		draw_polyline(diamond + PackedVector2Array([diamond[0]]), Color(1, 1, 1, 0.5), 1.0)
 
 	# Dots: aliados
 	for dot in _ally_dots:

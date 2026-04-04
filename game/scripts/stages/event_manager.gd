@@ -462,6 +462,7 @@ func _spawn_merchant() -> void:
 
 	get_parent().add_child(_merchant_node)
 	_merchant_node.global_position = center + offset
+	_merchant_node.add_to_group("merchant")
 
 	# Generate 3 random items to sell (exclude disabled and already owned)
 	_merchant_items.clear()

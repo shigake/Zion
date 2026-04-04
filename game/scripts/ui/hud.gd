@@ -53,6 +53,7 @@ var _boss_shake_timer: float = 0.0
 
 # Chest arrows and quest display
 var _chest_arrows: Dictionary = {}  # chest_instance_id -> Label
+var _merchant_arrow: Label = null  # Seta apontando para o mercador
 var _quest_label: Label = null
 var _quest_progress_bar: ProgressBar = null
 
@@ -317,6 +318,7 @@ func _process(delta: float) -> void:
 
 	_update_synergies(delta)
 	_update_chest_arrows()
+	_update_merchant_arrow()
 	_update_evo_notification(delta)
 	# Check achievements every 10s
 	achievement_check_timer += delta
@@ -816,6 +818,68 @@ func _update_chest_arrows() -> void:
 			arrow_char = "▼" if dir.y > 0 else "▲"
 		arrow.text = "%s 📦 %dm" % [arrow_char, int(dist)]
 		arrow.modulate.a = clampf(remap(dist, 3.0, 30.0, 0.6, 1.0), 0.6, 1.0)
+
+# --------------- Merchant Arrow ---------------
+
+func _update_merchant_arrow() -> void:
+	var merchants = get_tree().get_nodes_in_group("merchant")
+	var camera = get_viewport().get_camera_3d()
+
+	# Sem mercador ativo ou sem câmera — esconde seta
+	if merchants.is_empty() or not camera:
+		if is_instance_valid(_merchant_arrow):
+			_merchant_arrow.visible = false
+		return
+
+	var merchant_node = merchants[0]
+	if not is_instance_valid(merchant_node):
+		if is_instance_valid(_merchant_arrow):
+			_merchant_arrow.visible = false
+		return
+
+	var local_player = get_tree().get_first_node_in_group("players")
+	if not local_player or not is_instance_valid(local_player):
+		if is_instance_valid(_merchant_arrow):
+			_merchant_arrow.visible = false
+		return
+
+	var viewport_size = get_viewport().get_visible_rect().size
+	var dist = local_player.global_position.distance_to(merchant_node.global_position)
+	var behind = camera.global_transform.basis.z.dot(merchant_node.global_position - camera.global_position) > 0
+	var screen_pos = camera.unproject_position(merchant_node.global_position + Vector3(0, 1.5, 0))
+	if behind:
+		screen_pos = viewport_size - screen_pos
+	var margin = 50.0
+	var offscreen = behind or screen_pos.x < margin or screen_pos.x > viewport_size.x - margin or screen_pos.y < margin or screen_pos.y > viewport_size.y - margin
+
+	# Cria label se não existe
+	if not is_instance_valid(_merchant_arrow):
+		_merchant_arrow = Label.new()
+		_merchant_arrow.add_theme_font_size_override("font_size", 20)
+		_merchant_arrow.add_theme_color_override("font_color", GameConstants.MERCHANT_ARROW_COLOR)
+		_merchant_arrow.add_theme_constant_override("outline_size", 2)
+		_merchant_arrow.add_theme_color_override("font_outline_color", Color(0.0, 0.1, 0.2))
+		add_child(_merchant_arrow)
+
+	# Perto e na tela — esconde seta
+	if not offscreen and dist < 5.0:
+		_merchant_arrow.visible = false
+		return
+
+	_merchant_arrow.visible = true
+	var clamped = Vector2(
+		clampf(screen_pos.x, margin, viewport_size.x - margin),
+		clampf(screen_pos.y, margin, viewport_size.y - margin)
+	)
+	_merchant_arrow.position = clamped - Vector2(20, 10)
+	var dir = (screen_pos - viewport_size / 2).normalized()
+	var arrow_char: String
+	if absf(dir.x) > absf(dir.y):
+		arrow_char = "►" if dir.x > 0 else "◄"
+	else:
+		arrow_char = "▼" if dir.y > 0 else "▲"
+	_merchant_arrow.text = "%s 🧙 %dm" % [arrow_char, int(dist)]
+	_merchant_arrow.modulate.a = clampf(remap(dist, 3.0, 30.0, 0.6, 1.0), 0.6, 1.0)
 
 # --------------- Quest UI ---------------
 

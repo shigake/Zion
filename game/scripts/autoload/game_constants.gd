@@ -190,6 +190,7 @@ const CHEST_REWARD_CRYSTALS_MIN := 5
 const CHEST_REWARD_CRYSTALS_MAX := 15
 const CHEST_REWARD_XP := 20
 const CHEST_ARROW_COLOR := Color(1.0, 0.85, 0.2)  # Dourado
+const MERCHANT_ARROW_COLOR := Color(0.4, 0.85, 1.0)  # Ciano azulado
 const CHEST_DESPAWN_TIME := 20.0  # Desaparece em 20s se nao coletar
 
 # ---- Quest System ----
