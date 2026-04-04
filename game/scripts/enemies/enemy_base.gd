@@ -443,8 +443,8 @@ func _physics_process(delta: float) -> void:
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
 		# Walk bob on sprite (speed-proportional bob + lean + flip + squash-stretch)
-		var _walk_sprite = get_node_or_null("EnemySprite")
-		if _walk_sprite:
+		var _walk_sprite = _get_cached_sprite()
+		if _walk_sprite and _walk_sprite.visible:
 			var _move_spd = velocity.length()
 			var _bob_freq = 6.0 + _move_spd * 0.5  # Faster enemies bob faster
 			var _bob_amp = clampf(_move_spd * 0.006, 0.02, 0.06)  # Amplitude scales with speed
@@ -473,8 +473,8 @@ func _physics_process(delta: float) -> void:
 			_animator.set_walking(true)
 	else:
 		# Idle bob + reset scale + return lean to neutral
-		var _idle_sprite = get_node_or_null("EnemySprite")
-		if _idle_sprite:
+		var _idle_sprite = _get_cached_sprite()
+		if _idle_sprite and _idle_sprite.visible:
 			_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 2.5 + global_position.z) * 0.015
 			_idle_sprite.position.x = 0.0
 			_idle_sprite.rotation.z = lerp(_idle_sprite.rotation.z, 0.0, 0.1)

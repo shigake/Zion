@@ -8,7 +8,7 @@ extends Node
 
 # --- Enemy MultiMesh ---
 const THRESHOLD := 50  # Switch to multimesh above this count (was 100)
-const HYSTERESIS := 15  # Prevent flickering near threshold
+const HYSTERESIS := 25  # Prevent flickering near threshold (was 15, increased to reduce oscillation)
 
 var _multimesh_instance: MultiMeshInstance3D = null
 var _multimesh: MultiMesh = null
@@ -99,30 +99,44 @@ func _activate() -> void:
 func _deactivate() -> void:
 	_active = false
 	# Restore individual sprite/mesh visibility before removing multimesh
-	_restore_individual_visuals()
+	# Spread over multiple frames to avoid a single-frame stutter
+	_restore_individual_visuals_batched()
 	if _multimesh_instance and is_instance_valid(_multimesh_instance):
 		_multimesh_instance.queue_free()
 		_multimesh_instance = null
 		_multimesh = null
 
-func _restore_individual_visuals() -> void:
-	## Re-show the individual Sprite3D (EnemySprite) or ProceduralModel/Mesh nodes
-	## that were hidden when multimesh took over rendering.
+func _restore_individual_visuals_batched() -> void:
+	## Re-show the individual sprites in batches to avoid frame stutter.
+	## Uses enemy's cached sprite when available (EnemyBase3D._get_cached_sprite).
 	var enemies = GameManager.get_enemies()
+	var batch_size := 15
+	var idx := 0
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
+		# Use the enemy's cached sprite reference if available
+		if enemy is EnemyBase3D:
+			var cached = enemy._get_cached_sprite()
+			if cached:
+				cached.visible = true
+				idx += 1
+				continue
+		# Fallback: check nodes directly
 		var sprite_node = enemy.get_node_or_null("EnemySprite")
 		if sprite_node:
 			sprite_node.visible = true
+			idx += 1
 			continue
 		var proc_model = enemy.get_node_or_null("ProceduralModel")
 		if proc_model:
 			proc_model.visible = true
+			idx += 1
 			continue
 		var mesh_node = enemy.get_node_or_null("Mesh")
 		if mesh_node:
 			mesh_node.visible = true
+			idx += 1
 
 func _update_transforms() -> void:
 	if not _multimesh or not _multimesh_instance or not is_instance_valid(_multimesh_instance):
@@ -142,6 +156,7 @@ func _update_transforms() -> void:
 		_multimesh.instance_count = int(needed * 1.25)
 
 	# Update transforms and colors; hide individual sprites
+	# Uses enemy's cached sprite to avoid get_node_or_null every frame per enemy
 	var valid_idx := 0
 	for i in range(count):
 		var enemy = enemies[i]
@@ -156,22 +171,22 @@ func _update_transforms() -> void:
 		# Per-instance color tint — uses enemy_color from EnemyBase3D
 		if enemy is EnemyBase3D:
 			_multimesh.set_instance_color(valid_idx, enemy.enemy_color)
+			# Hide individual sprite using cached reference (no get_node_or_null)
+			var cached_sprite = enemy._get_cached_sprite()
+			if cached_sprite:
+				if cached_sprite.visible:
+					cached_sprite.visible = false
+			else:
+				# Fallback for enemies without cached sprite
+				var proc_model = enemy.get_node_or_null("ProceduralModel")
+				if proc_model and proc_model.visible:
+					proc_model.visible = false
+				else:
+					var mesh_node = enemy.get_node_or_null("Mesh")
+					if mesh_node and mesh_node.visible:
+						mesh_node.visible = false
 		else:
 			_multimesh.set_instance_color(valid_idx, Color.RED)
-
-		# Hide individual sprite/mesh to avoid double rendering
-		var sprite_node = enemy.get_node_or_null("EnemySprite")
-		if sprite_node and sprite_node.visible:
-			sprite_node.visible = false
-		else:
-			# Fallback: hide ProceduralModel or Mesh if no sprite
-			var proc_model = enemy.get_node_or_null("ProceduralModel")
-			if proc_model and proc_model.visible:
-				proc_model.visible = false
-			else:
-				var mesh_node = enemy.get_node_or_null("Mesh")
-				if mesh_node and mesh_node.visible:
-					mesh_node.visible = false
 
 		valid_idx += 1
 
