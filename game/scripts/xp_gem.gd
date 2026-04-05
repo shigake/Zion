@@ -11,7 +11,7 @@ extends Area3D
 ## Maximum number of pickups (xp_gems + crystals) allowed at once.
 const MAX_PICKUPS := 200
 
-## Preloaded texture — strong static reference prevents GC from unloading
+## Preloaded texture - strong static reference prevents GC from unloading
 const _XP_TEXTURE := preload("res://assets/sprites/pickups/xp_gem.png")
 
 var being_attracted: bool = false
@@ -60,7 +60,7 @@ func _physics_process(delta: float) -> void:
 
 	_frame_counter += 1
 
-	# Bobbing animation — every 3 frames (20fps is visually smooth enough)
+	# Bobbing animation - every 3 frames (20fps is visually smooth enough)
 	if _frame_counter % 3 == 0:
 		var bob = sin(GameManager.game_time * 4.0 + global_position.x) * 0.1
 		if _pickup_sprite:
@@ -68,10 +68,10 @@ func _physics_process(delta: float) -> void:
 		else:
 			position.y = 0.3 + bob
 
-	# Attraction check — every 5 frames if being attracted, every 10 if idle (distant)
+	# Attraction check - every 5 frames if being attracted, every 10 if idle (distant)
 	if not being_attracted and _frame_counter % 10 == 0:
 		var players = GameManager.get_players()
-		var range_sq = (base_attract_range * GameManager.magnet_mult) ** 2
+		var range_sq = pow(base_attract_range * GameManager.magnet_mult, 2.0)
 		for p in players:
 			if is_instance_valid(p) and global_position.distance_squared_to(p.global_position) < range_sq:
 				being_attracted = true
@@ -92,7 +92,7 @@ func _collect() -> void:
 	if _collected or not is_inside_tree():
 		return
 	_collected = true
-	set_physics_process(false)  # Stop immediately — no artifacts during queue_free frame
+	set_physics_process(false)  # Stop immediately - no artifacts during queue_free frame
 	ParticleFactory.spawn_collect_particles(global_position, Color(0.2, 0.6, 1.0))
 	AudioManager.play_sfx("collect_xp")
 	GameManager.add_xp(xp_value)
