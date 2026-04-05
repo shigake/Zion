@@ -201,23 +201,28 @@ class BloodOrbInstance extends Area3D:
 			add_child(droplet_mi)
 			_droplet_meshes.append(droplet_mi)
 
-		# Layer 4: Dark trail — GPUParticles3D (replaces per-frame MeshInstance3D spawning)
+		# Layer 4: Dark trail — GPUParticles3D (blood dripping downward)
 		_trail_particles = GPUParticles3D.new()
-		_trail_particles.amount = 6
-		_trail_particles.lifetime = 0.5
+		_trail_particles.amount = 8
+		_trail_particles.lifetime = 0.6
 		_trail_particles.emitting = true
 		_trail_particles.one_shot = false
 		_trail_particles.explosiveness = 0.0
 
 		var tp_mat = ParticleProcessMaterial.new()
 		tp_mat.direction = Vector3(0, -1, 0)
-		tp_mat.spread = 60.0
-		tp_mat.initial_velocity_min = 0.3
-		tp_mat.initial_velocity_max = 0.8
-		tp_mat.gravity = Vector3(0, -0.8, 0)
+		tp_mat.spread = 40.0
+		tp_mat.initial_velocity_min = 0.5
+		tp_mat.initial_velocity_max = 1.2
+		tp_mat.gravity = Vector3(0, -2.0, 0)  # Stronger gravity — dripping blood
 		tp_mat.scale_min = 0.03
-		tp_mat.scale_max = 0.06
-		tp_mat.color = Color(0.5, 0.0, 0.05, 0.5)
+		tp_mat.scale_max = 0.07
+		var tp_color = GradientTexture1D.new()
+		var tp_grad = Gradient.new()
+		tp_grad.set_color(0, Color(0.6, 0.02, 0.08, 0.7))
+		tp_grad.set_color(1, Color(0.3, 0.0, 0.03, 0.0))
+		tp_color.gradient = tp_grad
+		tp_mat.color_ramp = tp_color
 		var tp_scale_curve = CurveTexture.new()
 		var tp_curve = Curve.new()
 		tp_curve.add_point(Vector2(0.0, 1.0))
@@ -242,6 +247,75 @@ class BloodOrbInstance extends Area3D:
 		tp_draw.surface_set_material(0, tp_draw_mat)
 		_trail_particles.draw_pass_1 = tp_draw
 		add_child(_trail_particles)
+
+		# Layer 5: Dark mist aura (ominous fog surrounding the orb)
+		var _dark_mist = GPUParticles3D.new()
+		_dark_mist.name = "DarkMist"
+		_dark_mist.amount = 6
+		_dark_mist.lifetime = 1.5
+		_dark_mist.emitting = true
+		_dark_mist.one_shot = false
+		var mist_mat = ParticleProcessMaterial.new()
+		mist_mat.direction = Vector3(0, 0, 0)
+		mist_mat.spread = 180.0
+		mist_mat.initial_velocity_min = 0.0
+		mist_mat.initial_velocity_max = 0.1
+		mist_mat.gravity = Vector3.ZERO
+		mist_mat.scale_min = 0.5
+		mist_mat.scale_max = 1.2
+		mist_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+		mist_mat.emission_sphere_radius = 0.4
+		mist_mat.radial_velocity_min = 0.2
+		mist_mat.radial_velocity_max = 0.6
+		mist_mat.damping_min = 1.0
+		mist_mat.damping_max = 2.0
+		var mist_color = GradientTexture1D.new()
+		var mist_grad = Gradient.new()
+		mist_grad.set_color(0, Color(0.15, 0.0, 0.02, 0.2))
+		mist_grad.set_color(1, Color(0.05, 0.0, 0.01, 0.0))
+		mist_color.gradient = mist_grad
+		mist_mat.color_ramp = mist_color
+		var mist_scale_c = CurveTexture.new()
+		var msc = Curve.new()
+		msc.add_point(Vector2(0.0, 0.3))
+		msc.add_point(Vector2(0.4, 1.0))
+		msc.add_point(Vector2(1.0, 0.0))
+		mist_scale_c.curve = msc
+		mist_mat.scale_curve = mist_scale_c
+		_dark_mist.process_material = mist_mat
+		var mist_draw = SphereMesh.new()
+		mist_draw.radius = 0.2
+		mist_draw.height = 0.15  # Flat — fog-like
+		mist_draw.radial_segments = 5
+		mist_draw.rings = 3
+		var mist_draw_mat = StandardMaterial3D.new()
+		mist_draw_mat.albedo_color = Color(0.15, 0.0, 0.03, 0.2)
+		mist_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mist_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mist_draw.surface_set_material(0, mist_draw_mat)
+		_dark_mist.draw_pass_1 = mist_draw
+		add_child(_dark_mist)
+
+		# Layer 6: Blood glow ring (pulsing circle below the orb)
+		var _blood_ring = MeshInstance3D.new()
+		_blood_ring.name = "BloodRing"
+		var blood_torus = TorusMesh.new()
+		blood_torus.inner_radius = 0.3
+		blood_torus.outer_radius = 0.4
+		blood_torus.ring_segments = 4
+		blood_torus.rings = 12
+		_blood_ring.mesh = blood_torus
+		_blood_ring.position.y = -0.2
+		_blood_ring.rotation.x = PI / 2.0
+		var blood_ring_mat = StandardMaterial3D.new()
+		blood_ring_mat.albedo_color = Color(0.7, 0.05, 0.1, 0.3)
+		blood_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		blood_ring_mat.emission_enabled = true
+		blood_ring_mat.emission = Color(0.8, 0.05, 0.1)
+		blood_ring_mat.emission_energy_multiplier = 2.0
+		blood_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_blood_ring.material_override = blood_ring_mat
+		add_child(_blood_ring)
 
 	func _process(delta: float) -> void:
 		if not is_inside_tree():

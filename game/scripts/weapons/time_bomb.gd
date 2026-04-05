@@ -206,6 +206,8 @@ func _explode() -> void:
 	# Layer 3: Smoke/debris (dark)
 	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.7, 0.1))
 	ParticleFactory.spawn_death_particles(pos, Color(0.3, 0.15, 0.05))
+	# Layer 4: Shockwave ring on ground
+	_spawn_shockwave(pos, explosion_radius)
 
 	# Expand bomb mesh as shockwave then free
 	var tween = create_tween()
@@ -222,6 +224,34 @@ func _explode() -> void:
 			tween.tween_property(mat, "albedo_color:a", 0.0, 0.2)
 		tween.set_parallel(false)
 	tween.tween_callback(queue_free)
+
+func _spawn_shockwave(pos: Vector3, radius: float) -> void:
+	var ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.1
+	torus.outer_radius = 0.3
+	torus.ring_segments = 4
+	torus.rings = 16
+	ring.mesh = torus
+	ring.global_position = pos + Vector3(0, 0.1, 0)
+	ring.rotation.x = PI / 2.0
+	var ring_mat = StandardMaterial3D.new()
+	ring_mat.albedo_color = Color(1.0, 0.6, 0.1, 0.6)
+	ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring_mat.emission_enabled = true
+	ring_mat.emission = Color(1.0, 0.5, 0.0)
+	ring_mat.emission_energy_multiplier = 4.0
+	ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ring_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ring.material_override = ring_mat
+	get_tree().current_scene.add_child(ring)
+	var stw = ring.create_tween()
+	var target = radius * 2.0
+	stw.set_parallel(true)
+	stw.tween_property(ring, "scale", Vector3(target, target, target), 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	stw.tween_property(ring_mat, "albedo_color:a", 0.0, 0.35)
+	stw.set_parallel(false)
+	stw.tween_callback(ring.queue_free)
 
 func _spawn_explosion_layer(pos: Vector3, radius: float, color: Color, energy: float, duration: float) -> void:
 	var flash = MeshInstance3D.new()

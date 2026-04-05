@@ -82,36 +82,106 @@ func _create_portal_mesh(albedo: Color, emission: Color) -> MeshInstance3D:
 	void_sphere_inst.material_override = void_mat
 	container.add_child(void_sphere_inst)
 
-	# Suction particles
+	# Suction particles (converging inward)
 	var suction = GPUParticles3D.new()
-	suction.amount = 8
+	suction.amount = 10
 	suction.lifetime = 0.6
 	suction.emitting = true
 	suction.one_shot = false
 	var s_mat = ParticleProcessMaterial.new()
 	s_mat.direction = Vector3(0, 0, 0)
 	s_mat.spread = 180.0
-	s_mat.initial_velocity_min = -2.0
-	s_mat.initial_velocity_max = -1.0
+	s_mat.initial_velocity_min = 0.0
+	s_mat.initial_velocity_max = 0.1
+	s_mat.radial_velocity_min = -3.0
+	s_mat.radial_velocity_max = -1.5
 	s_mat.gravity = Vector3(0, 0, 0)
-	s_mat.scale_min = 0.2
-	s_mat.scale_max = 0.5
-	s_mat.color = Color(emission.r, emission.g, emission.b, 0.7)
+	s_mat.scale_min = 0.15
+	s_mat.scale_max = 0.4
 	s_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	s_mat.emission_sphere_radius = portal_radius
+	s_mat.emission_sphere_radius = portal_radius * 1.2
+	var suction_color = GradientTexture1D.new()
+	var suction_grad = Gradient.new()
+	suction_grad.set_color(0, Color(emission.r, emission.g, emission.b, 0.7))
+	suction_grad.set_color(1, Color(emission.r * 0.5, emission.g * 0.5, emission.b * 0.5, 0.0))
+	suction_color.gradient = suction_grad
+	s_mat.color_ramp = suction_color
 	suction.process_material = s_mat
 	var dot_mesh = SphereMesh.new()
-	dot_mesh.radius = 0.02
-	dot_mesh.height = 0.04
+	dot_mesh.radius = 0.025
+	dot_mesh.height = 0.05
 	var dot_mat = StandardMaterial3D.new()
 	dot_mat.albedo_color = Color(emission.r, emission.g, emission.b, 0.8)
 	dot_mat.emission_enabled = true
 	dot_mat.emission = emission
 	dot_mat.emission_energy_multiplier = 4.0
 	dot_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dot_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	dot_mesh.surface_set_material(0, dot_mat)
 	suction.draw_pass_1 = dot_mesh
 	container.add_child(suction)
+
+	# Dimensional energy wisps (orbiting the portal edge)
+	var wisps = GPUParticles3D.new()
+	wisps.name = "EnergyWisps"
+	wisps.amount = 6
+	wisps.lifetime = 1.0
+	wisps.emitting = true
+	wisps.one_shot = false
+	var wisp_mat = ParticleProcessMaterial.new()
+	wisp_mat.direction = Vector3(0, 1, 0)
+	wisp_mat.spread = 180.0
+	wisp_mat.initial_velocity_min = 0.5
+	wisp_mat.initial_velocity_max = 1.5
+	wisp_mat.gravity = Vector3.ZERO
+	wisp_mat.scale_min = 0.15
+	wisp_mat.scale_max = 0.35
+	wisp_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	wisp_mat.emission_sphere_radius = portal_radius * 0.6
+	wisp_mat.radial_velocity_min = 2.0
+	wisp_mat.radial_velocity_max = 4.0
+	wisp_mat.damping_min = 1.0
+	wisp_mat.damping_max = 3.0
+	var wisp_color = GradientTexture1D.new()
+	var wisp_grad = Gradient.new()
+	wisp_grad.set_color(0, Color(emission.r * 1.2, emission.g * 0.8, emission.b * 1.1, 0.5))
+	wisp_grad.set_color(1, Color(emission.r * 0.5, emission.g * 0.3, emission.b * 0.5, 0.0))
+	wisp_color.gradient = wisp_grad
+	wisp_mat.color_ramp = wisp_color
+	wisps.process_material = wisp_mat
+	var wisp_draw = SphereMesh.new()
+	wisp_draw.radius = 0.03
+	wisp_draw.height = 0.06
+	var wisp_draw_mat = StandardMaterial3D.new()
+	wisp_draw_mat.albedo_color = Color(emission.r, emission.g, emission.b, 0.6)
+	wisp_draw_mat.emission_enabled = true
+	wisp_draw_mat.emission = emission
+	wisp_draw_mat.emission_energy_multiplier = 3.0
+	wisp_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wisp_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	wisp_draw.surface_set_material(0, wisp_draw_mat)
+	wisps.draw_pass_1 = wisp_draw
+	container.add_child(wisps)
+
+	# Ground shadow/glow disc below portal
+	var ground_glow = MeshInstance3D.new()
+	ground_glow.name = "PortalGlow"
+	var glow_cyl = CylinderMesh.new()
+	glow_cyl.top_radius = portal_radius * 0.8
+	glow_cyl.bottom_radius = portal_radius * 0.8
+	glow_cyl.height = 0.02
+	ground_glow.mesh = glow_cyl
+	ground_glow.position.y = -0.05
+	var glow_mat = StandardMaterial3D.new()
+	glow_mat.albedo_color = Color(albedo.r, albedo.g, albedo.b, 0.12)
+	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glow_mat.emission_enabled = true
+	glow_mat.emission = emission
+	glow_mat.emission_energy_multiplier = 1.0
+	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	glow_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ground_glow.material_override = glow_mat
+	container.add_child(ground_glow)
 
 	return container
 

@@ -19,6 +19,9 @@ var hit_enemies: Array = []
 var energy_ring: MeshInstance3D = null
 var charge_particles: GPUParticles3D = null
 var beam_pulse_time: float = 0.0
+var beam_smoke: GPUParticles3D = null
+var beam_sparks: GPUParticles3D = null
+var beam_glow_ring: MeshInstance3D = null
 
 func _ready() -> void:
 	beam_mesh.visible = false
@@ -83,23 +86,30 @@ func _setup_billboard_sprite() -> void:
 
 	# -- Convergence particles (move toward center) --
 	charge_particles = GPUParticles3D.new()
-	charge_particles.amount = 10
+	charge_particles.amount = 14
 	charge_particles.lifetime = 0.5
 	charge_particles.emitting = false
 
 	var conv_mat = ParticleProcessMaterial.new()
 	conv_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	conv_mat.emission_sphere_radius = 1.0
+	conv_mat.emission_sphere_radius = 1.2
 	conv_mat.direction = Vector3(0, 0, 0)
 	conv_mat.spread = 0.0
 	conv_mat.initial_velocity_min = 0.0
 	conv_mat.initial_velocity_max = 0.0
-	conv_mat.radial_velocity_min = -3.0
+	conv_mat.radial_velocity_min = -3.5
 	conv_mat.radial_velocity_max = -2.0
 	conv_mat.gravity = Vector3.ZERO
 	conv_mat.scale_min = 0.3
 	conv_mat.scale_max = 0.8
 	conv_mat.color = Color(0.4, 0.85, 1.0)
+	# Fade convergence particles over lifetime
+	var conv_color_ramp = GradientTexture1D.new()
+	var conv_grad = Gradient.new()
+	conv_grad.set_color(0, Color(0.6, 0.9, 1.0, 0.8))
+	conv_grad.set_color(1, Color(0.3, 0.7, 1.0, 0.0))
+	conv_color_ramp.gradient = conv_grad
+	conv_mat.color_ramp = conv_color_ramp
 	charge_particles.process_material = conv_mat
 
 	var dot_mesh = SphereMesh.new()
@@ -169,6 +179,18 @@ func _process(delta: float) -> void:
 			beam_area.monitoring = false
 			beam_pulse_time = 0.0
 			hit_enemies.clear()
+			# Clean up beam effects
+			if beam_smoke:
+				beam_smoke.emitting = false
+				var _s = beam_smoke
+				get_tree().create_timer(1.0).timeout.connect(_s.queue_free)
+				beam_smoke = null
+			if beam_sparks:
+				beam_sparks.queue_free()
+				beam_sparks = null
+			if beam_glow_ring:
+				beam_glow_ring.queue_free()
+				beam_glow_ring = null
 	else:
 		attack_timer -= delta
 		if attack_timer <= 0:
@@ -231,6 +253,117 @@ func _fire_beam(level: int) -> void:
 	var area_scale = 1.0 + (level - 1) * 0.12
 	beam_area.scale = Vector3(area_scale, 1.0, area_scale)
 	beam_mesh.scale = Vector3(area_scale, 1.0, area_scale)
+
+	# --- Smoke/vapor trail along beam ---
+	if beam_smoke:
+		beam_smoke.queue_free()
+	beam_smoke = GPUParticles3D.new()
+	beam_smoke.amount = 12
+	beam_smoke.lifetime = 0.8
+	beam_smoke.emitting = true
+	beam_smoke.one_shot = false
+	beam_smoke.position = Vector3(0, 0.2, -3.0)  # Along beam axis
+	var smoke_mat = ParticleProcessMaterial.new()
+	smoke_mat.direction = Vector3(0, 1, 0)
+	smoke_mat.spread = 40.0
+	smoke_mat.initial_velocity_min = 0.3
+	smoke_mat.initial_velocity_max = 0.8
+	smoke_mat.gravity = Vector3(0, 0.5, 0)
+	smoke_mat.scale_min = 0.4
+	smoke_mat.scale_max = 1.0
+	smoke_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	smoke_mat.emission_box_extents = Vector3(area_scale * 0.5, 0.1, 3.0)
+	smoke_mat.damping_min = 2.0
+	smoke_mat.damping_max = 4.0
+	var smoke_color = GradientTexture1D.new()
+	var smoke_grad = Gradient.new()
+	smoke_grad.set_color(0, Color(0.3, 0.7, 1.0, 0.3))
+	smoke_grad.set_color(1, Color(0.15, 0.4, 0.6, 0.0))
+	smoke_color.gradient = smoke_grad
+	smoke_mat.color_ramp = smoke_color
+	var smoke_scale_curve = CurveTexture.new()
+	var sc = Curve.new()
+	sc.add_point(Vector2(0.0, 0.3))
+	sc.add_point(Vector2(0.3, 1.0))
+	sc.add_point(Vector2(1.0, 0.0))
+	smoke_scale_curve.curve = sc
+	smoke_mat.scale_curve = smoke_scale_curve
+	beam_smoke.process_material = smoke_mat
+	var smoke_draw = SphereMesh.new()
+	smoke_draw.radius = 0.15
+	smoke_draw.height = 0.3
+	smoke_draw.radial_segments = 5
+	smoke_draw.rings = 3
+	var smoke_draw_mat = StandardMaterial3D.new()
+	smoke_draw_mat.albedo_color = Color(0.3, 0.65, 0.9, 0.35)
+	smoke_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smoke_draw_mat.emission_enabled = true
+	smoke_draw_mat.emission = Color(0.2, 0.6, 1.0)
+	smoke_draw_mat.emission_energy_multiplier = 1.5
+	smoke_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	smoke_draw.surface_set_material(0, smoke_draw_mat)
+	beam_smoke.draw_pass_1 = smoke_draw
+	add_child(beam_smoke)
+
+	# --- Electric sparks along beam edges ---
+	if beam_sparks:
+		beam_sparks.queue_free()
+	beam_sparks = GPUParticles3D.new()
+	beam_sparks.amount = 8
+	beam_sparks.lifetime = 0.3
+	beam_sparks.emitting = true
+	beam_sparks.one_shot = false
+	beam_sparks.position = Vector3(0, 0.3, -2.5)
+	var sparks_mat = ParticleProcessMaterial.new()
+	sparks_mat.direction = Vector3(1, 1, 0)
+	sparks_mat.spread = 180.0
+	sparks_mat.initial_velocity_min = 2.0
+	sparks_mat.initial_velocity_max = 5.0
+	sparks_mat.gravity = Vector3(0, -4.0, 0)
+	sparks_mat.scale_min = 0.1
+	sparks_mat.scale_max = 0.3
+	sparks_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	sparks_mat.emission_box_extents = Vector3(area_scale * 0.6, 0.05, 2.5)
+	sparks_mat.color = Color(0.5, 0.9, 1.0, 0.9)
+	beam_sparks.process_material = sparks_mat
+	var spark_draw = SphereMesh.new()
+	spark_draw.radius = 0.015
+	spark_draw.height = 0.03
+	var spark_mat_draw = StandardMaterial3D.new()
+	spark_mat_draw.albedo_color = Color(0.6, 0.95, 1.0, 0.9)
+	spark_mat_draw.emission_enabled = true
+	spark_mat_draw.emission = Color(0.5, 0.9, 1.0)
+	spark_mat_draw.emission_energy_multiplier = 6.0
+	spark_mat_draw.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	spark_mat_draw.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	spark_draw.surface_set_material(0, spark_mat_draw)
+	beam_sparks.draw_pass_1 = spark_draw
+	add_child(beam_sparks)
+
+	# --- Glow ring at beam origin ---
+	if beam_glow_ring:
+		beam_glow_ring.queue_free()
+	beam_glow_ring = MeshInstance3D.new()
+	var glow_torus = TorusMesh.new()
+	glow_torus.inner_radius = 0.2 * area_scale
+	glow_torus.outer_radius = 0.4 * area_scale
+	beam_glow_ring.mesh = glow_torus
+	var glow_mat = StandardMaterial3D.new()
+	glow_mat.albedo_color = Color(0.3, 0.8, 1.0, 0.5)
+	glow_mat.emission_enabled = true
+	glow_mat.emission = Color(0.4, 0.85, 1.0)
+	glow_mat.emission_energy_multiplier = 5.0
+	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	beam_glow_ring.material_override = glow_mat
+	beam_glow_ring.position = Vector3(0, 0.3, 0)
+	beam_glow_ring.rotation.x = PI / 2.0
+	add_child(beam_glow_ring)
+	# Animate glow ring expanding then fading
+	var ring_tw = beam_glow_ring.create_tween()
+	ring_tw.set_parallel(true)
+	ring_tw.tween_property(beam_glow_ring, "scale", Vector3(2.0, 2.0, 2.0), fire_duration).set_trans(Tween.TRANS_QUAD)
+	ring_tw.tween_property(glow_mat, "albedo_color:a", 0.0, fire_duration)
 
 	# Screen shake and SFX
 	ScreenEffects.shake(0.4)

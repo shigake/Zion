@@ -146,6 +146,114 @@ func _place_totem(level: int) -> void:
 	ring_mi.name = "AreaRing"
 	totem.add_child(ring_mi)
 
+	# --- Electric spark particles radiating outward ---
+	var spark_particles = GPUParticles3D.new()
+	spark_particles.name = "ElectricSparks"
+	spark_particles.amount = 8
+	spark_particles.lifetime = 0.4
+	spark_particles.emitting = true
+	spark_particles.one_shot = false
+	spark_particles.position.y = 0.75  # At orb height
+	var spark_proc = ParticleProcessMaterial.new()
+	spark_proc.direction = Vector3(0, 0.5, 0)
+	spark_proc.spread = 180.0
+	spark_proc.initial_velocity_min = 2.0
+	spark_proc.initial_velocity_max = 5.0
+	spark_proc.gravity = Vector3(0, -3.0, 0)
+	spark_proc.scale_min = 0.08
+	spark_proc.scale_max = 0.2
+	spark_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	spark_proc.emission_sphere_radius = 0.2
+	spark_proc.radial_velocity_min = 1.0
+	spark_proc.radial_velocity_max = 3.0
+	spark_proc.color = Color(0.5, 0.9, 1.0, 0.85)
+	var spark_scale_curve = CurveTexture.new()
+	var ssc = Curve.new()
+	ssc.add_point(Vector2(0.0, 1.0))
+	ssc.add_point(Vector2(0.5, 0.6))
+	ssc.add_point(Vector2(1.0, 0.0))
+	spark_scale_curve.curve = ssc
+	spark_proc.scale_curve = spark_scale_curve
+	spark_particles.process_material = spark_proc
+	var spark_draw = SphereMesh.new()
+	spark_draw.radius = 0.015
+	spark_draw.height = 0.03
+	var spark_draw_mat = StandardMaterial3D.new()
+	spark_draw_mat.albedo_color = Color(0.5, 0.95, 1.0, 0.9)
+	spark_draw_mat.emission_enabled = true
+	spark_draw_mat.emission = Color(0.4, 0.85, 1.0)
+	spark_draw_mat.emission_energy_multiplier = 6.0
+	spark_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	spark_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	spark_draw.surface_set_material(0, spark_draw_mat)
+	spark_particles.draw_pass_1 = spark_draw
+	totem.add_child(spark_particles)
+
+	# --- Ground glow disc (subtle electric glow below totem) ---
+	var glow_disc = MeshInstance3D.new()
+	glow_disc.name = "GroundGlow"
+	var glow_mesh = CylinderMesh.new()
+	glow_mesh.top_radius = 1.0
+	glow_mesh.bottom_radius = 1.0
+	glow_mesh.height = 0.02
+	glow_disc.mesh = glow_mesh
+	glow_disc.position.y = 0.01
+	var glow_mat = StandardMaterial3D.new()
+	glow_mat.albedo_color = Color(0.2, 0.6, 1.0, 0.15)
+	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glow_mat.emission_enabled = true
+	glow_mat.emission = Color(0.3, 0.7, 1.0)
+	glow_mat.emission_energy_multiplier = 1.5
+	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	glow_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	glow_disc.material_override = glow_mat
+	totem.add_child(glow_disc)
+	# Pulse the ground glow
+	var glow_tw = totem.create_tween().set_loops()
+	glow_tw.tween_property(glow_disc, "scale", Vector3(1.3, 1.0, 1.3), 0.6).set_trans(Tween.TRANS_SINE)
+	glow_tw.tween_property(glow_disc, "scale", Vector3(0.8, 1.0, 0.8), 0.6).set_trans(Tween.TRANS_SINE)
+
+	# --- Ambient electric hum particles (tiny dots floating around orb) ---
+	var hum_particles = GPUParticles3D.new()
+	hum_particles.name = "ElectricHum"
+	hum_particles.amount = 5
+	hum_particles.lifetime = 1.0
+	hum_particles.emitting = true
+	hum_particles.one_shot = false
+	hum_particles.position.y = 0.75
+	var hum_proc = ParticleProcessMaterial.new()
+	hum_proc.direction = Vector3(0, 0, 0)
+	hum_proc.spread = 180.0
+	hum_proc.initial_velocity_min = 0.0
+	hum_proc.initial_velocity_max = 0.1
+	hum_proc.gravity = Vector3.ZERO
+	hum_proc.scale_min = 0.02
+	hum_proc.scale_max = 0.05
+	hum_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	hum_proc.emission_sphere_radius = 0.4
+	hum_proc.radial_velocity_min = 0.5
+	hum_proc.radial_velocity_max = 1.5
+	var hum_color = GradientTexture1D.new()
+	var hum_grad = Gradient.new()
+	hum_grad.set_color(0, Color(0.4, 0.85, 1.0, 0.7))
+	hum_grad.set_color(1, Color(0.3, 0.7, 1.0, 0.0))
+	hum_color.gradient = hum_grad
+	hum_proc.color_ramp = hum_color
+	hum_particles.process_material = hum_proc
+	var hum_draw = SphereMesh.new()
+	hum_draw.radius = 0.012
+	hum_draw.height = 0.024
+	var hum_draw_mat = StandardMaterial3D.new()
+	hum_draw_mat.albedo_color = Color(0.5, 0.9, 1.0, 0.7)
+	hum_draw_mat.emission_enabled = true
+	hum_draw_mat.emission = Color(0.4, 0.8, 1.0)
+	hum_draw_mat.emission_energy_multiplier = 4.0
+	hum_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hum_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	hum_draw.surface_set_material(0, hum_draw_mat)
+	hum_particles.draw_pass_1 = hum_draw
+	totem.add_child(hum_particles)
+
 	# Attach damage script behavior via timer
 	var damage = int(WeaponDB.get_damage("totem", level))
 	var lifetime = 15.0 + level * 2.0

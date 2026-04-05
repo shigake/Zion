@@ -74,22 +74,27 @@ func _throw_bottle(level: int) -> void:
 	# Visual — full 3D procedural (no Sprite3D)
 	var pool_radius = 2.0 + (level - 1) * 0.3
 
-	# --- Puddle disc (CylinderMesh flat on ground) ---
+	# --- Main puddle disc (CylinderMesh flat on ground) ---
 	var puddle_mi = MeshInstance3D.new()
 	puddle_mi.name = "PuddleDisc"
 	var disc = CylinderMesh.new()
 	disc.top_radius = pool_radius
-	disc.bottom_radius = pool_radius
+	disc.bottom_radius = pool_radius * 0.95  # Slightly smaller bottom for natural look
 	disc.height = 0.04
 	puddle_mi.mesh = disc
 	puddle_mi.position = Vector3(0, 0.02, 0)
+	# Squash the puddle slightly for organic shape (not perfect circle)
+	var squash_x = randf_range(0.85, 1.15)
+	var squash_z = randf_range(0.85, 1.15)
+	puddle_mi.scale = Vector3(squash_x, 1.0, squash_z)
 	var puddle_mat = StandardMaterial3D.new()
-	puddle_mat.albedo_color = Color(0.1, 0.6, 0.15, 0.85)
+	puddle_mat.albedo_color = Color(0.08, 0.55, 0.12, 0.88)
 	puddle_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	puddle_mat.emission_enabled = true
 	puddle_mat.emission = Color(0.15, 0.8, 0.1)
 	puddle_mat.emission_energy_multiplier = 1.5
-	puddle_mat.roughness = 0.3
+	puddle_mat.roughness = 0.15  # Glossier — liquid look
+	puddle_mat.metallic = 0.15  # Slight metallic sheen for liquid reflection
 	puddle_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	# Procedural noise texture on roughness for toxic surface detail
 	var noise_tex = NoiseTexture2D.new()
@@ -103,25 +108,110 @@ func _throw_bottle(level: int) -> void:
 	puddle_mi.material_override = puddle_mat
 	pool.add_child(puddle_mi)
 
-	# Pulsing animation on puddle disc
+	# --- Drip extensions (3-5 smaller discs poking out from edges like liquid spills) ---
+	var drip_count = randi_range(3, 5)
+	for di in range(drip_count):
+		var drip_mi = MeshInstance3D.new()
+		drip_mi.name = "Drip_%d" % di
+		var drip_disc = CylinderMesh.new()
+		var drip_radius = pool_radius * randf_range(0.15, 0.35)
+		drip_disc.top_radius = drip_radius
+		drip_disc.bottom_radius = drip_radius * 0.8
+		drip_disc.height = 0.03
+		drip_mi.mesh = drip_disc
+		# Position at edge of main puddle, extending outward
+		var drip_angle = di * TAU / drip_count + randf_range(-0.4, 0.4)
+		var drip_dist = pool_radius * randf_range(0.7, 1.1)
+		drip_mi.position = Vector3(cos(drip_angle) * drip_dist, 0.015, sin(drip_angle) * drip_dist)
+		# Stretch the drip outward for teardrop look
+		var stretch_dir = randf_range(1.2, 1.8)
+		var stretch_perp = randf_range(0.6, 0.9)
+		drip_mi.scale = Vector3(stretch_perp, 1.0, stretch_dir)
+		drip_mi.rotation.y = drip_angle  # Align stretch with drip direction
+		var drip_mat = StandardMaterial3D.new()
+		drip_mat.albedo_color = Color(0.08, 0.5, 0.1, 0.75)
+		drip_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		drip_mat.emission_enabled = true
+		drip_mat.emission = Color(0.12, 0.7, 0.08)
+		drip_mat.emission_energy_multiplier = 1.2
+		drip_mat.roughness = 0.15
+		drip_mat.metallic = 0.1
+		drip_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		drip_mi.material_override = drip_mat
+		pool.add_child(drip_mi)
+
+	# --- Tiny splatter dots around the puddle (like liquid droplets) ---
+	var splat_count = randi_range(4, 7)
+	for si in range(splat_count):
+		var splat_mi = MeshInstance3D.new()
+		splat_mi.name = "Splat_%d" % si
+		var splat_mesh = CylinderMesh.new()
+		var splat_radius = randf_range(0.08, 0.2)
+		splat_mesh.top_radius = splat_radius
+		splat_mesh.bottom_radius = splat_radius
+		splat_mesh.height = 0.02
+		splat_mi.mesh = splat_mesh
+		var splat_angle = randf() * TAU
+		var splat_dist = pool_radius * randf_range(1.1, 1.6)
+		splat_mi.position = Vector3(cos(splat_angle) * splat_dist, 0.01, sin(splat_angle) * splat_dist)
+		var splat_mat = StandardMaterial3D.new()
+		splat_mat.albedo_color = Color(0.06, 0.45, 0.08, 0.6)
+		splat_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		splat_mat.emission_enabled = true
+		splat_mat.emission = Color(0.1, 0.6, 0.05)
+		splat_mat.emission_energy_multiplier = 1.0
+		splat_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		splat_mi.material_override = splat_mat
+		pool.add_child(splat_mi)
+
+	# --- Surface ripple effect (animated ring expanding outward) ---
+	var ripple_mi = MeshInstance3D.new()
+	ripple_mi.name = "Ripple"
+	var ripple_torus = TorusMesh.new()
+	ripple_torus.inner_radius = pool_radius * 0.3
+	ripple_torus.outer_radius = pool_radius * 0.35
+	ripple_torus.ring_segments = 4
+	ripple_torus.rings = 16
+	ripple_mi.mesh = ripple_torus
+	ripple_mi.position = Vector3(0, 0.04, 0)
+	ripple_mi.rotation.x = PI / 2.0
+	var ripple_mat = StandardMaterial3D.new()
+	ripple_mat.albedo_color = Color(0.15, 0.9, 0.2, 0.25)
+	ripple_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ripple_mat.emission_enabled = true
+	ripple_mat.emission = Color(0.1, 0.7, 0.1)
+	ripple_mat.emission_energy_multiplier = 1.0
+	ripple_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ripple_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ripple_mi.material_override = ripple_mat
+	ripple_mi.scale = Vector3(0.5, 0.5, 0.5)
+	pool.add_child(ripple_mi)
+	# Looping ripple animation — expand then reset
+	var ripple_tw = pool.create_tween().set_loops()
+	ripple_tw.tween_property(ripple_mi, "scale", Vector3(1.3, 1.3, 1.3), 1.2).set_trans(Tween.TRANS_SINE)
+	ripple_tw.parallel().tween_property(ripple_mat, "albedo_color:a", 0.0, 1.2)
+	ripple_tw.tween_property(ripple_mi, "scale", Vector3(0.5, 0.5, 0.5), 0.0)
+	ripple_tw.tween_property(ripple_mat, "albedo_color:a", 0.25, 0.0)
+
+	# Pulsing animation on puddle disc (gentle breathing)
 	var pulse_tw = pool.create_tween().set_loops()
-	pulse_tw.tween_property(puddle_mi, "scale", Vector3(1.08, 1.0, 1.08), 0.8).set_trans(Tween.TRANS_SINE)
-	pulse_tw.tween_property(puddle_mi, "scale", Vector3(0.95, 1.0, 0.95), 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tw.tween_property(puddle_mi, "scale", Vector3(squash_x * 1.06, 1.0, squash_z * 1.06), 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tw.tween_property(puddle_mi, "scale", Vector3(squash_x * 0.96, 1.0, squash_z * 0.96), 0.8).set_trans(Tween.TRANS_SINE)
 
 	# --- Toxic cloud (GPUParticles3D stationary, replaces billboard sprite) ---
 	var toxic_cloud = GPUParticles3D.new()
 	toxic_cloud.name = "ToxicCloud"
-	toxic_cloud.amount = 18
-	toxic_cloud.lifetime = 2.0
-	toxic_cloud.position = Vector3(0, 0.3, 0)
+	toxic_cloud.amount = 22
+	toxic_cloud.lifetime = 2.5
+	toxic_cloud.position = Vector3(0, 0.15, 0)  # Lower — hugs the puddle surface
 	var cloud_proc = ParticleProcessMaterial.new()
 	cloud_proc.direction = Vector3(0, 1, 0)
-	cloud_proc.initial_velocity_min = 0.08
-	cloud_proc.initial_velocity_max = 0.25
-	cloud_proc.spread = 60.0
-	cloud_proc.gravity = Vector3(0, 0.15, 0)
-	cloud_proc.scale_min = 0.6
-	cloud_proc.scale_max = 1.4
+	cloud_proc.initial_velocity_min = 0.05
+	cloud_proc.initial_velocity_max = 0.18
+	cloud_proc.spread = 75.0  # Wider spread — fog-like
+	cloud_proc.gravity = Vector3(0, 0.08, 0)  # Slower rise — lingers more
+	cloud_proc.scale_min = 0.8
+	cloud_proc.scale_max = 1.8  # Bigger clouds
 	cloud_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
 	cloud_proc.emission_sphere_radius = pool_radius * 0.5
 	cloud_proc.damping_min = 0.8
