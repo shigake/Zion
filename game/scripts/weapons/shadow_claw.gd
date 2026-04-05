@@ -104,24 +104,39 @@ func _attack(level: int, is_second: bool = false) -> void:
 	slash_area.monitoring = true
 	hit_enemies.clear()
 
-	# Auto-aim toward nearest enemy
-	var enemies = GameManager.get_enemies()
-	if not enemies.is_empty():
-		var player = get_parent().get_parent() if get_parent() else null
-		if player and is_instance_valid(player):
-			var nearest: Node3D = null
-			var min_dist = INF
-			for e in enemies:
-				if not is_instance_valid(e):
-					continue
-				var d = player.global_position.distance_squared_to(e.global_position)
-				if d < min_dist:
-					min_dist = d
-					nearest = e
-			if nearest:
-				var dir = (nearest.global_position - player.global_position).normalized()
-				var aim_angle = atan2(-dir.x, -dir.z)
-				rotation.y = aim_angle
+	# Auto-aim toward nearest enemy (instinto dimensional)
+	var player = get_parent().get_parent() if get_parent() else null
+	if player and is_instance_valid(player):
+		var aimed = false
+		if GameManager.manual_aim and GameManager.aim_direction.length_squared() > 0.01:
+			var aim_angle = atan2(-GameManager.aim_direction.x, -GameManager.aim_direction.z)
+			global_rotation.y = aim_angle
+			aimed = true
+		else:
+			var enemies = GameManager.get_enemies()
+			if not enemies.is_empty():
+				var nearest: Node3D = null
+				var min_dist = INF
+				for e in enemies:
+					if not is_instance_valid(e):
+						continue
+					var d = player.global_position.distance_squared_to(e.global_position)
+					if d < min_dist:
+						min_dist = d
+						nearest = e
+				if nearest:
+					var dir = nearest.global_position - player.global_position
+					dir.y = 0.0
+					if dir.length_squared() > 0.01:
+						dir = dir.normalized()
+						global_rotation.y = atan2(-dir.x, -dir.z)
+						aimed = true
+		# Fallback: aim in player's movement direction
+		if not aimed and player is CharacterBody3D:
+			var vel = player.velocity
+			vel.y = 0.0
+			if vel.length_squared() > 0.1:
+				global_rotation.y = atan2(-vel.x, -vel.z)
 
 	var area_scale = 1.0 + (level - 1) * 0.18
 	slash_area.scale = Vector3.ONE * area_scale

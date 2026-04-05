@@ -107,13 +107,12 @@ func _place_totem(level: int) -> void:
 	arc_mat.emission_energy_multiplier = 3.0
 	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	arc_mat.no_depth_test = true
+	# Inner arcs (close to totem)
 	for i in range(3):
-		var arc_mi = MeshInstance3D.new()
-		# Create zigzag arc mesh (6 segments of small boxes)
 		var arc_parent = Node3D.new()
 		arc_parent.name = "ArcParent_%d" % i
 		var angle = i * TAU / 3.0
-		arc_parent.position = Vector3(cos(angle) * area_radius * 0.5, 0.5, sin(angle) * area_radius * 0.5)
+		arc_parent.position = Vector3(cos(angle) * area_radius * 0.35, 0.5, sin(angle) * area_radius * 0.35)
 		for j in range(6):
 			var seg = MeshInstance3D.new()
 			var seg_mesh = BoxMesh.new()
@@ -125,6 +124,64 @@ func _place_totem(level: int) -> void:
 			seg.name = "ArcSeg_%d" % j
 			arc_parent.add_child(seg)
 		totem.add_child(arc_parent)
+	# Outer arcs (near edge of circle)
+	for i in range(3):
+		var arc_parent = Node3D.new()
+		arc_parent.name = "ArcOuter_%d" % i
+		var angle = i * TAU / 3.0 + TAU / 6.0  # Offset from inner arcs
+		arc_parent.position = Vector3(cos(angle) * area_radius * 0.8, 0.3, sin(angle) * area_radius * 0.8)
+		for j in range(4):
+			var seg = MeshInstance3D.new()
+			var seg_mesh = BoxMesh.new()
+			seg_mesh.size = Vector3(0.025, 0.10, 0.025)
+			seg.mesh = seg_mesh
+			seg.material_override = arc_mat
+			seg.position = Vector3(randf_range(-0.05, 0.05), j * 0.10 - 0.2, randf_range(-0.05, 0.05))
+			seg.rotation.z = randf_range(-0.6, 0.6)
+			seg.name = "ArcSeg_%d" % j
+			arc_parent.add_child(seg)
+		totem.add_child(arc_parent)
+
+	# --- Ground lightning bolts (flat zigzag lines from center to edge) ---
+	var bolt_mat = StandardMaterial3D.new()
+	bolt_mat.albedo_color = Color(0.5, 0.9, 1.0, 0.6)
+	bolt_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bolt_mat.emission_enabled = true
+	bolt_mat.emission = Color(0.6, 0.95, 1.0)
+	bolt_mat.emission_energy_multiplier = 4.0
+	bolt_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bolt_mat.no_depth_test = true
+	for i in range(6):
+		var bolt = Node3D.new()
+		bolt.name = "GroundBolt_%d" % i
+		bolt.position.y = 0.05
+		var bolt_angle = i * TAU / 6.0
+		var bolt_len = area_radius * randf_range(0.5, 0.95)
+		var seg_count = 5
+		var prev_pos = Vector3.ZERO
+		for j in range(seg_count):
+			var t = float(j + 1) / float(seg_count)
+			var base_pos = Vector3(cos(bolt_angle) * bolt_len * t, 0, sin(bolt_angle) * bolt_len * t)
+			# Add zigzag offset perpendicular to bolt direction
+			var perp = Vector3(-sin(bolt_angle), 0, cos(bolt_angle))
+			base_pos += perp * randf_range(-0.3, 0.3)
+			var seg = MeshInstance3D.new()
+			var seg_mesh = BoxMesh.new()
+			var seg_len = prev_pos.distance_to(base_pos)
+			seg_mesh.size = Vector3(0.025, 0.015, maxf(seg_len, 0.05))
+			seg.mesh = seg_mesh
+			seg.material_override = bolt_mat
+			# Position at midpoint between prev and current
+			var mid = (prev_pos + base_pos) * 0.5
+			seg.position = mid
+			# Rotate to face from prev to current
+			if seg_len > 0.01:
+				var dir = (base_pos - prev_pos).normalized()
+				seg.rotation.y = atan2(dir.x, dir.z)
+			seg.name = "BoltSeg_%d" % j
+			bolt.add_child(seg)
+			prev_pos = base_pos
+		totem.add_child(bolt)
 
 	# --- Area ring (flat torus showing damage radius) ---
 	var ring_mi = MeshInstance3D.new()
@@ -146,11 +203,11 @@ func _place_totem(level: int) -> void:
 	ring_mi.name = "AreaRing"
 	totem.add_child(ring_mi)
 
-	# --- Electric spark particles radiating outward ---
+	# --- Electric spark particles radiating outward from orb ---
 	var spark_particles = GPUParticles3D.new()
 	spark_particles.name = "ElectricSparks"
-	spark_particles.amount = 8
-	spark_particles.lifetime = 0.4
+	spark_particles.amount = 12
+	spark_particles.lifetime = 0.5
 	spark_particles.emitting = true
 	spark_particles.one_shot = false
 	spark_particles.position.y = 0.75  # At orb height
@@ -188,6 +245,47 @@ func _place_totem(level: int) -> void:
 	spark_draw.surface_set_material(0, spark_draw_mat)
 	spark_particles.draw_pass_1 = spark_draw
 	totem.add_child(spark_particles)
+
+	# --- Ground electric field particles (fill the entire circle) ---
+	var field_particles = GPUParticles3D.new()
+	field_particles.name = "ElectricField"
+	field_particles.amount = 16
+	field_particles.lifetime = 0.6
+	field_particles.emitting = true
+	field_particles.one_shot = false
+	field_particles.position.y = 0.08
+	var field_proc = ParticleProcessMaterial.new()
+	field_proc.direction = Vector3(0, 0.3, 0)
+	field_proc.spread = 180.0
+	field_proc.initial_velocity_min = 0.3
+	field_proc.initial_velocity_max = 1.5
+	field_proc.gravity = Vector3(0, -1.0, 0)
+	field_proc.scale_min = 0.04
+	field_proc.scale_max = 0.12
+	field_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	field_proc.emission_sphere_radius = area_radius * 0.85  # Fill most of the circle
+	field_proc.radial_velocity_min = 0.5
+	field_proc.radial_velocity_max = 2.0
+	var field_color = GradientTexture1D.new()
+	var field_grad = Gradient.new()
+	field_grad.set_color(0, Color(0.5, 0.9, 1.0, 0.8))
+	field_grad.set_color(1, Color(0.3, 0.7, 1.0, 0.0))
+	field_color.gradient = field_grad
+	field_proc.color_ramp = field_color
+	field_particles.process_material = field_proc
+	var field_draw = SphereMesh.new()
+	field_draw.radius = 0.02
+	field_draw.height = 0.04
+	var field_draw_mat = StandardMaterial3D.new()
+	field_draw_mat.albedo_color = Color(0.6, 0.95, 1.0, 0.8)
+	field_draw_mat.emission_enabled = true
+	field_draw_mat.emission = Color(0.5, 0.9, 1.0)
+	field_draw_mat.emission_energy_multiplier = 5.0
+	field_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	field_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	field_draw.surface_set_material(0, field_draw_mat)
+	field_particles.draw_pass_1 = field_draw
+	totem.add_child(field_particles)
 
 	# --- Ground glow disc (subtle electric glow below totem) ---
 	var glow_disc = MeshInstance3D.new()

@@ -110,11 +110,16 @@ func _attack(level: int) -> void:
 	hit_enemies.clear()
 
 	# Auto-aim toward nearest enemy (instinto dimensional)
-	if not GameManager.manual_aim:
-		var enemies = GameManager.get_enemies()
-		if not enemies.is_empty():
-			var player = get_parent().get_parent() if get_parent() else null
-			if player and is_instance_valid(player):
+	var player = get_parent().get_parent() if get_parent() else null
+	if player and is_instance_valid(player):
+		var aimed = false
+		if GameManager.manual_aim and GameManager.aim_direction.length_squared() > 0.01:
+			var aim_angle = atan2(-GameManager.aim_direction.x, -GameManager.aim_direction.z)
+			global_rotation.y = aim_angle
+			aimed = true
+		else:
+			var enemies = GameManager.get_enemies()
+			if not enemies.is_empty():
 				var nearest: Node3D = null
 				var min_dist = INF
 				for e in enemies:
@@ -125,12 +130,18 @@ func _attack(level: int) -> void:
 						min_dist = d
 						nearest = e
 				if nearest:
-					var dir = (nearest.global_position - player.global_position).normalized()
-					var aim_angle = atan2(-dir.x, -dir.z)
-					rotation.y = aim_angle
-	else:
-		var aim_angle = atan2(-GameManager.aim_direction.x, -GameManager.aim_direction.z)
-		rotation.y = aim_angle
+					var dir = nearest.global_position - player.global_position
+					dir.y = 0.0
+					if dir.length_squared() > 0.01:
+						dir = dir.normalized()
+						global_rotation.y = atan2(-dir.x, -dir.z)
+						aimed = true
+		# Fallback: aim in player's movement direction
+		if not aimed and player is CharacterBody3D:
+			var vel = player.velocity
+			vel.y = 0.0
+			if vel.length_squared() > 0.1:
+				global_rotation.y = atan2(-vel.x, -vel.z)
 
 	# Scale with level
 	var area_scale = 1.0 + (level - 1) * 0.15
