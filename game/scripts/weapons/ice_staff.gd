@@ -91,17 +91,24 @@ func _fire(level: int) -> void:
 	bullet.weapon_id = "ice_staff"
 
 	# Override behavior: on hit, freeze area
+	# Usa WeakRef para evitar "Lambda capture freed" quando bullet eh reciclado pelo pool
+	var bullet_ref = weakref(bullet)
 	var _ice_hit = func(body: Node3D) -> void:
-		if not is_instance_valid(bullet) or not bullet.is_inside_tree():
+		var b = bullet_ref.get_ref()
+		if not b or not is_instance_valid(b) or not b.is_inside_tree():
+			return
+		if body == null or not is_instance_valid(body):
 			return
 		if body.has_method("take_damage") and body.is_in_group("enemies"):
 			GameManager._last_attacking_weapon = "ice_staff"
-			var hit_pos = bullet.global_position
+			var hit_pos = b.global_position
 			body.call_deferred("take_damage", dmg, "ice")
 			_freeze_area(hit_pos, level)
-			bullet.queue_free()
+			b.queue_free()
 	bullet.body_entered.connect(_ice_hit, CONNECT_ONE_SHOT)
 	bullet.area_entered.connect(func(area: Area3D) -> void:
+		if area == null or not is_instance_valid(area):
+			return
 		var parent = area.get_parent()
 		if parent and parent is Node3D:
 			_ice_hit.call(parent)

@@ -194,5 +194,6 @@ func _reset_for_reuse() -> void:
 		_trail_particles = get_node_or_null("IceTrail")
 	if _trail_particles:
 		_trail_particles.emitting = true
-	# Forca sincronizacao da posicao antes de rodar
-	force_update_transform()
+	# Forca sincronizacao da posicao antes de rodar (so se ja estiver na arvore)
+	if is_inside_tree():
+		force_update_transform()

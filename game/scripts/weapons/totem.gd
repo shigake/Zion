@@ -44,7 +44,6 @@ func _place_totem(level: int) -> void:
 
 	var totem = Node3D.new()
 	totem.name = "Totem"
-	totem.global_position = player_pos
 
 	# --- Full 3D procedural totem (no Sprite3D) ---
 	# Base stake (wooden pole)
@@ -365,6 +364,8 @@ func _place_totem(level: int) -> void:
 
 	active_totems.append(totem)
 	get_tree().current_scene.call_deferred("add_child", totem)
+	# Seta posicao apos add_child via deferred para evitar erro "!is_inside_tree()"
+	totem.set_deferred("global_position", player_pos)
 
 	AudioManager.play_sfx("electric_zap")
 	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.2, 0.6, 1.0))
