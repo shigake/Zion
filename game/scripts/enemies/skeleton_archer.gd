@@ -43,11 +43,15 @@ func _physics_process(delta: float) -> void:
 func _fire_projectile() -> void:
 	if not target or not is_instance_valid(target):
 		return
+	if not is_inside_tree():
+		return
+
+	var spawn_pos = global_position + Vector3(0, 0.5, 0)
+	var target_pos = target.global_position + Vector3(0, 0.5, 0)
+	var dir = (target_pos - spawn_pos).normalized()
 
 	var bullet = bullet_scene.instantiate()
-	bullet.global_position = global_position + Vector3(0, 0.5, 0)
-
-	var dir = (target.global_position + Vector3(0, 0.5, 0) - bullet.global_position).normalized()
+	bullet.position = spawn_pos
 	bullet.direction = dir
 	bullet.speed = projectile_speed
 	bullet.damage = damage

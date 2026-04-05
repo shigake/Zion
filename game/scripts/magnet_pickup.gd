@@ -133,9 +133,10 @@ func _start_magnet_attract(pickup: Node3D, target: Node3D) -> void:
 	pickup.being_attracted = true
 	pickup.attract_target = target
 	# Desabilita colisao Area3D — ja sabemos o target, nao precisa de overlap detection
+	# Usa set_deferred para evitar erro durante physics signal flush
 	if pickup is Area3D:
-		pickup.monitoring = false
-		pickup.monitorable = false
+		pickup.set_deferred("monitoring", false)
+		pickup.set_deferred("monitorable", false)
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players"):
