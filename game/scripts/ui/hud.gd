@@ -6,6 +6,7 @@ extends CanvasLayer
 @onready var character_hp_bar: Control = $MarginContainer/VBox/CharacterHPBar
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 @onready var level_label: Label = $MarginContainer/VBox/LevelLabel
+@onready var fps_label: Label = $MarginContainer/VBox/FPSLabel
 @onready var time_label: Label = $TopRight/TimeLabel
 @onready var kill_label: Label = $TopRight/KillLabel
 @onready var dash_label: Label = $BottomCenter/DashVBox/DashLabel
@@ -143,6 +144,12 @@ func _ready() -> void:
 	level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	level_label.add_theme_constant_override("outline_size", 3)
 	level_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.0))
+
+	# FPS label styling — small, semi-transparent white
+	fps_label.add_theme_font_size_override("font_size", 12)
+	fps_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.6))
+	fps_label.add_theme_constant_override("outline_size", 2)
+	fps_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.5))
 
 	# Boss HP bar styling (red)
 	var boss_fill = StyleBoxFlat.new()
@@ -306,6 +313,7 @@ func _process(delta: float) -> void:
 	_slow_update_timer += delta
 	if _slow_update_timer >= SLOW_UPDATE_INTERVAL:
 		_slow_update_timer = 0.0
+		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 		_update_time()
 		_update_kills()
 		_update_weapon_icons()
