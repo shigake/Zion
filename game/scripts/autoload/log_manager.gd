@@ -110,10 +110,15 @@ func _process(_delta: float) -> void:
 			_fps_full = true
 		if fps < _min_fps:
 			_min_fps = fps
-		# Aviso se FPS muito baixo (com cooldown de 10s para evitar spam)
-		if fps < 20.0 and _low_fps_cooldown <= 0:
-			warn("Performance", "Low FPS: %.0f" % fps)
-			_low_fps_cooldown = 600  # ~10s a 60fps
+		# Aviso se FPS abaixo de 50 (com cooldown de 5s para evitar spam)
+		if fps < 50.0 and _low_fps_cooldown <= 0:
+			var enemies = GameManager.enemies_alive if GameManager else -1
+			var game_time = GameManager.game_time if GameManager else 0.0
+			var mins = int(game_time) / 60
+			var secs = int(game_time) % 60
+			var stage_name = GameManager.selected_stage if GameManager and "selected_stage" in GameManager else "unknown"
+			warn("Performance", "FPS drop: %.0f | tempo: %d:%02d | inimigos: %d | fase: %s" % [fps, mins, secs, enemies, stage_name])
+			_low_fps_cooldown = 300  # ~5s a 60fps
 		if _low_fps_cooldown > 0:
 			_low_fps_cooldown -= 60
 
