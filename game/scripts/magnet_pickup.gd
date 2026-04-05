@@ -94,24 +94,48 @@ func _collect() -> void:
 	queue_free()
 
 func _attract_all_pickups(target: Node3D) -> void:
-	## Atrai TODOS os pickups do mapa para o jogador
-	# XP gems
-	for gem in get_tree().get_nodes_in_group("xp_gems"):
-		if is_instance_valid(gem) and not gem._collected:
-			gem.being_attracted = true
-			gem.attract_target = target
+	## Atrai TODOS os pickups do mapa para o jogador — escalonado em ondas
+	## para evitar stutter quando ha muitos pickups simultaneos.
+	var all_pickups: Array = []
 
-	# Cristais
-	for crystal in get_tree().get_nodes_in_group("crystals"):
-		if is_instance_valid(crystal) and not crystal._collected:
-			crystal.being_attracted = true
-			crystal.attract_target = target
+	# Coleta todos os pickups validos de uma vez (1 query ao inves de 3)
+	for p in get_tree().get_nodes_in_group("pickups"):
+		if is_instance_valid(p) and p != self and "being_attracted" in p and "_collected" in p and not p._collected:
+			all_pickups.append(p)
 
-	# Health pickups
-	for hp_pickup in get_tree().get_nodes_in_group("health_pickups"):
-		if is_instance_valid(hp_pickup) and hp_pickup != self and not hp_pickup._collected:
-			hp_pickup.being_attracted = true
-			hp_pickup.attract_target = target
+	# Ordena por distancia ao player (mais pertos primeiro)
+	var tgt_pos = target.global_position
+	all_pickups.sort_custom(func(a, b): return a.global_position.distance_squared_to(tgt_pos) < b.global_position.distance_squared_to(tgt_pos))
+
+	# Ativa atracao em ondas de BATCH_SIZE a cada BATCH_DELAY segundos
+	const BATCH_SIZE := 25
+	const BATCH_DELAY := 0.05  # 50ms entre ondas
+	var batch_idx := 0
+	for i in all_pickups.size():
+		var pickup = all_pickups[i]
+		if i > 0 and i % BATCH_SIZE == 0:
+			batch_idx += 1
+		# Primeira onda: imediata. Demais: timer escalonado
+		if batch_idx == 0:
+			_start_magnet_attract(pickup, target)
+		else:
+			var delay = batch_idx * BATCH_DELAY
+			# Usa callable com bind para capturar referencia
+			get_tree().create_timer(delay).timeout.connect(
+				func(): _start_magnet_attract(pickup, target)
+			)
+
+func _start_magnet_attract(pickup: Node3D, target: Node3D) -> void:
+	if not is_instance_valid(pickup) or not is_instance_valid(target):
+		return
+	if "_collected" in pickup and pickup._collected:
+		return
+	pickup.being_attracted = true
+	pickup.attract_target = target
+	# Desabilita colisao Area3D — ja sabemos o target, nao precisa de overlap detection
+	if pickup is Area3D:
+		pickup.monitoring = false
+		pickup.monitorable = false
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("players"):

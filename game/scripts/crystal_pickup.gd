@@ -87,13 +87,22 @@ func _physics_process(delta: float) -> void:
 
 var _collected := false
 
+## Throttle para coleta em massa (magnetica)
+static var _collect_sfx_cooldown: float = 0.0
+static var _collect_particles_cooldown: float = 0.0
+
 func _collect() -> void:
 	if _collected or not is_inside_tree():
 		return
 	_collected = true
 	set_physics_process(false)  # Stop immediately - no artifacts during queue_free frame
-	AudioManager.play_sfx("collect_crystal")
-	ParticleFactory.spawn_collect_particles(global_position, Color(0.7, 0.3, 0.9))
+	var now = GameManager.game_time
+	if now - _collect_particles_cooldown > 0.04:
+		_collect_particles_cooldown = now
+		ParticleFactory.spawn_collect_particles(global_position, Color(0.7, 0.3, 0.9))
+	if now - _collect_sfx_cooldown > 0.06:
+		_collect_sfx_cooldown = now
+		AudioManager.play_sfx("collect_crystal")
 	GameManager.crystals_this_run += crystal_value
 	queue_free()
 

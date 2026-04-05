@@ -88,13 +88,23 @@ func _physics_process(delta: float) -> void:
 
 var _collected := false
 
+## Throttle para coleta em massa (magnetica) — evita 200 SFX/particulas no mesmo frame
+static var _collect_sfx_cooldown: float = 0.0
+static var _collect_particles_cooldown: float = 0.0
+
 func _collect() -> void:
 	if _collected or not is_inside_tree():
 		return
 	_collected = true
 	set_physics_process(false)  # Stop immediately - no artifacts during queue_free frame
-	ParticleFactory.spawn_collect_particles(global_position, Color(0.2, 0.6, 1.0))
-	AudioManager.play_sfx("collect_xp")
+	# Throttle: SFX a cada 60ms, particulas a cada 40ms durante coleta em massa
+	var now = GameManager.game_time
+	if now - _collect_particles_cooldown > 0.04:
+		_collect_particles_cooldown = now
+		ParticleFactory.spawn_collect_particles(global_position, Color(0.2, 0.6, 1.0))
+	if now - _collect_sfx_cooldown > 0.06:
+		_collect_sfx_cooldown = now
+		AudioManager.play_sfx("collect_xp")
 	GameManager.add_xp(xp_value)
 	queue_free()
 

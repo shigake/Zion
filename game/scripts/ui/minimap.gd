@@ -83,21 +83,12 @@ func _refresh_dots() -> void:
 		if dot != Vector2.INF:
 			_boss_dots.append(dot)
 
-	# Pickups / itens no chao
+	# Pickups / itens no chao (xp_gems e crystals ja estao no grupo "pickups")
 	var pickups = get_tree().get_nodes_in_group("pickups")
 	for p in pickups:
 		if not is_instance_valid(p):
 			continue
 		var dot = _world_to_minimap(p.global_position, player_pos)
-		if dot != Vector2.INF:
-			_item_dots.append(dot)
-
-	# XP gems
-	var xp_gems = get_tree().get_nodes_in_group("xp_gems")
-	for g in xp_gems:
-		if not is_instance_valid(g):
-			continue
-		var dot = _world_to_minimap(g.global_position, player_pos)
 		if dot != Vector2.INF:
 			_item_dots.append(dot)
 

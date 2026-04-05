@@ -77,12 +77,18 @@ func _physics_process(delta: float) -> void:
 	if GameManager.game_time - _spawn_time > 30.0:
 		queue_free()
 
+## Throttle para coleta em massa (magnetica)
+static var _collect_sfx_cooldown: float = 0.0
+
 func _collect() -> void:
 	if _collected or not is_inside_tree():
 		return
 	_collected = true
-	AudioManager.play_sfx("heal")
 	ParticleFactory.spawn_collect_particles(global_position, Color(1.0, 0.3, 0.4))
+	var now = GameManager.game_time
+	if now - _collect_sfx_cooldown > 0.06:
+		_collect_sfx_cooldown = now
+		AudioManager.play_sfx("heal")
 	GameManager.heal(heal_value)
 	GameManager.health_pickups_used += 1
 	queue_free()
