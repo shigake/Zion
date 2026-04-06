@@ -22,7 +22,7 @@ func _ready() -> void:
 	if mesh:
 		mesh.material_override = VisualSetup.create_glow_material(Color(0.7, 0.8, 1.0), 3.0)
 	# Billboard sprite (hides mesh if sprite texture exists)
-	var sprite_path = "res://assets/sprites/pickups/magnet.png"
+	var sprite_path = "res://assets/sprites/pickups/magnet_pickup.png"
 	if ResourceLoader.exists(sprite_path):
 		if mesh:
 			mesh.visible = false
