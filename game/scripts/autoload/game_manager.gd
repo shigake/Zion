@@ -783,12 +783,14 @@ func _apply_character_bonuses() -> void:
 		dodge_chance += char_data["dodge_bonus"]
 	if "low_hp_damage_bonus" in char_data:
 		low_hp_damage_bonus = char_data["low_hp_damage_bonus"]
-	# Ronin: 20% crit chance
+	# Ronin: 20% crit chance + 10% melee damage
 	if selected_character == "ronin":
 		crit_chance = 0.20
-	# Pirata: +20% crystal drop
+		perm_damage_mult += 0.10
+	# Pirata: +20% crystal drop + 10% ranged damage
 	if selected_character == "pirata":
 		luck_mult += 0.20  # Affects crystal drop rates
+		perm_damage_mult += 0.10
 	# Vampiro: lifesteal natural + 10% attack speed
 	if selected_character == "vampiro":
 		lifesteal += 0.05

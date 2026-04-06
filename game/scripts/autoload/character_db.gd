@@ -34,7 +34,7 @@ var characters: Dictionary = {
 	"ronin": {
 		"name": "Ronin",
 		"starting_weapon": "katana",
-		"passive": "+20% critical hit",
+		"passive": "+20% critical hit, +10% dano",
 		"color": Color(0.2, 0.85, 0.3),
 		"speed_bonus": 0.0,
 		"damage_bonus": 0.0,
@@ -84,7 +84,7 @@ var characters: Dictionary = {
 	"pirata": {
 		"name": "Pirata",
 		"starting_weapon": "dual_pistol",
-		"passive": "+20% drop de cristais",
+		"passive": "+20% drop de cristais, +10% dano",
 		"color": Color(0.6, 0.4, 0.2),
 		"speed_bonus": 0.0,
 		"damage_bonus": 0.0,
