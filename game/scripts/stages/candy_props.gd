@@ -28,7 +28,6 @@ var _anim_frame: int = 0
 var _animated_props: Array = []
 var _gummy_base_y: Dictionary = {}
 var _player_caramel_count: int = 0
-var _prev_speed_mult: float = 1.0
 var _slowed_enemies: Dictionary = {}  # enemy -> original_speed
 var _mech_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 

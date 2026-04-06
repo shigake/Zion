@@ -187,9 +187,9 @@ func _process(delta: float) -> void:
 			if body.is_in_group("players") or (body is CharacterBody3D and body.has_method("take_damage") and body.get("is_local") != null):
 				GameManager.take_damage(LAVA_DPS)
 			elif body.has_method("take_damage"):
-				# Fire enemies are immune (check resistance)
+				# Fire enemies are immune (resistance <= 0.5 = very fire-resistant)
 				var resistances = body.get("resistances")
-				if resistances is Dictionary and resistances.get("fire", 1.0) < 0.5:
+				if resistances is Dictionary and resistances.get("fire", 1.0) <= 0.5:
 					continue  # Fire-resistant enemy, skip
 				body.take_damage(LAVA_DPS, "fire")
 
