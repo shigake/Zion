@@ -201,8 +201,8 @@ var weapons: Dictionary = {
 	"nunchaku": {
 		"name": "Nunchaku",
 		"type": "melee",
-		"element": "physical",
-		"description": "Ataque rapido em cone, velocidade aumenta com level",
+		"element": "poison",
+		"description": "Nunchaku envenenado, ataque rapido em cone",
 		"base_damage": 8,
 		"base_cooldown": 0.5,
 		"base_area": 1.5,
@@ -312,8 +312,8 @@ var weapons: Dictionary = {
 	"boxing_gloves": {
 		"name": "Luvas de Boxe",
 		"type": "melee",
-		"element": "physical",
-		"description": "Combo rapido de 3 hits com knockback forte",
+		"element": "fire",
+		"description": "Punhos flamejantes com combo de 3 hits e knockback",
 		"base_damage": 20,
 		"base_cooldown": 1.5,
 		"base_area": 1.5,
@@ -350,8 +350,8 @@ var weapons: Dictionary = {
 	"boomerang": {
 		"name": "Boomerang",
 		"type": "ranged",
-		"element": "physical",
-		"description": "Vai e volta, perfura inimigos na ida",
+		"element": "ice",
+		"description": "Bumerangue gelido que vai e volta, perfura inimigos",
 		"base_damage": 16,
 		"base_cooldown": 1.5,
 		"base_speed": 15.0,

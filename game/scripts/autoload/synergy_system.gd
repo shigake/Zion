@@ -154,6 +154,8 @@ func apply_on_kill_synergies(kill_position: Vector3) -> void:
 			_chain_lightning(kill_position)
 	if has_synergy("physical_physical"):
 		_berserker_on_kill()
+	if has_synergy("poison_poison"):
+		_plague_spread(kill_position)
 
 # ---- Passive Synergies (called from player/stage every frame) ----
 
@@ -324,6 +326,20 @@ func _update_berserker_speed() -> void:
 	GameManager.attack_speed_mult -= _current_berserker_bonus
 	_current_berserker_bonus = minf(BERSERKER_MAX_BONUS, _berserker_kill_count * BERSERKER_SPEED_PER_KILL)
 	GameManager.attack_speed_mult += _current_berserker_bonus
+
+# ---- Poison + Poison: Plague (poison spreads on kill) ----
+
+func _plague_spread(kill_pos: Vector3) -> void:
+	var spread_radius := 3.5
+	var spread_damage := 6
+	var nearby = GameManager.get_enemies_in_radius(kill_pos, spread_radius)
+	if nearby.is_empty():
+		return
+	ParticleFactory.spawn_hit_particles(kill_pos + Vector3(0, 0.3, 0), Color(0.3, 0.9, 0.2, 0.7), 8)
+	for e in nearby:
+		if e.has_method("take_damage"):
+			e.call_deferred("take_damage", spread_damage, "poison")
+	synergy_procced.emit("poison_poison", float(spread_damage * nearby.size()))
 
 # ---- Dark + Dark: Passive aura damage ----
 
