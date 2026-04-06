@@ -37,7 +37,7 @@ var upgrades: Dictionary = {
 		"cost_per_level": 30,
 		"max_level": 8,
 		"stat": "armor",
-		"value_per_level": 2,
+		"value_per_level": 3,
 	},
 	"xp_bonus": {
 		"name": "XP Bonus",
@@ -51,7 +51,7 @@ var upgrades: Dictionary = {
 	"magnetism": {
 		"name": "Magnetismo",
 		"description": "+range de coleta por level",
-		"base_cost": 30,
+		"base_cost": 40,
 		"cost_per_level": 20,
 		"max_level": 5,
 		"stat": "magnet",
