@@ -692,7 +692,17 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	var resist_mult: float = resistances.get(damage_type, 1.0)
 	var is_crit = GameManager.crit_chance > 0.0 and randf() < GameManager.crit_chance
 	var crit_mult = GameManager.crit_multiplier if is_crit else 1.0
-	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult * crit_mult))
+	# Apply element-specific item multipliers
+	var element_mult := 1.0
+	if damage_type == "electric" and GameManager.electric_damage_mult > 1.0:
+		element_mult *= GameManager.electric_damage_mult
+	if damage_type == "fire" and GameManager.explosion_damage_mult > 1.0:
+		element_mult *= GameManager.explosion_damage_mult
+	# Apply summon damage mult for summon weapons
+	var weapon_id = GameManager._last_attacking_weapon
+	if GameManager.summon_damage_mult > 1.0 and weapon_id in ["necro", "drone", "totem", "tornado", "blood_orb", "portal_weapon", "time_bomb"]:
+		element_mult *= GameManager.summon_damage_mult
+	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult * crit_mult * element_mult))
 	hp -= final_damage
 	GameManager.total_damage_dealt += final_damage
 	GameManager.record_weapon_damage(GameManager._last_attacking_weapon, final_damage)
