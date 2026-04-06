@@ -652,21 +652,39 @@ func _recalculate_item_bonuses() -> void:
 func _reapply_character_stat_bonuses() -> void:
 	## Re-applies character passives that overlap with item stats.
 	## Called after ItemBonusCalculator.recalculate() which resets these vars.
+	## Any character bonus that modifies a var reset in recalculate() must be here.
 	var char_data = CharacterDB.get_character(selected_character)
 	if char_data.is_empty():
 		return
+	# Generic data-driven bonuses
 	if "attack_speed_bonus" in char_data:
 		attack_speed_mult += char_data["attack_speed_bonus"]
 	if "area_bonus" in char_data:
 		area_mult += char_data["area_bonus"]
 	if "dodge_bonus" in char_data:
 		dodge_chance = minf(0.7, dodge_chance + char_data["dodge_bonus"])
-	# Hardcoded character bonuses that use the same vars
+	# Vampiro: lifesteal + attack speed
 	if selected_character == "vampiro":
+		lifesteal += 0.05
 		attack_speed_mult += 0.10
+	# Engenheiro: cooldown reduction
+	if selected_character == "engenheiro":
+		cooldown_mult = maxf(0.3, cooldown_mult - 0.15)
+	# Gladiador: max HP bonus (do NOT re-set player_hp here)
+	if selected_character == "gladiador":
+		max_hp_mult += 0.15
+	# Bruxa: extra summons + summon damage
+	if selected_character == "bruxa":
+		extra_projectiles += 2
+		summon_damage_mult += 0.20
+	# Pirata: luck bonus
+	if selected_character == "pirata":
+		luck_mult += 0.20
+	# Fragmentado: all stats
 	if selected_character == "fragmentado":
 		attack_speed_mult += 0.10
 		area_mult += 0.10
+	# Lealith: dodge
 	if selected_character == "lealith":
 		dodge_chance = minf(0.7, dodge_chance + 0.15)
 
