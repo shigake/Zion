@@ -151,7 +151,6 @@ func _collect_chest(chest: Node3D) -> void:
 		# Cristais
 		var crystals = randi_range(GameConstants.CHEST_REWARD_CRYSTALS_MIN, GameConstants.CHEST_REWARD_CRYSTALS_MAX)
 		GameManager.crystals_this_run += crystals
-		SaveManager.data["crystals"] = SaveManager.data.get("crystals", 0) + crystals
 		reward = {"type": "crystals", "amount": crystals}
 	elif roll < 0.6:
 		# XP

@@ -118,7 +118,6 @@ func _complete_quest() -> void:
 
 	# Recompensa
 	GameManager.crystals_this_run += GameConstants.QUEST_REWARD_CRYSTALS
-	SaveManager.data["crystals"] = SaveManager.data.get("crystals", 0) + GameConstants.QUEST_REWARD_CRYSTALS
 	GameManager.add_xp(GameConstants.QUEST_REWARD_XP)
 
 	AudioManager.play_sfx("achievement")

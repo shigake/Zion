@@ -957,8 +957,9 @@ func sync_weapon_damage(data: Dictionary) -> void:
 	weapon_damage_dealt = data
 
 func end_run() -> void:
-	# Cristais = kills / 5 (minimo), com multiplicador de mutacoes
-	crystals_this_run = maxi(int(maxi(total_kills / 5, 10) * MutationManager.get_crystal_multiplier()), 10)
+	# Cristais = kills / 5 + cristais coletados em baus/quests, com multiplicador de mutacoes
+	var kill_crystals = maxi(int(maxi(total_kills / 5, 10) * MutationManager.get_crystal_multiplier()), 10)
+	crystals_this_run += kill_crystals
 	LogManager.info("Game", "Run ended: %s on %s, time: %.1fs, kills: %d, crystals: %d, victory: %s" % [
 		selected_character, selected_stage, game_time, total_kills, crystals_this_run, str(is_victory)
 	])
