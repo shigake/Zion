@@ -188,6 +188,10 @@ func _star_burst(count: int) -> void:
 		get_tree().current_scene.call_deferred("add_child", proj)
 
 func _summon_gummy_bears(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var gummy = ObjectPool.get_instance(slime_scene)
 		var angle = (TAU / count) * i
@@ -196,10 +200,15 @@ func _summon_gummy_bears(count: int) -> void:
 		if gummy is EnemyBase3D:
 			gummy.xp_drop = 0
 			gummy.enemy_color = candy_colors[randi() % candy_colors.size()]
+			gummy.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", gummy)
 		GameManager.enemies_alive += 1
 
 func _summon_cupcake_bombers(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var bomber = ObjectPool.get_instance(bomber_scene)
 		var angle = (TAU / count) * i
@@ -208,19 +217,13 @@ func _summon_cupcake_bombers(count: int) -> void:
 		if bomber is EnemyBase3D:
 			bomber.xp_drop = 0
 			bomber.enemy_color = Color(1.0, 0.6, 0.8)  # Rosa cupcake
+			bomber.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", bomber)
 		GameManager.enemies_alive += 1
 
 func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	var indicator = Sprite3D.new()
-	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	for x in range(32):
-		for y in range(32):
-			var dx = x - 16
-			var dy = y - 16
-			if dx * dx + dy * dy < 14 * 14:
-				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
-	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.texture = EnemyBase3D.get_telegraph_texture()
 	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	indicator.rotation.x = deg_to_rad(-90)
 	indicator.pixel_size = radius * 0.06

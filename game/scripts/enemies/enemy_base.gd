@@ -45,6 +45,7 @@ static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path 
 ## Shared projectile mesh/material — avoid creating new ones every ranged attack
 static var _shared_proj_mesh: SphereMesh = null
 static var _shared_proj_mat: StandardMaterial3D = null
+static var _shared_telegraph_tex: ImageTexture = null  # Cached telegraph indicator texture
 
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var hitbox: Area3D = $Hitbox
@@ -681,6 +682,19 @@ func _find_target() -> void:
 		if dist < min_dist:
 			min_dist = dist
 			target = p
+
+static func get_telegraph_texture() -> ImageTexture:
+	if _shared_telegraph_tex:
+		return _shared_telegraph_tex
+	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	for x in range(32):
+		for y in range(32):
+			var dx = x - 16
+			var dy = y - 16
+			if dx * dx + dy * dy < 14 * 14:
+				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
+	_shared_telegraph_tex = ImageTexture.create_from_image(img)
+	return _shared_telegraph_tex
 
 func take_damage(amount: int, damage_type: String = "physical") -> void:
 	if is_dead or not is_inside_tree():

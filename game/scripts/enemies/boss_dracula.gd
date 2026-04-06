@@ -166,6 +166,10 @@ func _teleport_bat_form() -> void:
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 6)
 
 func _summon_bats(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var bat = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
@@ -174,10 +178,15 @@ func _summon_bats(count: int) -> void:
 		if bat is EnemyBase3D:
 			bat.xp_drop = 0
 			bat.enemy_color = Color(0.3, 0.0, 0.05)  # Vermelho escuro
+			bat.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", bat)
 		GameManager.enemies_alive += 1
 
 func _summon_vampires(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var vamp = ObjectPool.get_instance(skeleton_scene)
 		var angle = (TAU / count) * i
@@ -186,6 +195,7 @@ func _summon_vampires(count: int) -> void:
 		if vamp is EnemyBase3D:
 			vamp.xp_drop = 0
 			vamp.enemy_color = Color(0.7, 0.6, 0.6)  # Palido
+			vamp.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", vamp)
 		GameManager.enemies_alive += 1
 
@@ -264,14 +274,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	var indicator = Sprite3D.new()
-	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	for x in range(32):
-		for y in range(32):
-			var dx = x - 16
-			var dy = y - 16
-			if dx * dx + dy * dy < 14 * 14:
-				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
-	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.texture = EnemyBase3D.get_telegraph_texture()
 	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	indicator.rotation.x = deg_to_rad(-90)
 	indicator.pixel_size = radius * 0.06

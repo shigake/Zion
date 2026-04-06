@@ -208,6 +208,10 @@ func _tentacle_slam(radius: float) -> void:
 					player.take_damage(int(damage * 0.7), global_position)
 
 func _summon_jellyfish(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var jelly = ObjectPool.get_instance(ghost_scene)
 		var angle = (TAU / count) * i
@@ -216,19 +220,13 @@ func _summon_jellyfish(count: int) -> void:
 		if jelly is EnemyBase3D:
 			jelly.xp_drop = 0  # Boss summons nao dao XP
 			jelly.enemy_color = Color(0.3, 0.5, 1.0)  # Azul jellyfish
+			jelly.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", jelly)
 		GameManager.enemies_alive += 1
 
 func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	var indicator = Sprite3D.new()
-	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	for x in range(32):
-		for y in range(32):
-			var dx = x - 16
-			var dy = y - 16
-			if dx * dx + dy * dy < 14 * 14:
-				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
-	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.texture = EnemyBase3D.get_telegraph_texture()
 	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	indicator.rotation.x = deg_to_rad(-90)
 	indicator.pixel_size = radius * 0.06

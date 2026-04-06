@@ -135,6 +135,10 @@ func _teleport_near_player() -> void:
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 8)
 
 func _summon_drones(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var drone = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
@@ -143,10 +147,15 @@ func _summon_drones(count: int) -> void:
 		if drone is EnemyBase3D:
 			drone.xp_drop = 0  # Boss summons nao dao XP
 			drone.enemy_color = Color(0.2, 0.6, 1.0)  # Azul eletrico
+			drone.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", drone)
 		GameManager.enemies_alive += 1
 
 func _summon_virus_minions(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var virus = ObjectPool.get_instance(slime_scene)
 		var angle = (TAU / count) * i
@@ -155,6 +164,7 @@ func _summon_virus_minions(count: int) -> void:
 		if virus is EnemyBase3D:
 			virus.xp_drop = 0  # Boss summons nao dao XP
 			virus.enemy_color = Color(0.2, 1.0, 0.2)  # Verde brilhante
+			virus.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", virus)
 		GameManager.enemies_alive += 1
 
@@ -179,14 +189,7 @@ func _fire_laser_grid(count: int) -> void:
 
 func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	var indicator = Sprite3D.new()
-	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	for x in range(32):
-		for y in range(32):
-			var dx = x - 16
-			var dy = y - 16
-			if dx * dx + dy * dy < 14 * 14:
-				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
-	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.texture = EnemyBase3D.get_telegraph_texture()
 	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	indicator.rotation.x = deg_to_rad(-90)
 	indicator.pixel_size = radius * 0.06

@@ -141,6 +141,10 @@ func _teleport_near_player() -> void:
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 8)
 
 func _summon_fairies(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var fairy = ObjectPool.get_instance(bat_scene)
 		var angle = (TAU / count) * i
@@ -149,10 +153,15 @@ func _summon_fairies(count: int) -> void:
 		if fairy is EnemyBase3D:
 			fairy.xp_drop = 0  # Boss summons nao dao XP
 			fairy.enemy_color = Color(0.8, 0.5, 0.9)  # Cor de fada
+			fairy.add_to_group("boss_summon")
 		get_tree().current_scene.call_deferred("add_child", fairy)
 		GameManager.enemies_alive += 1
 
 func _spawn_clones(count: int) -> void:
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	for i in range(count):
 		var angle = (TAU / count) * i
 		var offset = Vector3(cos(angle), 0, sin(angle)) * 4.0
@@ -164,6 +173,7 @@ func _spawn_clones(count: int) -> void:
 			clone.speed = speed
 			clone.xp_drop = 0
 			clone.enemy_color = Color(0.9, 0.3, 0.9, 0.6)  # Semi-transparente
+			clone.add_to_group("boss_summon")
 		clone.scale = Vector3(2.0, 2.0, 2.0)
 		clone.global_position = global_position + offset
 		get_tree().current_scene.call_deferred("add_child", clone)
@@ -189,14 +199,7 @@ func _thorn_rain(count: int) -> void:
 
 func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	var indicator = Sprite3D.new()
-	var img = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	for x in range(32):
-		for y in range(32):
-			var dx = x - 16
-			var dy = y - 16
-			if dx * dx + dy * dy < 14 * 14:
-				img.set_pixel(x, y, Color(1, 0, 0, 0.3))
-	indicator.texture = ImageTexture.create_from_image(img)
+	indicator.texture = EnemyBase3D.get_telegraph_texture()
 	indicator.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	indicator.rotation.x = deg_to_rad(-90)
 	indicator.pixel_size = radius * 0.06

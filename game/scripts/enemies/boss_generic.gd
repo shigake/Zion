@@ -108,10 +108,16 @@ func _physics_process(delta: float) -> void:
 	if is_dead or not is_inside_tree():
 		return
 
-	# Update target
+	# Update target — closest player, not always first
 	var players = GameManager.get_players()
 	if not players.is_empty():
-		target = players[0]
+		var closest_dist := INF
+		for p in players:
+			if is_instance_valid(p):
+				var d := global_position.distance_squared_to(p.global_position)
+				if d < closest_dist:
+					closest_dist = d
+					target = p
 
 	# Phase detection
 	var hp_ratio = float(hp) / float(max_hp) if max_hp > 0 else 1.0
@@ -202,8 +208,13 @@ func _do_special(scene: Node) -> void:
 func _do_summon(scene: Node) -> void:
 	if not is_inside_tree():
 		return
+	# Cap summons to prevent performance death spiral
+	var current_summons := get_tree().get_nodes_in_group("boss_summon").size()
+	if current_summons >= GameConstants.BOSS_MAX_SUMMONS:
+		return
 	# Spawna 3-5 minions ao redor do boss
 	var count = randi_range(3, 5)
+	count = mini(count, GameConstants.BOSS_MAX_SUMMONS - current_summons)
 	var slime_scene = preload("res://scenes/enemies/slime.tscn")
 	for i in range(count):
 		var angle = (float(i) / count) * TAU
@@ -214,7 +225,8 @@ func _do_summon(scene: Node) -> void:
 			minion.hp = minion.max_hp
 			minion.enemy_color = boss_color.lightened(0.3)
 			minion.xp_drop = 0
-		scene.add_child(minion)
+			minion.add_to_group("boss_summon")
+		scene.call_deferred("add_child", minion)
 		minion.global_position = spawn_pos
 		GameManager.enemies_alive += 1
 	AudioManager.play_sfx("summon_pop")
