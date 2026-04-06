@@ -23,6 +23,8 @@ static func recalculate(gm: Node, items: Array) -> void:
 	gm.master_key_active = false
 	gm.weapon_level_bonus = 0
 	gm.accuracy_mult = 1.0
+	gm.xp_mult = 1.0
+	gm.electric_damage_mult = 1.0
 
 	for it in items:
 		var data = ItemDB.get_item(it["id"])
