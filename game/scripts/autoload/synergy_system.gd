@@ -37,8 +37,8 @@ func _ready() -> void:
 const SYNERGY_INFO := {
 	"fire_fire": {"icon_symbol": "🔥", "name": "Explosion", "effect": "20% chance de explosao ao matar", "trigger": "Fogo + Fogo (2 armas de fogo)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 0.6, 0.1)},
 	"ice_ice": {"icon_symbol": "❄", "name": "Shatter", "effect": "Inimigos congelados explodem em estilhacos", "trigger": "Gelo + Gelo (2 armas de gelo)", "cooldown": 0.0, "type": "base", "color": Color(0.4, 0.9, 1.0)},
-	"electric_electric": {"icon_symbol": "⚡", "name": "Chain Lightning", "effect": "Chain lightning ao matar (5 alvos, 12 dano cada)", "trigger": "Eletrico + Eletrico (2 armas eletricas)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 1.0, 0.3)},
-	"dark_dark": {"icon_symbol": "🌑", "name": "Darkness", "effect": "Area de trevas passiva (5 dano/s em raio de 4)", "trigger": "Dark + Dark (2 armas sombrias)", "cooldown": 1.0, "type": "base", "color": Color(0.7, 0.3, 0.9)},
+	"electric_electric": {"icon_symbol": "⚡", "name": "Chain Lightning", "effect": "25% chance de chain lightning ao matar (5 alvos, 12 dano)", "trigger": "Eletrico + Eletrico (2 armas eletricas)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 1.0, 0.3)},
+	"dark_dark": {"icon_symbol": "🌑", "name": "Darkness", "effect": "Area de trevas passiva (8 dano/s em raio de 4)", "trigger": "Dark + Dark (2 armas sombrias)", "cooldown": 1.0, "type": "base", "color": Color(0.7, 0.3, 0.9)},
 	"water_water": {"icon_symbol": "🌊", "name": "Tidal Wave", "effect": "Onda de mare empurra inimigos a cada 4s", "trigger": "Agua + Agua (2 armas de agua)", "cooldown": 4.0, "type": "water", "color": Color(0.2, 0.5, 1.0)},
 	"fire_ice": {"icon_symbol": "♨", "name": "Steam Cloud", "effect": "Nuvem de vapor (8 dano + slow 40%)", "trigger": "Fogo + Gelo", "cooldown": 1.5, "type": "cross", "color": Color(0.8, 0.8, 0.8)},
 	"electric_ice": {"icon_symbol": "🔷", "name": "Conductor", "effect": "Descarga massiva em area (25 dano, raio 6)", "trigger": "Eletrico + Gelo", "cooldown": 3.0, "type": "cross", "color": Color(0.3, 0.5, 1.0)},
@@ -47,7 +47,7 @@ const SYNERGY_INFO := {
 	"water_ice": {"icon_symbol": "🧊", "name": "Absolute Zero", "effect": "Congela inimigos por 2s em raio de 4", "trigger": "Agua + Gelo", "cooldown": 5.0, "type": "water", "color": Color(0.6, 0.9, 1.0)},
 	"water_dark": {"icon_symbol": "🌀", "name": "Abyssal Depths", "effect": "Inimigos 40% mais lentos em raio de 6", "trigger": "Agua + Dark", "cooldown": 0.5, "type": "water", "color": Color(0.1, 0.15, 0.4)},
 	"fire_poison": {"icon_symbol": "☣", "name": "Toxic Fire", "effect": "DoT de fogo dobrado (8+8 dano/s)", "trigger": "Fogo + Veneno", "cooldown": 1.0, "type": "cross", "color": Color(0.8, 0.5, 0.1)},
-	"ice_dark": {"icon_symbol": "🌘", "name": "Shadow Freeze", "effect": "Congela + drena vida (2% do dano vira cura)", "trigger": "Gelo + Dark", "cooldown": 2.0, "type": "cross", "color": Color(0.3, 0.1, 0.5)},
+	"ice_dark": {"icon_symbol": "🌘", "name": "Shadow Freeze", "effect": "Congela + drena vida (5% do dano vira cura)", "trigger": "Gelo + Dark", "cooldown": 2.0, "type": "cross", "color": Color(0.3, 0.1, 0.5)},
 	"electric_poison": {"icon_symbol": "💀", "name": "Toxic Shock", "effect": "Stun 0.5s + DoT de veneno (6 dano/1.5s)", "trigger": "Eletrico + Veneno", "cooldown": 1.5, "type": "cross", "color": Color(0.3, 1.0, 0.3)},
 	"poison_poison": {"icon_symbol": "☠", "name": "Plague", "effect": "Veneno se espalha para inimigos proximos", "trigger": "Veneno + Veneno (2 armas de veneno)", "cooldown": 0.0, "type": "base", "color": Color(0.5, 0.9, 0.2)},
 	"light_light": {"icon_symbol": "✦", "name": "Radiance", "effect": "Aura de luz que enfraquece inimigos", "trigger": "Luz + Luz (2 armas de luz)", "cooldown": 0.0, "type": "base", "color": Color(1.0, 1.0, 0.8)},
@@ -117,7 +117,7 @@ func get_synergy_description(synergy_id: String) -> String:
 		"electric_electric":
 			return "Eletrico + Eletrico: Chain lightning ao matar"
 		"dark_dark":
-			return "Dark + Dark: Area de trevas passiva ao redor"
+			return "Dark + Dark: Area de trevas passiva (8 dano/s)"
 		"water_water":
 			return "Agua + Agua: Onda de mare empurra inimigos a cada 4s"
 		"fire_ice":
@@ -135,7 +135,7 @@ func get_synergy_description(synergy_id: String) -> String:
 		"fire_poison", "poison_fire":
 			return "Fogo + Veneno: Toxic fire (DoT de fogo dobrado)"
 		"ice_dark", "dark_ice":
-			return "Gelo + Dark: Shadow freeze (congela + drena vida para o jogador)"
+			return "Gelo + Dark: Shadow freeze (congela + 5% do dano vira cura)"
 		"electric_poison", "poison_electric":
 			return "Eletrico + Veneno: Toxic shock (stun 0.5s + DoT de veneno)"
 	return ""
@@ -150,7 +150,7 @@ func apply_on_kill_synergies(kill_position: Vector3) -> void:
 		if randf() < 0.25:
 			_ice_shatter(kill_position)
 	if has_synergy("electric_electric"):
-		if randf() < 0.3:
+		if randf() < 0.25:
 			_chain_lightning(kill_position)
 
 # ---- Passive Synergies (called from player/stage every frame) ----
@@ -163,8 +163,8 @@ const SYNERGY_INTERVALS := {
 	"toxic_shock": 1.5,
 }
 const SYNERGY_DAMAGE := {
-	"dark_aura": 5, "steam_cloud": 8, "conductor": 25,
-	"tidal_wave": 5, "steam_explosion": 12, "absolute_zero": 8,
+	"dark_aura": 8, "steam_cloud": 8, "conductor": 25,
+	"tidal_wave": 10, "steam_explosion": 12, "absolute_zero": 8,
 	"toxic_fire": 8, "shadow_freeze": 10, "toxic_shock": 6,
 }
 const SYNERGY_RADIUS := {
@@ -455,7 +455,7 @@ func _shadow_freeze_tick(pos: Vector3) -> void:
 			total_damage_dealt += dmg
 		_freeze_enemy(e, 1.5)
 	if total_damage_dealt > 0.0:
-		var heal_amount = total_damage_dealt * 0.02
+		var heal_amount = total_damage_dealt * 0.05
 		if heal_amount < 1.0:
 			heal_amount = 1.0
 		GameManager.heal(int(heal_amount))
