@@ -7,8 +7,8 @@ extends Node
 ## Above THRESHOLD: MultiMesh with shared sprite texture (performance mode).
 
 # --- Enemy MultiMesh ---
-const THRESHOLD := 50  # Switch to multimesh above this count (was 100)
-const HYSTERESIS := 25  # Prevent flickering near threshold (was 15, increased to reduce oscillation)
+const THRESHOLD := 300  # Switch to multimesh only with massive hordes (individual sprites preferred)
+const HYSTERESIS := 100  # Prevent flickering near threshold
 
 var _multimesh_instance: MultiMeshInstance3D = null
 var _multimesh: MultiMesh = null
@@ -17,8 +17,8 @@ var _billboard_material: StandardMaterial3D = null
 var _fallback_texture: Texture2D = null
 
 # --- Pickup MultiMesh ---
-const PICKUP_THRESHOLD := 60
-const PICKUP_HYSTERESIS := 15
+const PICKUP_THRESHOLD := 200  # Individual sprites preferred — only use multimesh for extreme counts
+const PICKUP_HYSTERESIS := 50
 
 var _pickup_mm_instance: MultiMeshInstance3D = null
 var _pickup_mm: MultiMesh = null
@@ -229,7 +229,7 @@ func _activate_pickup_mm() -> void:
 	_pickup_mm_instance.name = "PickupMultiMesh"
 	_pickup_mm_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
-	# Billboard unshaded material with vertex colors
+	# Billboard unshaded material with vertex colors and pickup texture
 	var mat = StandardMaterial3D.new()
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -237,6 +237,9 @@ func _activate_pickup_mm() -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	mat.alpha_scissor_threshold = 0.5
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var pickup_tex = load("res://assets/sprites/pickups/xp_gem.png") as Texture2D
+	if pickup_tex:
+		mat.albedo_texture = pickup_tex
 	_pickup_mm_instance.material_override = mat
 
 	var scene = get_tree().current_scene

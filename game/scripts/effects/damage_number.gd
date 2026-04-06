@@ -12,10 +12,10 @@ func setup(value: int, color: Color = Color.WHITE, is_crit: bool = false) -> voi
 	modulate = color
 	if is_crit:
 		text = str(value) + "!"
-		font_size = 640
+		font_size = 860
 	else:
-		font_size = 480
-	outline_size = 30
+		font_size = 640
+	outline_size = 40
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	visible = true
 
@@ -36,7 +36,7 @@ func _reset_for_reuse() -> void:
 	modulate.a = 1.0
 	visible = false
 	text = ""
-	font_size = 480
+	font_size = 640
 	set_process(false)
 
 func _process(delta: float) -> void:

@@ -120,11 +120,8 @@ func get_bestiary_id() -> String:
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var is_boss := enemy_type.begins_with("Boss")
-	# Performance: when MultiMesh is active (50+ enemies), non-boss sprites are hidden anyway.
-	# Skip creating individual Sprite3D nodes — saves load() + node creation per enemy.
-	if not is_boss and MultiMeshManager._active:
-		mesh.visible = false
-		return
+	# Always create sprite nodes — MultiMesh will hide them when active but they need
+	# to exist for when MultiMesh deactivates or for visual correctness.
 	var stage = GameManager.selected_stage
 	var cache_key = "%s_%s" % [enemy_type, stage]
 	var sprite_path: String

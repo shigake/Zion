@@ -117,30 +117,8 @@ func _ready() -> void:
 	if ScreenEffects.has_signal("player_took_damage"):
 		ScreenEffects.player_took_damage.connect(_on_player_took_damage)
 
-	# XP bar — slimmer, with glow fill and level badge
-	xp_bar.custom_minimum_size = Vector2(260, 10)
-	var xp_fill = StyleBoxFlat.new()
-	xp_fill.bg_color = Color(0.3, 0.6, 1.0)
-	xp_fill.set_corner_radius_all(5)
-	xp_bar.add_theme_stylebox_override("fill", xp_fill)
-
-	var xp_bg = StyleBoxFlat.new()
-	xp_bg.bg_color = Color(0.03, 0.03, 0.1, 0.8)
-	xp_bg.set_corner_radius_all(5)
-	xp_bg.set_border_width_all(1)
-	xp_bg.border_color = Color(0.15, 0.2, 0.4, 0.5)
-	xp_bar.add_theme_stylebox_override("background", xp_bg)
-
-	# XP progress text label — overlaid on center of XP bar
-	_xp_text_label = Label.new()
-	_xp_text_label.name = "XPTextLabel"
-	_xp_text_label.add_theme_font_size_override("font_size", 9)
-	_xp_text_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0, 0.7))
-	_xp_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_xp_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_xp_text_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_xp_text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	xp_bar.add_child(_xp_text_label)
+	# XP bar hidden — player has world-space XP bar below HP near character
+	xp_bar.visible = false
 
 	# Level label styling — prominent gold with outline
 	level_label.add_theme_font_size_override("font_size", 20)
@@ -365,10 +343,7 @@ func _update_hp() -> void:
 	_prev_hp = current_hp
 
 func _update_xp() -> void:
-	xp_bar.max_value = GameManager.player_xp_to_next
-	xp_bar.value = GameManager.player_xp
-	if _xp_text_label:
-		_xp_text_label.text = "%d/%d" % [GameManager.player_xp, GameManager.player_xp_to_next]
+	pass  # XP bar hidden — using world-space bar near character
 
 func _update_time() -> void:
 	var t = int(GameManager.game_time)
