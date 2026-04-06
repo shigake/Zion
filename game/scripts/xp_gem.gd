@@ -52,7 +52,7 @@ func _ready() -> void:
 		return
 
 func _exit_tree() -> void:
-	GameManager.active_pickup_count -= 1
+	GameManager.active_pickup_count = maxi(0, GameManager.active_pickup_count - 1)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:

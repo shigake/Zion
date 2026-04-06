@@ -727,6 +727,7 @@ func reset() -> void:
 	QuestManager.reset()
 	game_time = 0.0
 	enemies_alive = 0
+	active_pickup_count = 0
 	total_kills = 0
 	total_damage_dealt = 0
 	peak_enemies = 0

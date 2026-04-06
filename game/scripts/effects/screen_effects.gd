@@ -126,13 +126,18 @@ func shake(amount: float = 0.15) -> void:
 	var multiplier: float = [0.0, 0.4, 1.0, 1.6][setting]
 	shake_amount = maxf(shake_amount, amount * multiplier)
 
+var _time_scale_priority: int = 0  # Higher priority effects won't be overridden
+
 func hit_freeze(duration: float = 0.05) -> void:
 	# Accessibility: reduce hit freeze duration by 70% if reduced motion
 	if AccessibilityManager.reduced_motion:
 		duration *= 0.3
+	if _time_scale_priority > 0:
+		return  # Don't override higher-priority time effects (boss kill freeze)
 	Engine.time_scale = 0.1
 	await get_tree().create_timer(duration * 0.1).timeout
-	Engine.time_scale = 1.0
+	if _time_scale_priority == 0:
+		Engine.time_scale = 1.0
 
 func boss_kill_freeze() -> void:
 	var duration: float = GameConstants.BOSS_KILL_FREEZE_DURATION
@@ -140,19 +145,23 @@ func boss_kill_freeze() -> void:
 	if AccessibilityManager.reduced_motion:
 		flash(0.12, GameConstants.BOSS_KILL_FLASH_ALPHA * 0.4)
 		return
-	# Pausa total + flash branco intenso
+	# Pausa total + flash branco intenso (high priority — blocks hit_freeze)
+	_time_scale_priority = 2
 	Engine.time_scale = 0.0
 	flash(0.12, GameConstants.BOSS_KILL_FLASH_ALPHA)
 	# Timer com process_always=true para rodar mesmo com time_scale=0
 	await get_tree().create_timer(duration, true, false, true).timeout
 	Engine.time_scale = 1.0
+	_time_scale_priority = 0
 	# Screen shake suave apos retomar
 	shake(GameConstants.BOSS_KILL_SHAKE_AMOUNT)
 
 func slow_motion(duration: float = 0.5, scale: float = 0.3) -> void:
+	_time_scale_priority = 1
 	Engine.time_scale = scale
 	await get_tree().create_timer(duration * scale).timeout
 	Engine.time_scale = 1.0
+	_time_scale_priority = 0
 
 ## Brief white flash overlay (e.g. on heavy swing)
 func flash(duration: float = 0.05, alpha: float = 0.1) -> void:
