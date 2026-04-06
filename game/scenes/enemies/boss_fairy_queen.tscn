@@ -20,7 +20,7 @@ transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 0, 0, 0)
 script = ExtResource("1")
 speed = 2.0
 max_hp = 2500
-damage = 20
+damage = 22
 xp_drop = 100
 enemy_color = Color(0.9, 0.3, 0.9, 1)
 

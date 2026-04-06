@@ -16,11 +16,11 @@ var bullet_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 func _ready() -> void:
 	# Boss tem resistencia parcial a todos os tipos
 	resistances = {
-		"physical": 0.7,
-		"fire": 0.7,
-		"ice": 0.7,
-		"electric": 0.7,
-		"dark": 0.5,  # Mais resistente a dark (ele e necromante)
+		"physical": 0.85,
+		"fire": 0.85,
+		"ice": 0.85,
+		"electric": 0.85,
+		"dark": 0.6,  # Mais resistente a dark (ele e necromante)
 	}
 	super._ready()
 	# Extra boss HP scaling for multiplayer (on top of base enemy scaling)

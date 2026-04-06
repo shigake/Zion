@@ -18,10 +18,10 @@ collision_layer = 2
 collision_mask = 1
 transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 0, 0, 0)
 script = ExtResource("1")
-speed = 2.5
-max_hp = 3000
-damage = 22
-xp_drop = 110
+speed = 3.0
+max_hp = 4500
+damage = 35
+xp_drop = 200
 enemy_color = Color(0.4, 0.0, 0.1, 1)
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
