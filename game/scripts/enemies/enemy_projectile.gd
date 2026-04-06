@@ -79,6 +79,8 @@ func _update_visuals() -> void:
 		_sprite.pixel_size = projectile_radius * 0.25
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	_timer += delta
 	if _timer >= lifetime:
 		_deactivate()
@@ -90,6 +92,8 @@ func _physics_process(delta: float) -> void:
 	global_position += _velocity * delta
 
 func _on_body_entered(body: Node3D) -> void:
+	if not is_inside_tree():
+		return
 	if body.is_in_group("players") and body.has_method("take_damage"):
 		body.take_damage(damage, global_position)
 		_deactivate()

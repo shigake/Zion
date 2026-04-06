@@ -99,7 +99,7 @@ func _process_cull_batch() -> void:
 	# Cache posicoes dos jogadores
 	var player_positions: Array[Vector3] = []
 	for player in players:
-		if is_instance_valid(player) and player is Node3D:
+		if is_instance_valid(player) and player is Node3D and player.is_inside_tree():
 			player_positions.append(player.global_position)
 
 	if player_positions.is_empty():
@@ -120,7 +120,7 @@ func _process_cull_batch() -> void:
 
 		var enemy: Node = enemies[idx]
 
-		if is_instance_valid(enemy) and enemy is Node3D:
+		if is_instance_valid(enemy) and enemy is Node3D and enemy.is_inside_tree():
 			# NUNCA fazer cull de bosses
 			if enemy.is_in_group("bosses"):
 				_batch_index = (_batch_index + 1) % maxi(total, 1)

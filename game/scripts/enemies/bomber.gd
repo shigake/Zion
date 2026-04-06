@@ -7,7 +7,7 @@ var explosion_radius: float = 3.0
 var has_exploded: bool = false
 
 func _physics_process(delta: float) -> void:
-	if is_dead or GameManager.paused:
+	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
 	# Knockback decay

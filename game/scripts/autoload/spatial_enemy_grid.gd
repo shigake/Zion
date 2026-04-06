@@ -16,7 +16,7 @@ func rebuild(enemies: Array) -> void:
 	_grid_frame = frame
 	_grid.clear()
 	for e in enemies:
-		if not is_instance_valid(e) or e.is_dead:
+		if not is_instance_valid(e) or e.is_dead or not e.is_inside_tree():
 			continue
 		var cell = _pos_to_cell(e.global_position)
 		if not _grid.has(cell):
@@ -39,7 +39,7 @@ func get_in_radius(pos: Vector3, radius: float) -> Array:
 	var result: Array = []
 	var radius_sq = radius * radius
 	for e in candidates:
-		if is_instance_valid(e) and not e.is_dead:
+		if is_instance_valid(e) and not e.is_dead and e.is_inside_tree():
 			var diff = pos - e.global_position
 			diff.y = 0
 			if diff.length_squared() <= radius_sq:

@@ -55,7 +55,7 @@ func _create_glow_effect() -> void:
 	add_child(_glow_sprite)
 
 func _physics_process(delta: float) -> void:
-	if is_dead or GameManager.paused:
+	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
 	# Knockback decay (copiado do base)

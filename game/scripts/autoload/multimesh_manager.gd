@@ -160,7 +160,7 @@ func _update_transforms() -> void:
 	var valid_idx := 0
 	for i in range(count):
 		var enemy = enemies[i]
-		if not is_instance_valid(enemy):
+		if not is_instance_valid(enemy) or not enemy.is_inside_tree():
 			continue
 
 		# Offset the quad upward to match the EnemySprite position (y=0.65)
@@ -259,7 +259,7 @@ func _update_pickup_transforms(pickups: Array) -> void:
 
 	var idx := 0
 	for pickup in pickups:
-		if not is_instance_valid(pickup):
+		if not is_instance_valid(pickup) or not pickup.is_inside_tree():
 			continue
 		# Position the quad slightly above ground
 		_pickup_mm.set_instance_transform(idx, Transform3D(Basis(), pickup.global_position + Vector3(0, 0.3, 0)))

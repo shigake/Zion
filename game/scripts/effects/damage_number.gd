@@ -40,6 +40,8 @@ func _reset_for_reuse() -> void:
 	set_process(false)
 
 func _process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	timer += delta
 	global_position += velocity * delta
 	velocity.y -= 5.0 * delta  # Gravidade

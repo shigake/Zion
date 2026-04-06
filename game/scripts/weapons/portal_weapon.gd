@@ -38,12 +38,12 @@ func _try_open_portal(level: int) -> void:
 	var cluster_radius_sq = CLUSTER_RADIUS * CLUSTER_RADIUS
 
 	for e in enemies:
-		if not is_instance_valid(e):
+		if not is_instance_valid(e) or not e.is_inside_tree():
 			continue
 		var center = e.global_position
 		var cluster: Array = []
 		for other in enemies:
-			if not is_instance_valid(other):
+			if not is_instance_valid(other) or not other.is_inside_tree():
 				continue
 			if center.distance_squared_to(other.global_position) <= cluster_radius_sq:
 				cluster.append(other)
@@ -62,7 +62,7 @@ func _try_open_portal(level: int) -> void:
 	var teleport_dir = Vector3(cos(random_angle), 0, sin(random_angle))
 
 	for enemy in best_cluster:
-		if not is_instance_valid(enemy):
+		if not is_instance_valid(enemy) or not enemy.is_inside_tree():
 			continue
 		if enemy.has_method("take_damage"):
 			GameManager._last_attacking_weapon = "portal_weapon"

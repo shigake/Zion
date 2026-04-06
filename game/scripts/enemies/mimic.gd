@@ -24,7 +24,7 @@ func _ready() -> void:
 	speed = 0.0
 
 func _physics_process(delta: float) -> void:
-	if is_dead or GameManager.paused:
+	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
 	if not is_activated:

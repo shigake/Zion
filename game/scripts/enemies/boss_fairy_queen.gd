@@ -33,7 +33,7 @@ func _ready() -> void:
 	enemy_color = Color(0.9, 0.3, 0.9)
 
 func _physics_process(delta: float) -> void:
-	if is_dead or GameManager.paused:
+	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
 	# Determina fase

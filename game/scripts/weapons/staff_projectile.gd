@@ -62,6 +62,8 @@ func _update_sprite_rotation() -> void:
 	_sprite.rotation.z = angle
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	timer += delta
 	if timer >= lifetime:
 		queue_free()

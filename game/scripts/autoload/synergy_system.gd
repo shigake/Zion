@@ -273,6 +273,8 @@ func _chain_lightning(start_pos: Vector3) -> void:
 		var closest: Node3D = null
 		var closest_dist: float = chain_range
 		for e in nearby:
+			if not is_instance_valid(e) or not e.is_inside_tree():
+				continue
 			if e in hit_enemies:
 				continue
 			var dist = current_pos.distance_to(e.global_position)
@@ -342,6 +344,8 @@ func _tidal_wave_tick(pos: Vector3) -> void:
 	var radius = SYNERGY_RADIUS["tidal_wave"]
 	var dmg = SYNERGY_DAMAGE["tidal_wave"]
 	for e in GameManager.get_enemies_in_radius(pos, radius):
+		if not is_instance_valid(e) or not e.is_inside_tree():
+			continue
 		var push_dir = (e.global_position - pos).normalized()
 		if push_dir.length() < 0.01:
 			push_dir = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()

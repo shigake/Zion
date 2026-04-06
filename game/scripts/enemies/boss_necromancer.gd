@@ -33,7 +33,7 @@ func _ready() -> void:
 	# Modelo procedural já aplicado pelo enemy_base._ready()
 
 func _physics_process(delta: float) -> void:
-	if is_dead or GameManager.paused:
+	if is_dead or GameManager.paused or not is_inside_tree():
 		return
 
 	# Determina fase

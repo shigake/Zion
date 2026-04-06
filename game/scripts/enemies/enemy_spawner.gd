@@ -128,6 +128,8 @@ func _spawn_wave(mult: float) -> void:
 	var players = GameManager.get_players()
 	if players.is_empty():
 		return
+	if not is_instance_valid(players[0]) or not players[0].is_inside_tree():
+		return
 
 	var target_pos = players[0].global_position
 	var count = int(base_enemies_per_spawn * mult * GameManager.get_mp_spawn_mult())
@@ -385,6 +387,8 @@ func _process_boss_rush(delta: float) -> void:
 	var players = GameManager.get_players()
 	if players.is_empty():
 		return
+	if not is_instance_valid(players[0]) or not players[0].is_inside_tree():
+		return
 	var pos = players[0].global_position
 	var spawn_pos = GameManager.get_annulus_position(pos, GameConstants.BOSS_ANNULUS_MIN_RADIUS, GameConstants.BOSS_ANNULUS_MAX_RADIUS)
 
@@ -430,6 +434,8 @@ func _make_elite(enemy: Node3D) -> void:
 func _spawn_miniboss() -> void:
 	var players = GameManager.get_players()
 	if players.is_empty():
+		return
+	if not is_instance_valid(players[0]) or not players[0].is_inside_tree():
 		return
 	var pos = players[0].global_position
 	var spawn_pos = GameManager.get_annulus_position(pos)
@@ -501,6 +507,8 @@ func _spawn_boss() -> void:
 
 	var players = GameManager.get_players()
 	if players.is_empty():
+		return
+	if not is_instance_valid(players[0]) or not players[0].is_inside_tree():
 		return
 	var pos = players[0].global_position
 	var spawn_pos = GameManager.get_annulus_position(pos, GameConstants.BOSS_ANNULUS_MIN_RADIUS, GameConstants.BOSS_ANNULUS_MAX_RADIUS)

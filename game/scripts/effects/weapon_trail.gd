@@ -23,6 +23,8 @@ func _ready() -> void:
 	add_child(_mesh_instance)
 
 func _process(_delta: float) -> void:
+	if not is_inside_tree():
+		return
 	points.append(global_position)
 	if points.size() > max_points:
 		points.remove_at(0)

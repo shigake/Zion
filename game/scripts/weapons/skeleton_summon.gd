@@ -32,7 +32,7 @@ func _apply_skeleton_model() -> void:
 		add_child(sprite)
 
 func _physics_process(delta: float) -> void:
-	if GameManager.paused:
+	if GameManager.paused or not is_inside_tree():
 		return
 
 	timer += delta

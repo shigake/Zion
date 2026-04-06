@@ -210,7 +210,7 @@ func _process_lod_batch() -> void:
 		var entry: Dictionary = _props[idx]
 		var node: Node3D = entry.node
 
-		if is_instance_valid(node):
+		if is_instance_valid(node) and node.is_inside_tree():
 			# Distancia ao quadrado (evita sqrt)
 			var dist_sq := camera_pos.distance_squared_to(node.global_position)
 
@@ -319,7 +319,7 @@ func _process_frustum_batch() -> void:
 		var entry: Dictionary = _particles[idx]
 		var node: Node3D = entry.node
 
-		if is_instance_valid(node):
+		if is_instance_valid(node) and node.is_inside_tree():
 			# Constroi AABB ao redor da posicao da particula
 			var half_size: Vector3 = entry.aabb_size * 0.5
 			var aabb := AABB(node.global_position - half_size, entry.aabb_size)
