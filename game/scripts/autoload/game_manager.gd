@@ -577,7 +577,10 @@ func has_weapon(weapon_id: String) -> bool:
 	return weapon_id in _weapon_level_cache
 
 func get_weapon_level(weapon_id: String) -> int:
-	return _weapon_level_cache.get(weapon_id, 0)
+	var base_level = _weapon_level_cache.get(weapon_id, 0)
+	if base_level > 0 and weapon_level_bonus > 0:
+		return mini(8, base_level + weapon_level_bonus)
+	return base_level
 
 func add_weapon(weapon_id: String) -> bool:
 	if has_weapon(weapon_id):
