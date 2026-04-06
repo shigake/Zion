@@ -662,6 +662,12 @@ func _reapply_shop_stat_bonuses() -> void:
 	var luck_lvl = SaveManager.get_upgrade_level("luck")
 	if luck_lvl > 0:
 		luck_mult += luck_lvl * 0.10
+	# Re-apply relic: master_key_active (wiped by recalculate)
+	if selected_relic == "master_key":
+		master_key_active = true
+	# Re-apply veteran relic active flag (affects enemy speed)
+	if veteran_relic_active:
+		pass  # Flag is not reset by recalculate, just checked here for safety
 
 func _reapply_character_stat_bonuses() -> void:
 	## Re-applies character passives that overlap with item stats.
