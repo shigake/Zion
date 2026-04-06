@@ -371,7 +371,7 @@ func _physics_process(delta: float) -> void:
 		input_dir = input_dir.normalized()
 
 		move_direction = Vector3(input_dir.x, 0, input_dir.y)
-		var speed = base_speed * GameManager.speed_mult
+		var speed = base_speed * GameManager.perm_speed_mult * GameManager.speed_mult
 		velocity = move_direction * speed
 
 		# Trigger dash
