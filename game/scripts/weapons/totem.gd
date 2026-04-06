@@ -92,7 +92,7 @@ func _place_totem(level: int) -> void:
 	var shape = CollisionShape3D.new()
 	var sphere = SphereShape3D.new()
 	var area_radius = 4.0 + (level - 1) * 0.5
-	sphere.radius = area_radius
+	sphere.radius = area_radius * GameManager.area_mult
 	shape.shape = sphere
 	area.add_child(shape)
 	totem.add_child(area)

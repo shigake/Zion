@@ -297,7 +297,7 @@ func _throw_bottle(level: int) -> void:
 	area.monitoring = true
 	var shape = CollisionShape3D.new()
 	var sphere = SphereShape3D.new()
-	sphere.radius = 2.0 + (level - 1) * 0.3
+	sphere.radius = (2.0 + (level - 1) * 0.3) * GameManager.area_mult
 	shape.shape = sphere
 	area.add_child(shape)
 	pool.add_child(area)
