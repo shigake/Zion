@@ -192,9 +192,9 @@ func _ready() -> void:
 	synergy_container.anchor_right = 0.0
 	synergy_container.anchor_bottom = 1.0
 	synergy_container.offset_left = 10.0
-	synergy_container.offset_top = -80.0
+	synergy_container.offset_top = -210.0
 	synergy_container.offset_right = 300.0
-	synergy_container.offset_bottom = -10.0
+	synergy_container.offset_bottom = -130.0
 	add_child(synergy_container)
 
 	# Minimap (bottom-right, hexagonal)
@@ -206,9 +206,9 @@ func _ready() -> void:
 	minimap.anchor_right = 1.0
 	minimap.anchor_bottom = 1.0
 	minimap.offset_left = -155.0
-	minimap.offset_top = -230.0
+	minimap.offset_top = -260.0
 	minimap.offset_right = -10.0
-	minimap.offset_bottom = -85.0
+	minimap.offset_bottom = -130.0
 	add_child(minimap)
 
 	# Touch controls (mobile only — joystick + dash button)
@@ -231,8 +231,8 @@ func _ready() -> void:
 	_quest_label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
 	_quest_label.anchor_left = 0.25
 	_quest_label.anchor_right = 0.75
-	_quest_label.offset_top = 55.0
-	_quest_label.offset_bottom = 75.0
+	_quest_label.offset_top = 130.0
+	_quest_label.offset_bottom = 150.0
 	_quest_label.visible = false
 	add_child(_quest_label)
 
@@ -240,8 +240,8 @@ func _ready() -> void:
 	_quest_progress_bar.name = "QuestProgressBar"
 	_quest_progress_bar.anchor_left = 0.35
 	_quest_progress_bar.anchor_right = 0.65
-	_quest_progress_bar.offset_top = 76.0
-	_quest_progress_bar.offset_bottom = 82.0
+	_quest_progress_bar.offset_top = 152.0
+	_quest_progress_bar.offset_bottom = 158.0
 	_quest_progress_bar.show_percentage = false
 	_quest_progress_bar.custom_minimum_size = Vector2(0, 6)
 	var qp_fill = StyleBoxFlat.new()
