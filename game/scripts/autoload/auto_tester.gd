@@ -28,6 +28,7 @@ var _menu_smoke: Node = null
 var _error_count: int = 0
 var _warning_count: int = 0
 var _logged_errors: Array = []
+var _subset: String = ""  # e.g. "1of3" — run only 1st third of tests
 
 func _ready() -> void:
 	# Parse command line arguments
@@ -38,8 +39,6 @@ func _ready() -> void:
 	var all_args: Array = []
 	all_args.append_array(args)
 	all_args.append_array(user_args)
-
-	var _subset: String = ""  # e.g. "1of3" — run only 1st third of tests
 
 	for arg in all_args:
 		if arg.begins_with("--test="):
