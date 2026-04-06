@@ -138,6 +138,10 @@ func _process(delta: float) -> void:
 func _collect_chest(chest: Node3D) -> void:
 	if not is_instance_valid(chest):
 		return
+	# Prevent double-collect in multiplayer (two players near same chest)
+	if not chest in _active_chests:
+		return
+	_active_chests.erase(chest)
 	GameManager.chests_opened += 1
 
 	# Gera recompensa
@@ -187,7 +191,6 @@ func _collect_chest(chest: Node3D) -> void:
 	ParticleFactory.spawn_chest_reward_text(chest.global_position, text, reward_color)
 
 	chest_collected.emit(reward)
-	_active_chests.erase(chest)
 	chest.visible = false  # Feedback visual imediato
 	chest.queue_free()
 
