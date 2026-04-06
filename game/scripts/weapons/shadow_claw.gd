@@ -188,7 +188,7 @@ func _on_body_entered(body: Node3D) -> void:
 		var level = GameManager.get_weapon_level("shadow_claw")
 		var dmg = int(WeaponDB.get_damage("shadow_claw", level))
 		GameManager._last_attacking_weapon = "shadow_claw"
-		body.call_deferred("take_damage", dmg, "shadow")
+		body.call_deferred("take_damage", dmg, "dark")
 		hit_enemies.append(body)
 		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 4)
 		ScreenEffects.shake(0.03)
