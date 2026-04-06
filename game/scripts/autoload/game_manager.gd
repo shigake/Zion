@@ -781,6 +781,8 @@ func _apply_character_bonuses() -> void:
 		area_mult += char_data["area_bonus"]
 	if "dodge_bonus" in char_data:
 		dodge_chance += char_data["dodge_bonus"]
+	if "damage_bonus" in char_data and char_data["damage_bonus"] != 0.0:
+		perm_damage_mult += char_data["damage_bonus"]
 	if "low_hp_damage_bonus" in char_data:
 		low_hp_damage_bonus = char_data["low_hp_damage_bonus"]
 	# Ronin: 20% crit chance + 10% melee damage
