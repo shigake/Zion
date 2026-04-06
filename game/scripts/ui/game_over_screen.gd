@@ -64,7 +64,12 @@ func _ready() -> void:
 	_build_detail_tab()
 
 
+var _already_shown: bool = false
+
 func _show() -> void:
+	if _already_shown:
+		return
+	_already_shown = true
 	GameManager.end_run()
 	AchievementManager.check_achievements()
 	var _unlocked_chars := SaveManager.check_unlocks()
