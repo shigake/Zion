@@ -940,7 +940,7 @@ func _apply_relic() -> void:
 
 func get_effective_damage_mult() -> float:
 	var mult = perm_damage_mult
-	if low_hp_damage_bonus > 0.0 and player_hp < int(get_effective_max_hp() * 0.3):
+	if low_hp_damage_bonus > 0.0 and player_hp < int(get_effective_max_hp() * 0.4):
 		mult *= (1.0 + low_hp_damage_bonus)
 	return mult
 

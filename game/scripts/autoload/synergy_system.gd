@@ -331,7 +331,7 @@ func _update_berserker_speed() -> void:
 
 func _plague_spread(kill_pos: Vector3) -> void:
 	var spread_radius := 3.5
-	var spread_damage := 6
+	var spread_damage := 10
 	var nearby = GameManager.get_enemies_in_radius(kill_pos, spread_radius)
 	if nearby.is_empty():
 		return

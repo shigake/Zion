@@ -60,7 +60,7 @@ var characters: Dictionary = {
 	"berserker": {
 		"name": "Berserker",
 		"starting_weapon": "axe",
-		"passive": "+30% dano quando HP < 30%",
+		"passive": "+30% dano quando HP < 40%",
 		"color": Color(0.8, 0.2, 0.1),
 		"speed_bonus": 0.0,
 		"damage_bonus": 0.0,
