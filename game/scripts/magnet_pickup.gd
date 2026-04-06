@@ -9,6 +9,7 @@ var being_attracted: bool = false
 var attract_target: Node3D = null
 var _collected := false
 var _spawn_time: float = 0.0
+const MAX_PICKUPS := GameConstants.PICKUP_CAP
 
 @onready var mesh: MeshInstance3D = $Mesh
 var _pickup_sprite: Sprite3D = null
@@ -36,6 +37,14 @@ func _ready() -> void:
 		sprite.name = "PickupSprite"
 		add_child(sprite)
 		_pickup_sprite = sprite
+	# O(1) pickup cap via global counter
+	GameManager.active_pickup_count += 1
+	if GameManager.active_pickup_count > MAX_PICKUPS:
+		_collect()
+		return
+
+func _exit_tree() -> void:
+	GameManager.active_pickup_count = maxi(0, GameManager.active_pickup_count - 1)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused:

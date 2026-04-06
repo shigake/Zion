@@ -484,8 +484,8 @@ func _toxic_fire_tick(pos: Vector3) -> void:
 	for e in GameManager.get_enemies_in_radius(pos, radius):
 		if e.has_method("take_damage"):
 			e.call_deferred("take_damage", dmg, "fire")
-			e.call_deferred("take_damage", dmg, "fire")
-	synergy_procced.emit("fire_poison", 16.0)
+			e.call_deferred("take_damage", dmg, "poison")
+	synergy_procced.emit("fire_poison", float(dmg * 2))
 
 # ---- Ice + Dark: Shadow Freeze (freeze + life drain to player) ----
 

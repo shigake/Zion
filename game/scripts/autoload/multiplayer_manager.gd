@@ -282,6 +282,15 @@ func _on_peer_disconnected(id: int) -> void:
 	clear_remote_position(id)
 	player_disconnected.emit(id)
 
+	# Clear disconnected peer from level-up pending list to prevent deadlock
+	if id in players_pending_choice:
+		players_pending_choice.erase(id)
+		LogManager.info("MP", "Removed disconnected peer %d from pending choices" % id)
+		if players_pending_choice.is_empty() and get_tree().paused:
+			get_tree().paused = false
+			_set_global_pause.rpc(false)
+			level_up_resumed.emit()
+
 	# Host migration é tratado via _on_server_disconnected() para clients.
 	# Aqui só tratamos o caso de o host detectar que um client saiu
 	# (o host não recebe server_disconnected).
@@ -360,6 +369,7 @@ func _snapshot_game_state() -> void:
 		"events_triggered": GameManager.events_triggered,
 		"player_hp": GameManager.player_hp,
 		"player_weapons": GameManager.player_weapons.duplicate(true),
+		"player_items": GameManager.player_items.duplicate(true),
 	}
 
 ## Aplica o estado do jogo salvo durante migração.
@@ -389,6 +399,9 @@ func _apply_game_state(game_state: Dictionary) -> void:
 		GameManager._weapon_level_cache.clear()
 		for w in GameManager.player_weapons:
 			GameManager._weapon_level_cache[w["id"]] = w["level"]
+	if "player_items" in game_state:
+		GameManager.player_items = game_state["player_items"]
+		GameManager._recalculate_item_bonuses()
 
 func _trigger_host_migration() -> void:
 	if not is_online:
