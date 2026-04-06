@@ -5,7 +5,7 @@ extends Node
 var relics: Dictionary = {
 	"hourglass": {
 		"name": "Ampulheta",
-		"description": "Run dura 40 min ao inves de 30",
+		"description": "+10 min de duracao na run",
 		"effect": "extend_time",
 	},
 	"golden_dice": {

@@ -296,7 +296,7 @@ const ELITE_XP_MULT := 5
 const ELITE_SPEED_MULT := 1.2
 const ELITE_SCALE := Vector3(1.3, 1.3, 1.3)
 const ELITE_COLOR := Color(1.0, 0.85, 0.2)  # Dourado
-const ELITE_MIN_MINUTE := 10.0  # Elites a partir do min 10 (era 15)
+const ELITE_MIN_MINUTE := 6.0   # Elites a partir do min 6 (era 10, nunca apareciam em runs normais de 10 min)
 const ELITE_SPAWN_CHANCE := 0.1  # 10%
 
 # ==================================================================
