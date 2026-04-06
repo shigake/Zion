@@ -206,7 +206,11 @@ func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	indicator.position = pos + Vector3(0, 0.05, 0)
 	indicator.shaded = false
 	indicator.transparent = true
-	get_tree().current_scene.add_child(indicator)
+	var scene = get_tree().current_scene
+	if scene and is_instance_valid(scene):
+		scene.add_child(indicator)
+	else:
+		indicator.queue_free()
 	var tween = get_tree().create_tween()
 	tween.tween_property(indicator, "modulate:a", 0.6, 0.3)
 	tween.tween_property(indicator, "modulate:a", 0.0, 0.2)

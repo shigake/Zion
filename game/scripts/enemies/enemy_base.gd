@@ -971,6 +971,10 @@ func _play_ragdoll_death(sprite: Node3D) -> void:
 
 ## Return enemy to ObjectPool for reuse instead of freeing
 func _recycle_to_pool() -> void:
+	# Bosses should NOT be pooled — they have unique state (phase, timers, etc.)
+	if is_in_group("boss"):
+		queue_free()
+		return
 	if is_in_group("boss_summon"):
 		remove_from_group("boss_summon")
 	# Reset sprite state for next reuse
