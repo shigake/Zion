@@ -136,7 +136,7 @@ func _physics_process(delta: float) -> void:
 
 	# Fury mode
 	if hp_ratio <= GameConstants.BOSS_FURY_THRESHOLD:
-		speed = _boss_base_speed * 1.5
+		speed = _boss_base_speed * GameConstants.BOSS_FURY_SPEED_MULT
 
 	# Timers
 	attack_timer -= delta
@@ -221,6 +221,8 @@ func _do_summon(scene: Node) -> void:
 		var spawn_pos = global_position + Vector3(cos(angle), 0, sin(angle)) * 3.0
 		var minion = ObjectPool.get_instance(slime_scene)
 		if minion is EnemyBase3D:
+			# Reset HP to base before applying multiplier (prevents pool reuse inflation)
+			minion.max_hp = GameConstants.ENEMY_BASE_HP
 			minion.max_hp = int(minion.max_hp * 1.5)
 			minion.hp = minion.max_hp
 			minion.enemy_color = boss_color.lightened(0.3)

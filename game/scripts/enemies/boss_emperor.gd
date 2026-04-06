@@ -59,9 +59,9 @@ func _physics_process(delta: float) -> void:
 			ScreenEffects.boss_phase3_transition(global_position, enemy_color)
 
 	# Fury phase (HP < 10%)
-	if hp < max_hp * 0.1 and not _fury_active:
+	if hp < max_hp * GameConstants.BOSS_FURY_THRESHOLD and not _fury_active:
 		_fury_active = true
-		speed *= 1.5
+		speed *= GameConstants.BOSS_FURY_SPEED_MULT
 		var sprite = get_node_or_null("EnemySprite")
 		if sprite:
 			sprite.modulate = Color(1.5, 0.5, 0.5)
@@ -72,7 +72,7 @@ func _physics_process(delta: float) -> void:
 		2: speed = 3.5
 		3: speed = 5.0
 	if _fury_active:
-		speed *= 1.5
+		speed *= GameConstants.BOSS_FURY_SPEED_MULT
 
 	# Charge movement override
 	if is_charging:
