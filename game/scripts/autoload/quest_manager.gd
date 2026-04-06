@@ -88,7 +88,7 @@ func _update_quest_progress(delta: float) -> void:
 			_quest_progress = mini(ceili(survive_time), current_quest["target"])
 			completed = survive_time >= float(current_quest["target"])
 		"collect_xp":
-			_quest_progress = mini(_quest_progress, current_quest["target"])
+			_quest_progress = mini(GameManager.player_xp - current_quest.get("_xp_at_start", GameManager.player_xp), current_quest["target"])
 			completed = _quest_progress >= current_quest["target"]
 		"kill_fast":
 			current_quest["_fast_timer"] -= delta
@@ -152,8 +152,6 @@ func _on_enemy_killed(_pos: Vector3, _xp: int) -> void:
 				_complete_quest()
 		"kill_fast":
 			current_quest["_fast_kills"] = current_quest.get("_fast_kills", 0) + 1
-		"collect_xp":
-			_quest_progress += 1
 
 func _on_level_up(_level: int) -> void:
 	pass  # reach_level checked in _update_quest_progress

@@ -193,7 +193,7 @@ func get_progress(id: String) -> Dictionary:
 				if SaveManager.is_character_unlocked(cid):
 					unlocked += 1
 			current = unlocked
-			target = 15
+			target = all_chars.size()
 		"completionist":
 			var completed_stages = SaveManager.data.get("completed_stages", [])
 			current = completed_stages.size()

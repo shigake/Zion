@@ -70,7 +70,7 @@ func _physics_process(delta: float) -> void:
 func take_damage(amount: int, damage_type: String = "physical") -> void:
 	super.take_damage(amount, damage_type)
 	# Remove visual de insetos proporcionalmente ao HP
-	var alive_ratio = float(hp) / float(max_hp)
+	var alive_ratio = float(hp) / float(max_hp) if max_hp > 0 else 1.0
 	var target_count = int(swarm_count * alive_ratio)
 	while _child_sprites.size() > target_count and not _child_sprites.is_empty():
 		var mini = _child_sprites.pop_back()

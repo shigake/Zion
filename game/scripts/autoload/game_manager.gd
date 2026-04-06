@@ -507,7 +507,7 @@ func take_damage(amount: int) -> void:
 							nearest = e
 				if nearest:
 					nearest.call_deferred("take_damage", reflected, "physical")
-	player_hp -= reduced
+	player_hp = maxi(0, player_hp - reduced)
 	total_damage_taken += reduced
 	_no_damage_streak = 0.0  # Reset no-damage streak
 	# Near-death tracking (HP < 10%)

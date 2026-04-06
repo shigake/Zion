@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 
 	# Determina fase
 	var old_phase = phase
-	var hp_pct = float(hp) / float(max_hp)
+	var hp_pct = float(hp) / float(max_hp) if max_hp > 0 else 1.0
 	if hp_pct > 0.75:
 		phase = 1
 	elif hp_pct > 0.25:

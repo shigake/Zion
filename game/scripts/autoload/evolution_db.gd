@@ -123,7 +123,7 @@ func check_evolution_available() -> String:
 		var evo = evolutions[evo_id]
 		var weapon_level = GameManager.get_weapon_level(evo["weapon_required"])
 		var item_level = GameManager.get_item_level(evo["item_required"])
-		if weapon_level >= 6 and item_level >= 3:
+		if weapon_level >= 8 and item_level >= 5:
 			return evo_id
 	return ""
 
