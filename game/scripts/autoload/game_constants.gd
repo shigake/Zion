@@ -305,11 +305,12 @@ const ELITE_SPAWN_CHANCE := 0.1  # 10%
 const SPAWN_MIN_INTERVAL := 0.15
 
 # ---- Fases de Spawn (minutos) ----
-const SPAWN_PHASE_1_END := 1.0    # So slimes (era 2 min)
-const SPAWN_PHASE_2_END := 5.0    # Slimes + Bats
-const SPAWN_PHASE_3_END := 8.0    # Skeletons + Bats + Slimes grandes
-const SPAWN_PHASE_4_END := 12.0   # Archers + Zombies + Ghosts + Bombers
-const SPAWN_PHASE_5_END := 20.0   # Mix de tudo + Tanks + Swarms
+# Comprimido para caber em runs de 10 min (RUN_TIME_NORMAL = 600s)
+const SPAWN_PHASE_1_END := 0.5    # So slimes (30s de warmup)
+const SPAWN_PHASE_2_END := 3.0    # Slimes + Bats
+const SPAWN_PHASE_3_END := 5.0    # Skeletons + Bats + Slimes grandes
+const SPAWN_PHASE_4_END := 7.0    # Archers + Zombies + Ghosts + Bombers
+const SPAWN_PHASE_5_END := 10.0   # Mix de tudo + Tanks + Swarms
 
 # ---- Probabilidades de Spawn ----
 const SPAWN_TOOTH_FAIRY_CHANCE := 0.03      # 3% a partir do minuto 5
