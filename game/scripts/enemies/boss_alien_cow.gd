@@ -160,7 +160,7 @@ func _abduction_beam() -> void:
 		nearest.enemy_color = Color(1.0, 0.85, 0.2)  # Dourado
 		nearest.damage = int(nearest.damage * 2.0)
 	# Joga na direcao do player
-	if target and is_instance_valid(target):
+	if target and is_instance_valid(target) and is_instance_valid(nearest):
 		var throw_dir = (target.global_position - global_position).normalized()
 		nearest.global_position = global_position + throw_dir * 3.0
 	# Visual feedback
