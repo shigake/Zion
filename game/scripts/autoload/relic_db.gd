@@ -20,7 +20,7 @@ var relics: Dictionary = {
 	},
 	"compass": {
 		"name": "Bussola",
-		"description": "Mostra direcao do proximo evento",
+		"description": "Mostra direcao do proximo evento + 15% XP",
 		"effect": "show_event_direction",
 	},
 	"scroll": {

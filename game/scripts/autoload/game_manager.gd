@@ -924,7 +924,7 @@ func _apply_relic() -> void:
 		"extend_time":
 			run_time_limit += 600.0  # +10 minutos
 		"show_event_direction":
-			pass  # Compass visual handled by HUD
+			xp_mult += 0.15  # Compass also gives +15% XP
 		"double_chest":
 			master_key_active = true  # Doubles XP gem and crystal drops from enemies
 
