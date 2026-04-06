@@ -13,6 +13,9 @@ const QUEUE_DELAY := 0.5
 const MARGIN_RIGHT := 16.0
 const MARGIN_TOP := 100.0
 
+func _get_viewport_width() -> float:
+	return get_viewport().get_visible_rect().size.x if get_viewport() else 1280.0
+
 # Colors
 const COLOR_BG_TOP := Color(0.18, 0.15, 0.06, 0.95)
 const COLOR_BG_BOTTOM := Color(0.12, 0.10, 0.04, 0.95)
@@ -50,7 +53,7 @@ func _build_popup() -> void:
 	_popup_panel.size = Vector2(POPUP_WIDTH, POPUP_HEIGHT)
 
 	# Position off-screen to the right
-	_popup_panel.position = Vector2(1280.0 + POPUP_WIDTH, MARGIN_TOP)
+	_popup_panel.position = Vector2(_get_viewport_width() + POPUP_WIDTH, MARGIN_TOP)
 	_popup_panel.visible = false
 
 	# Stylebox: dark gold gradient with gold border and rounded corners
@@ -177,8 +180,9 @@ func _display_popup(data: Dictionary) -> void:
 		_icon_rect.visible = true
 
 	# Reset position (off-screen right)
-	var target_x := 1280.0 - POPUP_WIDTH - MARGIN_RIGHT
-	_popup_panel.position = Vector2(1280.0 + 10.0, MARGIN_TOP)
+	var vw := _get_viewport_width()
+	var target_x := vw - POPUP_WIDTH - MARGIN_RIGHT
+	_popup_panel.position = Vector2(vw + 10.0, MARGIN_TOP)
 	_popup_panel.visible = true
 	_popup_panel.modulate = Color.WHITE
 
@@ -209,7 +213,7 @@ func _display_popup(data: Dictionary) -> void:
 	tween.tween_callback(func(): _is_sparkling = false; _hide_sparkles())
 
 	# Slide out
-	tween.tween_property(_popup_panel, "position:x", 1280.0 + 10.0, SLIDE_OUT_DURATION) \
+	tween.tween_property(_popup_panel, "position:x", _get_viewport_width() + 10.0, SLIDE_OUT_DURATION) \
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 
 	# Hide and process queue
