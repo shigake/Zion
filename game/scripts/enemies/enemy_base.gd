@@ -827,6 +827,9 @@ func _die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	# Kill pending flash tween to prevent lambda-capture errors on freed nodes
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
 	# Stop processing but keep visible for ragdoll animation (PRD 45)
 	set_physics_process(false)
 	set_process(false)
@@ -966,8 +969,8 @@ func _apply_death_behavior(pos: Vector3) -> void:
 				crow.scale = Vector3(0.5, 0.5, 0.5)
 				crow.xp_drop = 1
 				var offset = Vector3(randf_range(-1.5, 1.5), 0, randf_range(-1.5, 1.5))
+				crow.position = pos + offset
 				get_tree().current_scene.call_deferred("add_child", crow)
-				crow.global_position = pos + offset
 				GameManager.enemies_alive += 1
 		"explode_on_death":
 			# Golem: AoE fire damage in radius 2.5

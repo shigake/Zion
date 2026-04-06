@@ -168,10 +168,12 @@ func _process_phase() -> void:
 				_do_summon(scene)
 
 func _do_attack(scene: Node, intensity: int) -> void:
+	if not is_inside_tree():
+		return
 	match attack_style:
 		"melee":
 			# Cone AoE na direcao do jogador
-			if target and is_instance_valid(target):
+			if target and is_instance_valid(target) and target.is_inside_tree():
 				var dir = (target.global_position - global_position).normalized()
 				var cone_range = 4.0 + intensity
 				BossAttackPatterns.cone_aoe(scene, global_position, dir, cone_range, 60.0 + intensity * 10, int(damage * 0.4), 0.8, Color(boss_color.r, boss_color.g, boss_color.b, 0.3))
@@ -190,12 +192,16 @@ func _do_attack(scene: Node, intensity: int) -> void:
 				BossAttackPatterns.projectile_ring(scene, global_position, 4 + intensity * 2, int(damage * 0.25), 7.0, boss_color)
 
 func _do_special(scene: Node) -> void:
-	if target and is_instance_valid(target):
+	if not is_inside_tree():
+		return
+	if target and is_instance_valid(target) and target.is_inside_tree():
 		# Circle AoE na posicao do jogador (ataque surpresa)
 		BossAttackPatterns.circle_aoe(scene, target.global_position, 3.0, int(damage * 0.5), 1.2, Color(boss_color.r * 0.8, boss_color.g * 0.8, boss_color.b * 0.8, 0.4))
 	AudioManager.play_sfx("boss_attack")
 
 func _do_summon(scene: Node) -> void:
+	if not is_inside_tree():
+		return
 	# Spawna 3-5 minions ao redor do boss
 	var count = randi_range(3, 5)
 	var slime_scene = preload("res://scenes/enemies/slime.tscn")
