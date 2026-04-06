@@ -9,6 +9,8 @@ extends Area3D
 var target_pos: Vector3 = Vector3.ZERO
 var direction: Vector3 = Vector3.FORWARD
 var _sprite: Sprite3D = null
+var _lifetime: float = 0.0
+const MAX_LIFETIME := 5.0  # Despawn after 5 seconds to prevent memory leak
 
 var _direction_initialized: bool = false
 
@@ -21,6 +23,7 @@ func _ready() -> void:
 ## Resets state for ObjectPool reuse — ensures direction is recalculated.
 func initialize() -> void:
 	_direction_initialized = false
+	_lifetime = 0.0
 	visible = true
 	set_physics_process(true)
 
@@ -69,6 +72,12 @@ func _physics_process(delta: float) -> void:
 		direction = (target_pos - global_position).normalized()
 		direction.y = 0
 		_update_sprite_rotation()
+
+	# Lifetime safety — despawn if stuck or target unreachable
+	_lifetime += delta
+	if _lifetime >= MAX_LIFETIME:
+		_explode()
+		return
 
 	# Movimento reto — sem manipulacao de rotacao aqui
 	global_position += direction * speed * delta

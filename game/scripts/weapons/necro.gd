@@ -18,13 +18,15 @@ func _process(delta: float) -> void:
 	var cooldown = WeaponDB.get_cooldown("necro", level) * GameManager.cooldown_mult
 	var max_summons = 2 + (level - 1)
 
-	# Conta summons ativos
-	var current_summons = get_tree().get_nodes_in_group("player_summons").size()
-
 	summon_timer -= delta
-	if summon_timer <= 0 and current_summons < max_summons:
-		summon_timer = cooldown
-		_summon(level)
+	if summon_timer <= 0:
+		# Only count summons when we might actually spawn (avoids O(n) scan every frame)
+		var current_summons = get_tree().get_nodes_in_group("player_summons").size()
+		if current_summons < max_summons:
+			summon_timer = cooldown
+			_summon(level)
+		else:
+			summon_timer = 0.5  # Retry in 0.5s instead of next frame
 
 func _get_player_node() -> Node3D:
 	var candidate = get_parent().get_parent() if get_parent() else null
