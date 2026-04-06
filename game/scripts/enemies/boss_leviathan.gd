@@ -22,8 +22,8 @@ func _ready() -> void:
 	resistances = {
 		"physical": 0.7,
 		"fire": 0.7,
-		"ice": 1.5,  # Resistente a gelo
-		"electric": 0.5,  # Fraco contra eletrico
+		"ice": 0.7,  # Resistente a gelo (criatura do oceano profundo)
+		"electric": 1.5,  # Fraco contra eletrico (agua conduz)
 		"dark": 0.7,
 	}
 	super._ready()

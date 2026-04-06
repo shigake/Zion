@@ -31,8 +31,8 @@ var candy_colors: Array[Color] = [
 func _ready() -> void:
 	resistances = {
 		"physical": 0.8,
-		"fire": 0.5,  # Fraco contra fogo (derrete)
-		"ice": 0.5,   # Resistente a gelo (ja e doce gelado)
+		"fire": 1.3,  # Fraco contra fogo (acucar derrete)
+		"ice": 0.7,   # Resistente a gelo (doce endurece)
 		"electric": 0.8,
 		"dark": 0.8,
 	}
