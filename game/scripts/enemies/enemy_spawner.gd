@@ -3,8 +3,8 @@ extends Node3D
 ## Spawna inimigos fora da area visivel, com dificuldade crescente.
 ## Segue tabela de spawn por minuto da spec.
 
-@export var base_spawn_interval: float = 1.2
-@export var base_enemies_per_spawn: int = 2
+@export var base_spawn_interval: float = 1.0  # Era 1.2 — spawns mais rapidos
+@export var base_enemies_per_spawn: int = 3   # Era 2 — mais inimigos por onda
 
 var spawn_timer: float = 0.0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()

@@ -104,54 +104,54 @@ const BOSS_SCENE_PATHS := {
 ## Mini-boss pool por fenda — 3 opcoes aleatorias cada.
 const MINIBOSS_POOL := {
 	"cemetery": [
-		{"name": "Giant Zombie", "hp": 500, "dmg": 25, "spd": 2.5, "color": Color(0.4, 0.15, 0.15)},
-		{"name": "Bone Colossus", "hp": 700, "dmg": 20, "spd": 2.0, "color": Color(0.8, 0.8, 0.7)},
-		{"name": "Phantom Knight", "hp": 550, "dmg": 30, "spd": 4.0, "color": Color(0.3, 0.3, 0.6)},
+		{"name": "Giant Zombie", "hp": 650, "dmg": 32, "spd": 2.8, "color": Color(0.4, 0.15, 0.15)},
+		{"name": "Bone Colossus", "hp": 900, "dmg": 26, "spd": 2.2, "color": Color(0.8, 0.8, 0.7)},
+		{"name": "Phantom Knight", "hp": 700, "dmg": 38, "spd": 4.5, "color": Color(0.3, 0.3, 0.6)},
 	],
 	"forest": [
-		{"name": "Shadow Treant", "hp": 600, "dmg": 25, "spd": 5.0, "color": Color(0.1, 0.0, 0.2)},
-		{"name": "Poison Hydra", "hp": 500, "dmg": 35, "spd": 3.0, "color": Color(0.2, 0.7, 0.1)},
-		{"name": "Dire Wolf Alpha", "hp": 450, "dmg": 28, "spd": 7.0, "color": Color(0.5, 0.4, 0.3)},
+		{"name": "Shadow Treant", "hp": 780, "dmg": 32, "spd": 5.5, "color": Color(0.1, 0.0, 0.2)},
+		{"name": "Poison Hydra", "hp": 650, "dmg": 42, "spd": 3.5, "color": Color(0.2, 0.7, 0.1)},
+		{"name": "Dire Wolf Alpha", "hp": 580, "dmg": 35, "spd": 7.5, "color": Color(0.5, 0.4, 0.3)},
 	],
 	"farm": [
-		{"name": "Mad Bull", "hp": 700, "dmg": 28, "spd": 5.5, "color": Color(0.5, 0.5, 0.5)},
-		{"name": "Mutant Rooster", "hp": 500, "dmg": 35, "spd": 6.0, "color": Color(0.8, 0.2, 0.1)},
-		{"name": "Corn Golem", "hp": 900, "dmg": 20, "spd": 2.0, "color": Color(0.9, 0.8, 0.2)},
+		{"name": "Mad Bull", "hp": 900, "dmg": 35, "spd": 6.0, "color": Color(0.5, 0.5, 0.5)},
+		{"name": "Mutant Rooster", "hp": 650, "dmg": 42, "spd": 6.5, "color": Color(0.8, 0.2, 0.1)},
+		{"name": "Corn Golem", "hp": 1150, "dmg": 26, "spd": 2.2, "color": Color(0.9, 0.8, 0.2)},
 	],
 	"tokyo": [
-		{"name": "Mecha Ninja", "hp": 750, "dmg": 30, "spd": 5.0, "color": Color(0.2, 0.2, 0.3)},
-		{"name": "Yakuza Boss", "hp": 750, "dmg": 35, "spd": 4.0, "color": Color(0.1, 0.1, 0.1)},
-		{"name": "Rogue Drone Swarm", "hp": 400, "dmg": 20, "spd": 8.0, "color": Color(0.5, 0.5, 0.8)},
+		{"name": "Mecha Ninja", "hp": 950, "dmg": 38, "spd": 5.5, "color": Color(0.2, 0.2, 0.3)},
+		{"name": "Yakuza Boss", "hp": 950, "dmg": 42, "spd": 4.5, "color": Color(0.1, 0.1, 0.1)},
+		{"name": "Rogue Drone Swarm", "hp": 520, "dmg": 26, "spd": 8.5, "color": Color(0.5, 0.5, 0.8)},
 	],
 	"volcano": [
-		{"name": "Cerberus", "hp": 850, "dmg": 32, "spd": 4.0, "color": Color(0.6, 0.1, 0.0)},
-		{"name": "Lava Serpent", "hp": 700, "dmg": 28, "spd": 5.0, "color": Color(1.0, 0.4, 0.0)},
-		{"name": "Obsidian Golem", "hp": 1200, "dmg": 20, "spd": 1.5, "color": Color(0.2, 0.2, 0.25)},
+		{"name": "Cerberus", "hp": 1100, "dmg": 40, "spd": 4.5, "color": Color(0.6, 0.1, 0.0)},
+		{"name": "Lava Serpent", "hp": 900, "dmg": 35, "spd": 5.5, "color": Color(1.0, 0.4, 0.0)},
+		{"name": "Obsidian Golem", "hp": 1550, "dmg": 26, "spd": 1.8, "color": Color(0.2, 0.2, 0.25)},
 	],
 	"ocean": [
-		{"name": "Baby Kraken", "hp": 800, "dmg": 30, "spd": 4.5, "color": Color(0.1, 0.3, 0.5)},
-		{"name": "Shark King", "hp": 750, "dmg": 35, "spd": 6.0, "color": Color(0.3, 0.4, 0.5)},
-		{"name": "Giant Crab", "hp": 1000, "dmg": 22, "spd": 2.0, "color": Color(0.8, 0.3, 0.1)},
+		{"name": "Baby Kraken", "hp": 1050, "dmg": 38, "spd": 5.0, "color": Color(0.1, 0.3, 0.5)},
+		{"name": "Shark King", "hp": 950, "dmg": 42, "spd": 6.5, "color": Color(0.3, 0.4, 0.5)},
+		{"name": "Giant Crab", "hp": 1300, "dmg": 28, "spd": 2.2, "color": Color(0.8, 0.3, 0.1)},
 	],
 	"arena": [
-		{"name": "Champion Gladiator", "hp": 900, "dmg": 35, "spd": 4.5, "color": Color(0.7, 0.5, 0.1)},
-		{"name": "War Rhino", "hp": 1100, "dmg": 25, "spd": 6.0, "color": Color(0.5, 0.5, 0.5)},
-		{"name": "Dual Blade Assassin", "hp": 600, "dmg": 38, "spd": 7.0, "color": Color(0.2, 0.0, 0.3)},
+		{"name": "Champion Gladiator", "hp": 1150, "dmg": 42, "spd": 5.0, "color": Color(0.7, 0.5, 0.1)},
+		{"name": "War Rhino", "hp": 1400, "dmg": 32, "spd": 6.5, "color": Color(0.5, 0.5, 0.5)},
+		{"name": "Dual Blade Assassin", "hp": 780, "dmg": 46, "spd": 7.5, "color": Color(0.2, 0.0, 0.3)},
 	],
 	"space": [
-		{"name": "Alien Queen", "hp": 950, "dmg": 32, "spd": 4.0, "color": Color(0.3, 0.6, 0.2)},
-		{"name": "Cosmic Jellyfish", "hp": 900, "dmg": 28, "spd": 3.0, "color": Color(0.6, 0.3, 0.9)},
-		{"name": "Mech Sentinel", "hp": 800, "dmg": 38, "spd": 5.0, "color": Color(0.4, 0.4, 0.6)},
+		{"name": "Alien Queen", "hp": 1200, "dmg": 40, "spd": 4.5, "color": Color(0.3, 0.6, 0.2)},
+		{"name": "Cosmic Jellyfish", "hp": 1150, "dmg": 35, "spd": 3.5, "color": Color(0.6, 0.3, 0.9)},
+		{"name": "Mech Sentinel", "hp": 1050, "dmg": 46, "spd": 5.5, "color": Color(0.4, 0.4, 0.6)},
 	],
 	"castle": [
-		{"name": "Vampiress", "hp": 1000, "dmg": 35, "spd": 5.0, "color": Color(0.5, 0.0, 0.2)},
-		{"name": "Armored Gargoyle", "hp": 1200, "dmg": 28, "spd": 3.0, "color": Color(0.4, 0.4, 0.45)},
-		{"name": "Ghost Samurai", "hp": 750, "dmg": 38, "spd": 6.5, "color": Color(0.2, 0.5, 0.7)},
+		{"name": "Vampiress", "hp": 1300, "dmg": 42, "spd": 5.5, "color": Color(0.5, 0.0, 0.2)},
+		{"name": "Armored Gargoyle", "hp": 1550, "dmg": 35, "spd": 3.5, "color": Color(0.4, 0.4, 0.45)},
+		{"name": "Ghost Samurai", "hp": 950, "dmg": 46, "spd": 7.0, "color": Color(0.2, 0.5, 0.7)},
 	],
 	"candy": [
-		{"name": "Triple Layer Cake", "hp": 1100, "dmg": 30, "spd": 3.5, "color": Color(0.9, 0.6, 0.7)},
-		{"name": "Chocolate Golem", "hp": 1300, "dmg": 22, "spd": 2.0, "color": Color(0.4, 0.2, 0.1)},
-		{"name": "Sugar Rush Pixie", "hp": 400, "dmg": 35, "spd": 9.0, "color": Color(1.0, 0.8, 0.3)},
+		{"name": "Triple Layer Cake", "hp": 1400, "dmg": 38, "spd": 4.0, "color": Color(0.9, 0.6, 0.7)},
+		{"name": "Chocolate Golem", "hp": 1650, "dmg": 28, "spd": 2.2, "color": Color(0.4, 0.2, 0.1)},
+		{"name": "Sugar Rush Pixie", "hp": 520, "dmg": 42, "spd": 9.5, "color": Color(1.0, 0.8, 0.3)},
 	],
 }
 
@@ -179,19 +179,19 @@ const RESOLUTIONS: Array[Vector2i] = [
 # ==================================================================
 const XP_SCALE_FACTOR := 1.12
 const XP_FLAT_BONUS := 3
-const DIFFICULTY_TIME_SCALE := 0.35
+const DIFFICULTY_TIME_SCALE := 0.45
 const BOSS_SPAWN_TIME := 300.0  # 5 minutos (1o boss)
 const BOSS_SPAWN_INTERVAL := 240.0  # Boss a cada 4 min (2 bosses por run de 10 min)
 const RUN_TIME_NORMAL := 600.0  # 10 minutos por partida
 
 # ---- Reward Chests ----
-const CHEST_SPAWN_INTERVAL := 45.0  # Bau a cada 45 segundos
+const CHEST_SPAWN_INTERVAL := 55.0  # Bau a cada 55 segundos (era 45)
 const CHEST_REWARD_CRYSTALS_MIN := 5
 const CHEST_REWARD_CRYSTALS_MAX := 15
 const CHEST_REWARD_XP := 20
 const CHEST_ARROW_COLOR := Color(1.0, 0.85, 0.2)  # Dourado
 const MERCHANT_ARROW_COLOR := Color(0.4, 0.85, 1.0)  # Ciano azulado
-const CHEST_DESPAWN_TIME := 20.0  # Desaparece em 20s se nao coletar
+const CHEST_DESPAWN_TIME := 15.0  # Desaparece em 15s se nao coletar (era 20)
 
 # ---- Quest System ----
 const QUEST_INTERVAL := 60.0  # Nova quest a cada 60s
@@ -207,7 +207,7 @@ const PLAYER_BASE_SPEED := 8.0
 const PLAYER_DASH_SPEED := 24.0
 const PLAYER_DASH_DURATION := 0.15
 const PLAYER_DASH_COOLDOWN := 3.0
-const PLAYER_HURT_COOLDOWN := 0.5
+const PLAYER_HURT_COOLDOWN := 0.35
 const PLAYER_HURT_FLASH_DURATION := 0.12
 const PLAYER_SPRITE_PIXEL_SIZE := 0.07
 const PLAYER_SPRITE_Y_OFFSET := 0.65
@@ -242,13 +242,13 @@ const BARRIER_WALL_THICKNESS := 0.3
 # ==================================================================
 # ENEMY — BASE
 # ==================================================================
-const ENEMY_BASE_SPEED := 4.0
-const ENEMY_BASE_HP := 20
-const ENEMY_BASE_DAMAGE := 10
+const ENEMY_BASE_SPEED := 4.5
+const ENEMY_BASE_HP := 28
+const ENEMY_BASE_DAMAGE := 14
 const ENEMY_SPRITE_PIXEL_SIZE := 0.05
 const ENEMY_BOSS_SPRITE_PIXEL_SIZE := 0.07
 const ENEMY_SPRITE_Y_OFFSET := 0.65
-const ENEMY_KNOCKBACK_FORCE := 3.5
+const ENEMY_KNOCKBACK_FORCE := 2.8
 const ENEMY_KNOCKBACK_DECAY := 8.0
 
 # ---- Walk Animation (Inimigos) ----
@@ -290,14 +290,14 @@ const HIDDEN_PLAYER_LOSE_RANGE := 5.0
 # ==================================================================
 # ENEMY — ELITE
 # ==================================================================
-const ELITE_HP_MULT := 3.0
-const ELITE_DAMAGE_MULT := 1.5
+const ELITE_HP_MULT := 3.5
+const ELITE_DAMAGE_MULT := 1.8
 const ELITE_XP_MULT := 5
-const ELITE_SPEED_MULT := 1.2
+const ELITE_SPEED_MULT := 1.3
 const ELITE_SCALE := Vector3(1.3, 1.3, 1.3)
 const ELITE_COLOR := Color(1.0, 0.85, 0.2)  # Dourado
-const ELITE_MIN_MINUTE := 6.0   # Elites a partir do min 6 (era 10, nunca apareciam em runs normais de 10 min)
-const ELITE_SPAWN_CHANCE := 0.1  # 10%
+const ELITE_MIN_MINUTE := 3.5   # Elites a partir do min 3.5 (era 6)
+const ELITE_SPAWN_CHANCE := 0.15  # 15% (era 10%)
 
 # ==================================================================
 # ENEMY — SPAWNER
@@ -306,10 +306,10 @@ const SPAWN_MIN_INTERVAL := 0.15
 
 # ---- Fases de Spawn (minutos) ----
 # Comprimido para caber em runs de 10 min (RUN_TIME_NORMAL = 600s)
-const SPAWN_PHASE_1_END := 0.5    # So slimes (30s de warmup)
-const SPAWN_PHASE_2_END := 3.0    # Slimes + Bats
-const SPAWN_PHASE_3_END := 5.0    # Skeletons + Bats + Slimes grandes
-const SPAWN_PHASE_4_END := 7.0    # Archers + Zombies + Ghosts + Bombers
+const SPAWN_PHASE_1_END := 0.4    # So slimes (24s de warmup, era 30s)
+const SPAWN_PHASE_2_END := 2.0    # Slimes + Bats (era 3.0)
+const SPAWN_PHASE_3_END := 4.0    # Skeletons + Bats + Slimes grandes (era 5.0)
+const SPAWN_PHASE_4_END := 6.0    # Archers + Zombies + Ghosts + Bombers (era 7.0)
 const SPAWN_PHASE_5_END := 10.0   # Mix de tudo + Tanks + Swarms
 
 # ---- Probabilidades de Spawn ----
@@ -346,10 +346,10 @@ const MINIBOSS_SCALE := Vector3(2.5, 2.5, 2.5)
 const BOSS_PHASE_1_THRESHOLD := 0.75   # 100%-75% HP
 const BOSS_PHASE_2_THRESHOLD := 0.25   # 75%-25% HP
 const BOSS_FURY_THRESHOLD := 0.10      # 10% HP — modo furia
-const BOSS_FURY_SPEED_MULT := 1.5
+const BOSS_FURY_SPEED_MULT := 1.7
 const BOSS_FURY_COLOR := Color(1.5, 0.5, 0.5)
 const BOSS_CHARGE_DURATION := 0.5
-const BOSS_PROJ_DAMAGE_MULT := 0.3     # Dano do projetil = damage * 0.3
+const BOSS_PROJ_DAMAGE_MULT := 0.4     # Dano do projetil = damage * 0.4 (era 0.3)
 const BOSS_MINION_SPAWN_RADIUS := 3.0
 const BOSS_MINION_SPAWN_RADIUS_LARGE := 4.0
 const BOSS_AURA_PIXEL_MULT := 1.3
@@ -368,10 +368,10 @@ const BOSS_MAX_SUMMONS := 15  # Limite maximo de summons ativos por boss (evita 
 # ==================================================================
 const CRYSTAL_DROP_CHANCE := 0.3         # 30% base
 const CRYSTAL_DROP_CHANCE_KEY := 0.5     # 50% com master key
-const HEALTH_DROP_CHANCE := 0.04         # 4% base (era 2%)
-const HEALTH_DROP_BONUS_THRESHOLD := 0.3 # 30% HP threshold (era 40%)
-const HEALTH_DROP_BONUS_CHANCE := 0.03   # 3% extra quando HP baixo (era 2%)
-const HEALTH_HEAL_FRACTION := 0.08       # 8% do max HP
+const HEALTH_DROP_CHANCE := 0.025        # 2.5% base (era 4%)
+const HEALTH_DROP_BONUS_THRESHOLD := 0.25 # 25% HP threshold (era 30%)
+const HEALTH_DROP_BONUS_CHANCE := 0.02   # 2% extra quando HP baixo (era 3%)
+const HEALTH_HEAL_FRACTION := 0.06       # 6% do max HP (era 8%)
 const MAGNET_DROP_CHANCE := 0.01         # 1% base
 const MAGNET_DROP_CHANCE_KEY := 0.02     # 2% com master key
 const PICKUP_DESPAWN_TIME := 30.0        # Segundos ate despawn
@@ -602,10 +602,10 @@ const TOMBSTONE_PROGRESS_BAR_Y := 1.6
 # EVENT MANAGER
 # ==================================================================
 const EVENT_WARNING_TIME := 10.0        # Aviso N segundos antes
-const EVENT_FIRST_RANDOM_MIN := 120.0   # Primeiro evento aleatorio: min
-const EVENT_FIRST_RANDOM_MAX := 240.0   # Primeiro evento aleatorio: max
-const EVENT_RANDOM_INTERVAL_MIN := 90.0
-const EVENT_RANDOM_INTERVAL_MAX := 180.0
+const EVENT_FIRST_RANDOM_MIN := 90.0    # Primeiro evento aleatorio: min (era 120)
+const EVENT_FIRST_RANDOM_MAX := 180.0   # Primeiro evento aleatorio: max (era 240)
+const EVENT_RANDOM_INTERVAL_MIN := 70.0  # Eventos mais frequentes (era 90)
+const EVENT_RANDOM_INTERVAL_MAX := 150.0 # (era 180)
 
 # ---- Event Durations ----
 const EVENT_GOLDEN_HORDE_DURATION := 20.0
@@ -676,9 +676,9 @@ const MIMIC_XP := 30
 const MIMIC_SCALE := Vector3(1.5, 1.5, 1.5)
 
 # ---- Miniboss Strong Multipliers ----
-const MINIBOSS_STRONG_HP_MULT := 2.0
-const MINIBOSS_STRONG_DMG_MULT := 1.5
-const MINIBOSS_STRONG_SPD_MULT := 1.3
+const MINIBOSS_STRONG_HP_MULT := 2.5
+const MINIBOSS_STRONG_DMG_MULT := 1.8
+const MINIBOSS_STRONG_SPD_MULT := 1.4
 const MINIBOSS_STRONG_SCALE := 3.0
 const MINIBOSS_NORMAL_SCALE := 2.5
 const MINIBOSS_STRONG_XP := 100
