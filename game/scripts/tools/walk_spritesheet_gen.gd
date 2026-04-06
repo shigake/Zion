@@ -13,9 +13,9 @@ const SHEET_HEIGHT := 32
 
 # All characters
 const CHARACTERS := [
-	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
+	"ronin", "soldado", "mago", "berserker", "ninja", "bruxa",
 	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery",
-	"amazona", "bruxa", "fragmentado"
+	"amazona", "lealith", "fragmentado"
 ]
 
 # All generic enemies

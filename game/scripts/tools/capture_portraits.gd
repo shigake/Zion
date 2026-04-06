@@ -4,8 +4,9 @@ extends SceneTree
 ## Run: godot --path game --script res://scripts/tools/capture_portraits.gd
 
 const CHARACTERS := [
-	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
-	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery"
+	"ronin", "soldado", "mago", "berserker", "ninja", "bruxa",
+	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery",
+	"amazona", "lealith", "fragmentado"
 ]
 const PORTRAIT_SIZE := Vector2i(128, 128)
 const OUTPUT_DIR := "res://assets/icons/characters/"

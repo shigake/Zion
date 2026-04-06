@@ -15,8 +15,8 @@ var _active_tweens: Array = []
 
 const CHAR_IDS := [
 	"ronin", "soldado", "mago", "berserker", "ninja",
-	"necro", "pirata", "engenheiro", "vampiro", "gladiador",
-	"chef", "amazona", "bruxa"
+	"bruxa", "pirata", "engenheiro", "vampiro", "gladiador",
+	"chef", "amazona", "lealith"
 ]
 
 const VIEWPORT_SIZE := Vector2(1280, 720)

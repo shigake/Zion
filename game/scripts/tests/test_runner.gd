@@ -46,9 +46,9 @@ const STAGE_SCENES: Dictionary = {
 
 # All characters
 const ALL_CHARACTERS: Array = [
-	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
+	"ronin", "soldado", "mago", "berserker", "ninja", "bruxa",
 	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery",
-	"amazona", "bruxa", "fragmentado"
+	"amazona", "lealith", "fragmentado"
 ]
 
 func build_suite(suite_name: String) -> Array:

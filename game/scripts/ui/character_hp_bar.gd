@@ -85,7 +85,7 @@ const THEMES = {
 		"accent": Color(0.5, 0.3, 0.8, 0.3),
 		"particle": "smoke",
 	},
-	"necro": {
+	"bruxa": {
 		"name": "Almas",
 		"fill_color": Color(0.1, 0.7, 0.2),
 		"fill_color2": Color(0.05, 0.35, 0.1),
@@ -95,6 +95,17 @@ const THEMES = {
 		"shape": "drip",  # dripping bottom edge
 		"accent": Color(0.3, 1.0, 0.4, 0.4),
 		"particle": "drip",
+	},
+	"lealith": {
+		"name": "Sombra",
+		"fill_color": Color(0.15, 0.3, 0.85),
+		"fill_color2": Color(0.08, 0.15, 0.42),
+		"border_color": Color(0.3, 0.5, 1.0, 0.8),
+		"bg_color": Color(0.03, 0.05, 0.12),
+		"icon": "bolt",
+		"shape": "pointed",
+		"accent": Color(0.4, 0.6, 1.0, 0.4),
+		"particle": "spark",
 	},
 	"pirata": {
 		"name": "Rum",
