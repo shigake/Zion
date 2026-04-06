@@ -24,5 +24,10 @@ func _process(delta: float) -> void:
 		if target is CharacterBody3D:
 			var vel = target.velocity
 			look_ahead = Vector3(vel.x, 0, vel.z) * look_ahead_strength
-		var target_pos = target.global_position + offset + look_ahead
+		# Clamp look-ahead target to map boundaries (prevents showing off-map)
+		var base_pos = target.global_position + look_ahead
+		var half = GameManager.map_half_size
+		base_pos.x = clampf(base_pos.x, -half, half)
+		base_pos.z = clampf(base_pos.z, -half, half)
+		var target_pos = base_pos + offset
 		global_position = global_position.lerp(target_pos, smooth_speed * delta)
