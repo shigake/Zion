@@ -47,10 +47,10 @@ var items: Dictionary = {
 	},
 	"cape": {
 		"name": "Capa das Sombras",
-		"description": "8% chance de dodge por level",
+		"description": "6% chance de dodge por level",
 		"color": Color(0.3, 0.2, 0.4),
 		"stat": "dodge",
-		"value_per_level": 0.08,
+		"value_per_level": 0.06,
 	},
 	"xp_amulet": {
 		"name": "Amuleto de XP",
@@ -82,10 +82,10 @@ var items: Dictionary = {
 	},
 	"thorn_shield": {
 		"name": "Escudo de Espinhos",
-		"description": "Reflete 15% dano por level",
+		"description": "Reflete 20% dano por level",
 		"color": Color(0.5, 0.5, 0.3),
 		"stat": "thorns",
-		"value_per_level": 0.15,
+		"value_per_level": 0.20,
 	},
 	"lucky_coin": {
 		"name": "Moeda da Sorte",

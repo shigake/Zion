@@ -181,7 +181,7 @@ const XP_SCALE_FACTOR := 1.12
 const XP_FLAT_BONUS := 3
 const DIFFICULTY_TIME_SCALE := 0.35
 const BOSS_SPAWN_TIME := 300.0  # 5 minutos (1o boss)
-const BOSS_SPAWN_INTERVAL := 300.0  # Boss a cada 5 min
+const BOSS_SPAWN_INTERVAL := 240.0  # Boss a cada 4 min (2 bosses por run de 10 min)
 const RUN_TIME_NORMAL := 600.0  # 10 minutos por partida
 
 # ---- Reward Chests ----
