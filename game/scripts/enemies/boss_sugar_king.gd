@@ -145,11 +145,13 @@ func _physics_process(delta: float) -> void:
 				attack_timer = 2.0
 				_telegraph_attack(global_position, 3.0)
 				_candy_projectiles(8)
-			# Heal 1% HP every 5 seconds
+			# Heal 1% HP every 5 seconds (cap at phase 3 threshold to prevent infinite boss)
 			if heal_timer <= 0:
 				heal_timer = 5.0
-				var heal_amount = int(max_hp * 0.01)
-				hp = min(hp + heal_amount, max_hp)
+				var heal_cap = int(max_hp * GameConstants.BOSS_PHASE_2_THRESHOLD)
+				if hp < heal_cap:
+					var heal_amount = int(max_hp * 0.01)
+					hp = mini(hp + heal_amount, heal_cap)
 				# Visual feedback da cura
 				ParticleFactory.spawn_death_particles(global_position, Color(1.0, 0.8, 0.9), 4)
 

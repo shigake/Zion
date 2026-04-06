@@ -560,30 +560,30 @@ const CROSS_COMBO_RADIUS := 4.0
 
 ## Cross-combo element combinations and their effects
 const CROSS_COMBOS: Dictionary = {
-	"fire_ice": {"name": "Steam Cloud", "color": Color(0.8, 0.8, 0.8)},
-	"ice_fire": {"name": "Steam Cloud", "color": Color(0.8, 0.8, 0.8)},
-	"electric_poison": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
-	"poison_electric": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3)},
-	"fire_dark": {"name": "Shadow Flame", "color": Color(0.6, 0.1, 0.8)},
-	"dark_fire": {"name": "Shadow Flame", "color": Color(0.6, 0.1, 0.8)},
-	"ice_electric": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0)},
-	"electric_ice": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0)},
-	"fire_electric": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2)},
-	"electric_fire": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2)},
-	"dark_ice": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
-	"ice_dark": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5)},
+	"fire_ice": {"name": "Steam Cloud", "color": Color(0.8, 0.8, 0.8), "element": "fire"},
+	"ice_fire": {"name": "Steam Cloud", "color": Color(0.8, 0.8, 0.8), "element": "fire"},
+	"electric_poison": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3), "element": "electric"},
+	"poison_electric": {"name": "Toxic Shock", "color": Color(0.3, 1.0, 0.3), "element": "electric"},
+	"fire_dark": {"name": "Shadow Flame", "color": Color(0.6, 0.1, 0.8), "element": "dark"},
+	"dark_fire": {"name": "Shadow Flame", "color": Color(0.6, 0.1, 0.8), "element": "dark"},
+	"ice_electric": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0), "element": "ice"},
+	"electric_ice": {"name": "Cryo Conductor", "color": Color(0.3, 0.7, 1.0), "element": "ice"},
+	"fire_electric": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2), "element": "electric"},
+	"electric_fire": {"name": "Plasma Burst", "color": Color(1.0, 0.8, 0.2), "element": "electric"},
+	"dark_ice": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5), "element": "dark"},
+	"ice_dark": {"name": "Shadow Freeze", "color": Color(0.3, 0.1, 0.5), "element": "dark"},
 	# Water cross-combos
-	"water_fire": {"name": "Steam Explosion", "color": Color(1.0, 0.9, 0.8)},
-	"fire_water": {"name": "Steam Explosion", "color": Color(1.0, 0.9, 0.8)},
-	"water_electric": {"name": "Electrolysis", "color": Color(0.3, 0.6, 1.0)},
-	"electric_water": {"name": "Electrolysis", "color": Color(0.3, 0.6, 1.0)},
-	"water_ice": {"name": "Absolute Zero", "color": Color(0.6, 0.9, 1.0)},
-	"ice_water": {"name": "Absolute Zero", "color": Color(0.6, 0.9, 1.0)},
-	"water_dark": {"name": "Abyssal Depths", "color": Color(0.1, 0.15, 0.4)},
-	"dark_water": {"name": "Abyssal Depths", "color": Color(0.1, 0.15, 0.4)},
+	"water_fire": {"name": "Steam Explosion", "color": Color(1.0, 0.9, 0.8), "element": "fire"},
+	"fire_water": {"name": "Steam Explosion", "color": Color(1.0, 0.9, 0.8), "element": "fire"},
+	"water_electric": {"name": "Electrolysis", "color": Color(0.3, 0.6, 1.0), "element": "electric"},
+	"electric_water": {"name": "Electrolysis", "color": Color(0.3, 0.6, 1.0), "element": "electric"},
+	"water_ice": {"name": "Absolute Zero", "color": Color(0.6, 0.9, 1.0), "element": "ice"},
+	"ice_water": {"name": "Absolute Zero", "color": Color(0.6, 0.9, 1.0), "element": "ice"},
+	"water_dark": {"name": "Abyssal Depths", "color": Color(0.1, 0.15, 0.4), "element": "dark"},
+	"dark_water": {"name": "Abyssal Depths", "color": Color(0.1, 0.15, 0.4), "element": "dark"},
 	# New cross-combos
-	"fire_poison": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1)},
-	"poison_fire": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1)},
+	"fire_poison": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1), "element": "fire"},
+	"poison_fire": {"name": "Toxic Fire", "color": Color(0.8, 0.5, 0.1), "element": "fire"},
 }
 
 func register_elemental_zone(pos: Vector3, element: String, owner_peer: int, duration: float = 3.0) -> void:
@@ -631,10 +631,12 @@ func _execute_cross_combo(pos: Vector3, combo: Dictionary, base_damage: int) -> 
 	var combo_damage = int(base_damage * CROSS_COMBO_MULTIPLIER)
 	var combo_color: Color = combo.get("color", Color.WHITE)
 
+	# Determine damage type from combo elements (use first element)
+	var combo_element: String = combo.get("element", "fire")
 	# AoE damage to enemies (spatial grid)
 	for e in GameManager.get_enemies_in_radius(pos, 3.5):
 		if e.has_method("take_damage"):
-			e.call_deferred("take_damage", combo_damage, "fire")
+			e.call_deferred("take_damage", combo_damage, combo_element)
 
 	# Visual effects
 	ParticleFactory.spawn_explosion_particles(pos, 3.0)
