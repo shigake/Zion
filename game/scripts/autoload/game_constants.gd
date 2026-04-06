@@ -566,8 +566,8 @@ const BOSS_ANNULUS_MAX_RADIUS := 22.0
 # MULTIPLAYER SCALING
 # ==================================================================
 const MP_HP_MULT := [1.0, 1.0, 1.3, 1.6, 2.0]
-const MP_SPAWN_MULT := [0.85, 1.0, 1.2, 1.4, 1.6]  # Solo = 0.85x (era 1.0)
-const MP_BOSS_HP_MULT := [0.85, 1.0, 1.5, 2.0, 2.5]  # Boss solo = 0.85x HP
+const MP_SPAWN_MULT := [0.85, 0.85, 1.2, 1.4, 1.6]  # Solo (idx 1) = 0.85x spawn
+const MP_BOSS_HP_MULT := [0.85, 0.85, 1.5, 2.0, 2.5]  # Solo (idx 1) boss = 0.85x HP
 
 # ==================================================================
 # DIFFICULTY
