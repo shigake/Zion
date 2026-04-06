@@ -17,11 +17,39 @@ var _phase3_transition_done: bool = false
 var _boss_base_speed: float = 0.0
 
 func _ready() -> void:
+	# Assign thematic resistances based on stage if not already set
+	if resistances.is_empty():
+		_assign_stage_resistances()
 	super._ready()
 	add_to_group("boss")
 	enemy_color = boss_color
 	_boss_base_speed = speed
 	_load_boss_sprite()
+
+func _assign_stage_resistances() -> void:
+	## Alt bosses get partial resistances based on their stage theme.
+	var stage = GameManager.selected_stage
+	match stage:
+		"cemetery":
+			resistances = {"dark": 0.6, "poison": 0.6}
+		"forest":
+			resistances = {"poison": 0.7, "dark": 0.7}
+		"farm":
+			resistances = {"physical": 0.8}
+		"tokyo":
+			resistances = {"electric": 0.7}
+		"volcano":
+			resistances = {"fire": 0.5, "ice": 1.3}
+		"ocean":
+			resistances = {"ice": 0.7, "electric": 1.3}
+		"arena":
+			resistances = {"physical": 0.7}
+		"space":
+			resistances = {"dark": 0.7, "poison": 0.5}
+		"castle":
+			resistances = {"dark": 0.5, "poison": 0.6}
+		"candy":
+			resistances = {"fire": 1.3, "ice": 1.3}
 
 func _load_boss_sprite() -> void:
 	# Tenta varias variantes do nome para encontrar o sprite
