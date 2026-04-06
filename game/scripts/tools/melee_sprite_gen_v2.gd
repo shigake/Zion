@@ -114,46 +114,78 @@ func _generate_weapons() -> void:
 
 func _gen_katana() -> void:
 	var img = _img()
-	var blade = Color(0.82, 0.85, 0.9)
+	var blade = Color(0.78, 0.82, 0.88)
+	var blade_lt = Color(0.88, 0.92, 0.96)
+	var blade_dk = Color(0.6, 0.65, 0.72)
 	var edge = Color(0.95, 0.97, 1.0)
-	var handle = Color(0.6, 0.12, 0.12)
-	var handle_dk = Color(0.4, 0.08, 0.08)
-	var guard = Color(0.75, 0.7, 0.2)
-	var guard_hi = Color(0.9, 0.85, 0.35)
+	var hamon = Color(0.68, 0.72, 0.8)
+	var handle = Color(0.18, 0.08, 0.12)
+	var handle_wrap = Color(0.55, 0.1, 0.1)
+	var handle_wrap_dk = Color(0.38, 0.06, 0.06)
+	var guard = Color(0.72, 0.65, 0.18)
+	var guard_hi = Color(0.88, 0.82, 0.3)
+	var guard_dk = Color(0.52, 0.45, 0.1)
 
-	# Blade — diagonal from top-right to center-left
-	for i in range(36):
-		var bx = 50 - i
-		var by = 4 + i
-		_px(img, bx, by, blade)
-		_px(img, bx + 1, by, blade)
-		_px(img, bx + 2, by, edge)
-		_px(img, bx - 1, by, blade.darkened(0.15))
-	# Back edge (hamon)
-	for i in range(36):
-		var bx = 50 - i
-		var by = 4 + i
-		_px(img, bx + 3, by, Color(0.7, 0.73, 0.8, 0.7))
-	# Blade tip
-	_px(img, 52, 3, edge)
-	_px(img, 53, 2, edge)
-	_px(img, 51, 3, blade)
-	# Guard — cross piece
-	_fill(img, 12, 38, 16, 3, guard)
-	_fill(img, 14, 37, 12, 1, guard_hi)
-	_fill(img, 13, 41, 14, 1, guard.darkened(0.2))
-	# Handle — wrapping
-	for i in range(16):
-		var hx = 11 - int(i * 0.5)
-		var hy = 42 + i
-		_fill(img, hx, hy, 6, 1, handle)
-		if i % 3 == 0:
-			_fill(img, hx, hy, 6, 1, handle_dk)
-	# Pommel
-	_circle(img, 5, 58, 3, guard)
-	_circle(img, 5, 58, 2, guard_hi)
+	# Blade — slightly curved, diagonal from top-right to bottom-left
+	# Wide blade (6px wide) with proper taper
+	for i in range(38):
+		var bx = 48 - i
+		var by = 2 + i
+		var w = 6 if i < 32 else (6 - (i - 32))  # taper at base
+		if i < 3:
+			w = 2 + i  # taper at tip
+		_fill(img, bx, by, w, 1, blade)
+		# Sharp edge (bright side)
+		_px(img, bx + w - 1, by, edge)
+		# Back of blade (darker)
+		_px(img, bx, by, blade_dk)
+	# Hamon line (wavy temper line along blade)
+	for i in range(30):
+		var bx = 46 - i
+		var by = 5 + i
+		var wave = 1 if (i % 6 < 3) else 2
+		_px(img, bx + wave, by, hamon)
+		_px(img, bx + wave + 1, by, Color(0.72, 0.76, 0.84, 0.6))
+	# Blade highlight (specular)
+	for i in range(20):
+		var bx = 44 - i
+		var by = 6 + i
+		_px(img, bx + 3, by, blade_lt)
+	# Tip highlight
+	_px(img, 49, 2, Color.WHITE)
+	_px(img, 50, 1, edge)
 
-	_outline(img, Color(0.1, 0.1, 0.12))
+	# Tsuba (guard) — oval/rectangular with ornament
+	_fill(img, 8, 38, 18, 5, guard)
+	_fill(img, 10, 37, 14, 2, guard)
+	_fill(img, 10, 43, 14, 1, guard_dk)
+	_fill(img, 12, 39, 10, 2, guard_hi)
+	# Guard ornament (flower pattern)
+	_px(img, 14, 39, guard_dk)
+	_px(img, 18, 40, guard_dk)
+	_px(img, 16, 38, guard_hi)
+
+	# Tsuka (handle) — wrapped with ito (diamond pattern)
+	for i in range(18):
+		var hx = 8 - int(i * 0.3)
+		var hy = 43 + i
+		_fill(img, hx, hy, 7, 1, handle)
+		# Diamond wrap pattern
+		if i % 4 == 0:
+			_fill(img, hx + 1, hy, 5, 1, handle_wrap)
+		elif i % 4 == 2:
+			_fill(img, hx + 1, hy, 5, 1, handle_wrap_dk)
+		else:
+			_fill(img, hx + 2, hy, 3, 1, handle_wrap)
+	# Menuki (handle ornament)
+	_px(img, 7, 50, guard_hi)
+	_px(img, 6, 54, guard_hi)
+
+	# Kashira (pommel cap)
+	_fill(img, 2, 60, 8, 3, guard)
+	_fill(img, 3, 61, 6, 1, guard_hi)
+
+	_outline(img, Color(0.08, 0.08, 0.1))
 	_save_weapon(img, "katana")
 
 func _gen_scythe() -> void:
@@ -592,50 +624,86 @@ func _gen_cloud_sword() -> void:
 
 func _gen_boxing_gloves() -> void:
 	var img = _img()
-	var glove = Color(0.85, 0.15, 0.15)
-	var glove_hi = Color(1.0, 0.35, 0.3)
-	var glove_dk = Color(0.6, 0.1, 0.08)
-	var lace = Color(0.9, 0.85, 0.8)
-	var lace_dk = Color(0.7, 0.65, 0.58)
+	var red = Color(0.82, 0.12, 0.12)
+	var red_lt = Color(0.95, 0.28, 0.22)
+	var red_dk = Color(0.55, 0.06, 0.06)
+	var red_deep = Color(0.4, 0.04, 0.04)
+	var lace = Color(0.92, 0.88, 0.82)
+	var lace_dk = Color(0.72, 0.68, 0.6)
+	var stitch = Color(0.8, 0.75, 0.65)
+	var impact = Color(1.0, 1.0, 0.4)
+	var impact_br = Color(1.0, 1.0, 0.8)
 
-	# Left glove
-	_circle(img, 16, 24, 12, glove)
-	_circle(img, 14, 22, 6, glove_hi)
+	# === Left glove (slightly angled, fist facing right) ===
+	# Main fist body
+	_fill(img, 4, 16, 22, 20, red)
+	_fill(img, 6, 14, 18, 4, red)
+	_fill(img, 6, 34, 18, 4, red_dk)
+	# Highlight (top-left)
+	_fill(img, 6, 16, 8, 6, red_lt)
+	_circle(img, 10, 18, 4, red_lt)
+	# Shadow (bottom-right)
+	_fill(img, 18, 28, 6, 6, red_dk)
+	_fill(img, 8, 34, 14, 3, red_deep)
+	# Knuckle ridge
+	_fill(img, 24, 18, 4, 14, red)
+	_fill(img, 26, 20, 2, 10, red_dk)
 	# Thumb
-	_fill(img, 2, 20, 4, 10, glove)
-	_fill(img, 2, 22, 2, 6, glove_dk)
-	# Knuckle line
-	_fill(img, 8, 16, 16, 2, glove_dk)
-	# Wrist/lace area
-	_fill(img, 10, 36, 12, 8, lace)
-	_fill(img, 12, 38, 8, 4, lace_dk)
-	# Lace cross pattern
-	_line(img, 12, 38, 18, 42, Color(0.8, 0.75, 0.68))
-	_line(img, 18, 38, 12, 42, Color(0.8, 0.75, 0.68))
+	_fill(img, 2, 22, 4, 10, red)
+	_fill(img, 0, 24, 3, 6, red_dk)
+	_fill(img, 3, 24, 1, 6, red_lt)
+	# Wrist/cuff
+	_fill(img, 6, 38, 18, 10, lace)
+	_fill(img, 8, 40, 14, 6, lace_dk)
+	# Lace X stitching
+	for i in range(4):
+		_px(img, 10 + i * 2, 40 + i, stitch)
+		_px(img, 18 - i * 2, 40 + i, stitch)
+	# Stitching lines on glove
+	_fill(img, 10, 14, 10, 1, stitch)
+	_fill(img, 14, 22, 1, 8, stitch)
 
-	# Right glove
-	_circle(img, 48, 24, 12, glove)
-	_circle(img, 46, 22, 6, glove_hi)
+	# === Right glove (fist facing left, slightly overlapping) ===
+	_fill(img, 34, 14, 22, 20, red)
+	_fill(img, 36, 12, 18, 4, red)
+	_fill(img, 36, 32, 18, 4, red_dk)
+	# Highlight
+	_fill(img, 38, 14, 8, 6, red_lt)
+	_circle(img, 42, 16, 4, red_lt)
+	# Shadow
+	_fill(img, 48, 26, 6, 6, red_dk)
+	_fill(img, 38, 32, 14, 3, red_deep)
+	# Knuckle ridge
+	_fill(img, 34, 16, 4, 14, red)
+	_fill(img, 34, 18, 2, 10, red_dk)
 	# Thumb
-	_fill(img, 58, 20, 4, 10, glove)
-	_fill(img, 60, 22, 2, 6, glove_dk)
-	# Knuckle line
-	_fill(img, 40, 16, 16, 2, glove_dk)
-	# Wrist/lace area
-	_fill(img, 42, 36, 12, 8, lace)
-	_fill(img, 44, 38, 8, 4, lace_dk)
-	# Lace cross pattern
-	_line(img, 44, 38, 50, 42, Color(0.8, 0.75, 0.68))
-	_line(img, 50, 38, 44, 42, Color(0.8, 0.75, 0.68))
+	_fill(img, 56, 20, 4, 10, red)
+	_fill(img, 58, 22, 3, 6, red_dk)
+	_fill(img, 56, 22, 1, 6, red_lt)
+	# Wrist/cuff
+	_fill(img, 36, 36, 18, 10, lace)
+	_fill(img, 38, 38, 14, 6, lace_dk)
+	# Lace X stitching
+	for i in range(4):
+		_px(img, 40 + i * 2, 38 + i, stitch)
+		_px(img, 48 - i * 2, 38 + i, stitch)
+	# Stitching lines
+	_fill(img, 40, 12, 10, 1, stitch)
+	_fill(img, 46, 20, 1, 8, stitch)
 
-	# Impact stars between gloves
-	_px(img, 32, 18, Color(1.0, 1.0, 0.5))
-	_px(img, 31, 17, Color(1.0, 1.0, 0.5))
-	_px(img, 33, 17, Color(1.0, 1.0, 0.5))
-	_px(img, 32, 16, Color(1.0, 1.0, 0.5))
-	_px(img, 32, 20, Color(1.0, 1.0, 0.5))
+	# === Impact effect between gloves ===
+	_px(img, 31, 20, impact_br)
+	_px(img, 32, 20, impact_br)
+	_px(img, 31, 18, impact)
+	_px(img, 32, 22, impact)
+	_px(img, 29, 20, impact)
+	_px(img, 34, 20, impact)
+	# Small spark particles
+	_px(img, 28, 16, Color(1.0, 0.9, 0.3, 0.6))
+	_px(img, 35, 24, Color(1.0, 0.9, 0.3, 0.6))
+	_px(img, 30, 14, Color(1.0, 0.9, 0.3, 0.4))
 
-	_outline(img, Color(0.2, 0.05, 0.05))
+	_outline(img, Color(0.2, 0.04, 0.04))
 	_save_weapon(img, "boxing_gloves")
 
 func _gen_chain_whip() -> void:
