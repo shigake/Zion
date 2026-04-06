@@ -15,8 +15,10 @@ var _trail_counter: int = 0
 var _sprite: Sprite3D = null
 
 func _ready() -> void:
-	body_entered.connect(_on_body_entered)
-	area_entered.connect(_on_area_entered)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
 	_ensure_bullet_mesh()
 	_setup_billboard_sprite()
 	_spawn_muzzle_flash()
@@ -172,6 +174,7 @@ func _reset_for_reuse() -> void:
 	# Esconde mesh 3D (pode ter voltado visivel no pool)
 	_ensure_bullet_mesh()
 	# Forca sincronizacao da posicao antes de calcular rotacao visual
-	force_update_transform()
+	if is_inside_tree():
+		force_update_transform()
 	_update_sprite_rotation()
 	_spawn_muzzle_flash()

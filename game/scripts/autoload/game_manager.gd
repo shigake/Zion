@@ -18,7 +18,7 @@ signal bestiary_milestone_reached(enemy_id: String, kills: int, label: String, c
 
 ## Gera posição de spawn em anel (annulus) ao redor de um centro.
 ## Coordenadas polares → XZ, garantindo que inimigos nunca "pipoquem" na tela.
-static func get_annulus_position(center: Vector3, min_r: float = 15.0, max_r: float = 20.0) -> Vector3:
+func get_annulus_position(center: Vector3, min_r: float = 15.0, max_r: float = 20.0) -> Vector3:
 	var angle = randf() * TAU
 	var distance = randf_range(min_r, max_r)
 	return center + Vector3(cos(angle), 0, sin(angle)) * distance
