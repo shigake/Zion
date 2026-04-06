@@ -21,11 +21,11 @@ var bullet_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 func _ready() -> void:
 	resistances = {
 		"physical": 0.8,
-		"fire": 0.5,  # Fraco contra fogo
+		"fire": 1.3,  # Fraco contra fogo (vampiro + luz/chamas)
 		"ice": 0.8,
 		"electric": 0.8,
-		"dark": 0.3,  # Resistente a dark
-		"poison": 0.5,  # Vampiro resiste veneno
+		"dark": 0.3,  # Resistente a dark (senhor das trevas)
+		"poison": 0.5,  # Vampiro resiste veneno (morto-vivo)
 	}
 	super._ready()
 	# Extra boss HP scaling for multiplayer

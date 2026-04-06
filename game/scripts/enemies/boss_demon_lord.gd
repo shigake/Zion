@@ -24,8 +24,8 @@ var bullet_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 func _ready() -> void:
 	resistances = {
 		"physical": 0.7,
-		"fire": 1.5,  # Imune a fogo
-		"ice": 0.5,   # Fraco contra gelo
+		"fire": 0.5,  # Resistente a fogo (demonio do vulcao)
+		"ice": 1.5,   # Fraco contra gelo (oposto do seu elemento)
 		"electric": 0.7,
 		"dark": 0.7,
 	}

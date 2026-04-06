@@ -19,7 +19,7 @@ func _ready() -> void:
 		"physical": 0.7,
 		"fire": 0.7,
 		"ice": 0.7,
-		"electric": 0.5,  # Fraca contra eletricidade
+		"electric": 1.3,  # Fraca contra eletricidade (alienigena metalica)
 		"dark": 0.7,
 	}
 	super._ready()
