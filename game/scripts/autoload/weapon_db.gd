@@ -92,7 +92,7 @@ var weapons: Dictionary = {
 	"shadow_claw": {
 		"name": "Shadow Claw",
 		"type": "melee",
-		"element": "shadow",
+		"element": "dark",
 		"description": "Garras sombrias com duplo corte rapido",
 		"base_damage": 12,
 		"base_cooldown": 0.7,
