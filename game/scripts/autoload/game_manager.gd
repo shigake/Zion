@@ -643,6 +643,32 @@ func _recalculate_item_bonuses() -> void:
 	if not _item_bonus_calc:
 		_item_bonus_calc = load("res://scripts/autoload/item_bonus_calculator.gd")
 	_item_bonus_calc.recalculate(self, player_items)
+	# Re-apply character bonuses that recalculate() resets (attack_speed, area, dodge)
+	_reapply_character_stat_bonuses()
+	# Re-apply berserker synergy bonus (also uses attack_speed_mult)
+	SynergySystem._current_berserker_bonus = 0.0
+	SynergySystem._update_berserker_speed()
+
+func _reapply_character_stat_bonuses() -> void:
+	## Re-applies character passives that overlap with item stats.
+	## Called after ItemBonusCalculator.recalculate() which resets these vars.
+	var char_data = CharacterDB.get_character(selected_character)
+	if char_data.is_empty():
+		return
+	if "attack_speed_bonus" in char_data:
+		attack_speed_mult += char_data["attack_speed_bonus"]
+	if "area_bonus" in char_data:
+		area_mult += char_data["area_bonus"]
+	if "dodge_bonus" in char_data:
+		dodge_chance = minf(0.7, dodge_chance + char_data["dodge_bonus"])
+	# Hardcoded character bonuses that use the same vars
+	if selected_character == "vampiro":
+		attack_speed_mult += 0.10
+	if selected_character == "fragmentado":
+		attack_speed_mult += 0.10
+		area_mult += 0.10
+	if selected_character == "lealith":
+		dodge_chance = minf(0.7, dodge_chance + 0.15)
 
 func reset() -> void:
 	AchievementManager.reset_run()
