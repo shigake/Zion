@@ -49,7 +49,7 @@ var evolutions: Dictionary = {
 		"description": "Garras fantasmagoricas que drenam vida dos inimigos",
 		"weapon_required": "shadow_claw",
 		"item_required": "cape",
-		"evolved_damage_mult": 2.0,
+		"evolved_damage_mult": 2.2,
 		"special": "lifesteal_claw",
 	},
 	"minigun_infernal": {

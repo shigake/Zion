@@ -120,7 +120,7 @@ const MINIBOSS_POOL := {
 	],
 	"tokyo": [
 		{"name": "Mecha Ninja", "hp": 750, "dmg": 30, "spd": 5.0, "color": Color(0.2, 0.2, 0.3)},
-		{"name": "Yakuza Boss", "hp": 600, "dmg": 40, "spd": 4.0, "color": Color(0.1, 0.1, 0.1)},
+		{"name": "Yakuza Boss", "hp": 750, "dmg": 35, "spd": 4.0, "color": Color(0.1, 0.1, 0.1)},
 		{"name": "Rogue Drone Swarm", "hp": 400, "dmg": 20, "spd": 8.0, "color": Color(0.5, 0.5, 0.8)},
 	],
 	"volcano": [
@@ -130,13 +130,13 @@ const MINIBOSS_POOL := {
 	],
 	"ocean": [
 		{"name": "Baby Kraken", "hp": 800, "dmg": 30, "spd": 4.5, "color": Color(0.1, 0.3, 0.5)},
-		{"name": "Shark King", "hp": 650, "dmg": 40, "spd": 6.0, "color": Color(0.3, 0.4, 0.5)},
+		{"name": "Shark King", "hp": 750, "dmg": 35, "spd": 6.0, "color": Color(0.3, 0.4, 0.5)},
 		{"name": "Giant Crab", "hp": 1000, "dmg": 22, "spd": 2.0, "color": Color(0.8, 0.3, 0.1)},
 	],
 	"arena": [
 		{"name": "Champion Gladiator", "hp": 900, "dmg": 35, "spd": 4.5, "color": Color(0.7, 0.5, 0.1)},
 		{"name": "War Rhino", "hp": 1100, "dmg": 25, "spd": 6.0, "color": Color(0.5, 0.5, 0.5)},
-		{"name": "Dual Blade Assassin", "hp": 500, "dmg": 42, "spd": 7.0, "color": Color(0.2, 0.0, 0.3)},
+		{"name": "Dual Blade Assassin", "hp": 600, "dmg": 38, "spd": 7.0, "color": Color(0.2, 0.0, 0.3)},
 	],
 	"space": [
 		{"name": "Alien Queen", "hp": 950, "dmg": 32, "spd": 4.0, "color": Color(0.3, 0.6, 0.2)},
@@ -146,7 +146,7 @@ const MINIBOSS_POOL := {
 	"castle": [
 		{"name": "Vampiress", "hp": 1000, "dmg": 35, "spd": 5.0, "color": Color(0.5, 0.0, 0.2)},
 		{"name": "Armored Gargoyle", "hp": 1200, "dmg": 28, "spd": 3.0, "color": Color(0.4, 0.4, 0.45)},
-		{"name": "Ghost Samurai", "hp": 600, "dmg": 45, "spd": 6.5, "color": Color(0.2, 0.5, 0.7)},
+		{"name": "Ghost Samurai", "hp": 750, "dmg": 38, "spd": 6.5, "color": Color(0.2, 0.5, 0.7)},
 	],
 	"candy": [
 		{"name": "Triple Layer Cake", "hp": 1100, "dmg": 30, "spd": 3.5, "color": Color(0.9, 0.6, 0.7)},
@@ -361,6 +361,7 @@ const BOSS_LABEL_FONT_SIZE := 24
 const BOSS_LABEL_Y_OFFSET := 1.2
 const BOSS_ENTRANCE_SCALE_OVERSHOOT := 1.15
 const BOSS_FURIOUS_MUTATION_HP := 0.75  # Bosses furiosos comecam com 75% HP
+const BOSS_MAX_SUMMONS := 15  # Limite maximo de summons ativos por boss (evita death spiral)
 
 # ==================================================================
 # DROPS & PICKUPS
