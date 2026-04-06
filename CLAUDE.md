@@ -3,7 +3,7 @@
 ## Project
 
 Survivors roguelite 3D feito com Godot 4 (GDScript). Co-op online ate 4 jogadores.
-15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 30 Bosses (10 Sentinelas + 20 alternativos), 30 Mini-bosses, 12 evolucoes, 19 itens, 7 reliquias, 17 achievements. 453+ sprites, 51 SFX, 16 musicas. Baus de recompensa, sistema de quests, boss AoE attacks.
+15 Fragmentados, 32 armas, 7 fendas + 3 anomalias, 30 Bosses (10 Sentinelas + 20 alternativos), 30 Mini-bosses, 12 evolucoes, 19 itens, 7 reliquias, 13 achievements. 453+ sprites, 51 SFX, 16 musicas. Baus de recompensa, sistema de quests, boss AoE attacks, crateras 3D com fogo nos meteoros.
 
 ### Narrativa
 **Zion** era o ultimo santuario entre dimensoes, mantido pelo Coracao de Zion. Algo o estilhacou. Os jogadores sao **Fragmentados** — pessoas com estilhacos do cristal dentro de si. Cada fenda e uma realidade corrompida, cada boss e um **Sentinela Corrompido** a ser libertado (nao morto). A morte rebobina o Fragmentado ao hub. A loja e Zion se reconstruindo. Cristais sao fragmentos de Zion se reunindo. Ver `docs/story.md` para lore completo.
@@ -40,7 +40,7 @@ cd server && npm install && npm start
 Zion/
 ├── CLAUDE.md                    # Este arquivo — guia de dev
 ├── README.md                    # Documentacao publica do projeto
-├── docs/ (64 arquivos + adr/)      # Game design documents
+├── docs/ (73 arquivos + adr/)      # Game design documents
 │   ├── gdd.md                   # Game Design Document
 │   ├── story.md                 # Historia, lore, narrativa completa
 │   ├── fases.md                 # 7 fendas campanha + 3 anomalias
@@ -104,6 +104,13 @@ Zion/
 │   ├── prd_52_lanca_3d.md               # PRD 52: Lanca modelo 3D sem pixel art — concluido
 │   ├── prd_53_cajado_gelo_3d.md         # PRD 53: Cajado de Gelo projetil 3D sem pixel art — concluido
 │   ├── prd_54_machado_3d.md             # PRD 54: Machado Viking modelo 3D completo sem sprite — concluido
+│   ├── prd_55_damage_direction_indicator.md  # PRD 55: indicador de dano direcional — pendente
+│   ├── prd_56_contextual_mini_tutorial.md   # PRD 56: mini-tutorial contextual — pendente
+│   ├── prd_57_next_evolution_panel.md       # PRD 57: painel proxima evolucao no HUD — pendente
+│   ├── prd_58_synergy_visual_feedback.md    # PRD 58: feedback visual sinergia in-world — pendente
+│   ├── prd_59_post_run_stats_expanded.md    # PRD 59: stats pos-run expandidas — pendente
+│   ├── prd_60_elemental_death_effects.md    # PRD 60: efeitos de morte elementais — pendente
+│   ├── prd_61_endless_mode.md               # PRD 61: modo endless (fenda infinita) — pendente
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -116,18 +123,18 @@ Zion/
 └── game/                        # Projeto Godot 4
     ├── project.godot            # Config (autoloads, layers, display)
     ├── VERSION                  # Versao atual (sem "v")
-    ├── scenes/ (124 .tscn)       # Cenas
+    ├── scenes/ (125 .tscn)       # Cenas
     │   ├── enemies/             # 46 (16 genericos + 10 bosses + 20 alt bosses)
     │   ├── stages/              # 10 fendas com props procedurais
     │   ├── weapons/             # 40 cenas (32 armas + projeteis)
-    │   ├── ui/                  # 21 telas (HUD, menus, shop, leaderboard, etc)
+    │   ├── ui/                  # 22 telas (HUD, menus, shop, leaderboard, etc)
     │   └── player/              # Cena do jogador
-    ├── scripts/ (231 .gd)       # GDScript
+    ├── scripts/ (233 .gd)       # GDScript
     │   ├── autoload/            # 34 singletons (ver lista abaixo)
     │   ├── player/              # 2 player controller
     │   ├── enemies/             # 22 (base + spawner + 10 bosses + especiais)
     │   ├── weapons/             # 45 scripts (32 armas + projectiles + behaviors)
-    │   ├── ui/                  # 36 telas + debug overlay (F3/F4)
+    │   ├── ui/                  # 38 telas + debug overlay (F3/F4)
     │   ├── stages/              # 24 (10 fendas + props + camera + events)
     │   ├── effects/             # 9 (particulas, shaders, procedural anims)
     │   ├── tools/               # 49 geradores de sprites e assets
@@ -137,7 +144,7 @@ Zion/
 
 ## Architecture
 
-### Autoload Singletons (38 registrados no project.godot)
+### Autoload Singletons (40 registrados no project.godot)
 GameConstants, LogManager, PlatformHelper, GameManager, WeaponDB, ItemDB, SaveManager, ShopDB, CharacterDB, RelicDB, EvolutionDB, MultiplayerManager, SynergySystem, AudioManager, ObjectPool, UITheme, AccessibilityManager, KeybindingManager, LocaleManager, SteamManager, AchievementManager, MultiMeshManager, AutoTester, GamepadUI, Telemetry, MutationManager, DailyChallenge, LoadingScreen, ChestManager, QuestManager
 
 Registrados como autoload (mas ficam em scripts/effects/):
@@ -165,7 +172,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 - **Reward Chests**: ChestManager — baus de recompensa a cada 45s com setas no HUD
 - **Quest System**: QuestManager — mini-objetivos durante a run (kill, survive, find chest, reach level)
 - **Boss AoE**: BossAttackPatterns — ataques de area (circulo, cone) com telegraph visual em todos 10 bosses
-- **GameConstants**: 712 linhas de constantes centralizadas (29 categorias: balance, spawner, boss, drops, visual, camera, events, etc.)
+- **GameConstants**: 845 linhas de constantes centralizadas (29 categorias: balance, spawner, boss, drops, visual, camera, events, etc.)
 - **Performance**: LOD system, PerfMonitor, EnemyCuller, pickup cap (200), sprite cache, O(1) weapon lookups, slash trail pool
 - **Damage Feedback**: Screen shake, damage numbers, player hurt flash
 - **Drops**: Health pickups (5%) e magnet pickups (1%) de inimigos
@@ -244,7 +251,9 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~95% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 850+ linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 54 PRDs (todos concluidos), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD — todos implementados.
+**Versao atual: v4.0.0** — Major release publicada. Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~95% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 845 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 66 PRDs (54 concluidos + 5 extras + 7 pendentes), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD, crateras 3D com fogo nos meteoros — todos implementados.
+
+**PRDs pendentes** (7): PRD 55 (indicador dano direcional), PRD 56 (mini-tutorial contextual), PRD 57 (painel proxima evolucao), PRD 58 (feedback visual sinergia), PRD 59 (stats pos-run expandidas), PRD 60 (efeitos morte elementais), PRD 61 (modo endless).
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais (ADR-001 a ADR-014).
 
@@ -269,9 +278,10 @@ Resultados salvos em `user://test_results/`. Notificacao automatica no Discord.
 
 ## Remaining Work
 
+- **PRDs pendentes**: 7 PRDs abertos (55-61) — indicador direcional, mini-tutorial, evolucao HUD, sinergia visual, stats pos-run, morte elemental, modo endless
 - **QA**: rodar suite `combo` (150 combos, ~2.5h), teste multiplayer LAN manual
 - **Steam**: instalar plugin GodotSteam GDExtension (codigo 100% pronto)
-- **Distribuicao**: testar .exe em maquina limpa, pagina Itch.io, trailer 30s, GitHub Release
+- **Distribuicao**: testar .exe em maquina limpa, pagina Itch.io, trailer 30s
 - **Pos-lancamento**: matchmaking online, workshop de mods, localizacao EN/ES/JP, replays
 
 ## Regras Importantes

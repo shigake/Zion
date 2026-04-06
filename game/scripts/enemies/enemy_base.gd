@@ -524,6 +524,8 @@ func _physics_process(delta: float) -> void:
 			_animator.set_walking(false)
 
 func _process_stage_behavior(delta: float) -> void:
+	if not target or not is_instance_valid(target) or not target.is_inside_tree():
+		return
 	var dist_to_target = global_position.distance_to(target.global_position)
 	match _behavior:
 		"teleport":
@@ -676,7 +678,7 @@ func _find_target() -> void:
 				return
 	var min_dist = INF
 	for p in players:
-		if not is_instance_valid(p):
+		if not is_instance_valid(p) or not p.is_inside_tree():
 			continue
 		var dist = global_position.distance_squared_to(p.global_position)
 		if dist < min_dist:

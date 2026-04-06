@@ -41,6 +41,8 @@ func setup(p: CharacterBody3D) -> void:
 func _physics_process(delta: float) -> void:
 	if not enabled or not player or not is_instance_valid(player):
 		return
+	if not player.is_inside_tree():
+		return
 	if GameManager.paused or GameManager.is_game_over:
 		return
 
@@ -103,7 +105,7 @@ func _analyze_threats(pos: Vector3) -> Dictionary:
 	var nearby_positions: Array[Vector3] = []
 
 	for e in enemies:
-		if not is_instance_valid(e):
+		if not is_instance_valid(e) or not e.is_inside_tree():
 			continue
 		var dist = pos.distance_to(e.global_position)
 
@@ -147,7 +149,7 @@ func _find_best_collectible(pos: Vector3, threats: Dictionary) -> Node3D:
 	all_collectibles.append_array(crystals)
 
 	for item in all_collectibles:
-		if not is_instance_valid(item):
+		if not is_instance_valid(item) or not item.is_inside_tree():
 			continue
 		var dist = pos.distance_to(item.global_position)
 		if dist > collect_radius:
@@ -198,7 +200,7 @@ func _calculate_move_direction(pos: Vector3, delta: float, threats: Dictionary, 
 		"flee":
 			move_dir = _calculate_flee_direction(pos, threats, delta)
 		"collect":
-			if collect_target and is_instance_valid(collect_target):
+			if collect_target and is_instance_valid(collect_target) and collect_target.is_inside_tree():
 				move_dir = (collect_target.global_position - pos).normalized()
 			else:
 				move_dir = _get_wander_direction(delta)

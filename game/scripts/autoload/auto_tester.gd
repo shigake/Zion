@@ -39,12 +39,16 @@ func _ready() -> void:
 	all_args.append_array(args)
 	all_args.append_array(user_args)
 
+	var _subset: String = ""  # e.g. "1of3" — run only 1st third of tests
+
 	for arg in all_args:
 		if arg.begins_with("--test="):
 			_suite_name = arg.split("=")[1]
 			_active = true
 		elif arg == "--test-headless":
 			_headless = true
+		elif arg.begins_with("--test-subset="):
+			_subset = arg.split("=")[1]
 
 	if not _active:
 		return
@@ -89,8 +93,8 @@ func _start_testing() -> void:
 	# Small delay to let the current scene fully initialize
 	await get_tree().create_timer(1.0).timeout
 
-	# Start the test suite
-	_test_runner.start_suite(_suite_name)
+	# Start the test suite (with optional subset for parallel runs)
+	_test_runner.start_suite(_suite_name, _subset)
 
 
 func _start_menu_smoke() -> void:

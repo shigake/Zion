@@ -395,12 +395,27 @@ func _build_event_tests() -> Array:
 		})
 	return tests
 
-func start_suite(suite_name: String) -> void:
+func start_suite(suite_name: String, subset: String = "") -> void:
 	test_queue = build_suite(suite_name)
+
+	# Subset support: "1of3" runs tests 0,3,6... "2of3" runs 1,4,7... "3of3" runs 2,5,8...
+	if subset != "" and "of" in subset:
+		var parts = subset.split("of")
+		var idx = int(parts[0]) - 1  # 0-based
+		var total = int(parts[1])
+		if total > 0 and idx >= 0 and idx < total:
+			var filtered: Array = []
+			for i in range(test_queue.size()):
+				if i % total == idx:
+					filtered.append(test_queue[i])
+			test_queue = filtered
+
 	test_results.clear()
 	is_running = true
 	print("\n========================================")
 	print("  ZION AUTOMATED TEST SUITE: %s" % suite_name.to_upper())
+	if subset != "":
+		print("  Subset: %s" % subset)
 	print("  Tests to run: %d" % test_queue.size())
 	print("========================================\n")
 	_run_next_test()
