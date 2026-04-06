@@ -21,7 +21,7 @@ script = ExtResource("1")
 speed = 2.0
 max_hp = 3000
 damage = 25
-xp_drop = 120
+xp_drop = 200
 enemy_color = Color(0.2, 0.8, 1.0, 1)
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
