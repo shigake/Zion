@@ -260,6 +260,18 @@ func _show() -> void:
 	panel.visible = true
 	GameManager.paused = true
 
+	# Entrance animation — fade overlay + slide panel up
+	overlay.color.a = 0.0
+	panel.modulate.a = 0.0
+	var _panel_target_top = panel.offset_top
+	panel.offset_top += 30
+	var tw = create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.set_parallel(true)
+	tw.tween_property(overlay, "color:a", 0.85, 0.4).set_ease(Tween.EASE_OUT)
+	tw.tween_property(panel, "modulate:a", 1.0, 0.35).set_ease(Tween.EASE_OUT)
+	tw.tween_property(panel, "offset_top", _panel_target_top, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
 	# Default to tab 1 (Resumo)
 	_switch_tab(0)
 

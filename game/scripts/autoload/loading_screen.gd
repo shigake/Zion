@@ -581,6 +581,17 @@ func _do_scene_change() -> void:
 		LogManager.debug("Loading", "Threaded load incomplete, using sync fallback: %s" % _target_scene_path)
 		tree.change_scene_to_file(_target_scene_path)
 
+	# Fade-in to new scene (black → transparent)
+	if _fade_rect:
+		_fade_rect.visible = true
+		_fade_rect.modulate.a = 1.0
+		var fade_in = create_tween()
+		fade_in.tween_property(_fade_rect, "modulate:a", 0.0, 0.5).set_ease(Tween.EASE_OUT)
+		fade_in.tween_callback(func():
+			if _fade_rect and is_instance_valid(_fade_rect):
+				_fade_rect.visible = false
+		)
+
 	# Cleanup
 	_cleanup()
 	loading_finished.emit()

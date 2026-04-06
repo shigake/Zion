@@ -61,6 +61,9 @@ var _quest_progress_bar: ProgressBar = null
 # Achievement tracker
 var _achievement_tracker: Control = null
 
+# Damage vignette overlay
+var _damage_vignette: ColorRect = null
+
 func _ready() -> void:
 	GameManager.player_leveled_up.connect(_on_level_up)
 	GameManager.game_over.connect(_on_game_over)
@@ -181,12 +184,23 @@ func _ready() -> void:
 	dash_bg.border_color = Color(0.2, 0.3, 0.4)
 	dash_cooldown_bar.add_theme_stylebox_override("background", dash_bg)
 
-	# Timer label — bigger font for readability
-	time_label.add_theme_font_size_override("font_size", 18)
+	# Timer label — premium styling with outline
+	time_label.add_theme_font_size_override("font_size", 22)
+	time_label.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0))
+	time_label.add_theme_constant_override("outline_size", 3)
+	time_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.8))
 
-	# Event notification styling
-	event_label.add_theme_font_size_override("font_size", 28)
+	# Kill label — gold accent with outline
+	kill_label.add_theme_font_size_override("font_size", 16)
+	kill_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.5))
+	kill_label.add_theme_constant_override("outline_size", 2)
+	kill_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.7))
+
+	# Event notification styling — larger, bolder
+	event_label.add_theme_font_size_override("font_size", 32)
 	event_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	event_label.add_theme_constant_override("outline_size", 4)
+	event_label.add_theme_color_override("font_outline_color", Color(0.15, 0.05, 0.0))
 
 	# Achievement popup now handled by AchievementPopup autoload (CanvasLayer 10)
 
@@ -277,6 +291,14 @@ func _ready() -> void:
 	_achievement_tracker.set_script(ach_tracker_script)
 	_achievement_tracker.name = "AchievementTracker"
 	add_child(_achievement_tracker)
+
+	# Damage vignette — red border flash when player takes damage
+	_damage_vignette = ColorRect.new()
+	_damage_vignette.name = "DamageVignette"
+	_damage_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_damage_vignette.color = Color(0.8, 0.0, 0.0, 0.0)
+	_damage_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_damage_vignette)
 
 	# Evolution available notification (PRD 40)
 	_evo_notify_label = Label.new()
@@ -385,6 +407,15 @@ func _on_player_took_damage() -> void:
 	var tween = create_tween()
 	character_hp_bar.scale = Vector2(1.08, 1.15)
 	tween.tween_property(character_hp_bar, "scale", Vector2.ONE, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	# Red vignette flash on damage
+	_flash_damage_vignette()
+
+func _flash_damage_vignette() -> void:
+	if not _damage_vignette:
+		return
+	_damage_vignette.color.a = 0.25
+	var tw = create_tween()
+	tw.tween_property(_damage_vignette, "color:a", 0.0, 0.35).set_ease(Tween.EASE_OUT)
 
 # _on_achievement_unlocked removed — handled by AchievementPopup autoload
 
@@ -427,12 +458,19 @@ func _on_event_started(event_name: String) -> void:
 	event_label.text = text
 	event_label.visible = true
 	event_label.modulate = color
-	event_label.scale = Vector2(1.5, 1.5)
+	event_label.modulate.a = 0.0
+	event_label.scale = Vector2(1.8, 1.8)
+	event_label.pivot_offset = event_label.size / 2.0
 	var tween = create_tween()
-	tween.tween_property(event_label, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	tween.set_parallel(true)
+	tween.tween_property(event_label, "scale", Vector2.ONE, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(event_label, "modulate:a", 1.0, 0.25).set_ease(Tween.EASE_OUT)
 
 func _on_event_ended(_event_name: String) -> void:
-	event_label.visible = false
+	# Fade-out instead of hard cut
+	var tween = create_tween()
+	tween.tween_property(event_label, "modulate:a", 0.0, 0.3).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func(): event_label.visible = false)
 
 func _on_event_warning(event_name: String, seconds_left: float) -> void:
 	# Mostra aviso "INCOMING" antes do evento

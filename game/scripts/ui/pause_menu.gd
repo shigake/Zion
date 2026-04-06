@@ -358,15 +358,25 @@ func _on_resume() -> void:
 	if stats_panel and is_instance_valid(stats_panel):
 		stats_panel.queue_free()
 		stats_panel = null
-	panel.visible = false
-	overlay.visible = false
+	# Animated fade-out
+	var tw = create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.set_parallel(true)
+	tw.tween_property(panel, "modulate:a", 0.0, 0.15)
+	tw.tween_property(overlay, "color:a", 0.0, 0.15)
 	if _vignette:
-		_vignette.visible = false
-	get_tree().paused = false
-	# Restaura o estado de pausa anterior ao pause:
-	# Se o levelup estava aberto antes, GameManager.paused deve continuar true
-	# para que o jogo nao rode enquanto o levelup estiver na tela.
-	GameManager.paused = _was_gm_paused_before
+		tw.tween_property(_vignette, "color:a", 0.0, 0.15)
+	tw.chain().tween_callback(func():
+		panel.visible = false
+		panel.modulate.a = 1.0
+		overlay.visible = false
+		overlay.color.a = 0.72
+		if _vignette:
+			_vignette.visible = false
+			_vignette.color.a = 0.55
+		get_tree().paused = false
+		GameManager.paused = _was_gm_paused_before
+	)
 
 func _show_stats() -> void:
 	if stats_panel and is_instance_valid(stats_panel):
