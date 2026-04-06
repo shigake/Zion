@@ -31,6 +31,10 @@ func _spawn_chest() -> void:
 	var angle = randf() * TAU
 	var dist = randf_range(15.0, 25.0)
 	var spawn_pos = player_pos + Vector3(cos(angle), 0, sin(angle)) * dist
+	# Clamp to map boundary to prevent chests spawning outside playable area
+	var limit = GameManager.map_half_size - 2.0
+	spawn_pos.x = clampf(spawn_pos.x, -limit, limit)
+	spawn_pos.z = clampf(spawn_pos.z, -limit, limit)
 	spawn_pos.y = 0.3
 
 	var scene = get_tree().current_scene
@@ -96,8 +100,10 @@ func _process(delta: float) -> void:
 
 	# Coleta por distância (método principal — sem Area3D)
 	var players = GameManager.get_players()
-	if not players.is_empty():
-		var player_pos = players[0].global_position
+	for player in players:
+		if not is_instance_valid(player):
+			continue
+		var player_pos = player.global_position
 		for chest in _active_chests.duplicate():
 			if is_instance_valid(chest) and chest.is_inside_tree():
 				if player_pos.distance_to(chest.global_position) < 2.0:
