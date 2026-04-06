@@ -434,6 +434,155 @@ func _create_mystery_model() -> Node3D:
 	root.add_child(hood)
 	return root
 
+func _create_amazona_model() -> Node3D:
+	## Amazona: corpo atletico + lanca nas costas + tiara + saia de guerreira
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.2
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.17
+	head.mesh.height = 0.34
+	root.add_child(head)
+	# Tiara/headband
+	var tiara = _mesh(BoxMesh.new(), Vector3(0, 1.22, 0))
+	tiara.mesh.size = Vector3(0.38, 0.04, 0.38)
+	tiara.set_meta("accent", true)
+	root.add_child(tiara)
+	# Saia de guerreira (flared skirt)
+	var skirt = _mesh(CylinderMesh.new(), Vector3(0, 0.18, 0))
+	skirt.mesh.top_radius = 0.2
+	skirt.mesh.bottom_radius = 0.35
+	skirt.mesh.height = 0.3
+	root.add_child(skirt)
+	# Lanca nas costas (diagonal)
+	var lance = _mesh(CylinderMesh.new(), Vector3(-0.1, 0.7, -0.12))
+	lance.mesh.top_radius = 0.015
+	lance.mesh.bottom_radius = 0.015
+	lance.mesh.height = 0.9
+	lance.rotation.z = deg_to_rad(15)
+	root.add_child(lance)
+	# Ponta da lanca
+	var tip = _mesh(CylinderMesh.new(), Vector3(-0.04, 1.2, -0.12))
+	tip.mesh.top_radius = 0.0
+	tip.mesh.bottom_radius = 0.04
+	tip.mesh.height = 0.1
+	tip.set_meta("accent", true)
+	root.add_child(tip)
+	return root
+
+func _create_bruxa_model() -> Node3D:
+	## Bruxa: corpo esbelto + chapeu pontudo grande + vassoura + capa
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.18
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.17
+	head.mesh.height = 0.34
+	root.add_child(head)
+	# Chapeu de bruxa (pontudo, largo)
+	var hat_brim = _mesh(CylinderMesh.new(), Vector3(0, 1.25, 0))
+	hat_brim.mesh.top_radius = 0.3
+	hat_brim.mesh.bottom_radius = 0.3
+	hat_brim.mesh.height = 0.03
+	root.add_child(hat_brim)
+	var hat_cone = _mesh(CylinderMesh.new(), Vector3(0, 1.48, 0))
+	hat_cone.mesh.top_radius = 0.02
+	hat_cone.mesh.bottom_radius = 0.15
+	hat_cone.mesh.height = 0.4
+	root.add_child(hat_cone)
+	# Capa
+	var cape = _mesh(BoxMesh.new(), Vector3(0, 0.55, -0.15))
+	cape.mesh.size = Vector3(0.4, 0.6, 0.05)
+	root.add_child(cape)
+	# Robe longo
+	var robe = _mesh(CylinderMesh.new(), Vector3(0, 0.15, 0))
+	robe.mesh.top_radius = 0.18
+	robe.mesh.bottom_radius = 0.3
+	robe.mesh.height = 0.35
+	root.add_child(robe)
+	# Orbe magico na mao
+	var orb = _mesh(SphereMesh.new(), Vector3(0.28, 0.85, 0.12))
+	orb.mesh.radius = 0.06
+	orb.mesh.height = 0.12
+	orb.set_meta("accent", true)
+	root.add_child(orb)
+	return root
+
+func _create_fragmentado_model() -> Node3D:
+	## Fragmentado: corpo basico + cristais flutuantes ao redor + brilho
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.22
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.18
+	head.mesh.height = 0.36
+	root.add_child(head)
+	# Cristais flutuantes (fragmentos de Zion)
+	for i in range(4):
+		var angle = i * PI * 0.5
+		var cx = cos(angle) * 0.35
+		var cz = sin(angle) * 0.35
+		var crystal = _mesh(CylinderMesh.new(), Vector3(cx, 0.8 + i * 0.1, cz))
+		crystal.mesh.top_radius = 0.0
+		crystal.mesh.bottom_radius = 0.04
+		crystal.mesh.height = 0.12
+		crystal.rotation.z = deg_to_rad(20 * (i - 1.5))
+		crystal.set_meta("accent", true)
+		root.add_child(crystal)
+	# Armadura simples
+	var chest = _mesh(BoxMesh.new(), Vector3(0, 0.7, 0))
+	chest.mesh.size = Vector3(0.3, 0.15, 0.2)
+	root.add_child(chest)
+	return root
+
+func _create_lealith_model() -> Node3D:
+	## Lealith: corpo agil e fino + orelhas longas + cauda + garras
+	var root = Node3D.new()
+	var body = _mesh(CapsuleMesh.new(), Vector3(0, 0.6, 0))
+	body.mesh.radius = 0.18
+	body.mesh.height = 0.7
+	root.add_child(body)
+	var head = _mesh(SphereMesh.new(), Vector3(0, 1.1, 0))
+	head.mesh.radius = 0.16
+	head.mesh.height = 0.32
+	root.add_child(head)
+	# Orelhas longas (elficas/felinas)
+	var ear_l = _mesh(CylinderMesh.new(), Vector3(0.12, 1.32, 0))
+	ear_l.mesh.top_radius = 0.01
+	ear_l.mesh.bottom_radius = 0.04
+	ear_l.mesh.height = 0.2
+	ear_l.rotation.z = deg_to_rad(-15)
+	root.add_child(ear_l)
+	var ear_r = _mesh(CylinderMesh.new(), Vector3(-0.12, 1.32, 0))
+	ear_r.mesh.top_radius = 0.01
+	ear_r.mesh.bottom_radius = 0.04
+	ear_r.mesh.height = 0.2
+	ear_r.rotation.z = deg_to_rad(15)
+	root.add_child(ear_r)
+	# Cauda
+	var tail = _mesh(CylinderMesh.new(), Vector3(0, 0.4, -0.25))
+	tail.mesh.top_radius = 0.03
+	tail.mesh.bottom_radius = 0.015
+	tail.mesh.height = 0.3
+	tail.rotation.x = deg_to_rad(45)
+	root.add_child(tail)
+	# Garras (shadow claw weapon)
+	var claw_l = _mesh(BoxMesh.new(), Vector3(0.28, 0.65, 0.1))
+	claw_l.mesh.size = Vector3(0.06, 0.15, 0.04)
+	claw_l.set_meta("accent", true)
+	root.add_child(claw_l)
+	var claw_r = _mesh(BoxMesh.new(), Vector3(-0.28, 0.65, 0.1))
+	claw_r.mesh.size = Vector3(0.06, 0.15, 0.04)
+	claw_r.set_meta("accent", true)
+	root.add_child(claw_r)
+	return root
+
 # ===================== ENEMY MODELS =====================
 
 func create_slime_model() -> Node3D:
@@ -1389,6 +1538,10 @@ func get_model_for_character(char_id: String) -> Node3D:
 		"gladiador": return _create_gladiador_model()
 		"chef": return _create_chef_model()
 		"mystery": return _create_mystery_model()
+		"amazona": return _create_amazona_model()
+		"bruxa": return _create_bruxa_model()
+		"fragmentado": return _create_fragmentado_model()
+		"lealith": return _create_lealith_model()
 	return create_ronin_model()
 
 func _clean_enemy_name(raw_name: String) -> String:
