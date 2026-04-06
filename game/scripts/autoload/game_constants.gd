@@ -140,7 +140,7 @@ const MINIBOSS_POOL := {
 	],
 	"space": [
 		{"name": "Alien Queen", "hp": 950, "dmg": 32, "spd": 4.0, "color": Color(0.3, 0.6, 0.2)},
-		{"name": "Cosmic Jellyfish", "hp": 700, "dmg": 25, "spd": 3.0, "color": Color(0.6, 0.3, 0.9)},
+		{"name": "Cosmic Jellyfish", "hp": 900, "dmg": 28, "spd": 3.0, "color": Color(0.6, 0.3, 0.9)},
 		{"name": "Mech Sentinel", "hp": 800, "dmg": 38, "spd": 5.0, "color": Color(0.4, 0.4, 0.6)},
 	],
 	"castle": [
