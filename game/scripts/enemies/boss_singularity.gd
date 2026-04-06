@@ -20,11 +20,12 @@ var bullet_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
 func _ready() -> void:
 	resistances = {
-		"physical": 0.5,  # Fraca contra fisico
+		"physical": 0.5,  # Resistente a fisico (imaterial)
 		"fire": 0.6,
 		"ice": 0.6,
 		"electric": 0.6,
 		"dark": 0.6,
+		"poison": 0.4,  # Entidade cosmica quase imune a veneno
 	}
 	super._ready()
 	# Extra boss HP scaling for multiplayer

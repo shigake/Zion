@@ -21,6 +21,7 @@ func _ready() -> void:
 		"ice": 0.85,
 		"electric": 0.85,
 		"dark": 0.6,  # Mais resistente a dark (ele e necromante)
+		"poison": 0.5,  # Morto-vivo resiste veneno
 	}
 	super._ready()
 	# Extra boss HP scaling for multiplayer (on top of base enemy scaling)
