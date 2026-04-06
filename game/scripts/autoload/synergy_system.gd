@@ -152,6 +152,8 @@ func apply_on_kill_synergies(kill_position: Vector3) -> void:
 	if has_synergy("electric_electric"):
 		if randf() < 0.25:
 			_chain_lightning(kill_position)
+	if has_synergy("physical_physical"):
+		_berserker_on_kill()
 
 # ---- Passive Synergies (called from player/stage every frame) ----
 
@@ -177,7 +179,23 @@ const SYNERGY_RADIUS := {
 var _synergy_timers: Dictionary = {}  # synergy_id -> float
 var _electrolysis_active: bool = false
 
+# Berserker synergy: attack speed ramps with kills (physical_physical)
+var _berserker_kill_count: int = 0
+var _current_berserker_bonus: float = 0.0
+const BERSERKER_SPEED_PER_KILL := 0.005  # +0.5% attack speed per kill
+const BERSERKER_MAX_BONUS := 0.5         # Cap at +50% attack speed
+const BERSERKER_DECAY_RATE := 0.02       # Lose 2% bonus per second without kills
+var _berserker_decay_timer: float = 0.0
+
 func apply_passive_synergies(player_pos: Vector3, _delta: float) -> void:
+	# Berserker decay: lose bonus over time without kills
+	if has_synergy("physical_physical") and _berserker_kill_count > 0:
+		_berserker_decay_timer += _delta
+		if _berserker_decay_timer >= 1.0:
+			_berserker_decay_timer = 0.0
+			var lost = int(BERSERKER_DECAY_RATE / BERSERKER_SPEED_PER_KILL)
+			_berserker_kill_count = maxi(0, _berserker_kill_count - lost)
+			_update_berserker_speed()
 	if has_synergy("dark_dark"):
 		_dark_aura_tick(player_pos)
 	if has_synergy("fire_ice"):
@@ -293,6 +311,19 @@ func _chain_lightning(start_pos: Vector3) -> void:
 	if not hit_enemies.is_empty():
 		ScreenEffects.shake(0.05)
 		synergy_procced.emit("electric_electric", 12.0 * hit_enemies.size())
+
+# ---- Physical + Physical: Berserker (attack speed ramps with kills) ----
+
+func _berserker_on_kill() -> void:
+	_berserker_kill_count += 1
+	_berserker_decay_timer = 0.0  # Reset decay on kill
+	_update_berserker_speed()
+
+func _update_berserker_speed() -> void:
+	## Updates GameManager.attack_speed_mult with current berserker bonus.
+	GameManager.attack_speed_mult -= _current_berserker_bonus
+	_current_berserker_bonus = minf(BERSERKER_MAX_BONUS, _berserker_kill_count * BERSERKER_SPEED_PER_KILL)
+	GameManager.attack_speed_mult += _current_berserker_bonus
 
 # ---- Dark + Dark: Passive aura damage ----
 
@@ -490,6 +521,12 @@ func reset() -> void:
 			e.speed = _abyssal_slowed_enemies[eid]
 	_abyssal_slowed_enemies.clear()
 	_cross_combo_cooldowns.clear()
+	# Remove berserker bonus from attack speed
+	if _current_berserker_bonus > 0.0:
+		GameManager.attack_speed_mult -= _current_berserker_bonus
+	_berserker_kill_count = 0
+	_current_berserker_bonus = 0.0
+	_berserker_decay_timer = 0.0
 	_elemental_zones.clear()
 
 # ================================================================
