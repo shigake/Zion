@@ -182,7 +182,6 @@ func _on_caramel_entered(body: Node3D, _zone: Area3D) -> void:
 	if body.is_in_group("players") or (body is CharacterBody3D and body.has_method("take_damage") and body.get("is_local") != null):
 		_player_caramel_count += 1
 		if _player_caramel_count == 1:
-			_prev_speed_mult = GameManager.speed_mult
 			GameManager.speed_mult *= CARAMEL_SLOW_FACTOR
 			LogManager.info("Stage", "Player stuck in caramel — -50%% speed")
 		return
@@ -197,7 +196,8 @@ func _on_caramel_exited(body: Node3D, _zone: Area3D) -> void:
 	if body.is_in_group("players") or (body is CharacterBody3D and body.has_method("take_damage") and body.get("is_local") != null):
 		_player_caramel_count = maxi(0, _player_caramel_count - 1)
 		if _player_caramel_count <= 0:
-			GameManager.speed_mult = _prev_speed_mult
+			# Restore by dividing out the slow factor (preserves item bonuses)
+			GameManager.speed_mult /= CARAMEL_SLOW_FACTOR
 			LogManager.info("Stage", "Player free from caramel")
 		return
 	# Restore enemy speed
