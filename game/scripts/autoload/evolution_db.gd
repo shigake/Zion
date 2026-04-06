@@ -25,7 +25,7 @@ var evolutions: Dictionary = {
 		"description": "Executa inimigos abaixo de 20% HP",
 		"weapon_required": "scythe",
 		"item_required": "clock",
-		"evolved_damage_mult": 2.0,
+		"evolved_damage_mult": 2.5,
 		"special": "execute",
 	},
 	"nuke_launcher": {

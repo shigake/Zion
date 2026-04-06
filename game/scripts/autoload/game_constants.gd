@@ -136,7 +136,7 @@ const MINIBOSS_POOL := {
 	"arena": [
 		{"name": "Champion Gladiator", "hp": 900, "dmg": 35, "spd": 4.5, "color": Color(0.7, 0.5, 0.1)},
 		{"name": "War Rhino", "hp": 1100, "dmg": 25, "spd": 6.0, "color": Color(0.5, 0.5, 0.5)},
-		{"name": "Dual Blade Assassin", "hp": 500, "dmg": 50, "spd": 7.0, "color": Color(0.2, 0.0, 0.3)},
+		{"name": "Dual Blade Assassin", "hp": 500, "dmg": 42, "spd": 7.0, "color": Color(0.2, 0.0, 0.3)},
 	],
 	"space": [
 		{"name": "Alien Queen", "hp": 950, "dmg": 32, "spd": 4.0, "color": Color(0.3, 0.6, 0.2)},

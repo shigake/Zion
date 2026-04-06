@@ -47,10 +47,10 @@ var items: Dictionary = {
 	},
 	"cape": {
 		"name": "Capa das Sombras",
-		"description": "10% chance de dodge por level",
+		"description": "8% chance de dodge por level",
 		"color": Color(0.3, 0.2, 0.4),
 		"stat": "dodge",
-		"value_per_level": 0.10,
+		"value_per_level": 0.08,
 	},
 	"xp_amulet": {
 		"name": "Amuleto de XP",
