@@ -643,11 +643,25 @@ func _recalculate_item_bonuses() -> void:
 	if not _item_bonus_calc:
 		_item_bonus_calc = load("res://scripts/autoload/item_bonus_calculator.gd")
 	_item_bonus_calc.recalculate(self, player_items)
-	# Re-apply character bonuses that recalculate() resets (attack_speed, area, dodge)
+	# Re-apply shop upgrades for vars that recalculate() resets
+	_reapply_shop_stat_bonuses()
+	# Re-apply character bonuses that recalculate() resets
 	_reapply_character_stat_bonuses()
 	# Re-apply berserker synergy bonus (also uses attack_speed_mult)
 	SynergySystem._current_berserker_bonus = 0.0
 	SynergySystem._update_berserker_speed()
+
+func _reapply_shop_stat_bonuses() -> void:
+	## Re-applies shop upgrades for stats that recalculate() resets.
+	var cd_lvl = SaveManager.get_upgrade_level("cooldown_reduction")
+	if cd_lvl > 0:
+		cooldown_mult = maxf(0.3, cooldown_mult - cd_lvl * 0.03)
+	var mag_lvl = SaveManager.get_upgrade_level("magnetism")
+	if mag_lvl > 0:
+		magnet_mult += mag_lvl * 0.20
+	var luck_lvl = SaveManager.get_upgrade_level("luck")
+	if luck_lvl > 0:
+		luck_mult += luck_lvl * 0.10
 
 func _reapply_character_stat_bonuses() -> void:
 	## Re-applies character passives that overlap with item stats.
