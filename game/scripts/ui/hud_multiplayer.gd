@@ -349,4 +349,5 @@ func _on_reconnection_failed() -> void:
 	var timer = hud.get_tree().create_timer(3.0)
 	await timer.timeout
 	hud.get_tree().paused = false
+	Engine.time_scale = 1.0
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")

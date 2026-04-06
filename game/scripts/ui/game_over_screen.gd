@@ -319,6 +319,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_menu() -> void:
 	AudioManager.play_sfx("menu_click")
 	get_tree().paused = false
+	Engine.time_scale = 1.0  # Restore in case game ended during slow-mo
 	if MultiplayerManager.is_online:
 		MultiplayerManager.disconnect_from_game()
 	LoadingScreen.transition_to("res://scenes/ui/main_menu.tscn")
