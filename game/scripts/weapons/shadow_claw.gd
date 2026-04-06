@@ -138,7 +138,7 @@ func _attack(level: int, is_second: bool = false) -> void:
 			if vel.length_squared() > 0.1:
 				global_rotation.y = atan2(-vel.x, -vel.z)
 
-	var area_scale = (1.0 + (level - 1) * 0.18) * GameManager.attack_size_mult
+	var area_scale = (1.0 + (level - 1) * 0.18) * GameManager.attack_size_mult * GameManager.area_mult
 	slash_area.scale = Vector3.ONE * area_scale
 	slash_mesh.scale = Vector3.ONE * area_scale
 

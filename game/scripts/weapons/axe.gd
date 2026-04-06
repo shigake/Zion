@@ -103,7 +103,7 @@ func _throw(level: int) -> void:
 	axe_mesh.global_position = start_pos
 
 	# Scale area with level
-	var area_scale = (1.0 + (level - 1) * 0.12) * GameManager.attack_size_mult
+	var area_scale = (1.0 + (level - 1) * 0.12) * GameManager.attack_size_mult * GameManager.area_mult
 	axe_area.scale = Vector3.ONE * area_scale
 	axe_mesh.scale = Vector3.ONE * area_scale
 

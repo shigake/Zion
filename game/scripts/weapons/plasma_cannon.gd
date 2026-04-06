@@ -250,7 +250,7 @@ func _fire_beam(level: int) -> void:
 		rotation.y = aim_angle
 
 	# Scale beam with level
-	var area_scale = (1.0 + (level - 1) * 0.12) * GameManager.attack_size_mult
+	var area_scale = (1.0 + (level - 1) * 0.12) * GameManager.attack_size_mult * GameManager.area_mult
 	beam_area.scale = Vector3(area_scale, 1.0, area_scale)
 	beam_mesh.scale = Vector3(area_scale, 1.0, area_scale)
 

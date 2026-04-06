@@ -144,7 +144,7 @@ func _attack(level: int) -> void:
 				global_rotation.y = atan2(-vel.x, -vel.z)
 
 	# Scale with level
-	var area_scale = (1.0 + (level - 1) * 0.15) * GameManager.attack_size_mult
+	var area_scale = (1.0 + (level - 1) * 0.15) * GameManager.attack_size_mult * GameManager.area_mult
 	slash_area_l.scale = Vector3.ONE * area_scale
 	slash_area_r.scale = Vector3.ONE * area_scale
 	slash_mesh_l.scale = Vector3.ONE * area_scale
