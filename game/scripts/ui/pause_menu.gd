@@ -281,6 +281,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("pause") and not GameManager.is_game_over:
+		# Block pause if level-up screen is showing
+		var lvl_screen = get_tree().root.find_child("LevelUpScreen", true, false)
+		if lvl_screen and is_instance_valid(lvl_screen) and lvl_screen.get("panel") and lvl_screen.panel.visible:
+			if get_viewport(): get_viewport().set_input_as_handled()
+			return
 		# If merchant UI is open, close it instead of opening pause
 		var merchant_ui = get_tree().root.find_child("MerchantUI", true, false)
 		if merchant_ui and is_instance_valid(merchant_ui):

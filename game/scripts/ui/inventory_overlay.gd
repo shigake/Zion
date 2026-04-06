@@ -33,6 +33,11 @@ func _register_inventory_action() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("inventory") and not GameManager.is_game_over:
+		# Block inventory if level-up screen is showing
+		var lvl_screen = get_tree().root.find_child("LevelUpScreen", true, false)
+		if lvl_screen and is_instance_valid(lvl_screen) and lvl_screen.get("panel") and lvl_screen.panel.visible:
+			if get_viewport(): get_viewport().set_input_as_handled()
+			return
 		if _is_open:
 			_close()
 		else:
