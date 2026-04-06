@@ -871,7 +871,7 @@ func _die() -> void:
 			"stage": GameManager.selected_stage,
 			"time": GameManager.game_time,
 		})
-	GameManager.enemies_alive -= 1
+	GameManager.enemies_alive = maxi(GameManager.enemies_alive - 1, 0)
 	GameManager.total_kills += 1
 	# Track kill per weapon and overkill (PRD 28)
 	GameManager.record_kill(GameManager._last_attacking_weapon)
@@ -916,14 +916,14 @@ func _die() -> void:
 		sprite.modulate = Color(10, 10, 10)  # Flash branco mantido
 		visible = true  # Garantir visibilidade para ragdoll
 		_play_ragdoll_death(sprite)
-		return  # Don't queue_free immediately — tween handles it
+		return  # Don't recycle immediately — tween handles it
 	if _animator:
 		_animator.play_death()
-		# Delay queue_free for death animation
+		# Delay recycle for death animation
 		var tween = create_tween()
-		tween.tween_callback(queue_free).set_delay(0.5)
+		tween.tween_callback(_recycle_to_pool).set_delay(0.5)
 	else:
-		queue_free()
+		_recycle_to_pool()
 
 ## PRD 45: Ragdoll death animation — directional fly + spin + fade
 func _play_ragdoll_death(sprite: Node3D) -> void:
@@ -966,8 +966,21 @@ func _play_ragdoll_death(sprite: Node3D) -> void:
 	# Escala: leve stretch na direcao do voo (squash-stretch)
 	tween.tween_property(sprite, "scale", sprite.scale * Vector3(0.7, 1.3, 1.0), duration * 0.1)
 	tween.chain().tween_property(sprite, "scale", sprite.scale * Vector3(0.4, 0.4, 1.0), duration * 0.9)
-	# Cleanup
-	tween.chain().tween_callback(queue_free)
+	# Cleanup — return to pool instead of freeing
+	tween.chain().tween_callback(_recycle_to_pool)
+
+## Return enemy to ObjectPool for reuse instead of freeing
+func _recycle_to_pool() -> void:
+	if is_in_group("boss_summon"):
+		remove_from_group("boss_summon")
+	# Reset sprite state for next reuse
+	var sprite = get_node_or_null("EnemySprite")
+	if sprite:
+		sprite.modulate = Color.WHITE
+		sprite.position = Vector3(0, 0.65, 0)
+		sprite.rotation = Vector3.ZERO
+		sprite.scale = _sprite_base_scale
+	ObjectPool.return_instance(self)
 
 func _apply_death_behavior(pos: Vector3) -> void:
 	if not is_inside_tree():

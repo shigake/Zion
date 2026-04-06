@@ -21,7 +21,12 @@ signal bestiary_milestone_reached(enemy_id: String, kills: int, label: String, c
 func get_annulus_position(center: Vector3, min_r: float = 15.0, max_r: float = 20.0) -> Vector3:
 	var angle = randf() * TAU
 	var distance = randf_range(min_r, max_r)
-	return center + Vector3(cos(angle), 0, sin(angle)) * distance
+	var pos = center + Vector3(cos(angle), 0, sin(angle)) * distance
+	# Clamp to map boundary to prevent spawns outside playable area
+	var limit = map_half_size - 2.0
+	pos.x = clampf(pos.x, -limit, limit)
+	pos.z = clampf(pos.z, -limit, limit)
+	return pos
 
 # Tempo e dificuldade
 var game_time: float = 0.0

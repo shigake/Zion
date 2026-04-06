@@ -249,11 +249,16 @@ func _ground_slam(radius: float) -> void:
 					player.take_damage(int(damage * 0.6), global_position)
 
 func _lava_floor_damage() -> void:
-	# Dano periodico em todos os players (simulando lava floor)
+	# Dano periodico em players proximos ao boss (raio 8.0 — area de lava)
+	var lava_radius := 8.0
 	var players = GameManager.get_players()
 	for player in players:
 		if is_instance_valid(player) and player.has_method("take_damage"):
-			player.take_damage(int(damage * 0.1), global_position)
+			var dist := global_position.distance_to(player.global_position)
+			if dist <= lava_radius:
+				# Dano reduzido com distancia (100% perto, 30% na borda)
+				var falloff := 1.0 - (dist / lava_radius) * 0.7
+				player.take_damage(int(damage * 0.1 * falloff), global_position)
 
 func _telegraph_attack(pos: Vector3, radius: float = 3.0) -> void:
 	var indicator = Sprite3D.new()
