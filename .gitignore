@@ -3,3 +3,4 @@ build/
 server/telemetry.db
 server/telemetry.db-shm
 server/telemetry.db-wal
+.claude/worktrees/
