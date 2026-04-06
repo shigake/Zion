@@ -165,8 +165,8 @@ func _on_body_entered(body: Node3D) -> void:
 		var level = GameManager.get_weapon_level("nunchaku")
 		var dmg = int(WeaponDB.get_damage("nunchaku", level))
 		GameManager._last_attacking_weapon = "nunchaku"
-		body.call_deferred("take_damage", dmg, "physical")
+		body.call_deferred("take_damage", dmg, WeaponDB.get_element("nunchaku"))
 		hit_enemies.append(body)
-		# Orange impact sparks
-		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.6, 0.2), 3)
+		# Poison green impact sparks
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.9, 0.3), 3)
 		ScreenEffects.shake(0.03)

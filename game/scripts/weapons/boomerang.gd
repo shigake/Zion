@@ -78,7 +78,7 @@ func _fire(level: int) -> void:
 	bullet.damage = dmg
 	bullet.speed = speed
 	bullet.lifetime = 10.0  # Long lifetime; return logic handles removal
-	bullet.damage_type = "physical"
+	bullet.damage_type = WeaponDB.get_element("boomerang")
 	bullet.weapon_id = "boomerang"
 	# Attach boomerang behavior script
 	_attach_boomerang_behavior(bullet, player, max_distance, speed)
