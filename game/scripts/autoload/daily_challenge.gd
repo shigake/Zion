@@ -14,8 +14,9 @@ const SAVE_PATH := "user://daily_challenge.json"
 var ALL_STAGES: Array[String] = GameConstants.ALL_STAGES
 
 const ALL_CHARACTERS: Array[String] = [
-	"ronin", "soldado", "mago", "berserker", "ninja", "necro",
+	"ronin", "soldado", "mago", "berserker", "ninja", "bruxa",
 	"pirata", "engenheiro", "vampiro", "gladiador", "chef", "mystery",
+	"amazona", "lealith",
 ]
 
 const ALL_MUTATIONS: Array[String] = [
