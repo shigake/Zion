@@ -15,7 +15,7 @@ func _process(delta: float) -> void:
 	if level <= 0:
 		return
 
-	var cooldown = WeaponDB.get_cooldown("portal", level) / GameManager.attack_speed_mult
+	var cooldown = WeaponDB.get_cooldown("portal", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
 
 	# Clean up freed portal
 	if active_portal and not is_instance_valid(active_portal):

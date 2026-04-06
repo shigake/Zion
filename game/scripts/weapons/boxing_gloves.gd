@@ -60,7 +60,7 @@ func _process(delta: float) -> void:
 	if level <= 0:
 		return
 
-	var cooldown = WeaponDB.get_cooldown("boxing_gloves", level) / GameManager.attack_speed_mult
+	var cooldown = WeaponDB.get_cooldown("boxing_gloves", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
 
 	if is_attacking:
 		combo_timer -= delta

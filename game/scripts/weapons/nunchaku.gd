@@ -52,7 +52,7 @@ func _process(delta: float) -> void:
 		return
 
 	# Attack speed scales more with level
-	var cooldown = WeaponDB.get_cooldown("nunchaku", level) / GameManager.attack_speed_mult
+	var cooldown = WeaponDB.get_cooldown("nunchaku", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
 
 	if is_attacking:
 		attack_anim_timer -= delta

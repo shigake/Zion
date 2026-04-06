@@ -97,7 +97,7 @@ func _process(delta: float) -> void:
 	if level <= 0:
 		return
 
-	var cooldown = WeaponDB.get_cooldown("lance", level) / GameManager.attack_speed_mult
+	var cooldown = WeaponDB.get_cooldown("lance", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
 
 	if is_attacking:
 		attack_anim_timer -= delta

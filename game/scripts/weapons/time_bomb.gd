@@ -18,7 +18,7 @@ func _process(delta: float) -> void:
 	if level <= 0:
 		return
 
-	var cooldown = WeaponDB.get_cooldown("time_bomb", level) / GameManager.attack_speed_mult
+	var cooldown = WeaponDB.get_cooldown("time_bomb", level) / GameManager.attack_speed_mult * GameManager.cooldown_mult
 
 	# Limpa bombas invalidas
 	active_bombs = active_bombs.filter(func(b): return is_instance_valid(b))

@@ -95,8 +95,8 @@ func _cast(level: int) -> void:
 		elif hit_targets.size() == 1:
 			_draw_lightning(player_pos + Vector3(0, 0.8, 0), current_target.global_position + Vector3(0, 0.5, 0))
 
-		# Reduce damage for next chain
-		current_damage = int(current_damage * 0.7)
+		# Reduce damage for next chain (minimum 1)
+		current_damage = maxi(1, int(current_damage * 0.7))
 
 		# Find next nearest enemy not already hit
 		var next_target: Node3D = null
