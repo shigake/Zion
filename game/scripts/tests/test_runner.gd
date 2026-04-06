@@ -432,6 +432,9 @@ func _run_next_test() -> void:
 	_forced_item = current_test.get("forced_item", "")
 	_start_time_msec = Time.get_ticks_msec()
 
+	# Reset game state from previous test
+	GameManager.reset()
+
 	# Set game config
 	GameManager.selected_character = current_test["character"]
 	GameManager.selected_stage = current_test["stage"]
@@ -815,10 +818,11 @@ func _end_current_test(reason: String) -> void:
 	if GameManager.game_over.is_connected(_on_game_over):
 		GameManager.game_over.disconnect(_on_game_over)
 
-	# Reset for next test
+	# Reset for next test — force unpause tree so change_scene works
 	current_test = {}
 	GameManager.paused = false
 	GameManager.is_game_over = false
+	get_tree().paused = false
 
 	# Short delay then next test
 	await get_tree().create_timer(1.0).timeout
