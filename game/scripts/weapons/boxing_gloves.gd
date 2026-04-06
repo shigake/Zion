@@ -127,7 +127,7 @@ func _do_punch(level: int) -> void:
 	punch_area.monitoring = true
 
 	# Escala com level
-	var area_scale = 1.0 + (level - 1) * 0.12
+	var area_scale = (1.0 + (level - 1) * 0.12) * GameManager.attack_size_mult
 	punch_area.scale = Vector3.ONE * area_scale
 	punch_mesh.scale = Vector3.ONE * area_scale
 

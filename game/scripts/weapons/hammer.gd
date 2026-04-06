@@ -83,7 +83,7 @@ func _attack(level: int) -> void:
 	hit_enemies.clear()
 
 	# Scale area with level — radius 3.0 base
-	var area_scale = 1.0 + (level - 1) * 0.15
+	var area_scale = (1.0 + (level - 1) * 0.15) * GameManager.attack_size_mult
 	slam_area.scale = Vector3.ONE * area_scale
 	slam_mesh.scale = Vector3(0.3, 0.1, 0.3) * area_scale
 

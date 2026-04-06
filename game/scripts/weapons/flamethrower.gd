@@ -176,7 +176,7 @@ func _start_fire(level: int) -> void:
 	flame_area.monitoring = true
 
 	# Scale cone with level
-	var area_scale = 1.0 + (level - 1) * 0.12
+	var area_scale = (1.0 + (level - 1) * 0.12) * GameManager.attack_size_mult
 	flame_area.scale = Vector3(area_scale, 1.0, area_scale)
 	flame_mesh.scale = Vector3(area_scale, 1.0, area_scale)
 

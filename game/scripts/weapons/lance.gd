@@ -167,7 +167,7 @@ func _attack(level: int) -> void:
 				global_rotation.y = atan2(-vel.x, -vel.z)
 
 	# Scale with level — longer reach
-	var area_scale = 1.0 + (level - 1) * 0.15
+	var area_scale = (1.0 + (level - 1) * 0.15) * GameManager.attack_size_mult
 	thrust_area.scale = Vector3(1.0, 1.0, area_scale)
 	thrust_mesh.scale = Vector3(1.0, 1.0, area_scale)
 
