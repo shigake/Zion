@@ -125,8 +125,28 @@ func load_game() -> void:
 func _apply_save_json(json_str: String, source: String) -> void:
 	var loaded = _parse_json(json_str)
 	if loaded is Dictionary:
+		# Validate critical field types before applying
+		var type_checks := {
+			"crystals": TYPE_FLOAT, "total_runs": TYPE_FLOAT, "total_kills": TYPE_FLOAT,
+			"best_time": TYPE_FLOAT, "unlocked_characters": TYPE_ARRAY,
+			"unlocked_stages": TYPE_ARRAY, "achievements": TYPE_ARRAY,
+			"completed_stages": TYPE_ARRAY, "leaderboard": TYPE_ARRAY,
+			"upgrades": TYPE_DICTIONARY, "bestiary": TYPE_DICTIONARY,
+			"codex": TYPE_ARRAY, "best_run": TYPE_DICTIONARY, "best_runs": TYPE_DICTIONARY,
+		}
 		for key in loaded:
+			if key in type_checks:
+				var expected = type_checks[key]
+				var actual = typeof(loaded[key])
+				# JSON numbers are float; accept float for int fields
+				if actual != expected and not (expected == TYPE_FLOAT and actual == TYPE_INT):
+					LogManager.error("Save", "Type mismatch for '%s': expected %d, got %d — skipping" % [key, expected, actual])
+					continue
 			data[key] = loaded[key]
+		# Ensure numeric fields are int where needed
+		data["crystals"] = int(data.get("crystals", 0))
+		data["total_runs"] = int(data.get("total_runs", 0))
+		data["total_kills"] = int(data.get("total_kills", 0))
 		LogManager.info("Save", "Save loaded from %s: %d crystals, %d runs" % [source, data.get("crystals", 0), data.get("total_runs", 0)])
 	else:
 		LogManager.error("Save", "Save from %s has invalid format" % source)

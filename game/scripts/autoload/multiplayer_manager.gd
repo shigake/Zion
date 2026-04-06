@@ -384,6 +384,11 @@ func _apply_game_state(game_state: Dictionary) -> void:
 		GameManager.events_triggered = game_state["events_triggered"]
 	if "player_hp" in game_state:
 		GameManager.player_hp = game_state["player_hp"]
+	if "player_weapons" in game_state:
+		GameManager.player_weapons = game_state["player_weapons"]
+		GameManager._weapon_level_cache.clear()
+		for w in GameManager.player_weapons:
+			GameManager._weapon_level_cache[w["id"]] = w["level"]
 
 func _trigger_host_migration() -> void:
 	if not is_online:
@@ -530,6 +535,7 @@ func _send_full_state_to_peer(peer_id: int) -> void:
 		"player_xp_to_next": GameManager.player_xp_to_next,
 		"max_enemies": GameManager.max_enemies,
 		"events_triggered": GameManager.events_triggered,
+		"lobby_stage": lobby_stage,
 	}
 	_receive_full_state_sync.rpc_id(peer_id, game_state)
 
@@ -537,6 +543,8 @@ func _send_full_state_to_peer(peer_id: int) -> void:
 func _receive_full_state_sync(game_state: Dictionary) -> void:
 	## Client recebe estado completo do host ao reconectar.
 	_apply_game_state(game_state)
+	if "lobby_stage" in game_state:
+		lobby_stage = game_state["lobby_stage"]
 	LogManager.info("MP", "Estado completo recebido do host após reconexão")
 
 # ---- Lobby State Sync (Tasks 1 & 2) ----

@@ -157,7 +157,11 @@ func _teleport_bat_form() -> void:
 	var angle = randf() * TAU
 	var dist = randf_range(4.0, 8.0)
 	var offset = Vector3(cos(angle), 0, sin(angle)) * dist
-	global_position = target.global_position + offset
+	var new_pos = target.global_position + offset
+	var half = GameManager.map_half_size
+	new_pos.x = clampf(new_pos.x, -half, half)
+	new_pos.z = clampf(new_pos.z, -half, half)
+	global_position = new_pos
 	# Efeito visual no destino
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 6)
 

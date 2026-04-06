@@ -127,7 +127,11 @@ func _teleport_near_player() -> void:
 	var angle = randf() * TAU
 	var dist = randf_range(5.0, 10.0)
 	var offset = Vector3(cos(angle), 0, sin(angle)) * dist
-	global_position = target.global_position + offset
+	var new_pos = target.global_position + offset
+	var half = GameManager.map_half_size
+	new_pos.x = clampf(new_pos.x, -half, half)
+	new_pos.z = clampf(new_pos.z, -half, half)
+	global_position = new_pos
 	ParticleFactory.spawn_death_particles(global_position, enemy_color, 8)
 
 func _summon_drones(count: int) -> void:
