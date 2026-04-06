@@ -1076,8 +1076,175 @@ func _meteor_impact(meteor: Node3D, impact_pos: Vector3) -> void:
 	# Screen shake on impact
 	ScreenEffects.shake(0.15)
 
+	# Explosion particles
+	ParticleFactory.spawn_explosion_particles(impact_pos, radius)
+
 	# Remove meteor
 	meteor.queue_free()
+
+	# Spawn crater with fire at impact site
+	_spawn_meteor_crater(impact_pos)
+
+func _spawn_meteor_crater(pos: Vector3) -> void:
+	var crater_root = Node3D.new()
+	crater_root.name = "MeteorCrater"
+	get_parent().add_child(crater_root)
+	crater_root.global_position = pos
+
+	# --- Crater ring (torus-like rim using dark scorched ring) ---
+	var rim = MeshInstance3D.new()
+	var torus_mesh = TorusMesh.new()
+	torus_mesh.inner_radius = 0.8
+	torus_mesh.outer_radius = 1.6
+	torus_mesh.rings = 16
+	torus_mesh.ring_segments = 12
+	rim.mesh = torus_mesh
+	var rim_mat = StandardMaterial3D.new()
+	rim_mat.albedo_color = Color(0.15, 0.08, 0.02)
+	rim_mat.roughness = 1.0
+	rim_mat.metallic = 0.0
+	rim.material_override = rim_mat
+	rim.position = Vector3(0, 0.02, 0)
+	rim.rotation_degrees.x = 90.0
+	crater_root.add_child(rim)
+
+	# --- Scorched ground (dark disc inside crater) ---
+	var scorch = MeshInstance3D.new()
+	var disc_mesh = CylinderMesh.new()
+	disc_mesh.top_radius = 1.0
+	disc_mesh.bottom_radius = 1.0
+	disc_mesh.height = 0.05
+	disc_mesh.radial_segments = 16
+	scorch.mesh = disc_mesh
+	var scorch_mat = StandardMaterial3D.new()
+	scorch_mat.albedo_color = Color(0.08, 0.04, 0.01)
+	scorch_mat.roughness = 1.0
+	scorch_mat.emission_enabled = true
+	scorch_mat.emission = Color(0.3, 0.08, 0.0)
+	scorch_mat.emission_energy_multiplier = 0.5
+	scorch.material_override = scorch_mat
+	scorch.position = Vector3(0, -0.05, 0)
+	crater_root.add_child(scorch)
+
+	# --- Fire particles inside crater ---
+	var fire = GPUParticles3D.new()
+	fire.name = "CraterFire"
+	fire.emitting = true
+	fire.amount = 12
+	fire.lifetime = 0.8
+	fire.explosiveness = 0.1
+	fire.randomness = 0.5
+	fire.visibility_aabb = AABB(Vector3(-2, -1, -2), Vector3(4, 4, 4))
+
+	var fire_mat = ParticleProcessMaterial.new()
+	fire_mat.direction = Vector3(0, 1, 0)
+	fire_mat.spread = 15.0
+	fire_mat.initial_velocity_min = 1.0
+	fire_mat.initial_velocity_max = 2.5
+	fire_mat.gravity = Vector3(0, 0.5, 0)
+	fire_mat.scale_min = 0.08
+	fire_mat.scale_max = 0.2
+	fire_mat.damping_min = 1.0
+	fire_mat.damping_max = 2.0
+
+	# Fire color gradient: bright yellow core → orange → red tips → fade out
+	var color_ramp = GradientTexture1D.new()
+	var gradient = Gradient.new()
+	gradient.set_offset(0, 0.0)
+	gradient.set_color(0, Color(1.0, 0.95, 0.4, 1.0))  # bright yellow core
+	gradient.add_point(0.3, Color(1.0, 0.5, 0.05, 0.9))  # orange
+	gradient.add_point(0.7, Color(0.8, 0.15, 0.0, 0.6))  # dark red
+	gradient.set_offset(1, 1.0)
+	gradient.set_color(1, Color(0.3, 0.05, 0.0, 0.0))  # fade out
+	color_ramp.gradient = gradient
+	fire_mat.color_ramp = color_ramp
+
+	fire.process_material = fire_mat
+
+	# Fire draw pass (small sphere billboard)
+	var fire_mesh = SphereMesh.new()
+	fire_mesh.radius = 0.15
+	fire_mesh.height = 0.3
+	var fire_draw_mat = StandardMaterial3D.new()
+	fire_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	fire_draw_mat.albedo_color = Color(1.0, 0.7, 0.2, 0.9)
+	fire_draw_mat.emission_enabled = true
+	fire_draw_mat.emission = Color(1.0, 0.4, 0.05)
+	fire_draw_mat.emission_energy_multiplier = 4.0
+	fire_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	fire_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fire_mesh.surface_set_material(0, fire_draw_mat)
+	fire.draw_pass_1 = fire_mesh
+
+	fire.position = Vector3(0, 0.1, 0)
+	crater_root.add_child(fire)
+
+	# --- Ember sparks (small rising sparks) ---
+	var embers = GPUParticles3D.new()
+	embers.name = "CraterEmbers"
+	embers.emitting = true
+	embers.amount = 6
+	embers.lifetime = 1.2
+	embers.explosiveness = 0.0
+	embers.randomness = 0.8
+	embers.visibility_aabb = AABB(Vector3(-2, -1, -2), Vector3(4, 5, 4))
+
+	var ember_mat = ParticleProcessMaterial.new()
+	ember_mat.direction = Vector3(0, 1, 0)
+	ember_mat.spread = 30.0
+	ember_mat.initial_velocity_min = 0.5
+	ember_mat.initial_velocity_max = 1.5
+	ember_mat.gravity = Vector3(0, -0.3, 0)
+	ember_mat.scale_min = 0.02
+	ember_mat.scale_max = 0.05
+	ember_mat.color = Color(1.0, 0.6, 0.1, 0.8)
+	embers.process_material = ember_mat
+
+	var ember_mesh = SphereMesh.new()
+	ember_mesh.radius = 0.04
+	ember_mesh.height = 0.08
+	var ember_draw_mat = StandardMaterial3D.new()
+	ember_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ember_draw_mat.albedo_color = Color(1.0, 0.8, 0.3, 1.0)
+	ember_draw_mat.emission_enabled = true
+	ember_draw_mat.emission = Color(1.0, 0.6, 0.1)
+	ember_draw_mat.emission_energy_multiplier = 5.0
+	ember_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	ember_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ember_mesh.surface_set_material(0, ember_draw_mat)
+	embers.draw_pass_1 = ember_mesh
+
+	embers.position = Vector3(0, 0.15, 0)
+	crater_root.add_child(embers)
+
+	# --- Point light for fire glow ---
+	var light = OmniLight3D.new()
+	light.light_color = Color(1.0, 0.5, 0.1)
+	light.light_energy = 2.0
+	light.omni_range = 3.0
+	light.omni_attenuation = 1.5
+	light.position = Vector3(0, 0.5, 0)
+	crater_root.add_child(light)
+
+	# --- Accessibility: reduced motion = less particles ---
+	if AccessibilityManager.reduced_motion:
+		fire.amount = 4
+		embers.amount = 2
+
+	# --- Fade out and remove after 8 seconds ---
+	var fade_tween = create_tween()
+	# Hold visible for 5 seconds
+	fade_tween.tween_interval(5.0)
+	# Then fade fire and light over 3 seconds
+	fade_tween.tween_callback(func():
+		fire.emitting = false
+		embers.emitting = false
+	)
+	fade_tween.tween_property(light, "light_energy", 0.0, 3.0).set_ease(Tween.EASE_IN)
+	fade_tween.parallel().tween_property(rim_mat, "albedo_color:a", 0.0, 3.0)
+	fade_tween.parallel().tween_property(scorch_mat, "albedo_color:a", 0.0, 3.0)
+	fade_tween.parallel().tween_property(scorch_mat, "emission_energy_multiplier", 0.0, 3.0)
+	fade_tween.tween_callback(crater_root.queue_free)
 
 # ---- Angel Challenge (min 15) ----
 # Double permanent damage but halve current HP
