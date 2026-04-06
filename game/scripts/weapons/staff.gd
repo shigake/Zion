@@ -58,12 +58,13 @@ func _fire(level: int) -> void:
 
 	var player_pos = player_node.global_position  # WeaponPivot -> Player
 
-	# Numero de projeteis: +1 nos levels 3 e 6
+	# Numero de projeteis: +1 nos levels 3 e 6, + extra_projectiles do item Aljava
 	var num_projectiles = 1
 	if level >= 3:
 		num_projectiles = 2
 	if level >= 6:
 		num_projectiles = 3
+	num_projectiles += GameManager.extra_projectiles
 
 	var scene_root = get_tree().current_scene
 	if not is_instance_valid(scene_root):

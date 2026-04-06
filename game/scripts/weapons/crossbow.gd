@@ -110,6 +110,30 @@ func _fire(level: int) -> void:
 	scene_root.add_child(bolt)
 	bolt.global_position = pos
 
+	# Extra projectiles from Quiver item
+	for i in range(GameManager.extra_projectiles):
+		var extra = ObjectPool.get_instance(projectile_scene)
+		if not "direction" in extra:
+			extra.queue_free()
+			continue
+		var spread_angle = (i + 1) * 0.15 * (1 if i % 2 == 0 else -1)
+		extra.direction = direction.rotated(Vector3.UP, spread_angle).normalized()
+		extra.damage = dmg
+		extra.speed = 28.0
+		extra.lifetime = 3.0
+		extra.damage_type = "physical"
+		var extra_hits: Array = []
+		var _on_extra_hit = func(body: Node3D) -> void:
+			if body in extra_hits:
+				return
+			if body.has_method("take_damage") and body.is_in_group("enemies"):
+				GameManager._last_attacking_weapon = "crossbow"
+				body.call_deferred("take_damage", dmg, "physical")
+				extra_hits.append(body)
+		extra.body_entered.connect(_on_extra_hit)
+		scene_root.add_child(extra)
+		extra.global_position = pos
+
 ## Client-only: spawns visual bolt without collision (no damage).
 func _fire_visual_only(level: int) -> void:
 	var enemies = GameManager.get_enemies()

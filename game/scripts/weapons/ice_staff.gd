@@ -117,6 +117,35 @@ func _fire(level: int) -> void:
 	scene_root.add_child(bullet)
 	bullet.global_position = pos
 
+	# Extra projectiles from Quiver item
+	for i in range(GameManager.extra_projectiles):
+		var extra = ObjectPool.get_instance(projectile_scene)
+		if not "direction" in extra:
+			extra.queue_free()
+			continue
+		var spread_angle = (i + 1) * 0.2 * (1 if i % 2 == 0 else -1)
+		extra.direction = direction.rotated(Vector3.UP, spread_angle).normalized()
+		extra.damage = dmg
+		extra.speed = 10.0
+		extra.lifetime = 4.0
+		extra.damage_type = "ice"
+		extra.weapon_id = "ice_staff"
+		var extra_ref = weakref(extra)
+		var _extra_hit = func(body: Node3D) -> void:
+			var b = extra_ref.get_ref()
+			if not b or not is_instance_valid(b) or not b.is_inside_tree():
+				return
+			if body == null or not is_instance_valid(body):
+				return
+			if body.has_method("take_damage") and body.is_in_group("enemies"):
+				GameManager._last_attacking_weapon = "ice_staff"
+				body.call_deferred("take_damage", dmg, "ice")
+				_freeze_area(b.global_position, level)
+				b.queue_free()
+		extra.body_entered.connect(_extra_hit, CONNECT_ONE_SHOT)
+		scene_root.add_child(extra)
+		extra.global_position = pos
+
 ## Client-only: spawns visual ice projectile without collision (no damage/freeze).
 func _fire_visual_only(level: int) -> void:
 	var enemies = GameManager.get_enemies()

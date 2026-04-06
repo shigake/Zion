@@ -69,22 +69,25 @@ func _fire(level: int) -> void:
 	if not is_instance_valid(scene_root):
 		return
 
-	var bullet = ObjectPool.get_instance(projectile_scene)
-	if not "direction" in bullet:
-		bullet.queue_free()
-		return
 	var pos = player_pos + Vector3(0, 0.5, 0)
-	bullet.direction = aim_dir.normalized()
-	bullet.damage = dmg
-	bullet.speed = speed
-	bullet.lifetime = 10.0  # Long lifetime; return logic handles removal
-	bullet.damage_type = WeaponDB.get_element("boomerang")
-	bullet.weapon_id = "boomerang"
-	# Attach boomerang behavior script
-	_attach_boomerang_behavior(bullet, player, max_distance, speed)
-	_apply_boomerang_visual(bullet)
-	scene_root.add_child(bullet)
-	bullet.global_position = pos
+	var num_boomerangs = 1 + GameManager.extra_projectiles
+
+	for i in range(num_boomerangs):
+		var bullet = ObjectPool.get_instance(projectile_scene)
+		if not "direction" in bullet:
+			bullet.queue_free()
+			continue
+		var spread_angle = i * 0.25 * (1 if i % 2 == 0 else -1)
+		bullet.direction = aim_dir.rotated(Vector3.UP, spread_angle).normalized()
+		bullet.damage = dmg
+		bullet.speed = speed
+		bullet.lifetime = 10.0
+		bullet.damage_type = WeaponDB.get_element("boomerang")
+		bullet.weapon_id = "boomerang"
+		_attach_boomerang_behavior(bullet, player, max_distance, speed)
+		_apply_boomerang_visual(bullet)
+		scene_root.add_child(bullet)
+		bullet.global_position = pos
 
 func _attach_boomerang_behavior(bullet: Node, player: Node3D, max_dist: float, spd: float) -> void:
 	# Remove existing boomerang meta if reused from pool

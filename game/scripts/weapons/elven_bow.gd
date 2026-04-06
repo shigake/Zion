@@ -66,12 +66,13 @@ func _fire(level: int) -> void:
 		direction = (nearest.global_position - player_pos).normalized()
 		direction.y = 0
 
-	# Extra arrows at higher levels
+	# Extra arrows at higher levels + Quiver item bonus
 	var num_arrows = 1
 	if level >= 4:
 		num_arrows = 2
 	if level >= 7:
 		num_arrows = 3
+	num_arrows += GameManager.extra_projectiles
 
 	var scene_root = get_tree().current_scene
 	if not is_instance_valid(scene_root):

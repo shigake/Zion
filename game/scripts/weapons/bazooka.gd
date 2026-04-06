@@ -77,14 +77,19 @@ func _fire(level: int) -> void:
 	if not is_instance_valid(scene_root):
 		return
 
-	var rocket = ObjectPool.get_instance(rocket_scene)
-	rocket.target_pos = best_target
-	rocket.damage = int(WeaponDB.get_damage("bazooka", level))
-	rocket.explosion_radius = 3.0 + (level - 1) * 0.4
-	rocket.explosion_radius *= GameManager.area_mult
-	scene_root.add_child(rocket)
-	rocket.global_position = player_pos + Vector3(0, 0.5, 0)
-	rocket.initialize()
+	var dmg = int(WeaponDB.get_damage("bazooka", level))
+	var radius = (3.0 + (level - 1) * 0.4) * GameManager.area_mult
+	var num_rockets = 1 + GameManager.extra_projectiles
+
+	for i in range(num_rockets):
+		var rocket = ObjectPool.get_instance(rocket_scene)
+		var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)) * i * 0.5
+		rocket.target_pos = best_target + offset
+		rocket.damage = dmg
+		rocket.explosion_radius = radius
+		scene_root.add_child(rocket)
+		rocket.global_position = player_pos + Vector3(0, 0.5, 0)
+		rocket.initialize()
 
 ## Client-only: spawns visual rocket without collision (no damage/explosion).
 func _fire_visual_only(level: int) -> void:
