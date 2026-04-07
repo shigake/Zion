@@ -2,9 +2,8 @@ name: CI - Validacao e Testes
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
+    tags: ['v*']       # So roda em tags de release (v4.0.70, etc)
+  workflow_dispatch:   # Ou manualmente pelo GitHub
 
 env:
   GODOT_VERSION: "4.4.1"

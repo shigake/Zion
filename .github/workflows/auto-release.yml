@@ -1,9 +1,7 @@
 name: Auto Release
 
-# Dispara em push para main ou manualmente
+# Dispara apenas manualmente (evita gastar Actions a cada push)
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       force:
