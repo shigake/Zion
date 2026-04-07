@@ -17,19 +17,29 @@ func _ready() -> void:
 	_apply_skeleton_model()
 
 func _apply_skeleton_model() -> void:
-	var sprite_path = "res://assets/sprites/enemies/skeleton.png"
-	if ResourceLoader.exists(sprite_path):
-		var sprite = Sprite3D.new()
-		sprite.texture = load(sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.035
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.modulate = Color(0.7, 1.0, 0.7)  # Green tint for summoned
-		sprite.name = "SummonSprite"
-		sprite.position.y = 0.5
-		add_child(sprite)
+	var model_path = "res://assets/models/skeleton_minion.glb"
+	if ResourceLoader.exists(model_path):
+		var scene: PackedScene = load(model_path)
+		var model: Node3D = scene.instantiate()
+		model.name = "SummonModel"
+		model.scale = Vector3(0.4, 0.4, 0.4)
+		model.position.y = 0.0
+		add_child(model)
+	else:
+		# Fallback: sprite-based skeleton
+		var sprite_path = "res://assets/sprites/enemies/skeleton.png"
+		if ResourceLoader.exists(sprite_path):
+			var sprite = Sprite3D.new()
+			sprite.texture = load(sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.035
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.modulate = Color(0.7, 1.0, 0.7)  # Green tint for summoned
+			sprite.name = "SummonSprite"
+			sprite.position.y = 0.5
+			add_child(sprite)
 
 func _physics_process(delta: float) -> void:
 	if GameManager.paused or not is_inside_tree():

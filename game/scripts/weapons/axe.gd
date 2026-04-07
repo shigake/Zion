@@ -203,68 +203,77 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 	WeaponVFX.spawn_slash_trail(self, _slash_tex, pos)
 
 func _build_axe_model() -> void:
-	## Redesigned Viking axe: PrismMesh blade + long handle + metal cap + glowing rune.
+	## Viking axe: prefer 3D model, fallback to procedural PrismMesh + CylinderMesh.
 	axe_mesh.mesh = null  # Clear any default mesh
 
-	# -- Blade material (cold steel with fire emission) --
-	var blade_mat = StandardMaterial3D.new()
-	blade_mat.albedo_color = Color(0.55, 0.52, 0.50)
-	blade_mat.metallic = 0.85
-	blade_mat.roughness = 0.35
-	blade_mat.emission_enabled = true
-	blade_mat.emission = Color(0.9, 0.45, 0.1)
-	blade_mat.emission_energy_multiplier = 0.4
+	var model_path = "res://assets/models/viking_axe.glb"
+	if ResourceLoader.exists(model_path):
+		var scene: PackedScene = load(model_path)
+		var model: Node3D = scene.instantiate()
+		model.name = "AxeModel"
+		model.scale = Vector3(0.3, 0.3, 0.3)
+		axe_mesh.add_child(model)
+	else:
+		# Fallback: procedural axe model
+		# -- Blade material (cold steel with fire emission) --
+		var blade_mat = StandardMaterial3D.new()
+		blade_mat.albedo_color = Color(0.55, 0.52, 0.50)
+		blade_mat.metallic = 0.85
+		blade_mat.roughness = 0.35
+		blade_mat.emission_enabled = true
+		blade_mat.emission = Color(0.9, 0.45, 0.1)
+		blade_mat.emission_energy_multiplier = 0.4
 
-	# -- Handle material (Nordic dark wood) --
-	var handle_mat = StandardMaterial3D.new()
-	handle_mat.albedo_color = Color(0.28, 0.16, 0.06)
-	handle_mat.metallic = 0.0
-	handle_mat.roughness = 0.9
+		# -- Handle material (Nordic dark wood) --
+		var handle_mat = StandardMaterial3D.new()
+		handle_mat.albedo_color = Color(0.28, 0.16, 0.06)
+		handle_mat.metallic = 0.0
+		handle_mat.roughness = 0.9
 
-	# -- Rune material (glowing orange inscription) --
-	var rune_mat = StandardMaterial3D.new()
-	rune_mat.albedo_color = Color(1.0, 0.5, 0.1)
-	rune_mat.emission_enabled = true
-	rune_mat.emission = Color(1.0, 0.4, 0.05)
-	rune_mat.emission_energy_multiplier = 0.8
-	rune_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		# -- Rune material (glowing orange inscription) --
+		var rune_mat = StandardMaterial3D.new()
+		rune_mat.albedo_color = Color(1.0, 0.5, 0.1)
+		rune_mat.emission_enabled = true
+		rune_mat.emission = Color(1.0, 0.4, 0.05)
+		rune_mat.emission_energy_multiplier = 0.8
+		rune_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
-	# --- Blade (PrismMesh — triangular, aggressive shape) ---
-	var blade_mi = MeshInstance3D.new()
-	var blade_mesh = PrismMesh.new()
-	blade_mesh.size = Vector3(0.18, 0.42, 0.06)
-	blade_mi.mesh = blade_mesh
-	blade_mi.material_override = blade_mat
-	blade_mi.position = Vector3(0, 0.05, 0)
-	axe_mesh.add_child(blade_mi)
+		# --- Blade (PrismMesh — triangular, aggressive shape) ---
+		var blade_mi = MeshInstance3D.new()
+		var blade_mesh = PrismMesh.new()
+		blade_mesh.size = Vector3(0.18, 0.42, 0.06)
+		blade_mi.mesh = blade_mesh
+		blade_mi.material_override = blade_mat
+		blade_mi.position = Vector3(0, 0.05, 0)
+		axe_mesh.add_child(blade_mi)
 
-	# --- Handle (longer, thicker wooden cylinder) ---
-	var handle_mi = MeshInstance3D.new()
-	var handle_mesh = CylinderMesh.new()
-	handle_mesh.top_radius = 0.025
-	handle_mesh.bottom_radius = 0.03
-	handle_mesh.height = 0.65
-	handle_mesh.radial_segments = 6
-	handle_mi.mesh = handle_mesh
-	handle_mi.material_override = handle_mat
-	handle_mi.position = Vector3(0, -0.28, 0)
-	axe_mesh.add_child(handle_mi)
+		# --- Handle (longer, thicker wooden cylinder) ---
+		var handle_mi = MeshInstance3D.new()
+		var handle_mesh = CylinderMesh.new()
+		handle_mesh.top_radius = 0.025
+		handle_mesh.bottom_radius = 0.03
+		handle_mesh.height = 0.65
+		handle_mesh.radial_segments = 6
+		handle_mi.mesh = handle_mesh
+		handle_mi.material_override = handle_mat
+		handle_mi.position = Vector3(0, -0.28, 0)
+		axe_mesh.add_child(handle_mi)
 
-	# --- Metal cap (pommel adornment on top) ---
-	var cap_mi = MeshInstance3D.new()
-	var cap_mesh = SphereMesh.new()
-	cap_mesh.radius = 0.04
-	cap_mesh.height = 0.08
-	cap_mi.mesh = cap_mesh
-	cap_mi.material_override = blade_mat
-	cap_mi.position = Vector3(0, 0.28, 0)
-	axe_mesh.add_child(cap_mi)
+		# --- Metal cap (pommel adornment on top) ---
+		var cap_mi = MeshInstance3D.new()
+		var cap_mesh = SphereMesh.new()
+		cap_mesh.radius = 0.04
+		cap_mesh.height = 0.08
+		cap_mi.mesh = cap_mesh
+		cap_mi.material_override = blade_mat
+		cap_mi.position = Vector3(0, 0.28, 0)
+		axe_mesh.add_child(cap_mi)
 
-	# --- Rune detail (glowing inscription on blade) ---
-	var rune_mi = MeshInstance3D.new()
-	var rune_mesh = BoxMesh.new()
-	rune_mesh.size = Vector3(0.03, 0.12, 0.08)
-	rune_mi.mesh = rune_mesh
-	rune_mi.material_override = rune_mat
-	rune_mi.position = Vector3(0, 0.05, 0.04)
-	axe_mesh.add_child(rune_mi)
+		# --- Rune detail (glowing inscription on blade) ---
+		var rune_mi = MeshInstance3D.new()
+		var rune_mesh = BoxMesh.new()
+		rune_mesh.size = Vector3(0.03, 0.12, 0.08)
+		rune_mi.mesh = rune_mesh
+		rune_mi.material_override = rune_mat
+		rune_mi.position = Vector3(0, 0.05, 0.04)
+		axe_mesh.add_child(rune_mi)
