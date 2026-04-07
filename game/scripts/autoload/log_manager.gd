@@ -130,12 +130,14 @@ func _notification(what: int) -> void:
 		_flush()
 		if _log_file:
 			_log_file.close()
+			_log_file = null
 	elif what == NOTIFICATION_CRASH:
 		_on_crash("NOTIFICATION_CRASH received")
 	elif what == NOTIFICATION_PREDELETE:
 		_flush()
 		if _log_file:
 			_log_file.close()
+			_log_file = null
 
 
 # ==== PUBLIC API ====

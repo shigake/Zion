@@ -126,8 +126,8 @@ func _build_ui() -> void:
 	# Camera para visualizar o modelo
 	var cam = Camera3D.new()
 	cam.position = Vector3(0, 0.5, 1.5)
-	cam.look_at(Vector3(0, 0.3, 0), Vector3.UP)
 	detail_viewport.add_child(cam)
+	cam.look_at(Vector3(0, 0.3, 0), Vector3.UP)
 	cam.current = true
 
 	# Luz ambiente
@@ -293,7 +293,7 @@ func _on_card_focused(card: Control) -> void:
 		elif card_bottom > scroll.scroll_vertical + scroll.size.y:
 			scroll.scroll_vertical = int(card_bottom - scroll.size.y)
 
-func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool, type_color: Color, type_icon: String) -> void:
+func _show_weapon_details(weapon_id: String, data: Dictionary, is_unlocked: bool, type_color: Color, _type_icon: String) -> void:
 	AudioManager.play_sfx("menu_click")
 
 	# Esconde hint se existir
