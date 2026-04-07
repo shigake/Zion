@@ -37,6 +37,7 @@ var _cached_separation: Vector3 = Vector3.ZERO  # Cached separation vector (upda
 var _cached_enemy_sprite: Node = null  # Cached EnemySprite node reference
 var _cached_enemy_sprite_checked: bool = false  # Whether we've looked up the sprite node
 var _last_hit_direction: Vector3 = Vector3.ZERO  # PRD 45: direction of last hit for ragdoll
+var _last_damage_type: String = "physical"  # PRD 60: element of killing blow
 var _cached_boss_aura: Node = null  # Performance: cached BossAura reference
 var _boss_aura_checked: bool = false
 
@@ -729,6 +730,7 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 		element_mult *= GameManager.summon_damage_mult
 	var final_damage = maxi(1, int(amount * GameManager.get_effective_damage_mult() * resist_mult * crit_mult * element_mult))
 	hp -= final_damage
+	_last_damage_type = damage_type
 	GameManager.total_damage_dealt += final_damage
 	GameManager.record_weapon_damage(GameManager._last_attacking_weapon, final_damage)
 	AchievementManager.on_attack()
@@ -894,7 +896,9 @@ func _die() -> void:
 		# Throttle death particles at low FPS
 		var _fps = Engine.get_frames_per_second()
 		if _fps > 25 or randf() < 0.4:
-			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.3, 0), enemy_color, 6 if _fps < 40 else 12)
+			# PRD 60: Elemental death colors
+			var death_color: Color = GameConstants.DAMAGE_COLORS.get(_last_damage_type, enemy_color)
+			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.3, 0), death_color, 6 if _fps < 40 else 12)
 			# Gold particles for elite enemies
 			if enemy_color == Color(1.0, 0.85, 0.2) or scale.x > 1.2:
 				ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 8)
@@ -921,10 +925,12 @@ func _die() -> void:
 		hitbox.set_deferred("monitorable", false)
 	collision_layer = 0
 	collision_mask = 0
-	# Death animation: ragdoll with directional fly + spin (PRD 45)
+	# Death animation: ragdoll with directional fly + spin (PRD 45 + PRD 60 elemental)
 	var sprite = get_node_or_null("EnemySprite")
 	if sprite:
-		sprite.modulate = Color(10, 10, 10)  # Flash branco mantido
+		# PRD 60: Flash color based on killing element
+		var flash_color: Color = GameConstants.DAMAGE_COLORS.get(_last_damage_type, Color(1, 1, 0.8))
+		sprite.modulate = Color(flash_color.r * 3, flash_color.g * 3, flash_color.b * 3)
 		visible = true  # Garantir visibilidade para ragdoll
 		_play_ragdoll_death(sprite)
 		return  # Don't recycle immediately — tween handles it
@@ -961,10 +967,12 @@ func _play_ragdoll_death(sprite: Node3D) -> void:
 	var target_rot := sprite.rotation + Vector3(0, 0, spin_amount)
 	var duration := GameConstants.RAGDOLL_DURATION
 
-	# Flash branco inicial por 2 frames, depois volta ao normal antes de voar
+	# Flash branco inicial por 2 frames, depois volta ao elemental color antes de voar
 	await get_tree().process_frame
 	await get_tree().process_frame
-	sprite.modulate = Color(1, 1, 1, 1)
+	# PRD 60: tint toward elemental color during death
+	var elem_color: Color = GameConstants.DAMAGE_COLORS.get(_last_damage_type, Color(1, 1, 0.8))
+	sprite.modulate = Color(elem_color.r * 1.5, elem_color.g * 1.5, elem_color.b * 1.5, 1.0)
 
 	var tween := create_tween()
 	tween.set_parallel(true)

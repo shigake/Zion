@@ -13,6 +13,7 @@ signal boss_spawned(boss_name: String)
 signal boss_died(boss_name: String)
 signal boss_phase_changed(boss_name: String, phase: int)
 signal bestiary_milestone_reached(enemy_id: String, kills: int, label: String, crystals: int)
+signal player_took_damage_directional(amount: int, source_pos: Vector3)
 
 # Annulus spawning — constantes centralizadas em GameConstants
 
@@ -54,6 +55,7 @@ var events_triggered: Array[String] = []
 var weapon_damage_dealt: Dictionary = {}
 # Context: set by weapon scripts before dealing damage so enemy_base can attribute it
 var _last_attacking_weapon: String = ""
+var _last_damage_source_pos: Vector3 = Vector3.ZERO
 
 # PRD 28 §4 — Extended run stats tracking
 var overkill_damage: int = 0
@@ -515,6 +517,9 @@ func take_damage(amount: int) -> void:
 	player_hp = maxi(0, player_hp - reduced)
 	total_damage_taken += reduced
 	_no_damage_streak = 0.0  # Reset no-damage streak
+	# PRD 55: Directional damage indicator
+	if _last_damage_source_pos != Vector3.ZERO:
+		player_took_damage_directional.emit(reduced, _last_damage_source_pos)
 	# Near-death tracking (HP < 10%)
 	if player_hp > 0 and player_hp < int(get_effective_max_hp() * 0.1):
 		near_deaths += 1

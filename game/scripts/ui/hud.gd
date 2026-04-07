@@ -120,6 +120,26 @@ func _ready() -> void:
 	# XP bar hidden — player has world-space XP bar below HP near character
 	xp_bar.visible = false
 
+	# PRD 57: Evolution tracker
+	var evo_script = load("res://scripts/ui/evolution_tracker.gd")
+	if evo_script:
+		var evo = Control.new()
+		evo.name = "EvolutionTracker"
+		evo.set_script(evo_script)
+		evo.set_anchors_preset(Control.PRESET_FULL_RECT)
+		evo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(evo)
+
+	# PRD 55: Damage direction indicator
+	var ddi_script = load("res://scripts/ui/damage_direction_indicator.gd")
+	if ddi_script:
+		var ddi = Control.new()
+		ddi.name = "DamageDirectionIndicator"
+		ddi.set_script(ddi_script)
+		ddi.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ddi.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(ddi)
+
 	# Level label styling — prominent gold with outline
 	level_label.add_theme_font_size_override("font_size", 20)
 	level_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))

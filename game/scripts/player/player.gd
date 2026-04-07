@@ -516,7 +516,9 @@ func take_damage(amount: int, source_pos: Vector3 = Vector3.ZERO) -> void:
 		return
 	if _animator:
 		_animator.play_hit()
+	GameManager._last_damage_source_pos = source_pos
 	GameManager.take_damage(amount)
+	GameManager._last_damage_source_pos = Vector3.ZERO
 	can_be_hurt = false
 	hurt_cooldown = GameConstants.PLAYER_HURT_COOLDOWN
 	# Flash vermelho no mesh

@@ -13,6 +13,7 @@ var reduced_flash: bool = false
 var high_contrast: bool = false
 var ui_scale: float = 1.0  # 0.8, 1.0, 1.2, 1.5
 var font_scale: float = 1.0  # 0.8, 1.0, 1.2, 1.5
+var damage_direction_enabled: bool = true  # PRD 55
 
 # Flash rate limiter
 var _flash_count: int = 0
