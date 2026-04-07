@@ -61,6 +61,7 @@ InventoryOverlay="*res://scripts/ui/inventory_overlay.gd"
 ChestManager="*res://scripts/autoload/chest_manager.gd"
 QuestManager="*res://scripts/autoload/quest_manager.gd"
 MiniTutorial="*res://scripts/ui/mini_tutorial.gd"
+EndlessMode="*res://scripts/autoload/endless_mode.gd"
 
 [display]
 
