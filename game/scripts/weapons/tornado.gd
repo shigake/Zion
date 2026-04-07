@@ -91,37 +91,62 @@ class TornadoInstance extends Area3D:
 		shape.shape = sphere
 		add_child(shape)
 
-		# --- Full 3D procedural vortex (no Sprite3D) ---
-		# Layer 1: Main cone — outer vortex
-		_mesh = MeshInstance3D.new()
-		var cone1 = CylinderMesh.new()
-		cone1.top_radius = 0.08
-		cone1.bottom_radius = area_radius * 0.6
-		cone1.height = 2.2
-		cone1.radial_segments = 10
-		_mesh.mesh = cone1
-		_mesh.position.y = 1.1
-		var mat1 = StandardMaterial3D.new()
-		mat1.albedo_color = Color(0.5, 0.8, 1.0, 0.28)
-		mat1.emission_enabled = true
-		mat1.emission = Color(0.4, 0.7, 1.0)
-		mat1.emission_energy_multiplier = 2.0
-		mat1.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat1.cull_mode = BaseMaterial3D.CULL_DISABLED
-		_mesh.material_override = mat1
-		add_child(_mesh)
+		# --- 3D spiral vortex model ---
+		# Load imported tornado model (double helix spiral)
+		var _tornado_scene_path = "res://assets/models/tornado_vortex.glb"
+		if ResourceLoader.exists(_tornado_scene_path):
+			var tornado_scene = load(_tornado_scene_path)
+			_mesh = tornado_scene.instantiate() as Node3D
+			# Scale to match area
+			var vortex_scale = area_radius * 0.5
+			_mesh.scale = Vector3(vortex_scale, 1.0, vortex_scale)
+			# Apply ice material with transparency
+			var mat1 = StandardMaterial3D.new()
+			mat1.albedo_color = Color(0.3, 0.9, 1.0, 0.45)
+			mat1.emission_enabled = true
+			mat1.emission = Color(0.2, 0.85, 1.0)
+			mat1.emission_energy_multiplier = 4.0
+			mat1.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat1.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat1.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			for child in _mesh.get_children():
+				if child is MeshInstance3D:
+					child.material_override = mat1
+				for grandchild in child.get_children():
+					if grandchild is MeshInstance3D:
+						grandchild.material_override = mat1
+			add_child(_mesh)
+		else:
+			# Fallback: original cone mesh
+			_mesh = MeshInstance3D.new()
+			var cone1 = CylinderMesh.new()
+			cone1.top_radius = 0.08
+			cone1.bottom_radius = area_radius * 0.6
+			cone1.height = 2.2
+			cone1.radial_segments = 10
+			_mesh.mesh = cone1
+			_mesh.position.y = 1.1
+			var mat1 = StandardMaterial3D.new()
+			mat1.albedo_color = Color(0.5, 0.8, 1.0, 0.28)
+			mat1.emission_enabled = true
+			mat1.emission = Color(0.4, 0.7, 1.0)
+			mat1.emission_energy_multiplier = 2.0
+			mat1.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat1.cull_mode = BaseMaterial3D.CULL_DISABLED
+			_mesh.material_override = mat1
+			add_child(_mesh)
 
-		# Layer 2: Inner ribbon — counter-rotating for spiral illusion
+		# Layer 2: Inner glow cone (kept for volumetric fill)
 		_ribbon_mesh = MeshInstance3D.new()
 		var cone2 = CylinderMesh.new()
-		cone2.top_radius = 0.12
-		cone2.bottom_radius = area_radius * 0.35
-		cone2.height = 1.4
+		cone2.top_radius = 0.06
+		cone2.bottom_radius = area_radius * 0.25
+		cone2.height = 1.8
 		cone2.radial_segments = 8
 		_ribbon_mesh.mesh = cone2
-		_ribbon_mesh.position.y = 0.7
+		_ribbon_mesh.position.y = 0.9
 		var mat2 = StandardMaterial3D.new()
-		mat2.albedo_color = Color(0.6, 0.9, 1.0, 0.18)
+		mat2.albedo_color = Color(0.6, 0.9, 1.0, 0.12)
 		mat2.emission_enabled = true
 		mat2.emission = Color(0.55, 0.85, 1.0)
 		mat2.emission_energy_multiplier = 1.5
