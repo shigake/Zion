@@ -69,6 +69,18 @@ var _already_shown: bool = false
 func _show() -> void:
 	if _already_shown:
 		return
+	# PRD 61: Intercept victory to offer endless mode
+	if GameManager.is_victory and not EndlessMode.is_endless_active:
+		_already_shown = true
+		# Show endless prompt instead of game over
+		var prompt_script = load("res://scripts/ui/endless_prompt.gd")
+		if prompt_script:
+			var prompt = Control.new()
+			prompt.set_script(prompt_script)
+			get_tree().current_scene.add_child(prompt)
+			# Reset flag so game_over can be shown later (when player chooses to end or dies in endless)
+			_already_shown = false
+			return
 	_already_shown = true
 	GameManager.end_run()
 	AchievementManager.check_achievements()
@@ -256,6 +268,22 @@ func _show() -> void:
 
 	# Seed display
 	_update_seed_display()
+
+	# PRD 61: Endless mode stats
+	if EndlessMode.is_endless_active and EndlessMode.endless_wave > 0:
+		var endless_label = Label.new()
+		endless_label.add_theme_font_size_override("font_size", 14)
+		endless_label.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
+		endless_label.add_theme_constant_override("outline_size", 2)
+		endless_label.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
+		var classification = EndlessMode.get_classification()
+		var endless_time = GameManager.game_time - EndlessMode.endless_start_time
+		var et = int(endless_time)
+		endless_label.text = "Fenda infinita: onda %d | %02d:%02d | %s" % [
+			EndlessMode.endless_wave, et / 60, et % 60, classification
+		]
+		_content_vbox.add_child(endless_label)
+		EndlessMode.save_endless_result()
 
 	if GameManager.is_victory:
 		AudioManager.play_music("victory")

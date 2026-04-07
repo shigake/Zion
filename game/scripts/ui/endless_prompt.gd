@@ -179,7 +179,8 @@ func _on_end_run() -> void:
 	hide_prompt()
 	# Fluxo normal de vitoria
 	GameManager.is_victory = true
-	GameManager.end_run()
+	GameManager.is_game_over = true
+	GameManager.game_over.emit()
 
 
 func _on_fenda_infinita() -> void:

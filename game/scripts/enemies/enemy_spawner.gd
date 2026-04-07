@@ -155,6 +155,14 @@ func _spawn_wave(mult: float) -> void:
 		if minute >= GameConstants.ELITE_MIN_MINUTE and rng.randf() < GameConstants.ELITE_SPAWN_CHANCE:
 			_make_elite(enemy)
 
+		# PRD 61: Endless mode scaling
+		if EndlessMode.is_endless_active:
+			var em := EndlessMode.get_endless_multipliers()
+			enemy.max_hp = int(enemy.max_hp * em["hp_mult"])
+			enemy.hp = enemy.max_hp
+			enemy.damage = int(enemy.damage * em["dmg_mult"])
+			enemy.speed *= em["speed_mult"]
+
 		add_child(enemy)
 		enemy.global_position = spawn_pos
 		GameManager.enemies_alive += 1

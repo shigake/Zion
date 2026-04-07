@@ -730,6 +730,7 @@ func reset() -> void:
 	AchievementManager.reset_run()
 	ChestManager.reset()
 	QuestManager.reset()
+	EndlessMode.reset()
 	game_time = 0.0
 	enemies_alive = 0
 	active_pickup_count = 0
