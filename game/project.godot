@@ -43,6 +43,7 @@ AccessibilityManager="*res://scripts/autoload/accessibility_manager.gd"
 KeybindingManager="*res://scripts/autoload/keybinding_manager.gd"
 LocaleManager="*res://scripts/autoload/locale_manager.gd"
 VisualSetup="*res://scripts/effects/visual_setup.gd"
+SynergyVFX="*res://scripts/effects/synergy_vfx.gd"
 ModelFactory="*res://scripts/effects/model_factory.gd"
 SteamManager="*res://scripts/autoload/steam_manager.gd"
 AchievementManager="*res://scripts/autoload/achievement_manager.gd"
@@ -59,6 +60,7 @@ BossDialogue="*res://scripts/ui/boss_dialogue.gd"
 InventoryOverlay="*res://scripts/ui/inventory_overlay.gd"
 ChestManager="*res://scripts/autoload/chest_manager.gd"
 QuestManager="*res://scripts/autoload/quest_manager.gd"
+MiniTutorial="*res://scripts/ui/mini_tutorial.gd"
 
 [display]
 
