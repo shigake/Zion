@@ -969,62 +969,71 @@ func _gen_level_up_flash() -> void:
 	var img = _img16()
 	var gold = Color(1.0, 0.85, 0.15)
 	var gold_hi = Color(1.0, 0.95, 0.5)
-	var gold_dk = Color(0.85, 0.65, 0.05)
+	var gold_core = Color(1.0, 1.0, 0.8)
+	var gold_dk = Color(0.9, 0.7, 0.1)
 
 	# Starburst pattern (8 pointed)
-	# Center
-	_fill(img, 7, 7, 2, 2, gold_hi)
+	# Center glow
+	_fill(img, 6, 6, 4, 4, Color(1.0, 0.9, 0.3, 0.4))
+	_fill(img, 7, 7, 2, 2, gold_core)
 
-	# Cardinal spikes (longer)
+	# Cardinal spikes (longer, thicker)
 	for i in range(1, 7):
-		var alpha = 1.0 - i * 0.12
+		var alpha = maxf(1.0 - i * 0.1, 0.35)
 		var c = Color(gold.r, gold.g, gold.b, alpha)
 		_px(img, 7, 7 - i, c)
+		_px(img, 8, 7 - i, c)
 		_px(img, 8, 8 + i, c)
+		_px(img, 7, 8 + i, c)
 		_px(img, 7 - i, 8, c)
+		_px(img, 7 - i, 7, c)
 		_px(img, 8 + i, 7, c)
+		_px(img, 8 + i, 8, c)
 	# Diagonal spikes (shorter)
 	for i in range(1, 5):
-		var alpha = 1.0 - i * 0.15
+		var alpha = maxf(1.0 - i * 0.12, 0.4)
 		var c = Color(gold_dk.r, gold_dk.g, gold_dk.b, alpha)
 		_px(img, 7 - i, 7 - i, c)
 		_px(img, 8 + i, 8 + i, c)
 		_px(img, 8 + i, 7 - i, c)
 		_px(img, 7 - i, 8 + i, c)
 	# Extra glow around center
-	_px(img, 6, 7, gold)
-	_px(img, 9, 8, gold)
-	_px(img, 7, 6, gold)
-	_px(img, 8, 9, gold)
+	_px(img, 6, 7, gold_hi)
+	_px(img, 9, 8, gold_hi)
+	_px(img, 7, 6, gold_hi)
+	_px(img, 8, 9, gold_hi)
+	_px(img, 6, 8, gold)
+	_px(img, 9, 7, gold)
 
 	_save(img, "res://assets/sprites/effects/level_up_flash.png")
 
 func _gen_dash_trail() -> void:
 	var img = _img16()
-	var blue = Color(0.3, 0.6, 1.0)
-	var blue_hi = Color(0.5, 0.8, 1.0)
-	var blue_fade = Color(0.2, 0.4, 0.8, 0.5)
+	var cyan_core = Color(0.6, 0.95, 1.0, 1.0)
+	var cyan = Color(0.3, 0.7, 1.0, 0.9)
+	var cyan_mid = Color(0.25, 0.55, 0.9, 0.75)
+	var cyan_fade = Color(0.2, 0.4, 0.8, 0.5)
 
 	# Horizontal streak, bright on right fading left
 	# Core streak (right/front is bright)
-	_fill(img, 10, 7, 5, 2, blue_hi)
-	_fill(img, 6, 7, 4, 2, blue)
-	_fill(img, 2, 7, 4, 2, blue_fade)
+	_fill(img, 10, 7, 5, 2, cyan_core)
+	_fill(img, 6, 7, 4, 2, cyan)
+	_fill(img, 2, 7, 4, 2, cyan_mid)
 
 	# Wider middle section
-	_fill(img, 8, 6, 6, 1, blue)
-	_fill(img, 8, 9, 6, 1, blue)
+	_fill(img, 8, 6, 6, 1, cyan)
+	_fill(img, 8, 9, 6, 1, cyan)
 	# Tapered front
-	_px(img, 15, 7, blue_hi)
-	_px(img, 15, 8, blue)
+	_px(img, 15, 7, cyan_core)
+	_px(img, 15, 8, cyan)
 	# Faded tail
-	_px(img, 1, 7, Color(0.2, 0.4, 0.8, 0.25))
-	_px(img, 1, 8, Color(0.2, 0.4, 0.8, 0.25))
-	_px(img, 0, 8, Color(0.2, 0.4, 0.8, 0.1))
+	_px(img, 1, 7, cyan_fade)
+	_px(img, 1, 8, cyan_fade)
+	_px(img, 0, 8, Color(0.2, 0.4, 0.8, 0.3))
 
 	# Speed lines above and below
-	_fill(img, 3, 5, 4, 1, Color(0.3, 0.5, 0.9, 0.3))
-	_fill(img, 4, 10, 3, 1, Color(0.3, 0.5, 0.9, 0.3))
+	_fill(img, 3, 5, 4, 1, Color(0.3, 0.6, 0.9, 0.55))
+	_fill(img, 4, 10, 3, 1, Color(0.3, 0.6, 0.9, 0.55))
 
 	_save(img, "res://assets/sprites/effects/dash_trail.png")
 
