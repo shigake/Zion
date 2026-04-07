@@ -45,44 +45,57 @@ func _place_totem(level: int) -> void:
 	var totem = Node3D.new()
 	totem.name = "Totem"
 
-	# --- Full 3D procedural totem (no Sprite3D) ---
-	# Base stake (wooden pole)
-	var stake_mi = MeshInstance3D.new()
-	var stake_mesh = CylinderMesh.new()
-	stake_mesh.top_radius = 0.06
-	stake_mesh.bottom_radius = 0.10
-	stake_mesh.height = 0.6
-	stake_mesh.radial_segments = 6
-	stake_mi.mesh = stake_mesh
-	stake_mi.position.y = 0.3
-	var stake_mat = StandardMaterial3D.new()
-	stake_mat.albedo_color = Color(0.35, 0.2, 0.08)
-	stake_mat.roughness = 0.9
-	stake_mat.metallic = 0.0
-	stake_mi.material_override = stake_mat
-	stake_mi.name = "TotemStake"
-	totem.add_child(stake_mi)
-
-	# Central orb (electric crystal — pulsing)
-	var orb_mi = MeshInstance3D.new()
-	var orb_mesh = SphereMesh.new()
-	orb_mesh.radius = 0.22
-	orb_mesh.height = 0.44
-	orb_mesh.radial_segments = 8
-	orb_mesh.rings = 4
-	orb_mi.mesh = orb_mesh
-	orb_mi.position.y = 0.75
-	var orb_mat = StandardMaterial3D.new()
-	orb_mat.albedo_color = Color(0.3, 0.7, 1.0, 0.85)
-	orb_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	orb_mat.emission_enabled = true
-	orb_mat.emission = Color(0.4, 0.8, 1.0)
-	orb_mat.emission_energy_multiplier = 2.0
-	orb_mat.metallic = 0.5
-	orb_mat.roughness = 0.2
-	orb_mi.material_override = orb_mat
-	orb_mi.name = "TotemOrb"
-	totem.add_child(orb_mi)
+	# --- 3D Totem model ---
+	var _totem_scene_path = "res://assets/models/electric_totem.glb"
+	if ResourceLoader.exists(_totem_scene_path):
+		var totem_scene = load(_totem_scene_path)
+		var totem_model = totem_scene.instantiate()
+		totem_model.name = "TotemModel"
+		totem_model.scale = Vector3(0.8, 0.8, 0.8)
+		# Apply electric blue glow material
+		var totem_mat = StandardMaterial3D.new()
+		totem_mat.albedo_color = Color(0.35, 0.25, 0.12)
+		totem_mat.roughness = 0.7
+		totem_mat.emission_enabled = true
+		totem_mat.emission = Color(0.3, 0.7, 1.0)
+		totem_mat.emission_energy_multiplier = 2.0
+		for child in totem_model.get_children():
+			if child is MeshInstance3D:
+				child.material_override = totem_mat
+			for gc in child.get_children():
+				if gc is MeshInstance3D:
+					gc.material_override = totem_mat
+		totem.add_child(totem_model)
+	else:
+		# Fallback: original stake + orb
+		var stake_mi = MeshInstance3D.new()
+		var stake_mesh = CylinderMesh.new()
+		stake_mesh.top_radius = 0.06
+		stake_mesh.bottom_radius = 0.10
+		stake_mesh.height = 0.6
+		stake_mi.mesh = stake_mesh
+		stake_mi.position.y = 0.3
+		var stake_mat = StandardMaterial3D.new()
+		stake_mat.albedo_color = Color(0.35, 0.2, 0.08)
+		stake_mat.roughness = 0.9
+		stake_mi.material_override = stake_mat
+		stake_mi.name = "TotemStake"
+		totem.add_child(stake_mi)
+		var orb_mi = MeshInstance3D.new()
+		var orb_mesh = SphereMesh.new()
+		orb_mesh.radius = 0.22
+		orb_mesh.height = 0.44
+		orb_mi.mesh = orb_mesh
+		orb_mi.position.y = 0.75
+		var orb_mat = StandardMaterial3D.new()
+		orb_mat.albedo_color = Color(0.3, 0.7, 1.0, 0.85)
+		orb_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		orb_mat.emission_enabled = true
+		orb_mat.emission = Color(0.4, 0.8, 1.0)
+		orb_mat.emission_energy_multiplier = 2.0
+		orb_mi.material_override = orb_mat
+		orb_mi.name = "TotemOrb"
+		totem.add_child(orb_mi)
 
 	# Damage area
 	var area = Area3D.new()

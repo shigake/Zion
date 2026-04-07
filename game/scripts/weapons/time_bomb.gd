@@ -54,22 +54,57 @@ func _create_bomb_node(level: int) -> Node3D:
 	bomb.set_meta("fuse_time", FUSE_TIME)
 	bomb.set_meta("explosion_radius", EXPLOSION_RADIUS)
 
-	# Child 0: Bomb body (dark red/black metallic sphere)
-	var mesh_inst = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.3
-	sphere.height = 0.6
-	mesh_inst.mesh = sphere
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.3, 0.05, 0.05, 1.0)
-	mat.metallic = 0.5
-	mat.emission_enabled = true
-	mat.emission = Color(0.8, 0.1, 0.1)
-	mat.emission_energy_multiplier = 1.0
-	mesh_inst.material_override = mat
-	bomb.add_child(mesh_inst)
+	# Child 0: Bomb body — 3D model or fallback sphere
+	var _bomb_scene_path = "res://assets/models/time_bomb.glb"
+	if ResourceLoader.exists(_bomb_scene_path):
+		var bomb_scene = load(_bomb_scene_path)
+		var bomb_model = bomb_scene.instantiate()
+		bomb_model.name = "BombModel"
+		bomb_model.scale = Vector3(0.35, 0.35, 0.35)
+		# Apply dark metallic material with red glow
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.25, 0.05, 0.05, 1.0)
+		mat.metallic = 0.6
+		mat.roughness = 0.3
+		mat.emission_enabled = true
+		mat.emission = Color(0.9, 0.15, 0.1)
+		mat.emission_energy_multiplier = 2.0
+		for child in bomb_model.get_children():
+			if child is MeshInstance3D:
+				child.material_override = mat
+			for gc in child.get_children():
+				if gc is MeshInstance3D:
+					gc.material_override = mat
+		bomb.add_child(bomb_model)
+	else:
+		var mesh_inst = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.3
+		sphere.height = 0.6
+		mesh_inst.mesh = sphere
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.3, 0.05, 0.05, 1.0)
+		mat.metallic = 0.5
+		mat.emission_enabled = true
+		mat.emission = Color(0.8, 0.1, 0.1)
+		mat.emission_energy_multiplier = 1.0
+		mesh_inst.material_override = mat
+		bomb.add_child(mesh_inst)
+		# Fuse cylinder (only for fallback — model has its own fuse)
+		var fuse_mesh = MeshInstance3D.new()
+		var fuse_cyl = CylinderMesh.new()
+		fuse_cyl.top_radius = 0.01
+		fuse_cyl.bottom_radius = 0.01
+		fuse_cyl.height = 0.15
+		fuse_mesh.mesh = fuse_cyl
+		var fuse_mat = StandardMaterial3D.new()
+		fuse_mat.albedo_color = Color(0.15, 0.1, 0.05, 1.0)
+		fuse_mesh.material_override = fuse_mat
+		fuse_mesh.position = Vector3(0.02, 0.35, 0)
+		fuse_mesh.rotation.z = 0.3
+		bomb.add_child(fuse_mesh)
 
-	# Child 1: Timer label 3D
+	# Timer label 3D
 	var label = Label3D.new()
 	label.text = str(int(FUSE_TIME))
 	label.font_size = 32
@@ -77,20 +112,6 @@ func _create_bomb_node(level: int) -> Node3D:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.modulate = Color(1.0, 0.8, 0.0)
 	bomb.add_child(label)
-
-	# Child 2: Fuse cylinder on top of the bomb
-	var fuse_mesh = MeshInstance3D.new()
-	var fuse_cyl = CylinderMesh.new()
-	fuse_cyl.top_radius = 0.01
-	fuse_cyl.bottom_radius = 0.01
-	fuse_cyl.height = 0.15
-	fuse_mesh.mesh = fuse_cyl
-	var fuse_mat = StandardMaterial3D.new()
-	fuse_mat.albedo_color = Color(0.15, 0.1, 0.05, 1.0)
-	fuse_mesh.material_override = fuse_mat
-	fuse_mesh.position = Vector3(0.02, 0.35, 0)
-	fuse_mesh.rotation.z = 0.3  # Slight curve/tilt
-	bomb.add_child(fuse_mesh)
 
 	# Child 3: Fuse spark particles at fuse tip
 	var spark_particles = GPUParticles3D.new()

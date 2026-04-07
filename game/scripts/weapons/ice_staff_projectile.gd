@@ -68,25 +68,46 @@ func _setup_crystal_model() -> void:
 	if existing_mesh:
 		existing_mesh.visible = false
 
-	# Diamond crystal shape: front cone + back cone
-	_crystal_model = Node3D.new()
-	_crystal_model.name = "CrystalModel"
-
-	var front = MeshInstance3D.new()
-	front.mesh = _shared_front_cone
-	front.material_override = _shared_ice_mat
-	front.rotation.x = -PI / 2.0  # Point forward
-	front.position.z = 0.075
-	_crystal_model.add_child(front)
-
-	var back = MeshInstance3D.new()
-	back.mesh = _shared_back_cone
-	back.material_override = _shared_ice_mat
-	back.rotation.x = -PI / 2.0
-	back.position.z = -0.075
-	_crystal_model.add_child(back)
-
-	add_child(_crystal_model)
+	# Ice crystal model — imported 3D or fallback cones
+	var _crystal_scene_path = "res://assets/models/ice_crystal.glb"
+	if ResourceLoader.exists(_crystal_scene_path):
+		var crystal_scene = load(_crystal_scene_path)
+		_crystal_model = crystal_scene.instantiate()
+		_crystal_model.name = "CrystalModel"
+		_crystal_model.scale = Vector3(0.2, 0.2, 0.2)
+		# Vibrant ice blue material
+		var ice_mat = StandardMaterial3D.new()
+		ice_mat.albedo_color = Color(0.3, 0.85, 1.0, 0.9)
+		ice_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		ice_mat.metallic = 0.5
+		ice_mat.roughness = 0.08
+		ice_mat.emission_enabled = true
+		ice_mat.emission = Color(0.2, 0.8, 1.0)
+		ice_mat.emission_energy_multiplier = 3.0
+		for child in _crystal_model.get_children():
+			if child is MeshInstance3D:
+				child.material_override = ice_mat
+			for gc in child.get_children():
+				if gc is MeshInstance3D:
+					gc.material_override = ice_mat
+		add_child(_crystal_model)
+	else:
+		# Fallback: diamond cones
+		_crystal_model = Node3D.new()
+		_crystal_model.name = "CrystalModel"
+		var front = MeshInstance3D.new()
+		front.mesh = _shared_front_cone
+		front.material_override = _shared_ice_mat
+		front.rotation.x = -PI / 2.0
+		front.position.z = 0.075
+		_crystal_model.add_child(front)
+		var back = MeshInstance3D.new()
+		back.mesh = _shared_back_cone
+		back.material_override = _shared_ice_mat
+		back.rotation.x = -PI / 2.0
+		back.position.z = -0.075
+		_crystal_model.add_child(back)
+		add_child(_crystal_model)
 
 	# Ice trail particles
 	_trail_particles = GPUParticles3D.new()

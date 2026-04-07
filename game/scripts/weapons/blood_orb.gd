@@ -157,42 +157,71 @@ class BloodOrbInstance extends Area3D:
 		shape.shape = sphere
 		add_child(shape)
 
-		# --- Full 3D blood orb (no Sprite3D) ---
-		# Layer 1: Core sphere — deep blood-red with emission
-		_core_mesh = MeshInstance3D.new()
-		var core_sm = SphereMesh.new()
-		core_sm.radius = 0.32
-		core_sm.height = 0.64
-		core_sm.radial_segments = 10
-		core_sm.rings = 5
-		_core_mesh.mesh = core_sm
-		var core_mat = StandardMaterial3D.new()
-		core_mat.albedo_color = Color(0.55, 0.04, 0.08)
-		core_mat.metallic = 0.3
-		core_mat.roughness = 0.2
-		core_mat.emission_enabled = true
-		core_mat.emission = Color(0.9, 0.05, 0.1)
-		core_mat.emission_energy_multiplier = 1.5
-		_core_mesh.material_override = core_mat
-		add_child(_core_mesh)
-
-		# Layer 2: Translucent shell — slow rotating outer layer
-		_shell_mesh = MeshInstance3D.new()
-		var shell_sm = SphereMesh.new()
-		shell_sm.radius = 0.44
-		shell_sm.height = 0.88
-		shell_sm.radial_segments = 8
-		shell_sm.rings = 4
-		_shell_mesh.mesh = shell_sm
-		var shell_mat = StandardMaterial3D.new()
-		shell_mat.albedo_color = Color(0.7, 0.1, 0.15, 0.22)
-		shell_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		shell_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		shell_mat.emission_enabled = true
-		shell_mat.emission = Color(0.8, 0.1, 0.1)
-		shell_mat.emission_energy_multiplier = 0.5
-		_shell_mesh.material_override = shell_mat
-		add_child(_shell_mesh)
+		# --- 3D Blood Orb model ---
+		var _orb_scene_path = "res://assets/models/blood_orb.glb"
+		if ResourceLoader.exists(_orb_scene_path):
+			var orb_scene = load(_orb_scene_path)
+			_core_mesh = orb_scene.instantiate() as Node3D
+			_core_mesh.scale = Vector3(0.35, 0.35, 0.35)
+			# Apply vibrant blood material
+			var core_mat = StandardMaterial3D.new()
+			core_mat.albedo_color = Color(0.7, 0.04, 0.1)
+			core_mat.metallic = 0.4
+			core_mat.roughness = 0.15
+			core_mat.emission_enabled = true
+			core_mat.emission = Color(1.0, 0.05, 0.15)
+			core_mat.emission_energy_multiplier = 3.0
+			for child in _core_mesh.get_children():
+				if child is MeshInstance3D:
+					child.material_override = core_mat
+				for gc in child.get_children():
+					if gc is MeshInstance3D:
+						gc.material_override = core_mat
+			add_child(_core_mesh)
+			# Shell: translucent outer glow
+			_shell_mesh = MeshInstance3D.new()
+			var shell_sm = SphereMesh.new()
+			shell_sm.radius = 0.44
+			shell_sm.height = 0.88
+			shell_sm.radial_segments = 8
+			shell_sm.rings = 4
+			_shell_mesh.mesh = shell_sm
+			var shell_mat = StandardMaterial3D.new()
+			shell_mat.albedo_color = Color(0.9, 0.1, 0.15, 0.18)
+			shell_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			shell_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			shell_mat.emission_enabled = true
+			shell_mat.emission = Color(1.0, 0.1, 0.1)
+			shell_mat.emission_energy_multiplier = 1.0
+			_shell_mesh.material_override = shell_mat
+			add_child(_shell_mesh)
+		else:
+			# Fallback: original spheres
+			_core_mesh = MeshInstance3D.new()
+			var core_sm = SphereMesh.new()
+			core_sm.radius = 0.32
+			core_sm.height = 0.64
+			_core_mesh.mesh = core_sm
+			var core_mat = StandardMaterial3D.new()
+			core_mat.albedo_color = Color(0.7, 0.04, 0.1)
+			core_mat.emission_enabled = true
+			core_mat.emission = Color(1.0, 0.05, 0.15)
+			core_mat.emission_energy_multiplier = 3.0
+			_core_mesh.material_override = core_mat
+			add_child(_core_mesh)
+			_shell_mesh = MeshInstance3D.new()
+			var shell_sm = SphereMesh.new()
+			shell_sm.radius = 0.44
+			shell_sm.height = 0.88
+			_shell_mesh.mesh = shell_sm
+			var shell_mat = StandardMaterial3D.new()
+			shell_mat.albedo_color = Color(0.9, 0.1, 0.15, 0.18)
+			shell_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			shell_mat.emission_enabled = true
+			shell_mat.emission = Color(1.0, 0.1, 0.1)
+			shell_mat.emission_energy_multiplier = 1.0
+			_shell_mesh.material_override = shell_mat
+			add_child(_shell_mesh)
 
 		# Layer 3: Orbiting droplets (4 small spheres)
 		for i in range(4):

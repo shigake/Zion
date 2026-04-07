@@ -31,61 +31,72 @@ func _ready() -> void:
 	_setup_lance_mesh()
 
 func _setup_lance_mesh() -> void:
-	_lance_model = Node3D.new()
-	_lance_model.name = "LanceModel"
-	_lance_model.visible = false
-
-	# Gold metallic material (blade + cross-guard)
-	var gold_mat = StandardMaterial3D.new()
-	gold_mat.albedo_color = Color(0.85, 0.75, 0.2)
-	gold_mat.metallic = 0.9
-	gold_mat.roughness = 0.15
-	gold_mat.emission_enabled = true
-	gold_mat.emission = Color(1.0, 0.9, 0.35)
-	gold_mat.emission_energy_multiplier = 0.8
-
-	# Dark wood material (shaft)
-	var wood_mat = StandardMaterial3D.new()
-	wood_mat.albedo_color = Color(0.3, 0.18, 0.08)
-	wood_mat.roughness = 0.9
-	wood_mat.metallic = 0.0
-
-	# --- Shaft (long wood pole) ---
-	var shaft_mi = MeshInstance3D.new()
-	var shaft_mesh = CylinderMesh.new()
-	shaft_mesh.top_radius = 0.025
-	shaft_mesh.bottom_radius = 0.025
-	shaft_mesh.height = 1.6
-	shaft_mesh.radial_segments = 6
-	shaft_mi.mesh = shaft_mesh
-	shaft_mi.material_override = wood_mat
-	shaft_mi.rotation.x = PI / 2.0  # Align along Z axis
-	shaft_mi.position = Vector3(0, 0, -0.5)
-	_lance_model.add_child(shaft_mi)
-
-	# --- Blade (pointed cone tip) ---
-	var blade_mi = MeshInstance3D.new()
-	var blade_mesh = CylinderMesh.new()
-	blade_mesh.top_radius = 0.0
-	blade_mesh.bottom_radius = 0.07
-	blade_mesh.height = 0.45
-	blade_mesh.radial_segments = 6
-	blade_mi.mesh = blade_mesh
-	blade_mi.material_override = gold_mat
-	blade_mi.rotation.x = -PI / 2.0  # Point forward (negative Z)
-	blade_mi.position = Vector3(0, 0, -1.45)
-	_lance_model.add_child(blade_mi)
-
-	# --- Cross-guard ---
-	var guard_mi = MeshInstance3D.new()
-	var guard_mesh = BoxMesh.new()
-	guard_mesh.size = Vector3(0.35, 0.04, 0.04)
-	guard_mi.mesh = guard_mesh
-	guard_mi.material_override = gold_mat
-	guard_mi.position = Vector3(0, 0, -0.15)
-	_lance_model.add_child(guard_mi)
-
-	thrust_area.add_child(_lance_model)
+	var _lance_scene_path = "res://assets/models/crystal_lance.glb"
+	if ResourceLoader.exists(_lance_scene_path):
+		var lance_scene = load(_lance_scene_path)
+		_lance_model = lance_scene.instantiate()
+		_lance_model.name = "LanceModel"
+		_lance_model.visible = false
+		_lance_model.scale = Vector3(1.2, 1.2, 1.2)
+		_lance_model.rotation.x = PI / 2.0  # Align along Z axis
+		# Apply crystal blue + gold material
+		var lance_mat = StandardMaterial3D.new()
+		lance_mat.albedo_color = Color(0.7, 0.65, 0.3)
+		lance_mat.metallic = 0.8
+		lance_mat.roughness = 0.15
+		lance_mat.emission_enabled = true
+		lance_mat.emission = Color(0.4, 0.7, 1.0)
+		lance_mat.emission_energy_multiplier = 1.5
+		for child in _lance_model.get_children():
+			if child is MeshInstance3D:
+				child.material_override = lance_mat
+			for gc in child.get_children():
+				if gc is MeshInstance3D:
+					gc.material_override = lance_mat
+		thrust_area.add_child(_lance_model)
+	else:
+		# Fallback: procedural lance
+		_lance_model = Node3D.new()
+		_lance_model.name = "LanceModel"
+		_lance_model.visible = false
+		var gold_mat = StandardMaterial3D.new()
+		gold_mat.albedo_color = Color(0.85, 0.75, 0.2)
+		gold_mat.metallic = 0.9
+		gold_mat.roughness = 0.15
+		gold_mat.emission_enabled = true
+		gold_mat.emission = Color(1.0, 0.9, 0.35)
+		gold_mat.emission_energy_multiplier = 0.8
+		var wood_mat = StandardMaterial3D.new()
+		wood_mat.albedo_color = Color(0.3, 0.18, 0.08)
+		wood_mat.roughness = 0.9
+		var shaft_mi = MeshInstance3D.new()
+		var shaft_mesh = CylinderMesh.new()
+		shaft_mesh.top_radius = 0.025
+		shaft_mesh.bottom_radius = 0.025
+		shaft_mesh.height = 1.6
+		shaft_mi.mesh = shaft_mesh
+		shaft_mi.material_override = wood_mat
+		shaft_mi.rotation.x = PI / 2.0
+		shaft_mi.position = Vector3(0, 0, -0.5)
+		_lance_model.add_child(shaft_mi)
+		var blade_mi = MeshInstance3D.new()
+		var blade_mesh = CylinderMesh.new()
+		blade_mesh.top_radius = 0.0
+		blade_mesh.bottom_radius = 0.07
+		blade_mesh.height = 0.45
+		blade_mi.mesh = blade_mesh
+		blade_mi.material_override = gold_mat
+		blade_mi.rotation.x = -PI / 2.0
+		blade_mi.position = Vector3(0, 0, -1.45)
+		_lance_model.add_child(blade_mi)
+		var guard_mi = MeshInstance3D.new()
+		var guard_mesh = BoxMesh.new()
+		guard_mesh.size = Vector3(0.35, 0.04, 0.04)
+		guard_mi.mesh = guard_mesh
+		guard_mi.material_override = gold_mat
+		guard_mi.position = Vector3(0, 0, -0.15)
+		_lance_model.add_child(guard_mi)
+		thrust_area.add_child(_lance_model)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():
