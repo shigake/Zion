@@ -34,6 +34,20 @@ func _get_player_node() -> Node3D:
 		return candidate
 	return null
 
+static func _add_emission_to_model(model: Node3D, color: Color, strength: float) -> void:
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			for si in range(mi.get_surface_override_material_count()):
+				var base_mat = mi.mesh.surface_get_material(si)
+				if base_mat is StandardMaterial3D:
+					var mat = base_mat.duplicate() as StandardMaterial3D
+					mat.emission_enabled = true
+					mat.emission = color
+					mat.emission_energy_multiplier = strength
+					mi.set_surface_override_material(si, mat)
+		_add_emission_to_model(child, color, strength)
+
 func _place_totem(level: int) -> void:
 	if not is_inside_tree():
 		return
@@ -52,19 +66,8 @@ func _place_totem(level: int) -> void:
 		var totem_model = totem_scene.instantiate()
 		totem_model.name = "TotemModel"
 		totem_model.scale = Vector3(0.8, 0.8, 0.8)
-		# Apply electric blue glow material
-		var totem_mat = StandardMaterial3D.new()
-		totem_mat.albedo_color = Color(0.35, 0.25, 0.12)
-		totem_mat.roughness = 0.7
-		totem_mat.emission_enabled = true
-		totem_mat.emission = Color(0.3, 0.7, 1.0)
-		totem_mat.emission_energy_multiplier = 2.0
-		for child in totem_model.get_children():
-			if child is MeshInstance3D:
-				child.material_override = totem_mat
-			for gc in child.get_children():
-				if gc is MeshInstance3D:
-					gc.material_override = totem_mat
+		# Keep original textures, add electric blue emission glow
+		_add_emission_to_model(totem_model, Color(0.3, 0.8, 1.0), 2.0)
 		totem.add_child(totem_model)
 	else:
 		# Fallback: original stake + orb

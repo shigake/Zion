@@ -5,6 +5,20 @@ extends Node3D
 var attack_timer: float = 0.0
 var active_pools: Array = []
 
+static func _add_emission_recursive(model: Node3D, color: Color, strength: float) -> void:
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			for si in range(mi.get_surface_override_material_count()):
+				var base_mat = mi.mesh.surface_get_material(si)
+				if base_mat is StandardMaterial3D:
+					var mat = base_mat.duplicate() as StandardMaterial3D
+					mat.emission_enabled = true
+					mat.emission = color
+					mat.emission_energy_multiplier = strength
+					mi.set_surface_override_material(si, mat)
+		_add_emission_recursive(child, color, strength)
+
 func _process(delta: float) -> void:
 	if not is_inside_tree():
 		return
@@ -86,23 +100,8 @@ func _throw_bottle(level: int) -> void:
 		puddle_mi.scale = Vector3(model_scale, 1.0, model_scale)
 		puddle_mi.rotation.y = randf() * TAU  # Random rotation for variety
 		puddle_mi.position = Vector3(0, 0.02, 0)
-		# Apply vibrant neon green material
-		var puddle_mat = StandardMaterial3D.new()
-		puddle_mat.albedo_color = Color(0.1, 0.9, 0.15, 0.9)
-		puddle_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		puddle_mat.emission_enabled = true
-		puddle_mat.emission = Color(0.15, 1.0, 0.2)
-		puddle_mat.emission_energy_multiplier = 3.0
-		puddle_mat.roughness = 0.1
-		puddle_mat.metallic = 0.2
-		puddle_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		# Apply material to all mesh children
-		for child in puddle_mi.get_children():
-			if child is MeshInstance3D:
-				child.material_override = puddle_mat
-			for grandchild in child.get_children():
-				if grandchild is MeshInstance3D:
-					grandchild.material_override = puddle_mat
+		# Keep original textures, add neon green emission
+		_add_emission_recursive(puddle_mi, Color(0.15, 1.0, 0.2), 3.0)
 		pool.add_child(puddle_mi)
 	else:
 		# Fallback: simple disc

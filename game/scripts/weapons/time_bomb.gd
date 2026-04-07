@@ -47,6 +47,20 @@ func _drop_bomb(level: int) -> void:
 	get_tree().current_scene.call_deferred("add_child", bomb)
 	active_bombs.append(bomb)
 
+static func _add_emission_to_model(model: Node3D, color: Color, strength: float) -> void:
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			for si in range(mi.get_surface_override_material_count()):
+				var base_mat = mi.mesh.surface_get_material(si)
+				if base_mat is StandardMaterial3D:
+					var mat = base_mat.duplicate() as StandardMaterial3D
+					mat.emission_enabled = true
+					mat.emission = color
+					mat.emission_energy_multiplier = strength
+					mi.set_surface_override_material(si, mat)
+		_add_emission_to_model(child, color, strength)
+
 func _create_bomb_node(level: int) -> Node3D:
 	var bomb = Node3D.new()
 	bomb.name = "TimeBomb"
@@ -61,20 +75,8 @@ func _create_bomb_node(level: int) -> Node3D:
 		var bomb_model = bomb_scene.instantiate()
 		bomb_model.name = "BombModel"
 		bomb_model.scale = Vector3(0.35, 0.35, 0.35)
-		# Apply dark metallic material with red glow
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.25, 0.05, 0.05, 1.0)
-		mat.metallic = 0.6
-		mat.roughness = 0.3
-		mat.emission_enabled = true
-		mat.emission = Color(0.9, 0.15, 0.1)
-		mat.emission_energy_multiplier = 2.0
-		for child in bomb_model.get_children():
-			if child is MeshInstance3D:
-				child.material_override = mat
-			for gc in child.get_children():
-				if gc is MeshInstance3D:
-					gc.material_override = mat
+		# Keep original textures, add red danger glow
+		_add_emission_to_model(bomb_model, Color(1.0, 0.2, 0.1), 1.5)
 		bomb.add_child(bomb_model)
 	else:
 		var mesh_inst = MeshInstance3D.new()

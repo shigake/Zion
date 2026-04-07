@@ -143,6 +143,21 @@ class BloodOrbInstance extends Area3D:
 			hm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			_shared_heal_mesh.surface_set_material(0, hm)
 
+	## Adds emission glow to imported model without replacing original textures
+	static func _add_emission_to_model(model: Node3D, color: Color, strength: float) -> void:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi := child as MeshInstance3D
+				for si in range(mi.get_surface_override_material_count()):
+					var base_mat = mi.mesh.surface_get_material(si)
+					if base_mat is StandardMaterial3D:
+						var mat = base_mat.duplicate() as StandardMaterial3D
+						mat.emission_enabled = true
+						mat.emission = color
+						mat.emission_energy_multiplier = strength
+						mi.set_surface_override_material(si, mat)
+			_add_emission_to_model(child, color, strength)
+
 	func _ready() -> void:
 		add_to_group("player_summons")
 		collision_layer = 8  # PlayerAttacks
@@ -163,20 +178,8 @@ class BloodOrbInstance extends Area3D:
 			var orb_scene = load(_orb_scene_path)
 			_core_mesh = orb_scene.instantiate() as Node3D
 			_core_mesh.scale = Vector3(0.35, 0.35, 0.35)
-			# Apply vibrant blood material
-			var core_mat = StandardMaterial3D.new()
-			core_mat.albedo_color = Color(0.7, 0.04, 0.1)
-			core_mat.metallic = 0.4
-			core_mat.roughness = 0.15
-			core_mat.emission_enabled = true
-			core_mat.emission = Color(1.0, 0.05, 0.15)
-			core_mat.emission_energy_multiplier = 3.0
-			for child in _core_mesh.get_children():
-				if child is MeshInstance3D:
-					child.material_override = core_mat
-				for gc in child.get_children():
-					if gc is MeshInstance3D:
-						gc.material_override = core_mat
+			# Keep original textures, just boost emission for glow
+			_add_emission_to_model(_core_mesh, Color(1.0, 0.1, 0.15), 2.5)
 			add_child(_core_mesh)
 			# Shell: translucent outer glow
 			_shell_mesh = MeshInstance3D.new()

@@ -100,12 +100,12 @@ class TornadoInstance extends Area3D:
 			# Scale to match area
 			var vortex_scale = area_radius * 0.5
 			_mesh.scale = Vector3(vortex_scale, 1.0, vortex_scale)
-			# Apply ice material with transparency
+			# Apply vibrant ice material — semi-transparent glowing spiral
 			var mat1 = StandardMaterial3D.new()
-			mat1.albedo_color = Color(0.3, 0.9, 1.0, 0.45)
+			mat1.albedo_color = Color(0.2, 0.85, 1.0, 0.5)
 			mat1.emission_enabled = true
-			mat1.emission = Color(0.2, 0.85, 1.0)
-			mat1.emission_energy_multiplier = 4.0
+			mat1.emission = Color(0.1, 0.8, 1.0)
+			mat1.emission_energy_multiplier = 5.0
 			mat1.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mat1.cull_mode = BaseMaterial3D.CULL_DISABLED
 			mat1.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

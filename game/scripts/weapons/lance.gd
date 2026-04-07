@@ -27,8 +27,22 @@ func _ready() -> void:
 	_trail.max_points = 20
 	_trail.trail_width = 0.35
 	thrust_mesh.add_child(_trail)
-	# Build 3D procedural lance model (no Sprite3D)
+	# Build 3D lance model
 	_setup_lance_mesh()
+
+static func _add_emission_recursive(model: Node3D, color: Color, strength: float) -> void:
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			for si in range(mi.get_surface_override_material_count()):
+				var base_mat = mi.mesh.surface_get_material(si)
+				if base_mat is StandardMaterial3D:
+					var mat = base_mat.duplicate() as StandardMaterial3D
+					mat.emission_enabled = true
+					mat.emission = color
+					mat.emission_energy_multiplier = strength
+					mi.set_surface_override_material(si, mat)
+		_add_emission_recursive(child, color, strength)
 
 func _setup_lance_mesh() -> void:
 	var _lance_scene_path = "res://assets/models/crystal_lance.glb"
@@ -39,20 +53,8 @@ func _setup_lance_mesh() -> void:
 		_lance_model.visible = false
 		_lance_model.scale = Vector3(1.2, 1.2, 1.2)
 		_lance_model.rotation.x = PI / 2.0  # Align along Z axis
-		# Apply crystal blue + gold material
-		var lance_mat = StandardMaterial3D.new()
-		lance_mat.albedo_color = Color(0.7, 0.65, 0.3)
-		lance_mat.metallic = 0.8
-		lance_mat.roughness = 0.15
-		lance_mat.emission_enabled = true
-		lance_mat.emission = Color(0.4, 0.7, 1.0)
-		lance_mat.emission_energy_multiplier = 1.5
-		for child in _lance_model.get_children():
-			if child is MeshInstance3D:
-				child.material_override = lance_mat
-			for gc in child.get_children():
-				if gc is MeshInstance3D:
-					gc.material_override = lance_mat
+		# Keep original textures, add crystal blue glow
+		_add_emission_recursive(_lance_model, Color(0.4, 0.7, 1.0), 1.5)
 		thrust_area.add_child(_lance_model)
 	else:
 		# Fallback: procedural lance

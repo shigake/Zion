@@ -8,6 +8,20 @@ extends Area3D
 
 var direction: Vector3 = Vector3.FORWARD
 var timer: float = 0.0
+
+static func _add_emission_recursive(model: Node3D, color: Color, strength: float) -> void:
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			for si in range(mi.get_surface_override_material_count()):
+				var base_mat = mi.mesh.surface_get_material(si)
+				if base_mat is StandardMaterial3D:
+					var mat = base_mat.duplicate() as StandardMaterial3D
+					mat.emission_enabled = true
+					mat.emission = color
+					mat.emission_energy_multiplier = strength
+					mi.set_surface_override_material(si, mat)
+		_add_emission_recursive(child, color, strength)
 var damage_type: String = "ice"
 var weapon_id: String = ""
 var _returning: bool = false
@@ -75,21 +89,8 @@ func _setup_crystal_model() -> void:
 		_crystal_model = crystal_scene.instantiate()
 		_crystal_model.name = "CrystalModel"
 		_crystal_model.scale = Vector3(0.2, 0.2, 0.2)
-		# Vibrant ice blue material
-		var ice_mat = StandardMaterial3D.new()
-		ice_mat.albedo_color = Color(0.3, 0.85, 1.0, 0.9)
-		ice_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		ice_mat.metallic = 0.5
-		ice_mat.roughness = 0.08
-		ice_mat.emission_enabled = true
-		ice_mat.emission = Color(0.2, 0.8, 1.0)
-		ice_mat.emission_energy_multiplier = 3.0
-		for child in _crystal_model.get_children():
-			if child is MeshInstance3D:
-				child.material_override = ice_mat
-			for gc in child.get_children():
-				if gc is MeshInstance3D:
-					gc.material_override = ice_mat
+		# Keep original textures, add ice blue glow
+		_add_emission_recursive(_crystal_model, Color(0.2, 0.8, 1.0), 3.0)
 		add_child(_crystal_model)
 	else:
 		# Fallback: diamond cones
