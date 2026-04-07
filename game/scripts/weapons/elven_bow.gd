@@ -5,6 +5,29 @@ extends Node3D
 var attack_timer: float = 0.0
 var arrow_scene: PackedScene = preload("res://scenes/weapons/elven_bow_arrow.tscn")
 
+func _ready() -> void:
+	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/elven_bow.glb"
+	if ResourceLoader.exists(_model_path):
+		var model_scene = load(_model_path)
+		var model: Node3D = model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.3, 0.3, 0.3)
+		add_child(model)
+	else:
+		# Billboard sprite (fallback)
+		var _sprite_path = "res://assets/sprites/weapons/elven_bow.png"
+		if ResourceLoader.exists(_sprite_path):
+			var sprite = Sprite3D.new()
+			sprite.texture = load(_sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.03
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.name = "WeaponSprite"
+			add_child(sprite)
+
 func _get_player_node() -> Node3D:
 	var candidate = get_parent().get_parent() if get_parent() else null
 	if candidate is CharacterBody3D:
