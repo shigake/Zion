@@ -13,19 +13,29 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 @onready var drone_mesh: MeshInstance3D = $DroneMesh
 
 func _ready() -> void:
-	# Billboard sprite
-	var _sprite_path = "res://assets/sprites/weapons/drone.png"
-	if ResourceLoader.exists(_sprite_path):
+	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/combat_drone.glb"
+	if ResourceLoader.exists(_model_path):
 		drone_mesh.visible = false
-		var sprite = Sprite3D.new()
-		sprite.texture = load(_sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.name = "WeaponSprite"
-		drone_area.add_child(sprite)
+		var model_scene = load(_model_path)
+		var model: Node3D = model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.3, 0.3, 0.3)
+		drone_area.add_child(model)
+	else:
+		# Billboard sprite (fallback)
+		var _sprite_path = "res://assets/sprites/weapons/drone.png"
+		if ResourceLoader.exists(_sprite_path):
+			drone_mesh.visible = false
+			var sprite = Sprite3D.new()
+			sprite.texture = load(_sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.03
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.name = "WeaponSprite"
+			drone_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():
