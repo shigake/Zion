@@ -73,8 +73,8 @@ class BloodOrbInstance extends Area3D:
 	var _lifetime_timer: float = 0.0
 	var _damage_timer: float = 0.0
 	var _damage_interval: float = 0.5
-	var _core_mesh: MeshInstance3D = null
-	var _shell_mesh: MeshInstance3D = null
+	var _core_mesh: Node3D = null
+	var _shell_mesh: Node3D = null
 	var _droplet_meshes: Array = []
 	var _trail_particles: GPUParticles3D = null
 

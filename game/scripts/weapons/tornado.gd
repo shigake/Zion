@@ -73,8 +73,8 @@ class TornadoInstance extends Area3D:
 	var _damage_timer: float = 0.0
 	var _damage_interval: float = 0.5
 	var _pull_strength: float = 3.0
-	var _mesh: MeshInstance3D = null
-	var _ribbon_mesh: MeshInstance3D = null
+	var _mesh: Node3D = null
+	var _ribbon_mesh: MeshInstance3D = null  # Inner glow cone (always MeshInstance3D)
 	var _vortex_particles: GPUParticles3D = null
 	var _debris_particles: GPUParticles3D = null
 
