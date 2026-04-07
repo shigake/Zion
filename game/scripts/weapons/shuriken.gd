@@ -130,13 +130,36 @@ func _fire_visual_only(level: int) -> void:
 		proj.global_position = pos
 
 func _apply_shuriken_mesh(bullet: Node) -> void:
-	## Replace bullet's default mesh with a billboard sprite or spinning ninja-star shape.
-	# Try billboard sprite first
+	## Replace bullet's default mesh with a 3D model, billboard sprite, or spinning ninja-star shape.
+	var existing_mesh = bullet.get_node_or_null("Mesh")
+	if not existing_mesh:
+		existing_mesh = bullet.get_node_or_null("MeshInstance3D")
+	if existing_mesh:
+		existing_mesh.visible = false
+
+	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/shuriken.glb"
+	if ResourceLoader.exists(_model_path):
+		# Check if already has model (reused from pool)
+		var existing_spin = bullet.get_node_or_null("ShurikenModelSpin")
+		if existing_spin:
+			existing_spin.visible = true
+			return
+		var model_scene = load(_model_path)
+		var model: Node3D = model_scene.instantiate()
+		model.name = "ShurikenModel"
+		model.scale = Vector3(0.15, 0.15, 0.15)
+		# Wrap model in spin node so it rotates
+		var spin_node = Node3D.new()
+		spin_node.name = "ShurikenModelSpin"
+		spin_node.set_script(_ShurikenSpinScript)
+		bullet.add_child(spin_node)
+		spin_node.add_child(model)
+		return
+
+	# Try billboard sprite
 	var sprite_path = "res://assets/sprites/projectiles/shuriken_projectile.png"
 	if ResourceLoader.exists(sprite_path):
-		var existing_mesh = bullet.get_node_or_null("Mesh")
-		if not existing_mesh:
-			existing_mesh = bullet.get_node_or_null("MeshInstance3D")
 		if existing_mesh:
 			existing_mesh.visible = false
 		# Check if already has sprite (reused from pool)

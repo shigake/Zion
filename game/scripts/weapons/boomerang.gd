@@ -115,30 +115,43 @@ func _attach_boomerang_behavior(bullet: Node, player: Node3D, max_dist: float, s
 	bullet.add_child(ctrl)
 
 func _apply_boomerang_visual(bullet: Node) -> void:
-	# Billboard sprite
-	var sprite_path = "res://assets/sprites/weapons/boomerang.png"
 	var existing_mesh = bullet.get_node_or_null("Mesh")
 	if not existing_mesh:
 		existing_mesh = bullet.get_node_or_null("MeshInstance3D")
 	if existing_mesh:
 		existing_mesh.visible = false
 
-	# Check if already has sprite (reused from pool)
-	var existing_sprite = bullet.get_node_or_null("BoomerangSprite")
-	if existing_sprite:
-		existing_sprite.visible = true
-		return
-
-	var sprite = Sprite3D.new()
-	if ResourceLoader.exists(sprite_path):
-		sprite.texture = load(sprite_path)
-	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	sprite.pixel_size = 0.03
-	sprite.shaded = false
-	sprite.transparent = true
-	sprite.name = "BoomerangSprite"
-	bullet.add_child(sprite)
+	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/boomerang.glb"
+	if ResourceLoader.exists(_model_path):
+		# Check if already has model (reused from pool)
+		var existing_model = bullet.get_node_or_null("BoomerangModel")
+		if existing_model:
+			existing_model.visible = true
+			return
+		var model_scene = load(_model_path)
+		var model: Node3D = model_scene.instantiate()
+		model.name = "BoomerangModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		bullet.add_child(model)
+	else:
+		# Billboard sprite (fallback)
+		var sprite_path = "res://assets/sprites/weapons/boomerang.png"
+		# Check if already has sprite (reused from pool)
+		var existing_sprite = bullet.get_node_or_null("BoomerangSprite")
+		if existing_sprite:
+			existing_sprite.visible = true
+			return
+		var sprite = Sprite3D.new()
+		if ResourceLoader.exists(sprite_path):
+			sprite.texture = load(sprite_path)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.03
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.name = "BoomerangSprite"
+		bullet.add_child(sprite)
 
 # Inline boomerang control script
 var _boomerang_ctrl_script: GDScript = null
@@ -212,9 +225,9 @@ func _physics_process(delta: float) -> void:
 			return
 
 	# Spin visual — faster on return
+	var spin_speed = 15.0 if data["going_out"] else 25.0
 	var sprite = bullet.get_node_or_null("BoomerangSprite")
 	if sprite:
-		var spin_speed = 15.0 if data["going_out"] else 25.0
 		sprite.rotation.y += spin_speed * delta
 		# Afterimage glow: phase-based brightness + spin glow on return
 		var spin_glow = 0.8 + sin(bullet.get_meta("boomerang_data")["speed"] * 0.5 + Engine.get_process_frames() * 0.15) * 0.2
@@ -222,6 +235,9 @@ func _physics_process(delta: float) -> void:
 			sprite.modulate = Color(1.2, 1.1, spin_glow)
 		else:
 			sprite.modulate = Color(1.0, 1.0, spin_glow, 1.0)
+	var model3d = bullet.get_node_or_null("BoomerangModel")
+	if model3d:
+		model3d.rotation.y += spin_speed * delta
 
 	# Trail particle (every 3 frames — denser trail)
 	if Engine.get_process_frames() % 3 == 0 and Engine.get_frames_per_second() > 35:
