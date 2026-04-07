@@ -586,7 +586,7 @@ func _create_lealith_model() -> Node3D:
 # ===================== ENEMY MODELS =====================
 
 func create_slime_model() -> Node3D:
-	## Slime: esfera achatada + olhos
+	## Slime: esfera achatada + olhos + boca + bolhas internas
 	var root = Node3D.new()
 
 	# Corpo achatado
@@ -595,6 +595,19 @@ func create_slime_model() -> Node3D:
 	body.mesh.height = 0.45
 	body.scale = Vector3(1.0, 0.7, 1.0)
 	root.add_child(body)
+
+	# Bolha interna (da transparencia/volume)
+	var bubble1 = _mesh(SphereMesh.new(), Vector3(0.12, 0.22, 0.08))
+	bubble1.mesh.radius = 0.08
+	bubble1.mesh.height = 0.16
+	root.add_child(bubble1)
+	_mark_as_accent(bubble1)
+
+	var bubble2 = _mesh(SphereMesh.new(), Vector3(-0.08, 0.18, -0.05))
+	bubble2.mesh.radius = 0.06
+	bubble2.mesh.height = 0.12
+	root.add_child(bubble2)
+	_mark_as_accent(bubble2)
 
 	# Olho esquerdo
 	var eye_l = _mesh(SphereMesh.new(), Vector3(0.1, 0.3, 0.2))
@@ -609,6 +622,11 @@ func create_slime_model() -> Node3D:
 	eye_r.mesh.height = 0.12
 	root.add_child(eye_r)
 	_mark_as_accent(eye_r)
+
+	# Boca (sorriso)
+	var mouth = _mesh(BoxMesh.new(), Vector3(0, 0.2, 0.28))
+	mouth.mesh.size = Vector3(0.12, 0.03, 0.02)
+	root.add_child(mouth)
 
 	return root
 
@@ -997,7 +1015,7 @@ func create_boss_model() -> Node3D:
 	return root
 
 func create_tank_model() -> Node3D:
-	## Tank: corpo enorme quadrado + escudo
+	## Tank: corpo enorme quadrado + escudo + ombreiras + olhos
 	var root = Node3D.new()
 
 	# Corpo massivo
@@ -1010,6 +1028,30 @@ func create_tank_model() -> Node3D:
 	head.mesh.radius = 0.18
 	head.mesh.height = 0.36
 	root.add_child(head)
+
+	# Olhos ameacadores
+	var eye_l = _mesh(SphereMesh.new(), Vector3(0.08, 1.1, 0.14))
+	eye_l.mesh.radius = 0.04
+	eye_l.mesh.height = 0.08
+	root.add_child(eye_l)
+	_mark_as_accent(eye_l)
+
+	var eye_r = _mesh(SphereMesh.new(), Vector3(-0.08, 1.1, 0.14))
+	eye_r.mesh.radius = 0.04
+	eye_r.mesh.height = 0.08
+	root.add_child(eye_r)
+	_mark_as_accent(eye_r)
+
+	# Ombreiras
+	var shoulder_l = _mesh(SphereMesh.new(), Vector3(0.5, 0.85, 0))
+	shoulder_l.mesh.radius = 0.15
+	shoulder_l.mesh.height = 0.2
+	root.add_child(shoulder_l)
+
+	var shoulder_r = _mesh(SphereMesh.new(), Vector3(-0.5, 0.85, 0))
+	shoulder_r.mesh.radius = 0.15
+	shoulder_r.mesh.height = 0.2
+	root.add_child(shoulder_r)
 
 	# Escudo na frente
 	var shield = _mesh(BoxMesh.new(), Vector3(0, 0.5, 0.4))
