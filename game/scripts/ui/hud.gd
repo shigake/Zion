@@ -170,7 +170,7 @@ func _ready() -> void:
 
 	# Dash cooldown bar styling (cyan, wider)
 	dash_cooldown_bar.visible = false
-	dash_cooldown_bar.custom_minimum_size = Vector2(120, 8)
+	dash_cooldown_bar.custom_minimum_size = Vector2(120, 12)
 	var dash_fill = StyleBoxFlat.new()
 	dash_fill.bg_color = Color(0.2, 0.85, 1.0)
 	dash_fill.set_corner_radius_all(3)

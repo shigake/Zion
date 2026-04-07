@@ -155,7 +155,7 @@ func _create_upgrade_card(uid: String) -> void:
 	level_bar.max_value = data["max_level"]
 	level_bar.value = current
 	level_bar.show_percentage = false
-	level_bar.custom_minimum_size = Vector2(0, 6)
+	level_bar.custom_minimum_size = Vector2(0, 10)
 	var bar_fill = StyleBoxFlat.new()
 	bar_fill.bg_color = Color(0.3, 0.7, 0.3) if not maxed else Color(0.2, 0.6, 0.2)
 	bar_fill.set_corner_radius_all(3)

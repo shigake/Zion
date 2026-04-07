@@ -851,25 +851,35 @@ func _gen_whip_crack() -> void:
 
 func _gen_lance_thrust() -> void:
 	var img = _img()
-	var silver = Color(0.85, 0.85, 0.9, 0.9)
-	var silver_bright = Color(1.0, 1.0, 1.0, 0.95)
-	var silver_dark = Color(0.6, 0.6, 0.7, 0.6)
+	var steel_blue = Color(0.55, 0.75, 1.0, 0.95)
+	var steel_bright = Color(0.8, 0.9, 1.0, 1.0)
+	var steel_core = Color(1.0, 1.0, 1.0, 1.0)
+	var steel_edge = Color(0.35, 0.55, 0.85, 0.8)
+	var trail = Color(0.4, 0.6, 0.9, 0.5)
 
+	# Outer glow
+	_fill(img, 26, 8, 12, 48, Color(0.3, 0.5, 0.8, 0.3))
 	# Central thrust line
-	_fill(img, 28, 4, 8, 52, silver)
-	_fill(img, 30, 8, 4, 44, silver_bright)
+	_fill(img, 28, 4, 8, 52, steel_blue)
+	_fill(img, 30, 6, 4, 48, steel_bright)
+	_fill(img, 31, 10, 2, 40, steel_core)
 	# Side streaks
-	_fill(img, 24, 16, 2, 36, silver_dark)
-	_fill(img, 38, 16, 2, 36, silver_dark)
+	_fill(img, 24, 14, 2, 38, steel_edge)
+	_fill(img, 38, 14, 2, 38, steel_edge)
 	# Pointed tip
-	_fill(img, 29, 2, 6, 2, silver)
-	_fill(img, 30, 0, 4, 2, silver_bright)
+	_fill(img, 29, 2, 6, 4, steel_blue)
+	_fill(img, 30, 0, 4, 3, steel_bright)
+	_fill(img, 31, 0, 2, 2, steel_core)
 	# Arrow tip wings
-	_fill(img, 24, 6, 4, 2, silver)
-	_fill(img, 36, 6, 4, 2, silver)
+	_fill(img, 22, 6, 6, 2, steel_blue)
+	_fill(img, 36, 6, 6, 2, steel_blue)
+	_fill(img, 24, 4, 4, 2, steel_edge)
+	_fill(img, 36, 4, 4, 2, steel_edge)
 	# Speed lines
-	_line(img, 18, 20, 22, 52, Color(0.7, 0.7, 0.8, 0.3))
-	_line(img, 46, 20, 42, 52, Color(0.7, 0.7, 0.8, 0.3))
+	_line(img, 18, 18, 22, 54, trail)
+	_line(img, 46, 18, 42, 54, trail)
+	_line(img, 20, 22, 24, 56, Color(0.3, 0.5, 0.8, 0.35))
+	_line(img, 44, 22, 40, 56, Color(0.3, 0.5, 0.8, 0.35))
 
 	_save_slash(img, "lance_thrust")
 
@@ -915,20 +925,27 @@ func _gen_nunchaku_swing() -> void:
 
 func _gen_dual_katana_slash() -> void:
 	var img = _img()
-	var white = Color(1.0, 1.0, 1.0, 0.9)
-	var white_glow = Color(0.85, 0.9, 1.0, 0.6)
+	var cyan = Color(0.4, 0.85, 1.0, 0.95)
+	var cyan_bright = Color(0.7, 0.95, 1.0, 1.0)
+	var cyan_core = Color(1.0, 1.0, 1.0, 1.0)
+	var cyan_glow = Color(0.3, 0.6, 0.9, 0.5)
 
+	# Outer glow X
+	_thick_line(img, 2, 6, 58, 58, cyan_glow, 2)
+	_thick_line(img, 58, 6, 2, 58, cyan_glow, 2)
 	# X cross pattern
-	_thick_line(img, 4, 8, 56, 56, white, 3)
-	_thick_line(img, 56, 8, 4, 56, white, 3)
-	# Glow
-	_thick_line(img, 2, 6, 58, 58, white_glow, 1)
-	_thick_line(img, 58, 6, 2, 58, white_glow, 1)
+	_thick_line(img, 4, 8, 56, 56, cyan, 3)
+	_thick_line(img, 56, 8, 4, 56, cyan, 3)
+	# Bright core lines
+	_thick_line(img, 5, 9, 55, 55, cyan_bright, 1)
+	_thick_line(img, 55, 9, 5, 55, cyan_bright, 1)
 	# Bright intersection center
-	_circle(img, 32, 32, 4, Color(1.0, 1.0, 1.0, 1.0))
+	_circle(img, 32, 32, 5, cyan_glow)
+	_circle(img, 32, 32, 3, cyan_core)
 	# Sparkle tips
 	for pos in [Vector2i(4, 8), Vector2i(56, 8), Vector2i(4, 56), Vector2i(56, 56)]:
-		_circle(img, pos.x, pos.y, 2, white_glow)
+		_circle(img, pos.x, pos.y, 3, cyan_glow)
+		_circle(img, pos.x, pos.y, 2, cyan_bright)
 
 	_save_slash(img, "dual_katana_slash")
 
