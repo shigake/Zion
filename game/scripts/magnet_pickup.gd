@@ -9,7 +9,9 @@ var being_attracted: bool = false
 var attract_target: Node3D = null
 var _collected := false
 var _spawn_time: float = 0.0
+var _frame_counter: int = 0
 const MAX_PICKUPS := GameConstants.PICKUP_CAP
+const _MAGNET_TEXTURE := preload("res://assets/sprites/pickups/magnet_pickup.png")
 
 @onready var mesh: MeshInstance3D = $Mesh
 var _pickup_sprite: Sprite3D = null
@@ -19,16 +21,16 @@ func _ready() -> void:
 	add_to_group("magnet_pickups")
 	body_entered.connect(_on_body_entered)
 	_spawn_time = GameManager.game_time
+	_frame_counter = randi() % 10
 	# Glow cinza/branco magnetico
 	if mesh:
 		mesh.material_override = VisualSetup.create_glow_material(Color(0.7, 0.8, 1.0), 3.0)
 	# Billboard sprite (hides mesh if sprite texture exists)
-	var sprite_path = "res://assets/sprites/pickups/magnet_pickup.png"
-	if ResourceLoader.exists(sprite_path):
+	if _MAGNET_TEXTURE:
 		if mesh:
 			mesh.visible = false
 		var sprite = Sprite3D.new()
-		sprite.texture = load(sprite_path)
+		sprite.texture = _MAGNET_TEXTURE
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		sprite.pixel_size = 0.025
@@ -50,22 +52,25 @@ func _physics_process(delta: float) -> void:
 	if GameManager.paused:
 		return
 
-	# Bobbing + rotacao
+	_frame_counter += 1
+
+	# Bobbing + rotacao em passos para reduzir custo quando ha varias pickups em cena.
 	var t = GameManager.game_time
-	var bob = sin(t * 4.0 + global_position.z * 2.0) * 0.1
-	if _pickup_sprite:
-		_pickup_sprite.position.y = bob
-	else:
-		position.y = 0.35 + bob
-		if mesh:
-			mesh.rotation.y += delta * 5.0
+	if _frame_counter % 3 == 0:
+		var bob = sin(t * 4.0 + global_position.z * 2.0) * 0.1
+		if _pickup_sprite:
+			_pickup_sprite.position.y = bob
+		else:
+			position.y = 0.35 + bob
+			if mesh:
+				mesh.rotation.y += (1.0 / 20.0) * 5.0
 
 	# Atracao ao jogador
-	if not being_attracted:
+	if not being_attracted and _frame_counter % 10 == 0:
 		var players = GameManager.get_players()
+		var range_sq = pow(base_attract_range * GameManager.magnet_mult, 2.0)
 		for p in players:
-			var range_val = base_attract_range * GameManager.magnet_mult
-			if is_instance_valid(p) and global_position.distance_to(p.global_position) < range_val:
+			if is_instance_valid(p) and global_position.distance_squared_to(p.global_position) < range_sq:
 				being_attracted = true
 				attract_target = p
 				break
@@ -73,7 +78,7 @@ func _physics_process(delta: float) -> void:
 	if being_attracted and attract_target and is_instance_valid(attract_target):
 		var dir = (attract_target.global_position - global_position).normalized()
 		global_position += dir * attract_speed * delta
-		if global_position.distance_to(attract_target.global_position) < 0.5:
+		if global_position.distance_squared_to(attract_target.global_position) < 0.25:
 			_collect()
 
 	# Despawn apos 30 segundos

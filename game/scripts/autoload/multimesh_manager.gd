@@ -9,6 +9,8 @@ extends Node
 # --- Enemy MultiMesh ---
 const THRESHOLD := 300  # Switch to multimesh only with massive hordes (individual sprites preferred)
 const HYSTERESIS := 100  # Prevent flickering near threshold
+const _FALLBACK_ENEMY_TEXTURE := preload("res://assets/sprites/enemies/slime.png")
+const _PICKUP_TEXTURE := preload("res://assets/sprites/pickups/xp_gem.png")
 
 var _multimesh_instance: MultiMeshInstance3D = null
 var _multimesh: MultiMesh = null
@@ -23,9 +25,11 @@ const PICKUP_HYSTERESIS := 50
 var _pickup_mm_instance: MultiMeshInstance3D = null
 var _pickup_mm: MultiMesh = null
 var _pickup_active: bool = false
+var _pickup_material: StandardMaterial3D = null
 
 func _ready() -> void:
 	_create_billboard_material()
+	_create_pickup_material()
 
 func _create_billboard_material() -> void:
 	## Create a billboard material for the QuadMesh that:
@@ -40,10 +44,20 @@ func _create_billboard_material() -> void:
 	_billboard_material.alpha_scissor_threshold = 0.5
 	_billboard_material.no_depth_test = false
 	_billboard_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	# Load fallback sprite texture (slime) for the shared multimesh
-	_fallback_texture = load("res://assets/sprites/enemies/slime.png") as Texture2D
+	# Preloaded fallback sprite texture avoids runtime disk lookup.
+	_fallback_texture = _FALLBACK_ENEMY_TEXTURE
 	if _fallback_texture:
 		_billboard_material.albedo_texture = _fallback_texture
+
+func _create_pickup_material() -> void:
+	_pickup_material = StandardMaterial3D.new()
+	_pickup_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	_pickup_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_pickup_material.vertex_color_use_as_albedo = true
+	_pickup_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	_pickup_material.alpha_scissor_threshold = 0.5
+	_pickup_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_pickup_material.albedo_texture = _PICKUP_TEXTURE
 
 var _pickup_check_timer: float = 0.0
 const PICKUP_CHECK_INTERVAL := 0.5  # Check pickups every 0.5s instead of every frame
@@ -62,11 +76,13 @@ func _process(delta: float) -> void:
 
 	# Pickups: check activation less frequently, update transforms every frame when active
 	_pickup_check_timer += delta
+	var pickup_count := GameManager.active_pickup_count
 	if _pickup_active:
-		_process_pickups()
+		_process_pickups(pickup_count)
 	elif _pickup_check_timer >= PICKUP_CHECK_INTERVAL:
 		_pickup_check_timer = 0.0
-		_process_pickups()
+		if pickup_count >= PICKUP_THRESHOLD:
+			_process_pickups(pickup_count)
 
 func _activate() -> void:
 	_active = true
@@ -198,7 +214,13 @@ func _update_transforms() -> void:
 # Pickup MultiMesh — renders XP gems + crystals as a single draw call
 # =============================================================================
 
-func _process_pickups() -> void:
+func _process_pickups(tracked_count: int = -1) -> void:
+	if not _pickup_active and tracked_count >= 0 and tracked_count < PICKUP_THRESHOLD:
+		return
+	if _pickup_active and tracked_count >= 0 and tracked_count < (PICKUP_THRESHOLD - PICKUP_HYSTERESIS):
+		_deactivate_pickup_mm()
+		return
+
 	var pickups = get_tree().get_nodes_in_group("pickups")
 	var count = pickups.size()
 
@@ -229,18 +251,8 @@ func _activate_pickup_mm() -> void:
 	_pickup_mm_instance.name = "PickupMultiMesh"
 	_pickup_mm_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
-	# Billboard unshaded material with vertex colors and pickup texture
-	var mat = StandardMaterial3D.new()
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.vertex_color_use_as_albedo = true
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	mat.alpha_scissor_threshold = 0.5
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var pickup_tex = load("res://assets/sprites/pickups/xp_gem.png") as Texture2D
-	if pickup_tex:
-		mat.albedo_texture = pickup_tex
-	_pickup_mm_instance.material_override = mat
+	# Shared pickup material avoids recreating the same resource every activation.
+	_pickup_mm_instance.material_override = _pickup_material
 
 	var scene = get_tree().current_scene
 	if scene:

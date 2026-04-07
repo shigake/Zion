@@ -41,7 +41,9 @@ var _cached_boss_aura: Node = null  # Performance: cached BossAura reference
 var _boss_aura_checked: bool = false
 
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
+static var _sprite_cache_order: Array[String] = []  # Insertion order for bounded cache eviction
 static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
+const SPRITE_CACHE_MAX := 64
 ## Shared projectile mesh/material — avoid creating new ones every ranged attack
 static var _shared_proj_mesh: SphereMesh = null
 static var _shared_proj_mat: StandardMaterial3D = null
@@ -145,7 +147,7 @@ func _apply_sprite() -> void:
 	else:
 		tex = load(sprite_path) as Texture2D
 		if tex:
-			_sprite_cache[sprite_path] = tex
+			_cache_sprite_texture(sprite_path, tex)
 	if tex == null:
 		_apply_procedural_model()
 		return
@@ -187,6 +189,15 @@ func _apply_sprite() -> void:
 		label.position = sprite.position + Vector3(0, 1.2, 0)
 		label.name = "BossLabel"
 		add_child(label)
+
+static func _cache_sprite_texture(sprite_path: String, tex: Texture2D) -> void:
+	if _sprite_cache.has(sprite_path):
+		return
+	if _sprite_cache.size() >= SPRITE_CACHE_MAX and not _sprite_cache_order.is_empty():
+		var oldest_path = _sprite_cache_order.pop_front()
+		_sprite_cache.erase(oldest_path)
+	_sprite_cache[sprite_path] = tex
+	_sprite_cache_order.append(sprite_path)
 
 ## Resolve sprite path efficiently — single-pass with minimal ResourceLoader.exists() calls
 static func _resolve_sprite_path(enemy_type: String, stage: String) -> String:
@@ -801,7 +812,7 @@ func _get_damage_color(damage_type: String) -> Color:
 			return Color(1, 1, 0.8)
 
 func _flash_white() -> void:
-	var sprite = get_node_or_null("EnemySprite")
+	var sprite = _get_cached_sprite()
 	if sprite:
 		sprite.modulate = Color(5, 2, 2)  # Red-tinted flash
 		# Squash-stretch on hit — always use base scale to prevent accumulation

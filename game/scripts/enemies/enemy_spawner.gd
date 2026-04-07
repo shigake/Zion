@@ -62,10 +62,12 @@ func _ready() -> void:
 	ObjectPool.prewarm(ghost_scene, 5)
 	ObjectPool.prewarm(zombie_scene, 5)
 	ObjectPool.prewarm(slime_big_scene, 5)
-	ObjectPool.prewarm(skeleton_scene, 5)
+	ObjectPool.prewarm(archer_scene, 5)
 	ObjectPool.prewarm(bomber_scene, 3)
 	ObjectPool.prewarm(tank_scene, 3)
 	ObjectPool.prewarm(swarm_scene, 3)
+	ObjectPool.prewarm(mimic_scene, 2)
+	ObjectPool.prewarm(tooth_fairy_scene, 2)
 	# Cemetery ghost variants
 	if GameManager.selected_stage == "cemetery" or GameManager.selected_stage == "":
 		ObjectPool.prewarm(ghost_white_scene, 5)

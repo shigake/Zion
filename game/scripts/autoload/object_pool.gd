@@ -14,7 +14,10 @@ func prewarm(scene: PackedScene, count: int) -> void:
 		_pools[path] = []
 		_active[path] = 0
 	var pool: Array = _pools[path]
-	for _i in range(count):
+	# Prewarm is idempotent across runs: top up to the target size instead of
+	# appending blindly every time a new stage starts.
+	var missing := maxi(0, count - (pool.size() + int(_active[path])))
+	for _i in range(missing):
 		var instance = scene.instantiate()
 		# Disable processing so pre-warmed instances don't run logic
 		instance.set_process(false)

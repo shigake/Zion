@@ -10,7 +10,9 @@ var being_attracted: bool = false
 var attract_target: Node3D = null
 var _collected := false
 var _spawn_time: float = 0.0
+var _frame_counter: int = 0
 const MAX_PICKUPS := GameConstants.PICKUP_CAP
+const _HEALTH_TEXTURE := preload("res://assets/sprites/pickups/health_pickup.png")
 
 @onready var mesh: MeshInstance3D = $Mesh
 var _pickup_sprite: Sprite3D = null
@@ -20,16 +22,16 @@ func _ready() -> void:
 	add_to_group("health_pickups")
 	body_entered.connect(_on_body_entered)
 	_spawn_time = GameManager.game_time
+	_frame_counter = randi() % 10
 	# Glow vermelho pulsante
 	if mesh:
 		mesh.material_override = VisualSetup.create_glow_material(Color(1.0, 0.2, 0.3), 2.5)
 	# Billboard sprite (hides mesh if sprite texture exists)
-	var sprite_path = "res://assets/sprites/pickups/health_pickup.png"
-	if ResourceLoader.exists(sprite_path):
+	if _HEALTH_TEXTURE:
 		if mesh:
 			mesh.visible = false
 		var sprite = Sprite3D.new()
-		sprite.texture = load(sprite_path)
+		sprite.texture = _HEALTH_TEXTURE
 		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		sprite.pixel_size = 0.025
@@ -53,25 +55,27 @@ func _physics_process(delta: float) -> void:
 	if GameManager.paused:
 		return
 
-	# Bobbing + pulsacao de escala (heartbeat)
+	_frame_counter += 1
+
+	# Bobbing + pulsacao de escala (heartbeat), staggered to avoid 1 update per pickup per frame.
 	var t = GameManager.game_time
-	var bob = sin(t * 3.5 + global_position.x * 2.0) * 0.12
-	if _pickup_sprite:
-		_pickup_sprite.position.y = bob
+	if _frame_counter % 3 == 0:
+		var bob = sin(t * 3.5 + global_position.x * 2.0) * 0.12
 		var pulse = 1.0 + sin(t * 6.0) * 0.1
-		_pickup_sprite.scale = Vector3(pulse, pulse, pulse)
-	else:
-		position.y = 0.35 + bob
-		if mesh:
-			var pulse = 1.0 + sin(t * 6.0) * 0.1
-			mesh.scale = Vector3(pulse, pulse, pulse)
+		if _pickup_sprite:
+			_pickup_sprite.position.y = bob
+			_pickup_sprite.scale = Vector3(pulse, pulse, pulse)
+		else:
+			position.y = 0.35 + bob
+			if mesh:
+				mesh.scale = Vector3(pulse, pulse, pulse)
 
 	# Atracao ao jogador
-	if not being_attracted:
+	if not being_attracted and _frame_counter % 10 == 0:
 		var players = GameManager.get_players()
+		var range_sq = pow(base_attract_range * GameManager.magnet_mult, 2.0)
 		for p in players:
-			var range_val = base_attract_range * GameManager.magnet_mult
-			if is_instance_valid(p) and global_position.distance_to(p.global_position) < range_val:
+			if is_instance_valid(p) and global_position.distance_squared_to(p.global_position) < range_sq:
 				being_attracted = true
 				attract_target = p
 				break
@@ -79,7 +83,7 @@ func _physics_process(delta: float) -> void:
 	if being_attracted and attract_target and is_instance_valid(attract_target):
 		var dir = (attract_target.global_position - global_position).normalized()
 		global_position += dir * attract_speed * delta
-		if global_position.distance_to(attract_target.global_position) < 0.5:
+		if global_position.distance_squared_to(attract_target.global_position) < 0.25:
 			_collect()
 
 	# Despawn apos 30 segundos

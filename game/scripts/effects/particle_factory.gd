@@ -5,7 +5,7 @@ extends Node
 
 # --- Particle Pool ---
 const PARTICLE_POOL_SIZE := 30
-const MAX_ACTIVE_PARTICLES := 35  # Global budget: max simultaneous particle systems (was 50)
+const MAX_ACTIVE_PARTICLES := 24  # Keep headroom inside the pool to avoid burst allocations
 var _particle_pool: Array = []  # Available GPUParticles3D nodes
 var _active_particles: Dictionary = {}  # node -> cleanup_timer
 
@@ -130,15 +130,8 @@ func _create_particle_node() -> GPUParticles3D:
 	particles.emitting = false
 	particles.explosiveness = 1.0
 	particles.process_material = ParticleProcessMaterial.new()
-	# Draw pass with a default sphere mesh + material
-	var draw_pass = SphereMesh.new()
-	draw_pass.radius = 0.08
-	draw_pass.height = 0.16
-	var draw_mat = StandardMaterial3D.new()
-	draw_mat.emission_enabled = true
-	draw_mat.emission_energy_multiplier = 2.0
-	draw_pass.surface_set_material(0, draw_mat)
-	particles.draw_pass_1 = draw_pass
+	# Reuse the shared hit draw pass instead of creating one mesh/material per pooled node.
+	particles.draw_pass_1 = _hit_draw_pass
 	return particles
 
 func _get_particle() -> GPUParticles3D:
@@ -177,6 +170,9 @@ func _setup_and_emit(particles: GPUParticles3D, pos: Vector3, cleanup_time: floa
 	if not particles.is_inside_tree():
 		_particle_pool.append(particles)
 		return
+
+	if not particles.is_in_group("particles"):
+		particles.add_to_group("particles")
 
 	particles.global_position = pos
 	particles.emitting = true
