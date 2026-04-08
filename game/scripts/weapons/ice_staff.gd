@@ -4,6 +4,10 @@ extends Node3D
 
 var attack_timer: float = 0.0
 var projectile_scene: PackedScene = preload("res://scenes/weapons/ice_staff_projectile.tscn")
+var _crystal_mat: StandardMaterial3D = null
+var _mist_mesh: SphereMesh = null
+var _mist_mat_override: StandardMaterial3D = null
+var _mist_proc_mat: ParticleProcessMaterial = null
 
 func _get_player_node() -> Node3D:
 	var candidate = get_parent().get_parent() if get_parent() else null
@@ -227,13 +231,13 @@ func _freeze_area(pos: Vector3, level: int) -> void:
 			e.call_deferred("apply_slow", 0.4, freeze_duration)
 
 func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
-	var crystal_mat = StandardMaterial3D.new()
-	crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	crystal_mat.albedo_color = Color(0.4, 0.75, 1.0, 0.5)
-	crystal_mat.emission_enabled = true
-	crystal_mat.emission = Color(0.3, 0.7, 1.0)
-	crystal_mat.emission = Color(0.4, 0.8, 1.0)
-	crystal_mat.emission_energy_multiplier = 0.8
+	if not _crystal_mat:
+		_crystal_mat = StandardMaterial3D.new()
+		_crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_crystal_mat.albedo_color = Color(0.4, 0.75, 1.0, 0.5)
+		_crystal_mat.emission_enabled = true
+		_crystal_mat.emission = Color(0.4, 0.8, 1.0)
+		_crystal_mat.emission_energy_multiplier = 0.8
 
 	if not is_inside_tree():
 		return
@@ -252,7 +256,7 @@ func _spawn_freeze_crystals(pos: Vector3, duration: float) -> void:
 		var w = randf_range(0.04, 0.10)
 		mesh.size = Vector3(w, h, w)
 		crystal.mesh = mesh
-		crystal.material_override = crystal_mat
+		crystal.material_override = _crystal_mat
 
 		# Random position around impact point
 		var angle = randf() * TAU
@@ -290,32 +294,35 @@ func _spawn_frost_mist(pos: Vector3, duration: float) -> void:
 	mist.one_shot = false
 	mist.emitting = true
 
-	# Mist draw pass — white/blue transparent spheres
-	var mist_mesh = SphereMesh.new()
-	mist_mesh.radius = 0.08
-	mist_mesh.height = 0.16
-	mist.draw_pass_1 = mist_mesh
+	# Mist draw pass — white/blue transparent spheres (cached)
+	if not _mist_mesh:
+		_mist_mesh = SphereMesh.new()
+		_mist_mesh.radius = 0.08
+		_mist_mesh.height = 0.16
+	mist.draw_pass_1 = _mist_mesh
 
-	var mist_mat_override = StandardMaterial3D.new()
-	mist_mat_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mist_mat_override.albedo_color = Color(0.7, 0.85, 1.0, 0.15)
-	mist_mat_override.emission_enabled = true
-	mist_mat_override.emission = Color(0.5, 0.7, 1.0)
-	mist_mat_override.emission_energy_multiplier = 0.3
-	mist.material_override = mist_mat_override
+	if not _mist_mat_override:
+		_mist_mat_override = StandardMaterial3D.new()
+		_mist_mat_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mist_mat_override.albedo_color = Color(0.7, 0.85, 1.0, 0.15)
+		_mist_mat_override.emission_enabled = true
+		_mist_mat_override.emission = Color(0.5, 0.7, 1.0)
+		_mist_mat_override.emission_energy_multiplier = 0.3
+	mist.material_override = _mist_mat_override
 
-	var proc_mat = ParticleProcessMaterial.new()
-	proc_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	var freeze_radius_est = 3.0  # Base freeze radius estimate
-	proc_mat.emission_sphere_radius = freeze_radius_est * 0.8
-	proc_mat.direction = Vector3(0, 0.1, 0)
-	proc_mat.spread = 180.0
-	proc_mat.initial_velocity_min = 0.1
-	proc_mat.initial_velocity_max = 0.3
-	proc_mat.gravity = Vector3(0, -0.1, 0)
-	proc_mat.scale_min = 0.5
-	proc_mat.scale_max = 1.5
-	mist.process_material = proc_mat
+	if not _mist_proc_mat:
+		_mist_proc_mat = ParticleProcessMaterial.new()
+		_mist_proc_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+		var freeze_radius_est = 3.0  # Base freeze radius estimate
+		_mist_proc_mat.emission_sphere_radius = freeze_radius_est * 0.8
+		_mist_proc_mat.direction = Vector3(0, 0.1, 0)
+		_mist_proc_mat.spread = 180.0
+		_mist_proc_mat.initial_velocity_min = 0.1
+		_mist_proc_mat.initial_velocity_max = 0.3
+		_mist_proc_mat.gravity = Vector3(0, -0.1, 0)
+		_mist_proc_mat.scale_min = 0.5
+		_mist_proc_mat.scale_max = 1.5
+	mist.process_material = _mist_proc_mat
 
 	scene.add_child(mist)
 	mist.global_position = pos
