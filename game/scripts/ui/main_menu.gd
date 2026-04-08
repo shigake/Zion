@@ -201,13 +201,16 @@ shader_type canvas_item;
 uniform float time_val = 0.0;
 
 void fragment() {
-	float t = sin(time_val * 0.3) * 0.5 + 0.5;
-	vec3 dark_blue = vec3(0.02, 0.03, 0.12);
-	vec3 dark_purple = vec3(0.08, 0.02, 0.12);
-	vec3 col = mix(dark_blue, dark_purple, t);
-	// Vertical gradient: darker at top, slightly lighter at bottom
-	col += UV.y * 0.03;
-	COLOR = vec4(col, 0.65);
+	float t = sin(time_val * 0.5) * 0.5 + 0.5;
+	vec3 deep_blue = vec3(0.03, 0.05, 0.18);
+	vec3 deep_purple = vec3(0.12, 0.03, 0.18);
+	vec3 col = mix(deep_blue, deep_purple, t);
+	// Vertical gradient: darker at top, brighter purple/blue at bottom
+	col += UV.y * 0.08;
+	// Add subtle diagonal light beam
+	float beam = smoothstep(0.4, 0.6, sin(UV.x * 3.14 + time_val * 0.2) * 0.5 + 0.5);
+	col += vec3(0.02, 0.01, 0.04) * beam;
+	COLOR = vec4(col, 0.85);
 }
 """
 	var grad_mat := ShaderMaterial.new()
@@ -530,11 +533,11 @@ func _setup_floating_particles() -> void:
 	move_child(container, 6)
 
 	# Gold crystal sparkles (bigger, brighter)
-	for i in range(15):
+	for i in range(20):
 		var dot := ColorRect.new()
-		var dot_size := randf_range(2.5, 5.0)
+		var dot_size := randf_range(3.0, 7.0)
 		dot.size = Vector2(dot_size, dot_size)
-		var col := Color(1.0, 0.88, 0.35, randf_range(0.08, 0.25))
+		var col := Color(1.0, 0.88, 0.35, randf_range(0.3, 0.7))
 		dot.color = col
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var px := randf_range(0.0, 1280.0)
@@ -548,11 +551,11 @@ func _setup_floating_particles() -> void:
 		_particle_colors.append(col)
 
 	# Cyan crystal wisps (medium, gentle sway)
-	for i in range(8):
+	for i in range(12):
 		var dot := ColorRect.new()
-		var dot_size := randf_range(2.5, 5.5)
+		var dot_size := randf_range(3.0, 6.0)
 		dot.size = Vector2(dot_size, dot_size)
-		var col := Color(0.3, 0.85, 0.95, randf_range(0.06, 0.18))
+		var col := Color(0.3, 0.85, 0.95, randf_range(0.25, 0.55))
 		dot.color = col
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var px := randf_range(0.0, 1280.0)
@@ -566,11 +569,11 @@ func _setup_floating_particles() -> void:
 		_particle_colors.append(col)
 
 	# Purple crystal fragments (medium, swaying)
-	for i in range(7):
+	for i in range(10):
 		var dot := ColorRect.new()
-		var dot_size := randf_range(2.0, 5.0)
+		var dot_size := randf_range(3.0, 6.0)
 		dot.size = Vector2(dot_size, dot_size)
-		var col := Color(0.7, 0.35, 0.9, randf_range(0.05, 0.16))
+		var col := Color(0.7, 0.35, 0.9, randf_range(0.2, 0.5))
 		dot.color = col
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var px := randf_range(0.0, 1280.0)
