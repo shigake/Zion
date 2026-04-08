@@ -102,10 +102,10 @@ class TornadoInstance extends Area3D:
 			_mesh.scale = Vector3(vortex_scale, 1.0, vortex_scale)
 			# Apply vibrant ice material — semi-transparent glowing spiral
 			var mat1 = StandardMaterial3D.new()
-			mat1.albedo_color = Color(0.2, 0.85, 1.0, 0.5)
+			mat1.albedo_color = Color(0.2, 0.9, 1.0, 0.6)
 			mat1.emission_enabled = true
-			mat1.emission = Color(0.1, 0.8, 1.0)
-			mat1.emission_energy_multiplier = 5.0
+			mat1.emission = Color(0.15, 0.85, 1.0)
+			mat1.emission_energy_multiplier = 7.0
 			mat1.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mat1.cull_mode = BaseMaterial3D.CULL_DISABLED
 			mat1.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -157,7 +157,7 @@ class TornadoInstance extends Area3D:
 
 		# Layer 3: Vortex particles — GPUParticles3D (one-time setup, zero per-frame allocation)
 		_vortex_particles = GPUParticles3D.new()
-		_vortex_particles.amount = 10
+		_vortex_particles.amount = 16
 		_vortex_particles.lifetime = 0.6
 		_vortex_particles.emitting = true
 		_vortex_particles.one_shot = false
@@ -198,7 +198,7 @@ class TornadoInstance extends Area3D:
 		vp_draw_mat.albedo_color = Color(0.6, 0.85, 1.0, 0.6)
 		vp_draw_mat.emission_enabled = true
 		vp_draw_mat.emission = Color(0.5, 0.8, 1.0)
-		vp_draw_mat.emission_energy_multiplier = 4.0
+		vp_draw_mat.emission_energy_multiplier = 6.0
 		vp_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		vp_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		vp_draw.surface_set_material(0, vp_draw_mat)
@@ -301,8 +301,8 @@ class TornadoInstance extends Area3D:
 		# Layer 6: Ice crystal sparkles (diamond-like particles)
 		var _ice_sparkles = GPUParticles3D.new()
 		_ice_sparkles.name = "IceSparkles"
-		_ice_sparkles.amount = 6
-		_ice_sparkles.lifetime = 0.5
+		_ice_sparkles.amount = 12
+		_ice_sparkles.lifetime = 0.6
 		_ice_sparkles.emitting = true
 		_ice_sparkles.one_shot = false
 		_ice_sparkles.position.y = 1.0
@@ -327,7 +327,7 @@ class TornadoInstance extends Area3D:
 		ice_draw_mat.albedo_color = Color(0.75, 0.95, 1.0, 0.85)
 		ice_draw_mat.emission_enabled = true
 		ice_draw_mat.emission = Color(0.6, 0.9, 1.0)
-		ice_draw_mat.emission_energy_multiplier = 5.0
+		ice_draw_mat.emission_energy_multiplier = 8.0
 		ice_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		ice_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		ice_draw.surface_set_material(0, ice_draw_mat)
@@ -399,5 +399,7 @@ class TornadoInstance extends Area3D:
 				ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.85, 1.0), 3)
 
 		# Screen shake if vortex is hitting many enemies
-		if hit_count >= 3:
+		if hit_count >= 5:
+			ScreenEffects.shake(0.12)
+		elif hit_count >= 3:
 			ScreenEffects.shake(0.08)

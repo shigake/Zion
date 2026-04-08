@@ -5,7 +5,7 @@ extends Control
 ## PRD: docs/prd_multiplayer_menu.md (10 tasks)
 
 # ---- Constants ----
-var STAGE_ORDER: Array = GameConstants.ALL_STAGES
+var STAGE_ORDER: Array = GameConstants.ENABLED_STAGES
 const STAGE_NAMES: Dictionary = {
 	"cemetery": "Cemitério", "forest": "Floresta", "farm": "Fazenda",
 	"tokyo": "Tóquio", "volcano": "Vulcão", "ocean": "Oceano",

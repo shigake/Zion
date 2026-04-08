@@ -120,6 +120,11 @@ func _fire(level: int) -> void:
 		arrow.global_position = pos
 
 	AudioManager.play_sfx("bow_release")
+	# Elven bow release flash — green nature energy
+	var player = _get_player_node()
+	if player:
+		ParticleFactory.spawn_weapon_sparks(player.global_position + Vector3(0, 0.6, 0), Color(0.3, 0.9, 0.4), 4)
+		ScreenEffects.shake(0.03)
 
 ## Client-only: spawns visual arrows without collision (no damage).
 func _fire_visual_only(level: int) -> void:

@@ -104,7 +104,7 @@ func _show() -> void:
 	if GameManager.is_victory:
 		var header = "WIN!"
 		var all_complete := true
-		var all_stages := GameConstants.ALL_STAGES
+		var all_stages := GameConstants.ENABLED_STAGES
 		for s in all_stages:
 			if s not in SaveManager.data.get("completed_stages", []):
 				all_complete = false

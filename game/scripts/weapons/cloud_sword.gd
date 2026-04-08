@@ -24,9 +24,10 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path2)
 	# Weapon trail — wider blue energy glow
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.4, 0.6, 1.0, 0.85)
-	_trail.max_points = 18
-	_trail.trail_width = 0.25
+	_trail.trail_color = Color(0.3, 0.5, 1.0, 0.9)
+	_trail.trail_color_tip = Color(0.6, 0.85, 1.0, 1.0)
+	_trail.max_points = 27
+	_trail.trail_width = 0.4
 	slash_mesh.add_child(_trail)
 	# 3D model (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/cloud_sword.glb"
@@ -129,13 +130,16 @@ func _attack(level: int) -> void:
 	slash_area.scale = Vector3.ONE * area_scale
 	slash_mesh.scale = Vector3.ONE * area_scale
 
-	# Screen shake — golpe pesado
-	ScreenEffects.shake(0.4)
-	ScreenEffects.flash(0.05, 0.1)
+	# Screen shake — golpe pesado, epic impact
+	ScreenEffects.shake(0.5)
+	ScreenEffects.flash(0.06, 0.15)
 	AudioManager.play_sfx("sword_slash")
 
-	# Ground dust at player position
-	ParticleFactory.spawn_ground_dust(global_position, 8)
+	# Ground dust at player position — more dramatic
+	ParticleFactory.spawn_ground_dust(global_position, 12)
+	# Ground shockwave ring for heavy sword impact
+	if Engine.get_frames_per_second() > 40:
+		WeaponVFX.spawn_shockwave_ring(self, global_position, Color(0.3, 0.5, 1.0, 0.5), Color(0.4, 0.6, 1.0), 1.2, 0.2)
 
 	# Slash trail visual
 	_spawn_slash_trail()
@@ -161,12 +165,12 @@ func _spawn_slash_trail() -> void:
 	sprite.no_depth_test = true
 	scene.add_child(sprite)
 	sprite.global_position = pos + Vector3(0, 0.6, 0)
-	sprite.scale = Vector3(0.5, 0.5, 0.5)
-	sprite.modulate = Color(1, 1, 1, 1)
+	sprite.scale = Vector3(0.6, 0.6, 0.6)
+	sprite.modulate = Color(0.7, 0.85, 1.0, 1.0)
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(sprite, "scale", Vector3(1.5, 1.5, 1.5), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.2).set_ease(Tween.EASE_IN)
+	tween.tween_property(sprite, "scale", Vector3(2.0, 2.0, 2.0), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.25).set_ease(Tween.EASE_IN)
 	tween.set_parallel(false)
 	tween.tween_callback(sprite.queue_free)
 
@@ -179,5 +183,6 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "cloud_sword"
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
-		# Blue energy sparks
-		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.4, 0.6, 1.0), 5)
+		# Blue energy sparks — more vibrant
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.6, 1.0), 7)
+		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 3)

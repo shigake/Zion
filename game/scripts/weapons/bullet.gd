@@ -67,9 +67,13 @@ func _spawn_muzzle_flash() -> void:
 	if not _sprite:
 		return
 	# Sempre usa escala base constante (previne acumulo exponencial no pool)
-	_sprite.scale = Vector3.ONE * 1.8
+	# Bigger, brighter muzzle flash for more impactful feel
+	_sprite.scale = Vector3.ONE * 2.5
+	_sprite.modulate = Color(1.2, 1.1, 0.8, 1.0)
 	var tween = create_tween()
-	tween.tween_property(_sprite, "scale", Vector3.ONE, 0.08).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.set_parallel(true)
+	tween.tween_property(_sprite, "scale", Vector3.ONE, 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(_sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
 func _update_sprite_rotation() -> void:
 	if not _sprite:

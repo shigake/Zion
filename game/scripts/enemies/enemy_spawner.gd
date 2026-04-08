@@ -35,7 +35,7 @@ var _next_boss_time: float = GameConstants.BOSS_SPAWN_TIME
 var miniboss_spawned: bool = false
 
 # Boss Rush mode
-var _boss_rush_stages: Array = GameConstants.ALL_STAGES.duplicate()
+var _boss_rush_stages: Array = GameConstants.ENABLED_STAGES.duplicate()
 var _boss_rush_index: int = 0
 var _boss_rush_cooldown: float = 0.0
 var _boss_rush_active_boss: bool = false

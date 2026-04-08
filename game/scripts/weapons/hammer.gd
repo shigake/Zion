@@ -45,10 +45,10 @@ func _ready() -> void:
 			slam_area.add_child(sprite)
 	# Brief slam trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.7, 0.45, 0.2, 0.7)
-	_trail.trail_color_tip = Color(0.9, 0.6, 0.2, 0.8)
-	_trail.max_points = 10
-	_trail.trail_width = 0.2
+	_trail.trail_color = Color(0.85, 0.55, 0.15, 0.85)
+	_trail.trail_color_tip = Color(1.0, 0.7, 0.2, 0.95)
+	_trail.max_points = 15
+	_trail.trail_width = 0.35
 	slam_mesh.add_child(_trail)
 
 func _process(delta: float) -> void:
@@ -95,19 +95,28 @@ func _attack(level: int) -> void:
 	slam_area.scale = Vector3.ONE * area_scale
 	slam_mesh.scale = Vector3(0.3, 0.1, 0.3) * area_scale
 
-	# Screen shake on impact
-	ScreenEffects.shake(0.3)
+	# Screen shake on impact — heavy weapon, big shake
+	ScreenEffects.shake(0.45)
+	ScreenEffects.flash(0.04, 0.12)
 	AudioManager.play_sfx("hammer_slam")
 
 	# Slash trail visual (ground slam)
 	_spawn_slash_trail()
 
-	# Shockwave ring (TorusMesh expanding)
+	# Shockwave ring (TorusMesh expanding) — double ring for epic effect
 	_spawn_shockwave_ring(area_scale)
-	# Debris particles
-	ParticleFactory.spawn_hammer_debris(global_position, 12)
-	# Dust cloud
-	ParticleFactory.spawn_hammer_dust(global_position, 8)
+	if Engine.get_frames_per_second() > 40:
+		# Delayed second shockwave ring for layered impact
+		var _self = self
+		var _as = area_scale
+		get_tree().create_timer(0.08).timeout.connect(func():
+			if is_instance_valid(_self):
+				WeaponVFX.spawn_shockwave_ring(_self, _self.global_position, Color(1.0, 0.6, 0.15, 0.5), Color(1.0, 0.7, 0.2), _as * 0.7, 0.2)
+		)
+	# Debris particles — more debris for heavier impact
+	ParticleFactory.spawn_hammer_debris(global_position, 18)
+	# Dust cloud — bigger dust
+	ParticleFactory.spawn_hammer_dust(global_position, 12)
 
 func _spawn_slash_trail() -> void:
 	WeaponVFX.spawn_slash_trail(self, _slash_tex, global_position + Vector3(0, 0.15, 0), 0.04, 1.5, 0.2)

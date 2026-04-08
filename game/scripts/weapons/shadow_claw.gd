@@ -22,11 +22,11 @@ func _ready() -> void:
 	arc_mesh.size = Vector3(1.5, 0.1, 0.4)
 	slash_mesh.mesh = arc_mesh
 	var arc_mat = StandardMaterial3D.new()
-	arc_mat.albedo_color = Color(0.5, 0.15, 0.9, 0.7)
+	arc_mat.albedo_color = Color(0.6, 0.1, 1.0, 0.8)
 	arc_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	arc_mat.emission_enabled = true
-	arc_mat.emission = Color(0.6, 0.2, 1.0)
-	arc_mat.emission_energy_multiplier = 2.0
+	arc_mat.emission = Color(0.7, 0.15, 1.0)
+	arc_mat.emission_energy_multiplier = 4.0
 	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	arc_mat.no_depth_test = true
 	slash_mesh.material_override = arc_mat
@@ -176,16 +176,17 @@ func _spawn_claw_trail(is_second: bool) -> void:
 	sprite.no_depth_test = true
 	scene.add_child(sprite)
 	sprite.global_position = pos + Vector3(0, 0.5, 0)
-	sprite.scale = Vector3(0.4, 0.4, 0.4)
-	# Purple shadow color for claw trails
-	var claw_color = Color(0.6, 0.2, 1.0, 1.0) if not is_second else Color(0.3, 0.1, 0.8, 1.0)
+	sprite.scale = Vector3(0.5, 0.5, 0.5)
+	# Vibrant purple shadow color for claw trails
+	var claw_color = Color(0.7, 0.15, 1.0, 1.0) if not is_second else Color(0.4, 0.05, 0.9, 1.0)
 	sprite.modulate = claw_color
 	if is_second:
 		sprite.rotation.z = PI  # Flip second swipe
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(sprite, "scale", Vector3(1.3, 1.3, 1.3), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.15).set_ease(Tween.EASE_IN)
+	tween.tween_property(sprite, "scale", Vector3(1.6, 1.6, 1.6), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# Longer fade = lingering dark slash marks
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_IN)
 	tween.set_parallel(false)
 	tween.tween_callback(sprite.queue_free)
 
@@ -198,5 +199,6 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "shadow_claw"
 		body.call_deferred("take_damage", dmg, "dark")
 		hit_enemies.append(body)
-		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 4)
-		ScreenEffects.shake(0.03)
+		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 6)
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.1, 0.9), 3)
+		ScreenEffects.shake(0.04)

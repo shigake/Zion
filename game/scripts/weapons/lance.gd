@@ -23,9 +23,10 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path2)
 	# Weapon trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(1.0, 0.9, 0.35, 0.95)
-	_trail.max_points = 20
-	_trail.trail_width = 0.35
+	_trail.trail_color = Color(1.0, 0.85, 0.2, 0.95)
+	_trail.trail_color_tip = Color(1.0, 1.0, 0.6, 1.0)
+	_trail.max_points = 30
+	_trail.trail_width = 0.52
 	thrust_mesh.add_child(_trail)
 	# Build 3D lance model
 	_setup_lance_mesh()
@@ -203,6 +204,7 @@ func _on_body_entered(body: Node3D) -> void:
 		var dmg = int(WeaponDB.get_damage("lance", level))
 		GameManager._last_attacking_weapon = "lance"
 		body.call_deferred("take_damage", dmg, "physical")
-		# Golden thrust sparks (7 particles)
-		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.9, 0.35), 7)
-		ScreenEffects.shake(0.05)
+		# Golden thrust sparks — more particles, brighter
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.9, 0.3), 10)
+		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 4)
+		ScreenEffects.shake(0.07)

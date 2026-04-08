@@ -193,7 +193,7 @@ func _draw_chain(from: Vector3, to: Vector3) -> void:
 	glow_mat.albedo_color = Color(0.4, 0.7, 1.0, 0.4)
 	glow_mat.emission_enabled = true
 	glow_mat.emission = Color(0.5, 0.8, 1.0)
-	glow_mat.emission_energy_multiplier = 10.0
+	glow_mat.emission_energy_multiplier = 16.0
 	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	glow_mat.no_depth_test = true
@@ -215,7 +215,7 @@ func _draw_chain(from: Vector3, to: Vector3) -> void:
 	mat.albedo_color = Color(1.0, 0.95, 0.8, 1.0)
 	mat.emission_enabled = true
 	mat.emission = Color(0.9, 0.85, 0.5)
-	mat.emission_energy_multiplier = 14.0
+	mat.emission_energy_multiplier = 20.0
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.no_depth_test = true
@@ -250,7 +250,7 @@ func _spawn_electric_burst(pos: Vector3) -> void:
 	if not scene:
 		return
 	# Spawn 4-6 small electric sparks radiating outward
-	var spark_count = randi_range(4, 6)
+	var spark_count = randi_range(6, 10)
 	for i in range(spark_count):
 		var spark = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
@@ -260,7 +260,7 @@ func _spawn_electric_burst(pos: Vector3) -> void:
 		mat.albedo_color = Color(0.7, 0.9, 1.0, 0.8)
 		mat.emission_enabled = true
 		mat.emission = Color(0.6, 0.85, 1.0)
-		mat.emission_energy_multiplier = 12.0
+		mat.emission_energy_multiplier = 18.0
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		sphere.surface_set_material(0, mat)

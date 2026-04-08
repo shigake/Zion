@@ -99,6 +99,9 @@ func _explode() -> void:
 			e.call_deferred("take_damage", damage, "fire")
 
 	AudioManager.play_sfx("explosion")
+	# Epic explosion screen feedback
+	ScreenEffects.shake(0.5)
+	ScreenEffects.flash(0.06, 0.2)
 
 	# --- Multi-layer explosion ---
 	var explosion_root = Node3D.new()
@@ -130,7 +133,7 @@ func _create_flash(parent: Node3D) -> void:
 	mat.albedo_color = Color(1, 1, 1, 1)
 	mat.emission_enabled = true
 	mat.emission = Color(1, 1, 1, 1)
-	mat.emission_energy_multiplier = 10.0
+	mat.emission_energy_multiplier = 16.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh_inst.set_surface_override_material(0, mat)
@@ -232,8 +235,8 @@ func _create_smoke_particles(parent: Node3D) -> void:
 # Layer 5: Sparks flying outward
 func _create_spark_particles(parent: Node3D) -> void:
 	var particles = GPUParticles3D.new()
-	particles.amount = 12
-	particles.lifetime = 0.4
+	particles.amount = 18
+	particles.lifetime = 0.5
 	particles.one_shot = true
 	particles.explosiveness = 1.0
 	particles.emitting = true
@@ -258,7 +261,7 @@ func _create_spark_particles(parent: Node3D) -> void:
 	spark_mat.albedo_color = Color(1.0, 0.6, 0.1, 1.0)
 	spark_mat.emission_enabled = true
 	spark_mat.emission = Color(1.0, 0.5, 0.0, 1)
-	spark_mat.emission_energy_multiplier = 4.0
+	spark_mat.emission_energy_multiplier = 8.0
 	spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	draw_mesh.material = spark_mat
 	particles.draw_pass_1 = draw_mesh

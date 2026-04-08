@@ -90,9 +90,11 @@ func _fire(level: int) -> void:
 		direction = (nearest.global_position - player_pos).normalized()
 		direction.y = 0
 
-	# Spawn effect
-	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.6, 0.4, 0.2))
+	# Spawn effect — brighter muzzle flash
+	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.8, 0.6, 0.2), 7)
+	ParticleFactory.spawn_weapon_sparks(player_pos + Vector3(0, 0.6, 0), Color(0.9, 0.7, 0.3), 3)
 	AudioManager.play_sfx("bow_release")
+	ScreenEffects.shake(0.04)
 
 	var dmg = int(WeaponDB.get_damage("crossbow", level))
 

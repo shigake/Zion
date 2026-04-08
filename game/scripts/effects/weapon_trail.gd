@@ -15,7 +15,7 @@ func _ready() -> void:
 	mat.albedo_color = trail_color
 	mat.emission_enabled = true
 	mat.emission = trail_color
-	mat.emission_energy_multiplier = 2.0
+	mat.emission_energy_multiplier = 3.5
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.no_depth_test = true

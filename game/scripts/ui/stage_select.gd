@@ -78,10 +78,7 @@ const MARKER_BOB_AMOUNT := 4.0
 const HOVER_SCALE_TARGET := 1.2
 const HOVER_SCALE_SPEED := 8.0
 
-var stage_ids: Array[String] = [
-	"cemetery", "forest", "farm", "tokyo", "volcano",
-	"ocean", "arena", "space", "castle", "candy",
-]
+var stage_ids: Array[String] = []
 
 var selected_stage: String = "cemetery"
 var _hovered_stage: String = "cemetery"
@@ -110,6 +107,10 @@ var _seed_random_btn: Button = null
 func _ready() -> void:
 	get_tree().paused = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+
+	# Filter to only enabled stages
+	for sid in GameConstants.ENABLED_STAGES:
+		stage_ids.append(sid)
 
 	_build_adjacency()
 	_load_textures()
@@ -164,6 +165,8 @@ func _build_adjacency() -> void:
 	for conn in MAP_CONNECTIONS:
 		var a: String = conn[0]
 		var b: String = conn[1]
+		if a not in stage_ids or b not in stage_ids:
+			continue
 		if b not in _adjacency[a]:
 			_adjacency[a].append(b)
 		if a not in _adjacency[b]:
@@ -187,10 +190,12 @@ func _draw_map() -> void:
 	var scale_x := area_size.x / 800.0
 	var scale_y := area_size.y / 500.0
 
-	# Draw connections (paths)
+	# Draw connections (paths) — only between enabled stages
 	for conn in MAP_CONNECTIONS:
 		var a: String = conn[0]
 		var b: String = conn[1]
+		if a not in stage_ids or b not in stage_ids:
+			continue
 		var pos_a: Vector2 = MAP_POSITIONS[a] * Vector2(scale_x, scale_y)
 		var pos_b: Vector2 = MAP_POSITIONS[b] * Vector2(scale_x, scale_y)
 		var a_unlocked := SaveManager.is_stage_unlocked(a)

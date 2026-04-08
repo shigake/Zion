@@ -19,6 +19,14 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 	_setup_billboard_sprite()
+	# Green nature trail behind arrow
+	var trail = Node3D.new()
+	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
+	trail.trail_color = Color(0.2, 0.8, 0.3, 0.7)
+	trail.trail_color_tip = Color(0.5, 1.0, 0.5, 0.9)
+	trail.max_points = 18
+	trail.trail_width = 0.12
+	add_child(trail)
 
 func _setup_billboard_sprite() -> void:
 	# Guard: nao recria sprite se ja existe

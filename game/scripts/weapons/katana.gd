@@ -22,12 +22,12 @@ func _ready() -> void:
 	var _slash_path2 = "res://assets/sprites/effects/slashes/katana_slash.png"
 	if ResourceLoader.exists(_slash_path2):
 		_slash_tex = load(_slash_path2)
-	# Weapon trail — bright white-to-light-blue gradient
+	# Weapon trail — vibrant golden-white gradient
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(1.0, 1.0, 1.0, 0.8)
-	_trail.trail_color_tip = Color(0.6, 0.8, 1.0, 0.9)
-	_trail.max_points = 18
-	_trail.trail_width = 0.35  # PRD 34: thicker, more visible trail
+	_trail.trail_color = Color(1.0, 0.95, 0.6, 0.9)
+	_trail.trail_color_tip = Color(1.0, 0.85, 0.2, 1.0)
+	_trail.max_points = 27
+	_trail.trail_width = 0.52  # Enhanced: thicker, more impactful trail
 	slash_mesh.add_child(_trail)
 	# 3D model (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/katana.glb"
@@ -148,5 +148,8 @@ func _on_body_entered(body: Node3D) -> void:
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
 		# Impact sparks at hit position
-		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 5)
-		ScreenEffects.shake(0.03)
+		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 8)
+		ScreenEffects.shake(0.05)
+		# Golden flash on crit-like hits (every 3rd hit feels impactful)
+		if hit_enemies.size() == 1 and Engine.get_frames_per_second() > 40:
+			ScreenEffects.flash(0.04, 0.08)

@@ -124,6 +124,12 @@ func _cast(level: int) -> void:
 		current_target = next_target
 
 	AudioManager.play_sfx("electric_zap")
+	# Screen feedback scales with chain length
+	if hit_targets.size() >= 3:
+		ScreenEffects.shake(0.12)
+		ScreenEffects.flash(0.04, 0.1)
+	elif hit_targets.size() >= 1:
+		ScreenEffects.shake(0.06)
 
 func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	var container = Node3D.new()
@@ -148,14 +154,14 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 			point += right * offset_r + perp_up * offset_u
 		bolt_points.append(point)
 
-	# -- Outer glow pass (wide, semi-transparent electric blue) --
+	# -- Outer glow pass (wide, semi-transparent electric blue) — more passes for thicker arcs --
 	var glow_mesh = MeshInstance3D.new()
 	var im_glow = ImmediateMesh.new()
-	# Draw each segment as a camera-facing quad strip for width
-	for pass_idx in range(3):
+	# Draw each segment as a camera-facing quad strip for width — 5 passes for intense glow
+	for pass_idx in range(5):
 		im_glow.surface_begin(Mesh.PRIMITIVE_LINES)
-		im_glow.surface_set_color(Color(0.3, 0.6, 1.0, 0.25))
-		var jitter_scale = 0.06 * (pass_idx + 1)
+		im_glow.surface_set_color(Color(0.3, 0.65, 1.0, 0.3))
+		var jitter_scale = 0.05 * (pass_idx + 1)
 		for i in range(bolt_points.size() - 1):
 			var p0 = bolt_points[i] + right * randf_range(-jitter_scale, jitter_scale) + perp_up * randf_range(-jitter_scale, jitter_scale)
 			var p1 = bolt_points[i + 1] + right * randf_range(-jitter_scale, jitter_scale) + perp_up * randf_range(-jitter_scale, jitter_scale)
@@ -168,7 +174,7 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	glow_mat.albedo_color = Color(0.3, 0.6, 1.0, 0.3)
 	glow_mat.emission_enabled = true
 	glow_mat.emission = Color(0.4, 0.7, 1.0)
-	glow_mat.emission_energy_multiplier = 12.0
+	glow_mat.emission_energy_multiplier = 18.0
 	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	glow_mat.no_depth_test = true
@@ -190,7 +196,7 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	mat.albedo_color = Color(0.9, 0.95, 1.0, 1.0)
 	mat.emission_enabled = true
 	mat.emission = Color(0.85, 0.93, 1.0)
-	mat.emission_energy_multiplier = 18.0
+	mat.emission_energy_multiplier = 24.0
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.no_depth_test = true
@@ -222,7 +228,7 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	mat2.albedo_color = Color(0.5, 0.8, 1.0, 0.7)
 	mat2.emission_enabled = true
 	mat2.emission = Color(0.5, 0.8, 1.0)
-	mat2.emission_energy_multiplier = 10.0
+	mat2.emission_energy_multiplier = 16.0
 	mat2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat2.no_depth_test = true
@@ -240,7 +246,7 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	flash_mat.albedo_color = Color(0.7, 0.9, 1.0, 0.6)
 	flash_mat.emission_enabled = true
 	flash_mat.emission = Color(0.8, 0.95, 1.0)
-	flash_mat.emission_energy_multiplier = 20.0
+	flash_mat.emission_energy_multiplier = 28.0
 	flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	flash_mat.no_depth_test = true
@@ -249,10 +255,10 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	flash.position = to
 	container.add_child(flash)
 
-	# -- Spark particles at impact point (end of bolt) --
+	# -- Spark particles at impact point (end of bolt) — more sparks --
 	var sparks = GPUParticles3D.new()
-	sparks.amount = 12
-	sparks.lifetime = 0.3
+	sparks.amount = 18
+	sparks.lifetime = 0.35
 	sparks.one_shot = true
 	sparks.emitting = true
 	sparks.position = to
@@ -275,14 +281,14 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	spark_mesh_mat.albedo_color = Color(0.9, 0.97, 1.0)
 	spark_mesh_mat.emission_enabled = true
 	spark_mesh_mat.emission = Color(0.8, 0.95, 1.0)
-	spark_mesh_mat.emission_energy_multiplier = 16.0
+	spark_mesh_mat.emission_energy_multiplier = 22.0
 	spark_mesh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	spark_sphere.material = spark_mesh_mat
 	sparks.draw_pass_1 = spark_sphere
 	container.add_child(sparks)
 
 	get_tree().current_scene.call_deferred("add_child", container)
-	chain_visuals.append({"node": container, "timer": 0.25})
+	chain_visuals.append({"node": container, "timer": 0.35})
 
 func _cleanup_visuals(delta: float) -> void:
 	var to_remove: Array = []

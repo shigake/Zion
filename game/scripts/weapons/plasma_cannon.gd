@@ -258,7 +258,7 @@ func _fire_beam(level: int) -> void:
 	if beam_smoke:
 		beam_smoke.queue_free()
 	beam_smoke = GPUParticles3D.new()
-	beam_smoke.amount = 12
+	beam_smoke.amount = 18
 	beam_smoke.lifetime = 0.8
 	beam_smoke.emitting = true
 	beam_smoke.one_shot = false
@@ -299,7 +299,7 @@ func _fire_beam(level: int) -> void:
 	smoke_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	smoke_draw_mat.emission_enabled = true
 	smoke_draw_mat.emission = Color(0.2, 0.6, 1.0)
-	smoke_draw_mat.emission_energy_multiplier = 1.5
+	smoke_draw_mat.emission_energy_multiplier = 3.0
 	smoke_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	smoke_draw.surface_set_material(0, smoke_draw_mat)
 	beam_smoke.draw_pass_1 = smoke_draw
@@ -309,8 +309,8 @@ func _fire_beam(level: int) -> void:
 	if beam_sparks:
 		beam_sparks.queue_free()
 	beam_sparks = GPUParticles3D.new()
-	beam_sparks.amount = 8
-	beam_sparks.lifetime = 0.3
+	beam_sparks.amount = 14
+	beam_sparks.lifetime = 0.35
 	beam_sparks.emitting = true
 	beam_sparks.one_shot = false
 	beam_sparks.position = Vector3(0, 0.3, -2.5)
@@ -333,7 +333,7 @@ func _fire_beam(level: int) -> void:
 	spark_mat_draw.albedo_color = Color(0.6, 0.95, 1.0, 0.9)
 	spark_mat_draw.emission_enabled = true
 	spark_mat_draw.emission = Color(0.5, 0.9, 1.0)
-	spark_mat_draw.emission_energy_multiplier = 6.0
+	spark_mat_draw.emission_energy_multiplier = 10.0
 	spark_mat_draw.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	spark_mat_draw.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	spark_draw.surface_set_material(0, spark_mat_draw)
@@ -352,7 +352,7 @@ func _fire_beam(level: int) -> void:
 	glow_mat.albedo_color = Color(0.3, 0.8, 1.0, 0.5)
 	glow_mat.emission_enabled = true
 	glow_mat.emission = Color(0.4, 0.85, 1.0)
-	glow_mat.emission_energy_multiplier = 5.0
+	glow_mat.emission_energy_multiplier = 8.0
 	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	beam_glow_ring.material_override = glow_mat
@@ -365,8 +365,9 @@ func _fire_beam(level: int) -> void:
 	ring_tw.tween_property(beam_glow_ring, "scale", Vector3(2.0, 2.0, 2.0), fire_duration).set_trans(Tween.TRANS_QUAD)
 	ring_tw.tween_property(glow_mat, "albedo_color:a", 0.0, fire_duration)
 
-	# Screen shake and SFX
-	ScreenEffects.shake(0.4)
+	# Screen shake and SFX — epic beam fire
+	ScreenEffects.shake(0.5)
+	ScreenEffects.flash(0.05, 0.15)
 	AudioManager.play_sfx("hit")
 
 func _on_body_entered(body: Node3D) -> void:

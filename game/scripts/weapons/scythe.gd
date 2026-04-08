@@ -25,9 +25,10 @@ func _ready() -> void:
 	# Weapon trail — darker purple with ghostly wisps, slower fade
 	# Trail attached to scythe_area so it orbits with the weapon
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.45, 0.1, 0.65, 0.7)
-	_trail.max_points = 25
-	_trail.trail_width = 0.18
+	_trail.trail_color = Color(0.55, 0.05, 0.8, 0.85)
+	_trail.trail_color_tip = Color(0.8, 0.2, 1.0, 0.95)
+	_trail.max_points = 38
+	_trail.trail_width = 0.28
 	scythe_area.add_child(_trail)
 	# 3D model (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/scythe.glb"
@@ -101,9 +102,9 @@ func _on_body_entered(body: Node3D) -> void:
 	body.call_deferred("take_damage", dmg, "dark")
 	hit_timers[eid] = hit_cooldown
 	AudioManager.play_sfx("scythe_swoosh")
-	# Dark impact sparks
-	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.1, 0.7), 3)
-	ScreenEffects.shake(0.03)
+	# Dark impact sparks — more vibrant purple
+	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.7, 0.15, 1.0), 5)
+	ScreenEffects.shake(0.04)
 
 	# Slash trail visual at hit position
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
@@ -127,16 +128,18 @@ func _spawn_soul_wisps(from_pos: Vector3) -> void:
 	if not scene:
 		return
 	var player_pos = pos + Vector3(0, 0.5, 0)
-	for i in range(3):
+	for i in range(5):
 		var wisp = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
-		sphere.radius = 0.04
-		sphere.height = 0.08
+		sphere.radius = 0.06
+		sphere.height = 0.12
 		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.2, 1.0, 0.3, 0.8)
+		# Alternate green and purple wisps for necromantic feel
+		var wisp_color = Color(0.3, 1.0, 0.4, 0.9) if i % 2 == 0 else Color(0.6, 0.2, 1.0, 0.9)
+		mat.albedo_color = wisp_color
 		mat.emission_enabled = true
-		mat.emission = Color(0.2, 1.0, 0.3)
-		mat.emission_energy_multiplier = 3.0
+		mat.emission = wisp_color
+		mat.emission_energy_multiplier = 5.0
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		sphere.surface_set_material(0, mat)

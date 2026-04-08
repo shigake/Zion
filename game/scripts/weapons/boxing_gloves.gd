@@ -47,9 +47,10 @@ func _ready() -> void:
 			punch_area.add_child(sprite)
 	# Short punch trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(1.0, 0.3, 0.2, 0.7)
-	_trail.max_points = 6
-	_trail.trail_width = 0.12
+	_trail.trail_color = Color(1.0, 0.4, 0.15, 0.85)
+	_trail.trail_color_tip = Color(1.0, 0.7, 0.2, 0.95)
+	_trail.max_points = 9
+	_trail.trail_width = 0.2
 	punch_mesh.add_child(_trail)
 
 func _get_player_node() -> Node3D:
@@ -170,11 +171,11 @@ func _spawn_slash_trail(pos: Vector3) -> void:
 	sprite.no_depth_test = true
 	scene.add_child(sprite)
 	sprite.global_position = pos
-	sprite.scale = Vector3(0.5, 0.5, 0.5)
-	sprite.modulate = Color(1, 1, 1, 1)
+	sprite.scale = Vector3(0.6, 0.6, 0.6)
+	sprite.modulate = Color(1.0, 0.9, 0.7, 1.0)
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "scale", Vector3(1.5, 1.5, 1.5), 0.1).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(sprite, "modulate:a", 0.0, 0.15).set_ease(Tween.EASE_IN)
 	tween.set_parallel(false)
 	tween.tween_callback(sprite.queue_free)
@@ -188,9 +189,13 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "boxing_gloves"
 		body.call_deferred("take_damage", dmg, WeaponDB.get_element("boxing_gloves"))
 		hit_enemies_this_step.append(body)
-		# Punch impact sparks
-		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.5, 0.2), 3)
-		ScreenEffects.shake(0.03)
+		# Punch impact sparks — bigger impact per combo hit
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.6, 0.15), 5)
+		# Extra shake on 3rd hit (finisher)
+		var shake_amount = 0.06 if combo_step >= 3 else 0.04
+		ScreenEffects.shake(shake_amount)
+		if combo_step >= 3 and Engine.get_frames_per_second() > 40:
+			ScreenEffects.flash(0.03, 0.08)
 
 		# Knockback forte
 		var player = _get_player_node()

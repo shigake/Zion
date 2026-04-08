@@ -30,12 +30,16 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path2)
 	# Weapon trails
 	_trail_l = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail_l.trail_color = Color(0.8, 0.9, 1.0, 0.6)
-	_trail_l.max_points = 10
+	_trail_l.trail_color = Color(0.7, 0.85, 1.0, 0.85)
+	_trail_l.trail_color_tip = Color(0.9, 0.95, 1.0, 1.0)
+	_trail_l.max_points = 15
+	_trail_l.trail_width = 0.25
 	slash_mesh_l.add_child(_trail_l)
 	_trail_r = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail_r.trail_color = Color(0.8, 0.9, 1.0, 0.6)
-	_trail_r.max_points = 10
+	_trail_r.trail_color = Color(0.7, 0.85, 1.0, 0.85)
+	_trail_r.trail_color_tip = Color(0.9, 0.95, 1.0, 1.0)
+	_trail_r.max_points = 15
+	_trail_r.trail_width = 0.25
 	slash_mesh_r.add_child(_trail_r)
 	# 3D models (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/dual_katana.glb"
@@ -188,12 +192,12 @@ func _spawn_slash_trail() -> void:
 	sprite.no_depth_test = true
 	scene.add_child(sprite)
 	sprite.global_position = pos + Vector3(0, 0.5, 0)
-	sprite.scale = Vector3(0.5, 0.5, 0.5)
-	sprite.modulate = Color(1, 1, 1, 1)
+	sprite.scale = Vector3(0.6, 0.6, 0.6)
+	sprite.modulate = Color(0.8, 0.9, 1.0, 1.0)
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(sprite, "scale", Vector3(1.2, 1.2, 1.2), 0.18).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.18).set_ease(Tween.EASE_IN)
+	tween.tween_property(sprite, "scale", Vector3(1.6, 1.6, 1.6), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.22).set_ease(Tween.EASE_IN)
 	tween.set_parallel(false)
 	tween.tween_callback(sprite.queue_free)
 
@@ -206,6 +210,7 @@ func _on_body_entered(body: Node3D) -> void:
 		GameManager._last_attacking_weapon = "dual_katana"
 		body.call_deferred("take_damage", dmg, "physical")
 		hit_enemies.append(body)
-		# Light blue impact sparks
-		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.6, 0.8, 1.0), 4)
-		ScreenEffects.shake(0.03)
+		# Light blue impact sparks — more vibrant
+		ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.8, 1.0), 6)
+		ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 3)
+		ScreenEffects.shake(0.04)

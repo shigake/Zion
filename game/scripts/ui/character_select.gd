@@ -974,7 +974,7 @@ func _on_random_start() -> void:
 	GameManager.selected_character = char_id
 
 	# Pick random stage
-	var stages = GameConstants.ALL_STAGES
+	var stages = GameConstants.ENABLED_STAGES
 	GameManager.selected_stage = stages[randi() % stages.size()]
 
 	# No mutations, no relic, normal mode, auto-play ON

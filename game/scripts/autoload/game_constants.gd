@@ -16,6 +16,13 @@ const CAMPAIGN_STAGES: Array[String] = [
 ]
 const ANOMALY_STAGES: Array[String] = ["farm", "arena", "candy"]
 
+# Stages currently enabled for play — disabled stages stay in code but are
+# hidden from UI and filtered from random selection (daily challenge, etc.).
+const ENABLED_STAGES: Array[String] = ["cemetery", "forest"]
+const DISABLED_STAGES: Array[String] = [
+	"farm", "tokyo", "volcano", "ocean", "arena", "space", "castle", "candy",
+]
+
 const STAGE_SCENE_PATHS := {
 	"cemetery": "res://scenes/stages/stage_cemetery.tscn",
 	"forest": "res://scenes/stages/stage_forest.tscn",

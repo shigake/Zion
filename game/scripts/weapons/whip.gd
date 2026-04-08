@@ -24,10 +24,10 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path2)
 	# Weapon trail — more organic curve, red to dark red
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(0.4, 0.05, 0.05, 0.75)
-	_trail.trail_color_tip = Color(0.9, 0.2, 0.15, 0.85)
-	_trail.max_points = 22
-	_trail.trail_width = 0.12
+	_trail.trail_color = Color(0.5, 0.05, 0.02, 0.85)
+	_trail.trail_color_tip = Color(1.0, 0.25, 0.1, 0.95)
+	_trail.max_points = 33
+	_trail.trail_width = 0.18
 	slash_mesh.add_child(_trail)
 	# 3D model (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/whip.glb"
@@ -161,23 +161,26 @@ func _spawn_crack_flash() -> void:
 		return
 	var flash = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
-	sphere.radius = 0.1
-	sphere.height = 0.2
+	sphere.radius = 0.15
+	sphere.height = 0.3
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 1.0, 1.0, 0.9)
+	mat.albedo_color = Color(1.0, 0.95, 0.8, 0.95)
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 1.0, 1.0)
-	mat.emission_energy_multiplier = 8.0
+	mat.emission = Color(1.0, 0.9, 0.7)
+	mat.emission_energy_multiplier = 14.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.no_depth_test = true
 	sphere.surface_set_material(0, mat)
 	flash.mesh = sphere
 	flash.scale = Vector3.ZERO
 	scene.add_child(flash)
 	# Position at the tip of the whip (end of slash_mesh forward direction)
 	flash.global_position = tip_pos
-	# Scale up then down quickly
+	# Scale up then down quickly — bigger, brighter crack flash
 	var tween = create_tween()
-	tween.tween_property(flash, "scale", Vector3(0.1, 0.1, 0.1), 0.05)
-	tween.tween_property(flash, "scale", Vector3.ZERO, 0.05)
+	tween.tween_property(flash, "scale", Vector3(0.25, 0.25, 0.25), 0.04)
+	tween.tween_property(flash, "scale", Vector3.ZERO, 0.08)
 	tween.tween_callback(flash.queue_free)
+	# Screen flash on crack for extra impact
+	ScreenEffects.shake(0.06)

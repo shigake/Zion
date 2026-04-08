@@ -52,10 +52,10 @@ static func spawn_slash_trail(
 	caller: Node,
 	texture: Texture2D,
 	pos: Vector3,
-	pixel_size: float = 0.015,
-	final_scale: float = 1.2,
-	duration: float = 0.18,
-	start_scale: Vector3 = Vector3(0.5, 0.5, 0.5),
+	pixel_size: float = 0.020,
+	final_scale: float = 1.6,
+	duration: float = 0.22,
+	start_scale: Vector3 = Vector3(0.6, 0.6, 0.6),
 ) -> void:
 	if not caller.is_inside_tree() or not texture:
 		return
@@ -92,13 +92,13 @@ static func spawn_shockwave_ring(
 		return
 	var ring = MeshInstance3D.new()
 	var torus = TorusMesh.new()
-	torus.inner_radius = 0.2
-	torus.outer_radius = 0.35
+	torus.inner_radius = 0.25
+	torus.outer_radius = 0.45
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = color
 	mat.emission_enabled = true
 	mat.emission = emission_color
-	mat.emission_energy_multiplier = 1.5
+	mat.emission_energy_multiplier = 3.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.no_depth_test = true
@@ -107,7 +107,7 @@ static func spawn_shockwave_ring(
 	scene.add_child(ring)
 	ring.global_position = pos + Vector3(0, 0.05, 0)
 	ring.scale = Vector3(0.3, 0.1, 0.3)
-	var target_scale = Vector3(area_scale, 0.1, area_scale)
+	var target_scale = Vector3(area_scale * 1.4, 0.1, area_scale * 1.4)
 	# Use ring's own tween so it survives even if caller is freed
 	var tween = ring.create_tween()
 	tween.set_parallel(true)

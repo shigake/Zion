@@ -11,7 +11,7 @@ signal streak_updated(new_streak: int)
 const SAVE_PATH := "user://daily_challenge.json"
 
 # Stages e personagens disponiveis para sorteio
-var ALL_STAGES: Array[String] = GameConstants.ALL_STAGES
+var ALL_STAGES: Array[String] = GameConstants.ENABLED_STAGES
 
 const ALL_CHARACTERS: Array[String] = [
 	"ronin", "soldado", "mago", "berserker", "ninja", "bruxa",

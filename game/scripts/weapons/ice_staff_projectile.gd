@@ -113,8 +113,8 @@ func _setup_crystal_model() -> void:
 	# Ice trail particles
 	_trail_particles = GPUParticles3D.new()
 	_trail_particles.name = "IceTrail"
-	_trail_particles.amount = 6
-	_trail_particles.lifetime = 0.4
+	_trail_particles.amount = 10
+	_trail_particles.lifetime = 0.5
 	_trail_particles.emitting = true
 	var trail_mesh = SphereMesh.new()
 	trail_mesh.radius = 0.04
@@ -124,7 +124,7 @@ func _setup_crystal_model() -> void:
 	trail_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	trail_mat.emission_enabled = true
 	trail_mat.emission = Color(0.4, 0.8, 1.0)
-	trail_mat.emission_energy_multiplier = 1.5
+	trail_mat.emission_energy_multiplier = 3.5
 	trail_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	trail_mesh.surface_set_material(0, trail_mat)
 	_trail_particles.draw_pass_1 = trail_mesh

@@ -74,18 +74,18 @@ func _spawn_summon_circle(pos: Vector3) -> void:
 	disc.height = 0.05
 	circle.mesh = disc
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.15, 0.4, 0.2, 0.7)
+	mat.albedo_color = Color(0.1, 0.5, 0.2, 0.8)
 	mat.emission_enabled = true
-	mat.emission = Color(0.1, 0.8, 0.3)
-	mat.emission_energy_multiplier = 2.0
+	mat.emission = Color(0.1, 1.0, 0.35)
+	mat.emission_energy_multiplier = 4.0
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	circle.material_override = mat
 	container.add_child(circle)
 
 	# Rising soul particles (green/purple wisps)
 	var soul_particles = GPUParticles3D.new()
-	soul_particles.amount = 6
-	soul_particles.lifetime = 1.0
+	soul_particles.amount = 10
+	soul_particles.lifetime = 1.2
 	soul_particles.emitting = true
 	soul_particles.one_shot = false
 	var soul_mat = ParticleProcessMaterial.new()
@@ -111,7 +111,7 @@ func _spawn_summon_circle(pos: Vector3) -> void:
 	wisp_mat.albedo_color = Color(0.15, 0.6, 0.3, 0.5)
 	wisp_mat.emission_enabled = true
 	wisp_mat.emission = Color(0.1, 0.8, 0.3)
-	wisp_mat.emission_energy_multiplier = 3.0
+	wisp_mat.emission_energy_multiplier = 5.0
 	wisp_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	wisp_mesh.surface_set_material(0, wisp_mat)
 	soul_particles.draw_pass_1 = wisp_mesh

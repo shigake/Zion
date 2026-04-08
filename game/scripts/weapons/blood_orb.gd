@@ -190,12 +190,12 @@ class BloodOrbInstance extends Area3D:
 			shell_sm.rings = 4
 			_shell_mesh.mesh = shell_sm
 			var shell_mat = StandardMaterial3D.new()
-			shell_mat.albedo_color = Color(0.9, 0.1, 0.15, 0.18)
+			shell_mat.albedo_color = Color(0.95, 0.08, 0.12, 0.25)
 			shell_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			shell_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			shell_mat.emission_enabled = true
 			shell_mat.emission = Color(1.0, 0.1, 0.1)
-			shell_mat.emission_energy_multiplier = 1.0
+			shell_mat.emission_energy_multiplier = 2.5
 			_shell_mesh.material_override = shell_mat
 			add_child(_shell_mesh)
 		else:
@@ -206,10 +206,10 @@ class BloodOrbInstance extends Area3D:
 			core_sm.height = 0.64
 			_core_mesh.mesh = core_sm
 			var core_mat = StandardMaterial3D.new()
-			core_mat.albedo_color = Color(0.7, 0.04, 0.1)
+			core_mat.albedo_color = Color(0.8, 0.04, 0.1)
 			core_mat.emission_enabled = true
 			core_mat.emission = Color(1.0, 0.05, 0.15)
-			core_mat.emission_energy_multiplier = 3.0
+			core_mat.emission_energy_multiplier = 5.0
 			_core_mesh.material_override = core_mat
 			add_child(_core_mesh)
 			_shell_mesh = MeshInstance3D.new()
@@ -218,11 +218,11 @@ class BloodOrbInstance extends Area3D:
 			shell_sm.height = 0.88
 			_shell_mesh.mesh = shell_sm
 			var shell_mat = StandardMaterial3D.new()
-			shell_mat.albedo_color = Color(0.9, 0.1, 0.15, 0.18)
+			shell_mat.albedo_color = Color(0.95, 0.08, 0.12, 0.25)
 			shell_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			shell_mat.emission_enabled = true
 			shell_mat.emission = Color(1.0, 0.1, 0.1)
-			shell_mat.emission_energy_multiplier = 1.0
+			shell_mat.emission_energy_multiplier = 2.5
 			_shell_mesh.material_override = shell_mat
 			add_child(_shell_mesh)
 
@@ -235,8 +235,8 @@ class BloodOrbInstance extends Area3D:
 
 		# Layer 4: Dark trail — GPUParticles3D (blood dripping downward)
 		_trail_particles = GPUParticles3D.new()
-		_trail_particles.amount = 8
-		_trail_particles.lifetime = 0.6
+		_trail_particles.amount = 14
+		_trail_particles.lifetime = 0.8
 		_trail_particles.emitting = true
 		_trail_particles.one_shot = false
 		_trail_particles.explosiveness = 0.0
@@ -273,7 +273,7 @@ class BloodOrbInstance extends Area3D:
 		tp_draw_mat.albedo_color = Color(0.5, 0.0, 0.05, 0.5)
 		tp_draw_mat.emission_enabled = true
 		tp_draw_mat.emission = Color(0.6, 0.05, 0.1)
-		tp_draw_mat.emission_energy_multiplier = 3.0
+		tp_draw_mat.emission_energy_multiplier = 5.0
 		tp_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		tp_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		tp_draw.surface_set_material(0, tp_draw_mat)
@@ -340,11 +340,11 @@ class BloodOrbInstance extends Area3D:
 		_blood_ring.position.y = -0.2
 		_blood_ring.rotation.x = PI / 2.0
 		var blood_ring_mat = StandardMaterial3D.new()
-		blood_ring_mat.albedo_color = Color(0.7, 0.05, 0.1, 0.3)
+		blood_ring_mat.albedo_color = Color(0.85, 0.05, 0.1, 0.45)
 		blood_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		blood_ring_mat.emission_enabled = true
-		blood_ring_mat.emission = Color(0.8, 0.05, 0.1)
-		blood_ring_mat.emission_energy_multiplier = 2.0
+		blood_ring_mat.emission = Color(1.0, 0.08, 0.12)
+		blood_ring_mat.emission_energy_multiplier = 4.0
 		blood_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		_blood_ring.material_override = blood_ring_mat
 		add_child(_blood_ring)
@@ -377,8 +377,8 @@ class BloodOrbInstance extends Area3D:
 		)
 		global_position = orbit_pos
 
-		# Heartbeat pulse on core
-		var heartbeat = abs(sin(_lifetime_timer * 5.0)) * 0.15
+		# Heartbeat pulse on core — stronger, more dramatic pulsing
+		var heartbeat = abs(sin(_lifetime_timer * 5.0)) * 0.25
 		var pulse = 1.0 + heartbeat
 		if _core_mesh:
 			_core_mesh.scale = Vector3(pulse, pulse, pulse)

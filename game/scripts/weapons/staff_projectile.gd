@@ -18,10 +18,13 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	if target and is_instance_valid(target):
 		direction = (target.global_position - global_position).normalized()
-	# Blue weapon trail
+	# Blue weapon trail — more vibrant, longer
 	var trail = Node3D.new()
 	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
-	trail.trail_color = Color(0.3, 0.5, 1.0, 0.6)
+	trail.trail_color = Color(0.2, 0.5, 1.0, 0.8)
+	trail.trail_color_tip = Color(0.5, 0.8, 1.0, 0.95)
+	trail.max_points = 20
+	trail.trail_width = 0.2
 	add_child(trail)
 	_setup_billboard_sprite()
 
@@ -84,6 +87,8 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = "staff"
 		body.call_deferred("take_damage", damage, damage_type)
+		# Impact particles on hit
+		ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.6, 1.0), 6)
 		queue_free()
 
 ## Detecao alternativa via Area3D (Hitbox do inimigo)
@@ -92,4 +97,5 @@ func _on_area_entered(area: Area3D) -> void:
 	if parent and parent.has_method("take_damage") and parent.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = "staff"
 		parent.call_deferred("take_damage", damage, damage_type)
+		ParticleFactory.spawn_hit_particles(parent.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.6, 1.0), 6)
 		queue_free()

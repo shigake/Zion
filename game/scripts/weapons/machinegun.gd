@@ -71,9 +71,11 @@ func _fire(level: int) -> void:
 	if not player:
 		return
 	var player_pos = player.global_position
-	# Muzzle flash
-	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(1.0, 0.8, 0.2))
+	# Muzzle flash — brighter, more vibrant
+	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.15), 6)
+	ParticleFactory.spawn_weapon_sparks(player_pos + Vector3(0, 0.6, 0), Color(1.0, 0.9, 0.3), 3)
 	AudioManager.play_sfx("gun_shot")
+	ScreenEffects.shake(0.02)
 
 	var direction: Vector3
 	if GameManager.manual_aim:

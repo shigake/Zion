@@ -104,7 +104,7 @@ func check_achievements() -> void:
 	if "completionist" not in unlocked:
 		var completed = SaveManager.data.get("completed_stages", [])
 		var all_done = true
-		for stage in GameConstants.ALL_STAGES:
+		for stage in GameConstants.ENABLED_STAGES:
 			if stage not in completed:
 				all_done = false
 				break

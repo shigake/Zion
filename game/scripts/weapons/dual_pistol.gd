@@ -97,9 +97,11 @@ func _fire(level: int) -> void:
 	var right = direction.cross(Vector3.UP).normalized()
 	var spawn_pos = player_pos + Vector3(0, 0.5, 0) + right * side_offset
 
-	# Muzzle flash
-	ParticleFactory.spawn_hit_particles(spawn_pos, Color(1.0, 0.9, 0.3))
+	# Muzzle flash — brighter
+	ParticleFactory.spawn_hit_particles(spawn_pos, Color(1.0, 0.9, 0.2), 6)
+	ParticleFactory.spawn_weapon_sparks(spawn_pos, Color(1.0, 0.85, 0.3), 2)
 	AudioManager.play_sfx("gun_shot")
+	ScreenEffects.shake(0.02)
 
 	var dmg = int(WeaponDB.get_damage("dual_pistol", level))
 

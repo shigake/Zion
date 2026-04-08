@@ -253,8 +253,8 @@ func complete_stage(stage_id: String) -> void:
 		if "completed_stages" not in data:
 			data["completed_stages"] = []
 		data["completed_stages"].append(stage_id)
-		# Desbloqueia proxima fase
-		var stage_order = GameConstants.ALL_STAGES
+		# Desbloqueia proxima fase (somente entre stages habilitados)
+		var stage_order = GameConstants.ENABLED_STAGES
 		var idx = stage_order.find(stage_id)
 		if idx >= 0 and idx + 1 < stage_order.size():
 			unlock_stage(stage_order[idx + 1])
@@ -290,7 +290,7 @@ func check_unlocks() -> Array[String]:
 					unlocked = true
 			"all_stages":
 				var all_complete = true
-				for stage in GameConstants.ALL_STAGES:
+				for stage in GameConstants.ENABLED_STAGES:
 					if stage not in data.get("completed_stages", []):
 						all_complete = false
 						break
