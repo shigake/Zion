@@ -68,18 +68,8 @@ func _create_bomb_node(level: int) -> Node3D:
 	bomb.set_meta("fuse_time", FUSE_TIME)
 	bomb.set_meta("explosion_radius", EXPLOSION_RADIUS)
 
-	# Child 0: Bomb body — 3D model or fallback sphere
-	var _bomb_scene_path = "res://assets/models/time_bomb.glb"
-	if ResourceLoader.exists(_bomb_scene_path):
-		var bomb_scene = load(_bomb_scene_path)
-		var bomb_model = bomb_scene.instantiate()
-		bomb_model.name = "BombModel"
-		bomb_model.scale = Vector3(0.35, 0.35, 0.35)
-		# Keep original textures, add red danger glow
-		_add_emission_to_model(bomb_model, Color(1.0, 0.2, 0.1), 1.5)
-		bomb.add_child(bomb_model)
-	else:
-		var mesh_inst = MeshInstance3D.new()
+	# Child 0: Bomb body sphere
+	var mesh_inst = MeshInstance3D.new()
 		var sphere = SphereMesh.new()
 		sphere.radius = 0.3
 		sphere.height = 0.6

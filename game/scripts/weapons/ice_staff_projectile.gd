@@ -83,19 +83,13 @@ func _setup_crystal_model() -> void:
 		existing_mesh.visible = false
 
 	# Ice crystal model — imported 3D or fallback cones
-	var _crystal_scene_path = "res://assets/models/ice_crystal.glb"
-	if ResourceLoader.exists(_crystal_scene_path):
-		var crystal_scene = load(_crystal_scene_path)
 		_crystal_model = crystal_scene.instantiate()
-		_crystal_model.name = "CrystalModel"
-		_crystal_model.scale = Vector3(0.2, 0.2, 0.2)
 		# Keep original textures, add ice blue glow
 		_add_emission_recursive(_crystal_model, Color(0.2, 0.8, 1.0), 3.0)
 		add_child(_crystal_model)
 	else:
 		# Fallback: diamond cones
 		_crystal_model = Node3D.new()
-		_crystal_model.name = "CrystalModel"
 		var front = MeshInstance3D.new()
 		front.mesh = _shared_front_cone
 		front.material_override = _shared_ice_mat
@@ -212,7 +206,6 @@ func _reset_for_reuse() -> void:
 	if not _crystal_model or not is_instance_valid(_crystal_model):
 		_crystal_model = get_node_or_null("CrystalModel")
 	if _crystal_model:
-		_crystal_model.scale = Vector3.ONE
 		_crystal_model.rotation = Vector3.ZERO
 	# Restart trail emitting
 	if not _trail_particles or not is_instance_valid(_trail_particles):

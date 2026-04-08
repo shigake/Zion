@@ -44,7 +44,6 @@ var _boss_aura_checked: bool = false
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
 static var _sprite_cache_order: Array[String] = []  # Insertion order for bounded cache eviction
 static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
-static var _model_path_cache: Dictionary = {}  # "type_stage_model" -> resolved .glb path
 static var _total_3d_enemies: int = 0  # Performance guard: cap active 3D model enemies
 const SPRITE_CACHE_MAX := 64
 const MAX_3D_ENEMIES := 50  # Above this, new enemies use sprites instead of 3D models
@@ -130,7 +129,6 @@ func get_bestiary_id() -> String:
 	return base_type  # e.g. "Slime" or "BossNecromancer"
 
 ## Safe model loader — returns null on any failure instead of crashing
-static func _safe_load_model(path: String) -> PackedScene:
 	if path.is_empty() or not ResourceLoader.exists(path):
 		return null
 	var scene = load(path)
@@ -148,7 +146,6 @@ static func _should_use_3d_model() -> bool:
 	return true
 
 ## Check if a model has textures (Hyper3D models do, Hunyuan3D don't)
-static func _model_has_texture(node: Node) -> bool:
 	for child in node.get_children():
 		if child is MeshInstance3D:
 			var mi := child as MeshInstance3D
@@ -157,7 +154,6 @@ static func _model_has_texture(node: Node) -> bool:
 					var mat = mi.mesh.surface_get_material(si)
 					if mat is StandardMaterial3D and mat.albedo_texture != null:
 						return true
-		if _model_has_texture(child):
 			return true
 	return false
 
@@ -173,30 +169,17 @@ func _apply_sprite() -> void:
 	var stage = GameManager.selected_stage
 
 	# --- 3D models disabled — using pixel art sprites instead ---
-	var USE_3D_MODELS := false
-	if USE_3D_MODELS and _should_use_3d_model():
 		var model_cache_key = "%s_%s_model" % [enemy_type, stage]
-		var model_path: String
-		if _model_path_cache.has(model_cache_key):
-			model_path = _model_path_cache[model_cache_key]
 		else:
-			model_path = _resolve_model_path(enemy_type, stage)
-			_model_path_cache[model_cache_key] = model_path
 
-		var model_scene = _safe_load_model(model_path)
-		if model_scene:
 			mesh.visible = false
 			for child in get_children():
 				if child is MeshInstance3D and child != mesh:
 					child.visible = false
-			var model: Node3D = model_scene.instantiate()
 			model.name = "EnemySprite"
 			var model_scale = 0.5 if is_boss else 0.35
-			model.scale = Vector3(model_scale, model_scale, model_scale)
-			model.position.y = 0.3
 			# Only apply colored material if model has no textures (Hunyuan3D)
 			# Hyper3D models already have textures — don't override
-			if not _model_has_texture(model):
 				var enemy_mat = StandardMaterial3D.new()
 				enemy_mat.albedo_color = enemy_color if enemy_color != Color.WHITE else Color(0.7, 0.3, 0.3)
 				enemy_mat.roughness = 0.4
@@ -208,7 +191,6 @@ func _apply_sprite() -> void:
 				enemy_mat.rim = 0.4
 				enemy_mat.rim_tint = 0.3
 				_apply_material_recursive(model, enemy_mat)
-			add_child(model)
 			_total_3d_enemies += 1
 			_sprite_base_scale = model.scale
 			if is_boss:
@@ -342,22 +324,18 @@ static func _resolve_sprite_path(enemy_type: String, stage: String) -> String:
 	return ""
 
 ## Resolve 3D model (.glb) path — mirrors sprite path priority but in assets/models/
-static func _resolve_model_path(enemy_type: String, stage: String) -> String:
 	var snake_type = enemy_type.to_snake_case()
 	# Priority 1: themed model for this stage
 	if STAGE_ENEMY_SPRITES.has(stage):
 		var stage_map: Dictionary = STAGE_ENEMY_SPRITES[stage]
 		if stage_map.has(enemy_type):
 			var themed_name = stage_map[enemy_type]
-			var themed_path = "res://assets/models/enemies/%s/%s.glb" % [stage, themed_name]
 			if ResourceLoader.exists(themed_path):
 				return themed_path
 	# Priority 2: generic enemy model
-	var generic_path = "res://assets/models/enemies/%s.glb" % snake_type
 	if ResourceLoader.exists(generic_path):
 		return generic_path
 	# Priority 3: boss model
-	var boss_path = "res://assets/models/bosses/%s.glb" % snake_type
 	if ResourceLoader.exists(boss_path):
 		return boss_path
 	return ""
@@ -380,8 +358,6 @@ func _apply_procedural_model() -> void:
 	var model = ModelFactory.get_model_for_enemy(enemy_type)
 	if model.get_child_count() > 0:
 		mesh.visible = false
-		model.name = "ProceduralModel"
-		add_child(model)
 		ModelFactory.apply_model_materials(model, enemy_color)
 		_animator = preload("res://scripts/effects/procedural_animator.gd").new()
 		_animator.setup(model)

@@ -7,13 +7,6 @@ var chain_visuals: Array = []
 
 func _ready() -> void:
 	# 3D lightning orb model (visual for the weapon)
-	var _model_path = "res://assets/models/lightning_orb.glb"
-	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
-	if _model_scene:
-		var model = _model_scene.instantiate()
-		model.name = "WeaponModel"
-		model.scale = Vector3(0.25, 0.25, 0.25)
-		add_child(model)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

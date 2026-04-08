@@ -122,18 +122,11 @@ func _apply_boomerang_visual(bullet: Node) -> void:
 		existing_mesh.visible = false
 
 	# --- 3D Model (priority) ---
-	var _model_path = "res://assets/models/boomerang.glb"
-	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
-	if _model_scene:
 		# Check if already has model (reused from pool)
 		var existing_model = bullet.get_node_or_null("BoomerangModel")
 		if existing_model:
 			existing_model.visible = true
 			return
-		var model: Node3D = _model_scene.instantiate()
-		model.name = "BoomerangModel"
-		model.scale = Vector3(0.25, 0.25, 0.25)
-		bullet.add_child(model)
 	else:
 		# Billboard sprite (fallback)
 		var sprite_path = "res://assets/sprites/weapons/boomerang.png"

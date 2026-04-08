@@ -11,13 +11,6 @@ func _ready() -> void:
 	if ResourceLoader.exists(path):
 		_slash_tex = load(path)
 	# 3D model for chain whip visual
-	var _model_path = "res://assets/models/chain_whip.glb"
-	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
-	if _model_scene:
-		var model = _model_scene.instantiate()
-		model.name = "WeaponModel"
-		model.scale = Vector3(0.25, 0.25, 0.25)
-		add_child(model)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

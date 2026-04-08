@@ -93,9 +93,6 @@ class TornadoInstance extends Area3D:
 
 		# --- 3D spiral vortex model ---
 		# Load imported tornado model (double helix spiral)
-		var _tornado_scene_path = "res://assets/models/tornado_vortex.glb"
-		if ResourceLoader.exists(_tornado_scene_path):
-			var tornado_scene = load(_tornado_scene_path)
 			_mesh = tornado_scene.instantiate() as Node3D
 			# Scale to match area
 			var vortex_scale = area_radius * 0.5

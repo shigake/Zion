@@ -46,13 +46,8 @@ static func _add_emission_recursive(model: Node3D, color: Color, strength: float
 		_add_emission_recursive(child, color, strength)
 
 func _setup_lance_mesh() -> void:
-	var _lance_scene_path = "res://assets/models/crystal_lance.glb"
-	if ResourceLoader.exists(_lance_scene_path):
-		var lance_scene = load(_lance_scene_path)
 		_lance_model = lance_scene.instantiate()
-		_lance_model.name = "LanceModel"
 		_lance_model.visible = false
-		_lance_model.scale = Vector3(1.2, 1.2, 1.2)
 		_lance_model.rotation.x = PI / 2.0  # Align along Z axis
 		# Keep original textures, add crystal blue glow
 		_add_emission_recursive(_lance_model, Color(0.4, 0.7, 1.0), 1.5)
@@ -60,7 +55,6 @@ func _setup_lance_mesh() -> void:
 	else:
 		# Fallback: procedural lance
 		_lance_model = Node3D.new()
-		_lance_model.name = "LanceModel"
 		_lance_model.visible = false
 		var gold_mat = StandardMaterial3D.new()
 		gold_mat.albedo_color = Color(0.85, 0.75, 0.2)

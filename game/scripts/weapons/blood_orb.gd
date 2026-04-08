@@ -173,9 +173,6 @@ class BloodOrbInstance extends Area3D:
 		add_child(shape)
 
 		# --- 3D Blood Orb model ---
-		var _orb_scene_path = "res://assets/models/blood_orb.glb"
-		if ResourceLoader.exists(_orb_scene_path):
-			var orb_scene = load(_orb_scene_path)
 			_core_mesh = orb_scene.instantiate() as Node3D
 			_core_mesh.scale = Vector3(0.35, 0.35, 0.35)
 			# Keep original textures, just boost emission for glow
