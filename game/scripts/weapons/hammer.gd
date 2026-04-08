@@ -23,6 +23,13 @@ func _ready() -> void:
 	if ResourceLoader.exists(_slash_path2):
 		_slash_tex = load(_slash_path2)
 	# 3D model (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/hammer.glb"
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model = _model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		slam_area.add_child(model)
 	else:
 		var _sprite_path = "res://assets/sprites/weapons/hammer.png"
 		if ResourceLoader.exists(_sprite_path):

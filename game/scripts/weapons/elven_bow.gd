@@ -7,6 +7,13 @@ var arrow_scene: PackedScene = preload("res://scenes/weapons/elven_bow_arrow.tsc
 
 func _ready() -> void:
 	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/elven_bow.glb"
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model: Node3D = _model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.3, 0.3, 0.3)
+		add_child(model)
 	else:
 		# Billboard sprite (fallback)
 		var _sprite_path = "res://assets/sprites/weapons/elven_bow.png"
@@ -121,7 +128,7 @@ func _fire(level: int) -> void:
 
 	AudioManager.play_sfx("bow_release")
 	# Elven bow release flash — green nature energy
-	player = _get_player_node()
+	var player = _get_player_node()
 	if player:
 		ParticleFactory.spawn_weapon_sparks(player.global_position + Vector3(0, 0.6, 0), Color(0.3, 0.9, 0.4), 4)
 		ScreenEffects.shake(0.03)

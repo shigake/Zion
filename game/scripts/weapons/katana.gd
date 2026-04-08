@@ -30,6 +30,13 @@ func _ready() -> void:
 	_trail.trail_width = 0.52  # Enhanced: thicker, more impactful trail
 	slash_mesh.add_child(_trail)
 	# 3D model (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/katana.glb"
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model = _model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		slash_area.add_child(model)
 	else:
 		var _sprite_path = "res://assets/sprites/weapons/katana.png"
 		if ResourceLoader.exists(_sprite_path):

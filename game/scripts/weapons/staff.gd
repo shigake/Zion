@@ -7,6 +7,13 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/staff_projecti
 
 func _ready() -> void:
 	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/magic_staff.glb"
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model: Node3D = _model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.3, 0.3, 0.3)
+		add_child(model)
 	else:
 		# Billboard sprite (fallback)
 		var mesh = MeshInstance3D.new()

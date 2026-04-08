@@ -60,7 +60,12 @@ func _place_totem(level: int) -> void:
 	totem.name = "Totem"
 
 	# --- 3D Totem model ---
+	var _totem_scene_path = "res://assets/models/electric_totem.glb"
+	if ResourceLoader.exists(_totem_scene_path):
+		var totem_scene = load(_totem_scene_path)
 		var totem_model = totem_scene.instantiate()
+		totem_model.name = "TotemModel"
+		totem_model.scale = Vector3(0.8, 0.8, 0.8)
 		# Keep original textures, add electric blue emission glow
 		_add_emission_to_model(totem_model, Color(0.3, 0.8, 1.0), 2.0)
 		totem.add_child(totem_model)

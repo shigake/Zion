@@ -773,6 +773,9 @@ func _update_tile_highlights(selected_color: Color) -> void:
 
 
 func _load_info_sprite(char_id: String) -> void:
+	var model_path := "res://assets/models/characters/%s.glb" % char_id
+	if ResourceLoader.exists(model_path):
+		_show_3d_preview(model_path)
 	else:
 		_hide_3d_preview()
 		var sprite_path := "res://assets/sprites/characters/%s.png" % char_id
@@ -783,6 +786,7 @@ func _load_info_sprite(char_id: String) -> void:
 		_start_bob_animation()
 
 
+func _show_3d_preview(model_path: String) -> void:
 	# Remove old model
 	if _3d_model and is_instance_valid(_3d_model):
 		_3d_model.queue_free()
@@ -799,6 +803,7 @@ func _load_info_sprite(char_id: String) -> void:
 		_bob_tween = null
 
 	# Load and instance the 3D model
+	var scene: PackedScene = load(model_path)
 	if not scene:
 		_hide_3d_preview()
 		return

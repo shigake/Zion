@@ -86,8 +86,14 @@ func _spawn_portal_effect(pos: Vector3) -> void:
 	get_tree().current_scene.call_deferred("add_child", container)
 	container.position = pos + Vector3(0, 0.5, 0)
 
+	var model_path = "res://assets/models/dark_portal.glb"
+	var _portal_scene = EnemyBase3D._safe_load_model(model_path)
 	if _portal_scene:
 		# 3D model portal
+		var model: Node3D = _portal_scene.instantiate()
+		model.name = "PortalModel"
+		model.scale = Vector3(0.5, 0.5, 0.5)
+		container.add_child(model)
 
 		# Simple fade-out and cleanup script
 		container.set_meta("elapsed", 0.0)

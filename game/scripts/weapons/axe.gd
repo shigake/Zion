@@ -207,6 +207,13 @@ func _build_axe_model() -> void:
 	## Viking axe: prefer 3D model, fallback to procedural PrismMesh + CylinderMesh.
 	axe_mesh.mesh = null  # Clear any default mesh
 
+	var model_path = "res://assets/models/viking_axe.glb"
+	var _axe_scene = EnemyBase3D._safe_load_model(model_path)
+	if _axe_scene:
+		var model: Node3D = _axe_scene.instantiate()
+		model.name = "AxeModel"
+		model.scale = Vector3(0.3, 0.3, 0.3)
+		axe_mesh.add_child(model)
 	else:
 		# Fallback: procedural axe model
 		# -- Blade material (cold steel with fire emission) --

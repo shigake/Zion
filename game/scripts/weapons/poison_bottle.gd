@@ -90,6 +90,9 @@ func _throw_bottle(level: int) -> void:
 
 	# --- Main puddle: imported organic 3D model ---
 	var puddle_mi: Node3D = null
+	var _pool_scene_path = "res://assets/models/poison_pool.glb"
+	if ResourceLoader.exists(_pool_scene_path):
+		var pool_scene = load(_pool_scene_path)
 		puddle_mi = pool_scene.instantiate()
 		puddle_mi.name = "PuddleModel"
 		# Scale model to match pool radius (model is ~2 units wide)

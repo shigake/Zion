@@ -7,6 +7,13 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
 func _ready() -> void:
 	# --- 3D Model (priority) ---
+	var _model_path = "res://assets/models/machinegun.glb"
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model: Node3D = _model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		add_child(model)
 	else:
 		# Billboard sprite (fallback)
 		var mesh = MeshInstance3D.new()

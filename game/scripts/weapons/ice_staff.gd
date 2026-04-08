@@ -107,10 +107,7 @@ func _fire(level: int) -> void:
 			_freeze_area(hit_pos, level)
 			b.queue_free()
 	bullet.body_entered.connect(_ice_hit, CONNECT_ONE_SHOT)
-	var self_ref = weakref(self)
 	bullet.area_entered.connect(func(area: Area3D) -> void:
-		if not self_ref.get_ref():
-			return
 		if area == null or not is_instance_valid(area):
 			return
 		var parent = area.get_parent()
