@@ -437,11 +437,10 @@ func _animate_panel_in() -> void:
 	if _sparkle_particles:
 		_sparkle_particles.visible = true
 		_sparkle_particles.emitting = true
-	# Hide buttons initially for cascade
+	# Hide buttons initially for cascade (only fade, no position change — VBox manages layout)
 	for btn in _all_buttons:
 		if is_instance_valid(btn):
 			btn.modulate.a = 0.0
-			btn.position.y += 12
 	var tw = create_tween()
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.set_parallel(true)
@@ -464,7 +463,6 @@ func _animate_panel_in() -> void:
 		if is_instance_valid(btn):
 			var delay = 0.1 + i * 0.08
 			tw.tween_property(btn, "modulate:a", 1.0, 0.2).set_delay(delay)
-			tw.tween_property(btn, "position:y", btn.position.y - 12, 0.2).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func _setup_pause_focus() -> void:
 	var buttons := []

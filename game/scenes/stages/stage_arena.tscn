@@ -67,8 +67,8 @@ mesh = SubResource("1")
 surface_material_override/0 = SubResource("2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.574, 0.819, 0, -0.819, 0.574, 0, 16, 14)
-fov = 50.0
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 18, 12)
+fov = 45.0
 script = ExtResource("7")
 
 [node name="ArenaProps" type="Node3D" parent="."]

@@ -5,13 +5,12 @@ class_name StageAtmosphere
 
 const STAGE_CONFIGS := {
 	"cemetery": {
-		"ambient_color": Color(0.1, 0.07, 0.18),
+		"ambient_color": Color(0.12, 0.08, 0.18),
 		"ambient_energy": 0.3,
 		"bg_color": Color(0.03, 0.02, 0.06),
 		"fog_enabled": true,
-		"fog_color": Color(0.12, 0.08, 0.22),
-		"fog_density": 0.012,
-		"fog_aerial": 0.5,
+		"fog_color": Color(0.15, 0.12, 0.2),
+		"fog_density": 0.015,
 		"light_color": Color(0.4, 0.3, 0.6),
 		"light_energy": 0.6,
 		"glow_intensity": 0.4,
@@ -22,9 +21,8 @@ const STAGE_CONFIGS := {
 		"ambient_energy": 0.5,
 		"bg_color": Color(0.02, 0.05, 0.02),
 		"fog_enabled": true,
-		"fog_color": Color(0.08, 0.16, 0.06),
-		"fog_density": 0.006,
-		"fog_aerial": 0.4,
+		"fog_color": Color(0.1, 0.18, 0.08),
+		"fog_density": 0.008,
 		"light_color": Color(0.5, 0.7, 0.3),
 		"light_energy": 0.8,
 		"glow_intensity": 0.3,
@@ -145,7 +143,7 @@ static func apply(scene: Node3D, stage_id: String) -> void:
 		env.fog_enabled = true
 		env.fog_light_color = config["fog_color"]
 		env.fog_density = config["fog_density"]
-		env.fog_aerial_perspective = config.get("fog_aerial", 0.3)
+		env.fog_aerial_perspective = 0.3
 
 	# Glow (bloom)
 	env.glow_enabled = true

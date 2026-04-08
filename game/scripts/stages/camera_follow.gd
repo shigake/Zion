@@ -2,7 +2,7 @@ extends Camera3D
 
 ## Camera top-down que segue o jogador com offset fixo + look-ahead.
 
-@export var offset: Vector3 = Vector3(0, 16, 14)
+@export var offset: Vector3 = Vector3(0, 18, 12)
 @export var smooth_speed: float = 5.0
 @export var look_ahead_strength: float = 0.3
 
