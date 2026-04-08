@@ -12,20 +12,27 @@ var direction: Vector3 = Vector3.FORWARD
 var timer: float = 0.0
 var damage_type: String = "ice"
 var _sprite: Sprite3D = null
+var _trail: Node3D = null
+var _signals_connected: bool = false
 
 func _ready() -> void:
-	body_entered.connect(_on_body_entered)
-	area_entered.connect(_on_area_entered)
+	if not _signals_connected:
+		body_entered.connect(_on_body_entered)
+		area_entered.connect(_on_area_entered)
+		_signals_connected = true
 	if target and is_instance_valid(target):
 		direction = (target.global_position - global_position).normalized()
-	# Blue weapon trail — more vibrant, longer
-	var trail = Node3D.new()
-	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
-	trail.trail_color = Color(0.2, 0.5, 1.0, 0.8)
-	trail.trail_color_tip = Color(0.5, 0.8, 1.0, 0.95)
-	trail.max_points = 20
-	trail.trail_width = 0.2
-	add_child(trail)
+	# Blue weapon trail — reuse existing or create once
+	if not _trail or not is_instance_valid(_trail):
+		_trail = Node3D.new()
+		_trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
+		_trail.trail_color = Color(0.2, 0.5, 1.0, 0.8)
+		_trail.trail_color_tip = Color(0.5, 0.8, 1.0, 0.95)
+		_trail.max_points = 20
+		_trail.trail_width = 0.2
+		add_child(_trail)
+	else:
+		_trail.points.clear()
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:
@@ -64,12 +71,28 @@ func _update_sprite_rotation() -> void:
 	var angle = atan2(-direction.z, direction.x)
 	_sprite.rotation.z = angle
 
+func _reset_for_reuse() -> void:
+	timer = 0.0
+	target = null
+	direction = Vector3.FORWARD
+	damage = 8
+	damage_type = "ice"
+	collision_layer = 8  # PlayerAttacks
+	collision_mask = 2   # Enemies
+	set_deferred("monitorable", true)
+	set_deferred("monitoring", true)
+	if _trail and is_instance_valid(_trail):
+		_trail.points.clear()
+
+func _retire() -> void:
+	ObjectPool.return_instance(self)
+
 func _physics_process(delta: float) -> void:
 	if not is_inside_tree():
 		return
 	timer += delta
 	if timer >= lifetime:
-		queue_free()
+		_retire()
 		return
 
 	# Homing: ajusta direcao em direcao ao alvo
@@ -89,7 +112,7 @@ func _on_body_entered(body: Node3D) -> void:
 		body.call_deferred("take_damage", damage, damage_type)
 		# Impact particles on hit
 		ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.6, 1.0), 6)
-		queue_free()
+		_retire()
 
 ## Detecao alternativa via Area3D (Hitbox do inimigo)
 func _on_area_entered(area: Area3D) -> void:
@@ -98,4 +121,4 @@ func _on_area_entered(area: Area3D) -> void:
 		GameManager._last_attacking_weapon = "staff"
 		parent.call_deferred("take_damage", damage, damage_type)
 		ParticleFactory.spawn_hit_particles(parent.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.6, 1.0), 6)
-		queue_free()
+		_retire()
