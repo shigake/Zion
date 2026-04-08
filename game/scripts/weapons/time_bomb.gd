@@ -8,6 +8,37 @@ const MAX_BOMBS: int = 3
 const FUSE_TIME: float = 3.0
 const EXPLOSION_RADIUS: float = 4.0
 
+# --- Cached materials (lazy-init, reused across bomb spawns) ---
+var _bomb_body_mat_cache: StandardMaterial3D = null
+var _fuse_mat_cache: StandardMaterial3D = null
+var _spark_draw_mat_cache: StandardMaterial3D = null
+
+func _get_bomb_body_mat() -> StandardMaterial3D:
+	if _bomb_body_mat_cache == null:
+		_bomb_body_mat_cache = StandardMaterial3D.new()
+		_bomb_body_mat_cache.albedo_color = Color(0.3, 0.05, 0.05, 1.0)
+		_bomb_body_mat_cache.metallic = 0.5
+		_bomb_body_mat_cache.emission_enabled = true
+		_bomb_body_mat_cache.emission = Color(0.8, 0.1, 0.1)
+		_bomb_body_mat_cache.emission_energy_multiplier = 1.0
+	return _bomb_body_mat_cache
+
+func _get_fuse_mat() -> StandardMaterial3D:
+	if _fuse_mat_cache == null:
+		_fuse_mat_cache = StandardMaterial3D.new()
+		_fuse_mat_cache.albedo_color = Color(0.15, 0.1, 0.05, 1.0)
+	return _fuse_mat_cache
+
+func _get_spark_draw_mat() -> StandardMaterial3D:
+	if _spark_draw_mat_cache == null:
+		_spark_draw_mat_cache = StandardMaterial3D.new()
+		_spark_draw_mat_cache.albedo_color = Color(1.0, 0.6, 0.1, 0.9)
+		_spark_draw_mat_cache.emission_enabled = true
+		_spark_draw_mat_cache.emission = Color(1.0, 0.5, 0.0)
+		_spark_draw_mat_cache.emission_energy_multiplier = 5.0
+		_spark_draw_mat_cache.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return _spark_draw_mat_cache
+
 func _process(delta: float) -> void:
 	if not is_inside_tree():
 		return
@@ -84,12 +115,8 @@ func _create_bomb_node(level: int) -> Node3D:
 		sphere.radius = 0.3
 		sphere.height = 0.6
 		mesh_inst.mesh = sphere
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.3, 0.05, 0.05, 1.0)
-		mat.metallic = 0.5
-		mat.emission_enabled = true
-		mat.emission = Color(0.8, 0.1, 0.1)
-		mat.emission_energy_multiplier = 1.0
+		# Duplicate from cache since explosion tween modifies emission per-bomb
+		var mat = _get_bomb_body_mat().duplicate() as StandardMaterial3D
 		mesh_inst.material_override = mat
 		bomb.add_child(mesh_inst)
 		# Fuse cylinder (only for fallback — model has its own fuse)
@@ -99,9 +126,7 @@ func _create_bomb_node(level: int) -> Node3D:
 		fuse_cyl.bottom_radius = 0.01
 		fuse_cyl.height = 0.15
 		fuse_mesh.mesh = fuse_cyl
-		var fuse_mat = StandardMaterial3D.new()
-		fuse_mat.albedo_color = Color(0.15, 0.1, 0.05, 1.0)
-		fuse_mesh.material_override = fuse_mat
+		fuse_mesh.material_override = _get_fuse_mat()
 		fuse_mesh.position = Vector3(0.02, 0.35, 0)
 		fuse_mesh.rotation.z = 0.3
 		bomb.add_child(fuse_mesh)
@@ -136,13 +161,7 @@ func _create_bomb_node(level: int) -> Node3D:
 	var spark_mesh = SphereMesh.new()
 	spark_mesh.radius = 0.01
 	spark_mesh.height = 0.02
-	var spark_draw_mat = StandardMaterial3D.new()
-	spark_draw_mat.albedo_color = Color(1.0, 0.6, 0.1, 0.9)
-	spark_draw_mat.emission_enabled = true
-	spark_draw_mat.emission = Color(1.0, 0.5, 0.0)
-	spark_draw_mat.emission_energy_multiplier = 5.0
-	spark_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	spark_mesh.surface_set_material(0, spark_draw_mat)
+	spark_mesh.surface_set_material(0, _get_spark_draw_mat())
 	spark_particles.draw_pass_1 = spark_mesh
 	bomb.add_child(spark_particles)
 

@@ -5,6 +5,58 @@ extends Node3D
 var attack_timer: float = 0.0
 var active_pools: Array = []
 
+# --- Cached materials (lazy-init, reused across spawns) ---
+var _puddle_mat_cache: StandardMaterial3D = null
+var _ripple_mat_cache: StandardMaterial3D = null
+var _cloud_mesh_mat_cache: StandardMaterial3D = null
+var _bubble_mesh_mat_cache: StandardMaterial3D = null
+
+func _get_puddle_mat() -> StandardMaterial3D:
+	if _puddle_mat_cache == null:
+		_puddle_mat_cache = StandardMaterial3D.new()
+		_puddle_mat_cache.albedo_color = Color(0.1, 0.9, 0.15, 0.9)
+		_puddle_mat_cache.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_puddle_mat_cache.emission_enabled = true
+		_puddle_mat_cache.emission = Color(0.15, 1.0, 0.2)
+		_puddle_mat_cache.emission_energy_multiplier = 3.0
+		_puddle_mat_cache.roughness = 0.1
+		_puddle_mat_cache.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _puddle_mat_cache
+
+func _get_ripple_mat() -> StandardMaterial3D:
+	if _ripple_mat_cache == null:
+		_ripple_mat_cache = StandardMaterial3D.new()
+		_ripple_mat_cache.albedo_color = Color(0.2, 1.0, 0.3, 0.35)
+		_ripple_mat_cache.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_ripple_mat_cache.emission_enabled = true
+		_ripple_mat_cache.emission = Color(0.15, 0.9, 0.15)
+		_ripple_mat_cache.emission_energy_multiplier = 2.0
+		_ripple_mat_cache.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_ripple_mat_cache.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _ripple_mat_cache
+
+func _get_cloud_mesh_mat() -> StandardMaterial3D:
+	if _cloud_mesh_mat_cache == null:
+		_cloud_mesh_mat_cache = StandardMaterial3D.new()
+		_cloud_mesh_mat_cache.albedo_color = Color(0.15, 0.95, 0.1, 0.6)
+		_cloud_mesh_mat_cache.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_cloud_mesh_mat_cache.emission_enabled = true
+		_cloud_mesh_mat_cache.emission = Color(0.15, 0.9, 0.1)
+		_cloud_mesh_mat_cache.emission_energy_multiplier = 1.2
+		_cloud_mesh_mat_cache.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return _cloud_mesh_mat_cache
+
+func _get_bubble_mesh_mat() -> StandardMaterial3D:
+	if _bubble_mesh_mat_cache == null:
+		_bubble_mesh_mat_cache = StandardMaterial3D.new()
+		_bubble_mesh_mat_cache.albedo_color = Color(0.1, 0.85, 0.05, 0.55)
+		_bubble_mesh_mat_cache.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_bubble_mesh_mat_cache.roughness = 0.1
+		_bubble_mesh_mat_cache.emission_enabled = true
+		_bubble_mesh_mat_cache.emission = Color(0.15, 0.9, 0.05)
+		_bubble_mesh_mat_cache.emission_energy_multiplier = 0.6
+	return _bubble_mesh_mat_cache
+
 static func _add_emission_recursive(model: Node3D, color: Color, strength: float) -> void:
 	for child in model.get_children():
 		if child is MeshInstance3D:
@@ -113,15 +165,7 @@ func _throw_bottle(level: int) -> void:
 		disc.height = 0.04
 		puddle_mi.mesh = disc
 		puddle_mi.position = Vector3(0, 0.02, 0)
-		var puddle_mat = StandardMaterial3D.new()
-		puddle_mat.albedo_color = Color(0.1, 0.9, 0.15, 0.9)
-		puddle_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		puddle_mat.emission_enabled = true
-		puddle_mat.emission = Color(0.15, 1.0, 0.2)
-		puddle_mat.emission_energy_multiplier = 3.0
-		puddle_mat.roughness = 0.1
-		puddle_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		puddle_mi.material_override = puddle_mat
+		puddle_mi.material_override = _get_puddle_mat()
 		pool.add_child(puddle_mi)
 
 	# --- Surface ripple effect (animated ring expanding outward) ---
@@ -135,29 +179,26 @@ func _throw_bottle(level: int) -> void:
 	ripple_mi.mesh = ripple_torus
 	ripple_mi.position = Vector3(0, 0.04, 0)
 	ripple_mi.rotation.x = PI / 2.0
-	var ripple_mat = StandardMaterial3D.new()
-	ripple_mat.albedo_color = Color(0.2, 1.0, 0.3, 0.35)
-	ripple_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ripple_mat.emission_enabled = true
-	ripple_mat.emission = Color(0.15, 0.9, 0.15)
-	ripple_mat.emission_energy_multiplier = 2.0
-	ripple_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	ripple_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Duplicate from cache since tween animates albedo_color:a per-pool
+	var ripple_mat = _get_ripple_mat().duplicate() as StandardMaterial3D
 	ripple_mi.material_override = ripple_mat
 	ripple_mi.scale = Vector3(0.5, 0.5, 0.5)
 	pool.add_child(ripple_mi)
 	# Looping ripple animation — expand then reset
+	# Store tweens as meta so behavior can kill them on cleanup
 	var ripple_tw = pool.create_tween().set_loops()
 	ripple_tw.tween_property(ripple_mi, "scale", Vector3(1.3, 1.3, 1.3), 1.2).set_trans(Tween.TRANS_SINE)
 	ripple_tw.parallel().tween_property(ripple_mat, "albedo_color:a", 0.0, 1.2)
 	ripple_tw.tween_property(ripple_mi, "scale", Vector3(0.5, 0.5, 0.5), 0.0)
 	ripple_tw.tween_property(ripple_mat, "albedo_color:a", 0.35, 0.0)
+	pool.set_meta("_ripple_tween", ripple_tw)
 
 	# Pulsing animation on puddle (gentle breathing)
 	var _base_scale = puddle_mi.scale
 	var pulse_tw = pool.create_tween().set_loops()
 	pulse_tw.tween_property(puddle_mi, "scale", _base_scale * 1.06, 0.8).set_trans(Tween.TRANS_SINE)
 	pulse_tw.tween_property(puddle_mi, "scale", _base_scale * 0.96, 0.8).set_trans(Tween.TRANS_SINE)
+	pool.set_meta("_pulse_tween", pulse_tw)
 
 	# --- Toxic cloud (GPUParticles3D stationary, replaces billboard sprite) ---
 	var toxic_cloud = GPUParticles3D.new()
@@ -199,14 +240,7 @@ func _throw_bottle(level: int) -> void:
 	cloud_mesh.height = 0.24
 	cloud_mesh.radial_segments = 6
 	cloud_mesh.rings = 3
-	var cloud_mesh_mat = StandardMaterial3D.new()
-	cloud_mesh_mat.albedo_color = Color(0.15, 0.95, 0.1, 0.6)
-	cloud_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cloud_mesh_mat.emission_enabled = true
-	cloud_mesh_mat.emission = Color(0.15, 0.9, 0.1)
-	cloud_mesh_mat.emission_energy_multiplier = 1.2
-	cloud_mesh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	cloud_mesh.surface_set_material(0, cloud_mesh_mat)
+	cloud_mesh.surface_set_material(0, _get_cloud_mesh_mat())
 	toxic_cloud.draw_pass_1 = cloud_mesh
 	pool.add_child(toxic_cloud)
 
@@ -240,14 +274,7 @@ func _throw_bottle(level: int) -> void:
 	var bubble_mesh = SphereMesh.new()
 	bubble_mesh.radius = 0.08
 	bubble_mesh.height = 0.16
-	var bubble_mesh_mat = StandardMaterial3D.new()
-	bubble_mesh_mat.albedo_color = Color(0.1, 0.85, 0.05, 0.55)
-	bubble_mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	bubble_mesh_mat.roughness = 0.1
-	bubble_mesh_mat.emission_enabled = true
-	bubble_mesh_mat.emission = Color(0.15, 0.9, 0.05)
-	bubble_mesh_mat.emission_energy_multiplier = 0.6
-	bubble_mesh.surface_set_material(0, bubble_mesh_mat)
+	bubble_mesh.surface_set_material(0, _get_bubble_mesh_mat())
 	bubbles.draw_pass_1 = bubble_mesh
 	pool.add_child(bubbles)
 

@@ -20,6 +20,7 @@ func _process(delta: float) -> void:
 
 	life_timer -= delta
 	if life_timer <= 0:
+		_cleanup_tweens()
 		get_parent().queue_free()
 		return
 
@@ -27,6 +28,17 @@ func _process(delta: float) -> void:
 	if damage_timer <= 0:
 		damage_timer = damage_interval
 		_deal_damage()
+
+func _cleanup_tweens() -> void:
+	var pool_node = get_parent()
+	if not is_instance_valid(pool_node):
+		return
+	for tw_key in ["_ripple_tween", "_pulse_tween"]:
+		if pool_node.has_meta(tw_key):
+			var tw = pool_node.get_meta(tw_key) as Tween
+			if tw and tw.is_valid():
+				tw.kill()
+			pool_node.remove_meta(tw_key)
 
 func _deal_damage() -> void:
 	var area: Area3D = get_meta("area")
