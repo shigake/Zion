@@ -259,7 +259,7 @@ func _get_cached_fps() -> float:
 	return _cached_fps
 
 
-func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 6) -> void:
+func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 9) -> void:
 	# Accessibility: reduce particles if reduced motion
 	if AccessibilityManager.reduced_motion:
 		count = maxi(1, int(count * 0.3))
@@ -271,7 +271,7 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 		return
 	# Reduce count at medium-low FPS
 	if fps < 45:
-		count = mini(count, 3)
+		count = mini(count, 4)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
@@ -280,7 +280,7 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 	mat.initial_velocity_max = 5.0
 	mat.gravity = Vector3(0, -8, 0)
 	mat.scale_min = 0.05
-	mat.scale_max = 0.12
+	mat.scale_max = 0.156  # +30% bigger particles for more visual impact
 	mat.color = color
 
 	particles.amount = count
@@ -295,6 +295,41 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 		draw_mat.emission = color
 
 	_setup_and_emit(particles, pos, 1.0)
+
+	# Brief white flash particle for extra impact (skip at low FPS)
+	if fps >= 45 and not AccessibilityManager.reduced_motion:
+		_spawn_hit_flash(pos)
+
+## Brief bright white flash particle that fades fast — adds impact punch to hits
+func _spawn_hit_flash(pos: Vector3) -> void:
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 0.5
+	mat.initial_velocity_max = 1.5
+	mat.gravity = Vector3(0, 0, 0)
+	mat.scale_min = 0.15
+	mat.scale_max = 0.25
+	mat.color = Color(1.0, 1.0, 1.0, 0.9)
+
+	particles.amount = 2
+	particles.lifetime = 0.12  # Very brief bright flash
+	particles.explosiveness = 1.0
+
+	particles.draw_pass_1 = _hit_draw_pass
+	var draw_mat: StandardMaterial3D = _hit_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = Color.WHITE
+		draw_mat.emission = Color(1.0, 1.0, 1.0)
+		draw_mat.emission_energy_multiplier = 5.0
+
+	_setup_and_emit(particles, pos, 0.5)
+
+	# Restore hit draw pass material after flash emits (next frame)
+	await get_tree().process_frame
+	if draw_mat:
+		draw_mat.emission_energy_multiplier = 2.0
 
 func spawn_death_particles(pos: Vector3, color: Color, count: int = 12) -> void:
 	# Accessibility: reduce particles if reduced motion
@@ -342,15 +377,15 @@ func spawn_collect_particles(pos: Vector3, color: Color = Color(0.2, 0.6, 1.0)) 
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
-	mat.spread = 60.0
-	mat.initial_velocity_min = 1.0
-	mat.initial_velocity_max = 3.0
+	mat.spread = 90.0  # Wider spread for more satisfying collection feel
+	mat.initial_velocity_min = 1.5
+	mat.initial_velocity_max = 4.0
 	mat.gravity = Vector3(0, 2, 0)  # Sobe
 	mat.scale_min = 0.03
 	mat.scale_max = 0.08
 	mat.color = color
 
-	particles.amount = 4
+	particles.amount = 5
 	particles.lifetime = 0.5
 	particles.explosiveness = 1.0
 
@@ -363,6 +398,10 @@ func spawn_collect_particles(pos: Vector3, color: Color = Color(0.2, 0.6, 1.0)) 
 
 	_setup_and_emit(particles, pos, 1.0)
 
+	# Subtle screen flash on XP collection for extra satisfaction
+	if ScreenEffects and ScreenEffects.has_method("flash"):
+		ScreenEffects.flash(0.1, 0.05)
+
 func spawn_level_up_particles(pos: Vector3) -> void:
 	# Accessibility: skip decorative level-up particles if reduced motion
 	if AccessibilityManager.reduced_motion:
@@ -371,16 +410,16 @@ func spawn_level_up_particles(pos: Vector3) -> void:
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
-	mat.spread = 30.0
-	mat.initial_velocity_min = 2.0
-	mat.initial_velocity_max = 6.0
-	mat.gravity = Vector3(0, 0, 0)
-	mat.scale_min = 0.05
-	mat.scale_max = 0.15
+	mat.spread = 40.0
+	mat.initial_velocity_min = 3.0
+	mat.initial_velocity_max = 9.0  # Particles go higher
+	mat.gravity = Vector3(0, -1, 0)  # Slight gravity so they arc
+	mat.scale_min = 0.06
+	mat.scale_max = 0.18
 	mat.color = color
 
-	particles.amount = 20
-	particles.lifetime = 1.0
+	particles.amount = 40  # Doubled for dramatic effect
+	particles.lifetime = 1.2
 	particles.explosiveness = 0.8
 
 	# Use shared draw pass (no per-emission allocation)
@@ -390,7 +429,42 @@ func spawn_level_up_particles(pos: Vector3) -> void:
 		draw_mat.albedo_color = color
 		draw_mat.emission = Color(1, 0.85, 0.2)
 
-	_setup_and_emit(particles, pos, 2.0)
+	_setup_and_emit(particles, pos, 2.5)
+
+	# Gold ring shockwave expanding outward
+	_spawn_level_up_ring(pos)
+
+## Gold ring shockwave for level-up — expands outward and fades
+func _spawn_level_up_ring(pos: Vector3) -> void:
+	var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+	if not scene:
+		return
+	var ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.3
+	torus.outer_radius = 0.5
+	torus.rings = 16
+	torus.ring_segments = 24
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.85, 0.2, 0.8)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.85, 0.2)
+	mat.emission_energy_multiplier = 4.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.no_depth_test = true
+	torus.surface_set_material(0, mat)
+	ring.mesh = torus
+	scene.add_child(ring)
+	ring.global_position = pos + Vector3(0, 0.1, 0)
+	ring.rotation_degrees.x = 90.0  # Lay flat on the ground
+
+	# Expand outward and fade
+	var tween = ring.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(ring, "scale", Vector3(6.0, 6.0, 6.0), 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.6).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(ring.queue_free)
 
 ## Katana impact sparks — small bright white particles outward from slash point
 func spawn_slash_sparks(pos: Vector3, count: int = 5) -> void:

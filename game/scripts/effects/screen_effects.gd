@@ -126,6 +126,10 @@ func shake(amount: float = 0.15) -> void:
 	var multiplier: float = [0.0, 0.4, 1.0, 1.6][setting]
 	shake_amount = maxf(shake_amount, amount * multiplier)
 
+	# Chromatic aberration on strong shakes (amount >= 0.2)
+	if amount >= 0.2 and not AccessibilityManager.reduced_motion:
+		_apply_chromatic_aberration(amount)
+
 var _time_scale_priority: int = 0  # Higher priority effects won't be overridden
 
 func hit_freeze(duration: float = 0.05) -> void:
@@ -197,21 +201,89 @@ func damage_feedback(damage_amount: int, damage_source_pos: Vector3 = Vector3.ZE
 	# 3. Damage intensity for post-processing
 	_damage_intensity = clampf(damage_ratio * GameConstants.DAMAGE_INTENSITY_SCALE, GameConstants.DAMAGE_INTENSITY_MIN, 1.0)
 
+	# 3b. Vibrant red flash on damage (scales with damage ratio)
+	var flash_alpha_scale = clampf(damage_ratio * 2.0, 0.1, 0.25)
+	if _flash_overlay and AccessibilityManager.can_flash():
+		_flash_overlay.color = Color(1.0, 0.1, 0.05, flash_alpha_scale)
+		_flash_overlay.visible = true
+		var flash_tw = create_tween()
+		flash_tw.tween_property(_flash_overlay, "color:a", 0.0, 0.15)
+		flash_tw.tween_callback(func(): _flash_overlay.visible = false)
+
 	# 4. Gamepad vibration
 	_vibrate_gamepad(damage_ratio)
 
 	# 5. Signal for HUD
 	player_took_damage.emit()
 
-## Red flash overlay on damage — DISABLED (PRD 09)
-func damage_flash(_duration: float = 0.15) -> void:
-	pass
+## Red flash overlay on damage — re-enabled with brighter vibrant red
+func damage_flash(duration: float = 0.15) -> void:
+	if not _flash_overlay:
+		return
+	# Accessibility: rate-limit flashes
+	if not AccessibilityManager.can_flash():
+		return
+	_flash_overlay.color = Color(1.0, 0.1, 0.05, 0.18)  # Vibrant bright red
+	_flash_overlay.visible = true
+	var tween = create_tween()
+	tween.tween_property(_flash_overlay, "color:a", 0.0, duration)
+	tween.tween_callback(func(): _flash_overlay.visible = false)
 
 ## Gamepad vibration on damage
 func _vibrate_gamepad(intensity: float) -> void:
 	var strong = clampf(intensity * GameConstants.VIBRATE_STRONG_SCALE, 0.1, GameConstants.VIBRATE_STRONG_MAX)
 	var weak = clampf(intensity * GameConstants.VIBRATE_WEAK_SCALE, 0.2, GameConstants.VIBRATE_WEAK_MAX)
 	Input.start_joy_vibration(0, weak, strong, GameConstants.VIBRATE_DURATION)
+
+## Chromatic aberration effect during strong shakes — offset RGB channels briefly
+var _chroma_overlay_r: ColorRect = null
+var _chroma_overlay_b: ColorRect = null
+var _chroma_tween: Tween = null
+
+func _apply_chromatic_aberration(intensity: float) -> void:
+	if not _vignette_canvas:
+		return
+	# Use two semi-transparent color overlays offset in opposite directions
+	# to simulate chromatic aberration cheaply (no shader needed)
+	var offset = clampf(intensity * 3.0, 1.0, 4.0)
+	var alpha = clampf(intensity * 0.15, 0.02, 0.08)
+
+	if not _chroma_overlay_r:
+		_chroma_overlay_r = ColorRect.new()
+		_chroma_overlay_r.anchors_preset = Control.PRESET_FULL_RECT
+		_chroma_overlay_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_chroma_overlay_r.color = Color(1.0, 0.0, 0.0, 0.0)
+		_vignette_canvas.add_child(_chroma_overlay_r)
+
+	if not _chroma_overlay_b:
+		_chroma_overlay_b = ColorRect.new()
+		_chroma_overlay_b.anchors_preset = Control.PRESET_FULL_RECT
+		_chroma_overlay_b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_chroma_overlay_b.color = Color(0.0, 0.0, 1.0, 0.0)
+		_vignette_canvas.add_child(_chroma_overlay_b)
+
+	# Offset the overlays slightly
+	_chroma_overlay_r.position = Vector2(-offset, 0)
+	_chroma_overlay_b.position = Vector2(offset, 0)
+	_chroma_overlay_r.color.a = alpha
+	_chroma_overlay_b.color.a = alpha
+	_chroma_overlay_r.visible = true
+	_chroma_overlay_b.visible = true
+
+	# Kill previous tween if still running
+	if _chroma_tween and _chroma_tween.is_valid():
+		_chroma_tween.kill()
+
+	# Fade out quickly
+	_chroma_tween = create_tween().set_parallel(true)
+	_chroma_tween.tween_property(_chroma_overlay_r, "color:a", 0.0, 0.2)
+	_chroma_tween.tween_property(_chroma_overlay_b, "color:a", 0.0, 0.2)
+	_chroma_tween.chain().tween_callback(func():
+		_chroma_overlay_r.visible = false
+		_chroma_overlay_b.visible = false
+		_chroma_overlay_r.position = Vector2.ZERO
+		_chroma_overlay_b.position = Vector2.ZERO
+	)
 
 # ---- Level Up Flash ----
 
