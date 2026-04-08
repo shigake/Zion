@@ -237,7 +237,9 @@ func _deal_damage(level: int) -> void:
 			return
 		var player_pos = player.global_position
 		var fx_pos = player_pos + fire_direction * 2.0 + Vector3(0, 0.5, 0)
-		ParticleFactory.spawn_hit_particles(fx_pos, Color(1.0, 0.4, 0.1))
+		ParticleFactory.spawn_hit_particles(fx_pos, Color(1.0, 0.5, 0.05), 7)
+		if bodies.size() >= 3:
+			ScreenEffects.shake(0.06)
 
 func _set_flame_visible(visible_flag: bool) -> void:
 	flame_mesh.visible = visible_flag

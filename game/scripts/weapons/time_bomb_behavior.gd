@@ -167,12 +167,13 @@ func _explode() -> void:
 
 	var pos = global_position
 
-	# Multi-layer explosion
-	ScreenEffects.shake(0.5)
+	# Multi-layer explosion — epic impact
+	ScreenEffects.shake(0.6)
+	ScreenEffects.flash(0.06, 0.18)
 	AudioManager.play_sfx("hit")
 
-	# Core flash
-	_spawn_explosion_flash(pos, 0.5, Color(1.0, 0.9, 0.6), 6.0, 0.15)
+	# Core flash — brighter
+	_spawn_explosion_flash(pos, 0.6, Color(1.0, 0.95, 0.7), 10.0, 0.18)
 	# Fire burst
 	ParticleFactory.spawn_explosion_particles(pos, explosion_radius)
 	ParticleFactory.spawn_hit_particles(pos, Color(1.0, 0.4, 0.0))

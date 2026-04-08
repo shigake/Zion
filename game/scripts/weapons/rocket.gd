@@ -18,6 +18,14 @@ func _ready() -> void:
 	# Direction is calculated in first _physics_process frame
 	# because global_position may not be set yet during add_child
 	_setup_billboard_sprite()
+	# Smoke trail behind rocket
+	var trail = Node3D.new()
+	trail.set_script(preload("res://scripts/effects/weapon_trail.gd"))
+	trail.trail_color = Color(0.5, 0.4, 0.3, 0.6)
+	trail.trail_color_tip = Color(1.0, 0.5, 0.1, 0.8)
+	trail.max_points = 20
+	trail.trail_width = 0.15
+	add_child(trail)
 
 ## Called by bazooka.gd after setting target_pos and global_position.
 ## Resets state for ObjectPool reuse — ensures direction is recalculated.

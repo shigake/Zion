@@ -126,7 +126,9 @@ func _fire(level: int) -> void:
 		bullet.global_position = drone_global_pos
 
 	AudioManager.play_sfx("hit")
-	ParticleFactory.spawn_hit_particles(drone_global_pos, Color(0.3, 0.7, 1.0))
+	# Brighter drone muzzle flash
+	ParticleFactory.spawn_hit_particles(drone_global_pos, Color(0.3, 0.8, 1.0), 6)
+	ParticleFactory.spawn_weapon_sparks(drone_global_pos, Color(0.5, 0.9, 1.0), 3)
 
 ## Client-only: spawns visual projectiles without collision (no damage).
 func _fire_visual_only(level: int) -> void:

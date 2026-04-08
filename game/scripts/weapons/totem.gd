@@ -119,7 +119,7 @@ func _place_totem(level: int) -> void:
 	arc_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	arc_mat.emission_enabled = true
 	arc_mat.emission = Color(0.5, 0.9, 1.0)
-	arc_mat.emission_energy_multiplier = 3.0
+	arc_mat.emission_energy_multiplier = 6.0
 	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	arc_mat.no_depth_test = true
 	# Inner arcs (close to totem)
@@ -163,7 +163,7 @@ func _place_totem(level: int) -> void:
 	bolt_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	bolt_mat.emission_enabled = true
 	bolt_mat.emission = Color(0.6, 0.95, 1.0)
-	bolt_mat.emission_energy_multiplier = 4.0
+	bolt_mat.emission_energy_multiplier = 7.0
 	bolt_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	bolt_mat.no_depth_test = true
 	for i in range(6):
@@ -221,7 +221,7 @@ func _place_totem(level: int) -> void:
 	# --- Electric spark particles radiating outward from orb ---
 	var spark_particles = GPUParticles3D.new()
 	spark_particles.name = "ElectricSparks"
-	spark_particles.amount = 12
+	spark_particles.amount = 18
 	spark_particles.lifetime = 0.5
 	spark_particles.emitting = true
 	spark_particles.one_shot = false
@@ -254,7 +254,7 @@ func _place_totem(level: int) -> void:
 	spark_draw_mat.albedo_color = Color(0.5, 0.95, 1.0, 0.9)
 	spark_draw_mat.emission_enabled = true
 	spark_draw_mat.emission = Color(0.4, 0.85, 1.0)
-	spark_draw_mat.emission_energy_multiplier = 6.0
+	spark_draw_mat.emission_energy_multiplier = 10.0
 	spark_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	spark_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	spark_draw.surface_set_material(0, spark_draw_mat)

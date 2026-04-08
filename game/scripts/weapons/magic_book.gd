@@ -122,6 +122,9 @@ func _on_body_entered(body: Node3D) -> void:
 	GameManager._last_attacking_weapon = "magic_book"
 	body.call_deferred("take_damage", dmg, "physical")
 	hit_timers[eid] = hit_cooldown
+	# Arcane impact sparks
+	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(0.5, 0.3, 1.0), 4)
+	ScreenEffects.shake(0.02)
 
 func _fire_page(level: int) -> void:
 	if not is_inside_tree():

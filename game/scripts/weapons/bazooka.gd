@@ -104,6 +104,9 @@ func _fire(level: int) -> void:
 	var radius = (3.0 + (level - 1) * 0.4) * GameManager.area_mult
 	var num_rockets = 1 + GameManager.extra_projectiles
 
+	# Launch flash and smoke
+	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(1.0, 0.6, 0.1), 8)
+	ScreenEffects.shake(0.08)
 	for i in range(num_rockets):
 		var rocket = ObjectPool.get_instance(rocket_scene)
 		var offset = Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)) * i * 0.5

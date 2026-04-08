@@ -47,6 +47,9 @@ func _physics_process(delta: float) -> void:
 
 	timer += delta
 	if timer >= lifetime:
+		# Death/expire effect — green soul wisps
+		if Engine.get_frames_per_second() > 40:
+			ParticleFactory.spawn_death_particles(global_position + Vector3(0, 0.5, 0), Color(0.2, 0.8, 0.3), 6)
 		queue_free()
 		return
 
@@ -83,3 +86,6 @@ func _attack() -> void:
 	if target and is_instance_valid(target) and target.has_method("take_damage"):
 		GameManager._last_attacking_weapon = "necro"
 		target.call_deferred("take_damage", damage, "dark")
+		# Dark impact sparks on skeleton attack
+		if Engine.get_frames_per_second() > 40:
+			ParticleFactory.spawn_weapon_sparks(target.global_position + Vector3(0, 0.5, 0), Color(0.3, 0.8, 0.3), 3)

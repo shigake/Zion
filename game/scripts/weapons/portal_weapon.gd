@@ -76,8 +76,10 @@ func _try_open_portal(level: int) -> void:
 	AudioManager.play_sfx("portal_hum")
 
 func _spawn_portal_effect(pos: Vector3) -> void:
-	ParticleFactory.spawn_hit_particles(pos, Color(0.4, 0.0, 0.8))
-	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 1, 0), Color(0.6, 0.1, 1.0))
+	ParticleFactory.spawn_hit_particles(pos, Color(0.5, 0.0, 1.0), 8)
+	ParticleFactory.spawn_hit_particles(pos + Vector3(0, 1, 0), Color(0.7, 0.15, 1.0), 6)
+	ScreenEffects.shake(0.06)
+	ScreenEffects.flash(0.04, 0.08)
 
 	# Container for portal visual
 	var container = Node3D.new()

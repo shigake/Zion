@@ -48,7 +48,7 @@ func _ensure_shared_meshes() -> void:
 		_shared_ice_mat.roughness = 0.1
 		_shared_ice_mat.emission_enabled = true
 		_shared_ice_mat.emission = Color(0.3, 0.7, 1.0)
-		_shared_ice_mat.emission_energy_multiplier = 1.8
+		_shared_ice_mat.emission_energy_multiplier = 3.5
 	if not _shared_front_cone:
 		_shared_front_cone = CylinderMesh.new()
 		_shared_front_cone.top_radius = 0.0
@@ -167,6 +167,8 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("take_damage") and body.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = "ice_staff"
 		body.call_deferred("take_damage", damage, damage_type)
+		# Ice impact particles
+		ParticleFactory.spawn_hit_particles(body.global_position + Vector3(0, 0.5, 0), Color(0.4, 0.85, 1.0), 5)
 
 ## Detecao alternativa via Area3D (Hitbox do inimigo)
 func _on_area_entered(area: Area3D) -> void:
@@ -176,6 +178,7 @@ func _on_area_entered(area: Area3D) -> void:
 	if parent and parent.has_method("take_damage") and parent.is_in_group("enemies"):
 		GameManager._last_attacking_weapon = "ice_staff"
 		parent.call_deferred("take_damage", damage, damage_type)
+		ParticleFactory.spawn_hit_particles(parent.global_position + Vector3(0, 0.5, 0), Color(0.4, 0.85, 1.0), 5)
 
 func _return_to_pool() -> void:
 	if _returning:

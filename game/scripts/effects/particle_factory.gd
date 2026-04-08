@@ -279,8 +279,8 @@ func spawn_hit_particles(pos: Vector3, color: Color = Color.WHITE, count: int = 
 	mat.initial_velocity_min = 2.0
 	mat.initial_velocity_max = 5.0
 	mat.gravity = Vector3(0, -8, 0)
-	mat.scale_min = 0.05
-	mat.scale_max = 0.156  # +30% bigger particles for more visual impact
+	mat.scale_min = 0.06
+	mat.scale_max = 0.2  # Bigger particles for dramatic visual impact
 	mat.color = color
 
 	particles.amount = count
@@ -466,22 +466,22 @@ func _spawn_level_up_ring(pos: Vector3) -> void:
 	tween.tween_property(mat, "albedo_color:a", 0.0, 0.6).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(ring.queue_free)
 
-## Katana impact sparks — small bright white particles outward from slash point
-func spawn_slash_sparks(pos: Vector3, count: int = 5) -> void:
-	var color = Color(1.0, 1.0, 1.0)
+## Katana impact sparks — bright white particles outward from slash point
+func spawn_slash_sparks(pos: Vector3, count: int = 7) -> void:
+	var color = Color(1.0, 1.0, 0.9)
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
-	mat.spread = 120.0
-	mat.initial_velocity_min = 3.0
-	mat.initial_velocity_max = 6.0
+	mat.spread = 130.0
+	mat.initial_velocity_min = 3.5
+	mat.initial_velocity_max = 7.0
 	mat.gravity = Vector3(0, -6, 0)
-	mat.scale_min = 0.02
-	mat.scale_max = 0.05
+	mat.scale_min = 0.03
+	mat.scale_max = 0.07
 	mat.color = color
 
 	particles.amount = count
-	particles.lifetime = 0.15
+	particles.lifetime = 0.2
 	particles.explosiveness = 1.0
 
 	particles.draw_pass_1 = _spark_draw_pass
@@ -521,8 +521,8 @@ func spawn_ground_dust(pos: Vector3, count: int = 8) -> void:
 
 	_setup_and_emit(particles, pos, 1.0)
 
-## Hammer debris — rocky bits flying outward
-func spawn_hammer_debris(pos: Vector3, count: int = 12) -> void:
+## Hammer debris — rocky bits flying outward (enhanced: more dramatic)
+func spawn_hammer_debris(pos: Vector3, count: int = 16) -> void:
 	# Accessibility: reduce particles if reduced motion
 	if AccessibilityManager.reduced_motion:
 		count = maxi(2, int(count * 0.3))
@@ -629,8 +629,8 @@ func spawn_chest_reward_text(position: Vector3, text: String, color: Color) -> v
 
 func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	var color = Color(1.0, 0.5, 0.1)
-	var explosion_count := 15
-	var explosion_lifetime := 0.6
+	var explosion_count := 20
+	var explosion_lifetime := 0.7
 	# Accessibility: reduce explosion particles if reduced motion
 	if AccessibilityManager.reduced_motion:
 		explosion_count = 4
@@ -660,20 +660,20 @@ func spawn_explosion_particles(pos: Vector3, radius: float = 3.0) -> void:
 	_setup_and_emit(particles, pos, 1.5)
 
 ## Weapon impact sparks — colored sparks at hit position
-func spawn_weapon_sparks(pos: Vector3, color: Color, count: int = 4) -> void:
+func spawn_weapon_sparks(pos: Vector3, color: Color, count: int = 5) -> void:
 	var particles = _get_particle()
 	var mat: ParticleProcessMaterial = particles.process_material
 	mat.direction = Vector3(0, 1, 0)
-	mat.spread = 100.0
-	mat.initial_velocity_min = 2.5
-	mat.initial_velocity_max = 5.0
+	mat.spread = 110.0
+	mat.initial_velocity_min = 3.0
+	mat.initial_velocity_max = 6.0
 	mat.gravity = Vector3(0, -7, 0)
-	mat.scale_min = 0.02
-	mat.scale_max = 0.04
+	mat.scale_min = 0.025
+	mat.scale_max = 0.06
 	mat.color = color
 
 	particles.amount = count
-	particles.lifetime = 0.15
+	particles.lifetime = 0.2
 	particles.explosiveness = 1.0
 
 	particles.draw_pass_1 = _spark_draw_pass

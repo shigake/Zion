@@ -67,8 +67,9 @@ func _fire(level: int) -> void:
 		direction = (nearest.global_position - player_pos).normalized()
 		direction.y = 0
 
-	# Ice particles at spawn
-	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.3, 0.7, 1.0))
+	# Ice particles at spawn — brighter, more dramatic
+	ParticleFactory.spawn_hit_particles(player_pos + Vector3(0, 0.5, 0), Color(0.3, 0.8, 1.0), 7)
+	ParticleFactory.spawn_weapon_sparks(player_pos + Vector3(0, 0.6, 0), Color(0.5, 0.9, 1.0), 3)
 	AudioManager.play_sfx("magic_cast")
 
 	var dmg = int(WeaponDB.get_damage("ice_staff", level))

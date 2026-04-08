@@ -33,10 +33,10 @@ func _ready() -> void:
 	_build_axe_model()
 	# Fire trail for flight (wider per PRD 54)
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
-	_trail.trail_color = Color(1.0, 0.5, 0.1, 0.8)
-	_trail.trail_color_tip = Color(1.0, 0.2, 0.0, 0.9)
-	_trail.max_points = 16
-	_trail.trail_width = 0.20
+	_trail.trail_color = Color(1.0, 0.55, 0.05, 0.9)
+	_trail.trail_color_tip = Color(1.0, 0.25, 0.0, 1.0)
+	_trail.max_points = 24
+	_trail.trail_width = 0.32
 	axe_mesh.add_child(_trail)
 
 func _get_player_node() -> Node3D:
@@ -196,8 +196,9 @@ func _on_body_entered(body: Node3D) -> void:
 	# Slash trail visual at hit position
 	_spawn_slash_trail(body.global_position + Vector3(0, 0.5, 0))
 	# Impact fire sparks
-	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.5, 0.1), 4)
-	ScreenEffects.shake(0.03)
+	ParticleFactory.spawn_weapon_sparks(body.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.6, 0.1), 6)
+	ParticleFactory.spawn_slash_sparks(body.global_position + Vector3(0, 0.5, 0), 3)
+	ScreenEffects.shake(0.05)
 
 func _spawn_slash_trail(pos: Vector3) -> void:
 	WeaponVFX.spawn_slash_trail(self, _slash_tex, pos)
