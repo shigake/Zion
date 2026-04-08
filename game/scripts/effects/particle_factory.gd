@@ -609,3 +609,288 @@ func spawn_weapon_sparks(pos: Vector3, color: Color, count: int = 4) -> void:
 		draw_mat.emission = color
 
 	_setup_and_emit(particles, pos, 0.5)
+
+# ==================================================================
+# PRD 60: Elemental Death Effects
+# ==================================================================
+
+## Spawn element-specific death particles based on damage type.
+## Each element has unique direction, velocity, color, and behavior.
+func spawn_elemental_death(pos: Vector3, element: String, count: int = 12) -> void:
+	# Accessibility: reduce particles if reduced motion
+	if AccessibilityManager.reduced_motion:
+		count = maxi(2, int(count * 0.3))
+	# Reduce at low FPS
+	var fps = _get_cached_fps()
+	if fps < 25:
+		count = 2
+	elif fps < 35:
+		count = 3
+	elif fps < 45:
+		count = mini(count, 6)
+
+	match element:
+		"fire":
+			_spawn_fire_death(pos, count)
+		"ice":
+			_spawn_ice_death(pos, count)
+		"electric":
+			_spawn_electric_death(pos, count)
+		"dark":
+			_spawn_dark_death(pos, count)
+		"poison":
+			_spawn_poison_death(pos, count)
+		_:
+			# Physical / unknown — use default death particles (white/gray poof)
+			spawn_death_particles(pos, Color(0.85, 0.85, 0.8), count)
+
+## Fire death: orange/red particles burst upward like flames
+func _spawn_fire_death(pos: Vector3, count: int) -> void:
+	var color = Color(1.0, 0.45, 0.1)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 40.0
+	mat.initial_velocity_min = 4.0
+	mat.initial_velocity_max = 9.0
+	mat.gravity = Vector3(0, 2, 0)  # Fire rises
+	mat.scale_min = 0.06
+	mat.scale_max = 0.18
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.7
+	particles.explosiveness = 0.9
+
+	particles.draw_pass_1 = _death_draw_pass
+	var draw_mat: StandardMaterial3D = _death_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(1.0, 0.3, 0.05)
+
+	_setup_and_emit(particles, pos, 1.2)
+
+	# Secondary ember particles (smaller, slower, more spread)
+	if count >= 4:
+		var embers = _get_particle()
+		var emat: ParticleProcessMaterial = embers.process_material
+		emat.direction = Vector3(0, 1, 0)
+		emat.spread = 80.0
+		emat.initial_velocity_min = 1.5
+		emat.initial_velocity_max = 4.0
+		emat.gravity = Vector3(0, 1.5, 0)
+		emat.scale_min = 0.02
+		emat.scale_max = 0.06
+		emat.color = Color(1.0, 0.7, 0.2)
+
+		embers.amount = mini(count, 6)
+		embers.lifetime = 0.9
+		embers.explosiveness = 0.7
+
+		embers.draw_pass_1 = _spark_draw_pass
+		var smat: StandardMaterial3D = _spark_draw_pass.surface_get_material(0)
+		if smat:
+			smat.albedo_color = Color(1.0, 0.7, 0.2)
+			smat.emission = Color(1.0, 0.6, 0.1)
+
+		_setup_and_emit(embers, pos + Vector3(0, 0.1, 0), 1.5)
+
+## Ice death: blue/white shards scatter outward like shattering
+func _spawn_ice_death(pos: Vector3, count: int) -> void:
+	var color = Color(0.5, 0.85, 1.0)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 0.3, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 5.0
+	mat.initial_velocity_max = 10.0
+	mat.gravity = Vector3(0, -12, 0)  # Heavy shards fall fast
+	mat.scale_min = 0.04
+	mat.scale_max = 0.14
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.5
+	particles.explosiveness = 1.0
+
+	particles.draw_pass_1 = _death_draw_pass
+	var draw_mat: StandardMaterial3D = _death_draw_pass.surface_get_material(0)
+	if draw_mat:
+		draw_mat.albedo_color = color
+		draw_mat.emission = Color(0.6, 0.9, 1.0)
+
+	_setup_and_emit(particles, pos, 1.0)
+
+	# Secondary frost mist (slow, rising, fading)
+	if count >= 4:
+		var mist = _get_particle()
+		var mmat: ParticleProcessMaterial = mist.process_material
+		mmat.direction = Vector3(0, 1, 0)
+		mmat.spread = 60.0
+		mmat.initial_velocity_min = 0.5
+		mmat.initial_velocity_max = 1.5
+		mmat.gravity = Vector3(0, 0.5, 0)
+		mmat.scale_min = 0.1
+		mmat.scale_max = 0.25
+		mmat.color = Color(0.7, 0.9, 1.0, 0.5)
+
+		mist.amount = mini(count, 4)
+		mist.lifetime = 0.6
+		mist.explosiveness = 0.6
+
+		mist.draw_pass_1 = _dust_draw_pass
+		var dmat: StandardMaterial3D = _dust_draw_pass.surface_get_material(0)
+		if dmat:
+			dmat.albedo_color = Color(0.7, 0.9, 1.0, 0.4)
+			dmat.emission = Color(0.5, 0.7, 0.9)
+
+		_setup_and_emit(mist, pos + Vector3(0, 0.2, 0), 1.2)
+
+## Electric death: yellow/cyan sparks jittering outward
+func _spawn_electric_death(pos: Vector3, count: int) -> void:
+	var color = Color(1.0, 1.0, 0.3)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 0.5, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 6.0
+	mat.initial_velocity_max = 12.0
+	mat.gravity = Vector3(0, -3, 0)
+	mat.scale_min = 0.02
+	mat.scale_max = 0.06
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.35
+	particles.explosiveness = 1.0
+
+	particles.draw_pass_1 = _spark_draw_pass
+	var spark_mat: StandardMaterial3D = _spark_draw_pass.surface_get_material(0)
+	if spark_mat:
+		spark_mat.albedo_color = color
+		spark_mat.emission = Color(0.8, 1.0, 1.0)
+
+	_setup_and_emit(particles, pos, 0.8)
+
+	# Secondary cyan arc particles
+	if count >= 4:
+		var arcs = _get_particle()
+		var amat: ParticleProcessMaterial = arcs.process_material
+		amat.direction = Vector3(0, 1, 0)
+		amat.spread = 150.0
+		amat.initial_velocity_min = 3.0
+		amat.initial_velocity_max = 7.0
+		amat.gravity = Vector3(0, -5, 0)
+		amat.scale_min = 0.01
+		amat.scale_max = 0.04
+		amat.color = Color(0.3, 1.0, 1.0)
+
+		arcs.amount = mini(count, 8)
+		arcs.lifetime = 0.25
+		arcs.explosiveness = 0.8
+
+		arcs.draw_pass_1 = _spark_draw_pass
+
+		_setup_and_emit(arcs, pos, 0.6)
+
+## Dark death: purple/black wisps rising upward (dissolve)
+func _spawn_dark_death(pos: Vector3, count: int) -> void:
+	var color = Color(0.6, 0.2, 0.8)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 30.0
+	mat.initial_velocity_min = 2.0
+	mat.initial_velocity_max = 5.0
+	mat.gravity = Vector3(0, 3, 0)  # Wisps float upward
+	mat.scale_min = 0.08
+	mat.scale_max = 0.22
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.8
+	particles.explosiveness = 0.6  # Staggered emission for wispy look
+
+	particles.draw_pass_1 = _death_draw_pass
+	var death_mat: StandardMaterial3D = _death_draw_pass.surface_get_material(0)
+	if death_mat:
+		death_mat.albedo_color = color
+		death_mat.emission = Color(0.5, 0.1, 0.7)
+
+	_setup_and_emit(particles, pos, 1.5)
+
+	# Secondary dark core particles (smaller, faster rise)
+	if count >= 4:
+		var core = _get_particle()
+		var cmat: ParticleProcessMaterial = core.process_material
+		cmat.direction = Vector3(0, 1, 0)
+		cmat.spread = 15.0
+		cmat.initial_velocity_min = 3.0
+		cmat.initial_velocity_max = 6.0
+		cmat.gravity = Vector3(0, 4, 0)
+		cmat.scale_min = 0.03
+		cmat.scale_max = 0.08
+		cmat.color = Color(0.3, 0.05, 0.4)
+
+		core.amount = mini(count, 5)
+		core.lifetime = 0.6
+		core.explosiveness = 0.5
+
+		core.draw_pass_1 = _spark_draw_pass
+		var core_mat: StandardMaterial3D = _spark_draw_pass.surface_get_material(0)
+		if core_mat:
+			core_mat.albedo_color = Color(0.3, 0.05, 0.4)
+			core_mat.emission = Color(0.4, 0.1, 0.6)
+
+		_setup_and_emit(core, pos + Vector3(0, 0.3, 0), 1.2)
+
+## Poison death: green bubbles and dripping particles downward
+func _spawn_poison_death(pos: Vector3, count: int) -> void:
+	var color = Color(0.3, 0.9, 0.2)
+	var particles = _get_particle()
+	var mat: ParticleProcessMaterial = particles.process_material
+	mat.direction = Vector3(0, -0.5, 0)
+	mat.spread = 120.0
+	mat.initial_velocity_min = 1.5
+	mat.initial_velocity_max = 4.0
+	mat.gravity = Vector3(0, -6, 0)  # Drips downward
+	mat.scale_min = 0.05
+	mat.scale_max = 0.15
+	mat.color = color
+
+	particles.amount = count
+	particles.lifetime = 0.7
+	particles.explosiveness = 0.7
+
+	particles.draw_pass_1 = _death_draw_pass
+	var poison_mat: StandardMaterial3D = _death_draw_pass.surface_get_material(0)
+	if poison_mat:
+		poison_mat.albedo_color = color
+		poison_mat.emission = Color(0.2, 0.8, 0.1)
+
+	_setup_and_emit(particles, pos, 1.2)
+
+	# Secondary bubble particles (round, rising briefly then falling)
+	if count >= 4:
+		var bubbles = _get_particle()
+		var bmat: ParticleProcessMaterial = bubbles.process_material
+		bmat.direction = Vector3(0, 0.5, 0)
+		bmat.spread = 90.0
+		bmat.initial_velocity_min = 1.0
+		bmat.initial_velocity_max = 3.0
+		bmat.gravity = Vector3(0, -4, 0)
+		bmat.scale_min = 0.04
+		bmat.scale_max = 0.1
+		bmat.color = Color(0.4, 1.0, 0.3, 0.7)
+
+		bubbles.amount = mini(count, 6)
+		bubbles.lifetime = 0.5
+		bubbles.explosiveness = 0.5
+
+		bubbles.draw_pass_1 = _collect_draw_pass
+		var bubble_mat: StandardMaterial3D = _collect_draw_pass.surface_get_material(0)
+		if bubble_mat:
+			bubble_mat.albedo_color = Color(0.4, 1.0, 0.3, 0.7)
+			bubble_mat.emission = Color(0.3, 0.8, 0.2)
+
+		_setup_and_emit(bubbles, pos + Vector3(0, 0.4, 0), 1.0)

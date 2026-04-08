@@ -21,6 +21,14 @@ var _tile_sprites: Array[TextureRect] = []
 var _info_panel: PanelContainer
 var _info_sprite: TextureRect
 var _name_label: Label
+
+# 3D model preview
+var _3d_viewport: SubViewport = null
+var _3d_container: SubViewportContainer = null
+var _3d_model: Node3D = null
+var _3d_pivot: Node3D = null
+var _3d_rotation_tween: Tween = null
+var _has_3d_preview: bool = false
 var _passive_label: Label
 var _weapon_label: Label
 var _weapon_icon: TextureRect
@@ -373,13 +381,66 @@ func _build_info_panel(parent: VBoxContainer) -> void:
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	_info_panel.add_child(hbox)
 
-	# -- Large character sprite --
+	# -- Character preview container (holds either 3D viewport or 2D sprite) --
+	var preview_container := Control.new()
+	preview_container.custom_minimum_size = Vector2(INFO_SPRITE_SIZE, INFO_SPRITE_SIZE)
+	preview_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(preview_container)
+
+	# 3D SubViewport for model preview
+	_3d_container = SubViewportContainer.new()
+	_3d_container.custom_minimum_size = Vector2(INFO_SPRITE_SIZE, INFO_SPRITE_SIZE)
+	_3d_container.size = Vector2(INFO_SPRITE_SIZE, INFO_SPRITE_SIZE)
+	_3d_container.stretch = true
+	_3d_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_3d_container.visible = false
+	preview_container.add_child(_3d_container)
+
+	_3d_viewport = SubViewport.new()
+	_3d_viewport.size = Vector2i(int(INFO_SPRITE_SIZE * 2), int(INFO_SPRITE_SIZE * 2))
+	_3d_viewport.transparent_bg = true
+	_3d_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_3d_viewport.msaa_3d = Viewport.MSAA_2X
+	_3d_container.add_child(_3d_viewport)
+
+	# Camera for 3D preview
+	var cam := Camera3D.new()
+	cam.name = "PreviewCamera"
+	cam.transform.origin = Vector3(0, 0.8, 2.2)
+	cam.rotation_degrees = Vector3(-10, 0, 0)
+	cam.fov = 30.0
+	cam.current = true
+	_3d_viewport.add_child(cam)
+
+	# Lighting for 3D preview
+	var light := DirectionalLight3D.new()
+	light.name = "PreviewLight"
+	light.transform.origin = Vector3(2, 3, 2)
+	light.rotation_degrees = Vector3(-40, 30, 0)
+	light.light_energy = 1.2
+	light.shadow_enabled = false
+	_3d_viewport.add_child(light)
+
+	# Fill light from opposite side
+	var fill_light := DirectionalLight3D.new()
+	fill_light.name = "PreviewFillLight"
+	fill_light.rotation_degrees = Vector3(-20, -150, 0)
+	fill_light.light_energy = 0.4
+	fill_light.shadow_enabled = false
+	_3d_viewport.add_child(fill_light)
+
+	# Pivot node for rotation
+	_3d_pivot = Node3D.new()
+	_3d_pivot.name = "ModelPivot"
+	_3d_viewport.add_child(_3d_pivot)
+
+	# Fallback 2D sprite (hidden when 3D is active)
 	_info_sprite = TextureRect.new()
 	_info_sprite.custom_minimum_size = Vector2(INFO_SPRITE_SIZE, INFO_SPRITE_SIZE)
 	_info_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_info_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_info_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hbox.add_child(_info_sprite)
+	preview_container.add_child(_info_sprite)
 
 	# -- Vertical separator line --
 	var vsep := VSeparator.new()
@@ -712,12 +773,78 @@ func _update_tile_highlights(selected_color: Color) -> void:
 
 
 func _load_info_sprite(char_id: String) -> void:
-	var sprite_path := "res://assets/sprites/characters/%s.png" % char_id
-	if ResourceLoader.exists(sprite_path):
-		_info_sprite.texture = load(sprite_path)
+	var model_path := "res://assets/models/characters/%s.glb" % char_id
+	if ResourceLoader.exists(model_path):
+		_show_3d_preview(model_path)
 	else:
-		_info_sprite.texture = null
-	_start_bob_animation()
+		_hide_3d_preview()
+		var sprite_path := "res://assets/sprites/characters/%s.png" % char_id
+		if ResourceLoader.exists(sprite_path):
+			_info_sprite.texture = load(sprite_path)
+		else:
+			_info_sprite.texture = null
+		_start_bob_animation()
+
+
+func _show_3d_preview(model_path: String) -> void:
+	# Remove old model
+	if _3d_model and is_instance_valid(_3d_model):
+		_3d_model.queue_free()
+		_3d_model = null
+
+	# Stop rotation tween
+	if _3d_rotation_tween:
+		_3d_rotation_tween.kill()
+		_3d_rotation_tween = null
+
+	# Stop bob animation on 2D sprite
+	if _bob_tween:
+		_bob_tween.kill()
+		_bob_tween = null
+
+	# Load and instance the 3D model
+	var scene: PackedScene = load(model_path)
+	if not scene:
+		_hide_3d_preview()
+		return
+
+	_3d_model = scene.instantiate()
+	_3d_pivot.add_child(_3d_model)
+
+	# Reset pivot rotation for new character
+	_3d_pivot.rotation = Vector3.ZERO
+
+	# Show 3D, hide 2D
+	_3d_container.visible = true
+	_info_sprite.visible = false
+	_has_3d_preview = true
+
+	# Start slow rotation
+	_start_model_rotation()
+
+
+func _hide_3d_preview() -> void:
+	if _3d_model and is_instance_valid(_3d_model):
+		_3d_model.queue_free()
+		_3d_model = null
+	if _3d_rotation_tween:
+		_3d_rotation_tween.kill()
+		_3d_rotation_tween = null
+	_3d_container.visible = false
+	_info_sprite.visible = true
+	_has_3d_preview = false
+
+
+func _start_model_rotation() -> void:
+	if _3d_rotation_tween:
+		_3d_rotation_tween.kill()
+	# Full 360 rotation over 8 seconds, looping forever
+	_3d_rotation_tween = create_tween().set_loops()
+	_3d_rotation_tween.tween_property(_3d_pivot, "rotation_degrees:y", 360.0, 8.0) \
+		.from(0.0).set_trans(Tween.TRANS_LINEAR)
+	_3d_rotation_tween.tween_callback(func():
+		_3d_pivot.rotation_degrees.y = 0.0
+	)
 
 
 func _start_bob_animation() -> void:

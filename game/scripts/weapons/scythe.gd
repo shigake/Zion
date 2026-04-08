@@ -29,19 +29,26 @@ func _ready() -> void:
 	_trail.max_points = 25
 	_trail.trail_width = 0.18
 	scythe_area.add_child(_trail)
-	# Billboard sprite — attached to scythe_area (the orbiting node)
-	var _sprite_path = "res://assets/sprites/weapons/scythe.png"
-	if ResourceLoader.exists(_sprite_path):
-		scythe_mesh.visible = false
-		var sprite = Sprite3D.new()
-		sprite.texture = load(_sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.name = "WeaponSprite"
-		scythe_area.add_child(sprite)
+	# 3D model (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/scythe.glb"
+	if ResourceLoader.exists(_model_path):
+		var model = load(_model_path).instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		scythe_area.add_child(model)
+	else:
+		var _sprite_path = "res://assets/sprites/weapons/scythe.png"
+		if ResourceLoader.exists(_sprite_path):
+			scythe_mesh.visible = false
+			var sprite = Sprite3D.new()
+			sprite.texture = load(_sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.03
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.name = "WeaponSprite"
+			scythe_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

@@ -16,22 +16,29 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 
 func _ready() -> void:
 	book_area.body_entered.connect(_on_body_entered)
-	# Billboard sprite — child do book_mesh para orbitar junto
-	var _sprite_path = "res://assets/sprites/weapons/magic_book.png"
-	if ResourceLoader.exists(_sprite_path):
-		book_mesh.visible = false
-		var sprite = Sprite3D.new()
-		sprite.texture = load(_sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.05
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.name = "WeaponSprite"
-		sprite.render_priority = 1  # Render on top of player
-		add_child(sprite)
-		# Sprite segue a posicao do book_mesh no _process
-		sprite.set_meta("follows_book", true)
+	# 3D model (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/magic_book.glb"
+	if ResourceLoader.exists(_model_path):
+		var model = load(_model_path).instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		book_area.add_child(model)
+	else:
+		var _sprite_path = "res://assets/sprites/weapons/magic_book.png"
+		if ResourceLoader.exists(_sprite_path):
+			book_mesh.visible = false
+			var sprite = Sprite3D.new()
+			sprite.texture = load(_sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.05
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.name = "WeaponSprite"
+			sprite.render_priority = 1  # Render on top of player
+			add_child(sprite)
+			# Sprite segue a posicao do book_mesh no _process
+			sprite.set_meta("follows_book", true)
 	_setup_billboard_sprite()
 
 func _setup_billboard_sprite() -> void:

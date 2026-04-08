@@ -22,19 +22,26 @@ func _ready() -> void:
 	var _slash_path2 = "res://assets/sprites/effects/slashes/hammer_slam.png"
 	if ResourceLoader.exists(_slash_path2):
 		_slash_tex = load(_slash_path2)
-	# Billboard sprite
-	var _sprite_path = "res://assets/sprites/weapons/hammer.png"
-	if ResourceLoader.exists(_sprite_path):
-		slam_mesh.visible = false
-		var sprite = Sprite3D.new()
-		sprite.texture = load(_sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.name = "WeaponSprite"
-		slam_area.add_child(sprite)
+	# 3D model (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/hammer.glb"
+	if ResourceLoader.exists(_model_path):
+		var model = load(_model_path).instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		slam_area.add_child(model)
+	else:
+		var _sprite_path = "res://assets/sprites/weapons/hammer.png"
+		if ResourceLoader.exists(_sprite_path):
+			slam_mesh.visible = false
+			var sprite = Sprite3D.new()
+			sprite.texture = load(_sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.03
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.name = "WeaponSprite"
+			slam_area.add_child(sprite)
 	# Brief slam trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(0.7, 0.45, 0.2, 0.7)

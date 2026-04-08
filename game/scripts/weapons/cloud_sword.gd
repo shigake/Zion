@@ -28,19 +28,26 @@ func _ready() -> void:
 	_trail.max_points = 18
 	_trail.trail_width = 0.25
 	slash_mesh.add_child(_trail)
-	# Billboard sprite
-	var _sprite_path = "res://assets/sprites/weapons/cloud_sword.png"
-	if ResourceLoader.exists(_sprite_path):
-		slash_mesh.visible = false
-		var sprite = Sprite3D.new()
-		sprite.texture = load(_sprite_path)
-		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite.pixel_size = 0.03
-		sprite.shaded = false
-		sprite.transparent = true
-		sprite.name = "WeaponSprite"
-		slash_area.add_child(sprite)
+	# 3D model (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/cloud_sword.glb"
+	if ResourceLoader.exists(_model_path):
+		var model = load(_model_path).instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		slash_area.add_child(model)
+	else:
+		var _sprite_path = "res://assets/sprites/weapons/cloud_sword.png"
+		if ResourceLoader.exists(_sprite_path):
+			slash_mesh.visible = false
+			var sprite = Sprite3D.new()
+			sprite.texture = load(_sprite_path)
+			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite.pixel_size = 0.03
+			sprite.shaded = false
+			sprite.transparent = true
+			sprite.name = "WeaponSprite"
+			slash_area.add_child(sprite)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

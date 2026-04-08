@@ -14,7 +14,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 4,
 		"cooldown_per_level": -0.06,
 		"area_per_level": 0.2,
-		"disabled": true,
 	},
 	"staff": {
 		"name": "Staff Magico",
@@ -40,7 +39,6 @@ var weapons: Dictionary = {
 		"cooldown_per_level": 0,
 		"area_per_level": 0.3,
 		"lifesteal": 0.02,
-		"disabled": true,
 	},
 	"machinegun": {
 		"name": "Metralhadora",
@@ -102,7 +100,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 4,
 		"cooldown_per_level": -0.05,
 		"area_per_level": 0.15,
-		"disabled": true,
 	},
 	"drone": {
 		"name": "Drone",
@@ -164,7 +161,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 3,
 		"cooldown_per_level": 0,
 		"area_per_level": 0.1,
-		"disabled": true,
 	},
 	"whip": {
 		"name": "Chicote",
@@ -177,7 +173,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 4,
 		"cooldown_per_level": -0.07,
 		"area_per_level": 0.25,
-		"disabled": true,
 	},
 	"lance": {
 		"name": "Lanca",
@@ -190,7 +185,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 5,
 		"cooldown_per_level": -0.06,
 		"area_per_level": 0.3,
-		"disabled": true,
 	},
 	"hammer": {
 		"name": "Martelo",
@@ -203,7 +197,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 8,
 		"cooldown_per_level": -0.12,
 		"area_per_level": 0.3,
-		"disabled": true,
 	},
 	"nunchaku": {
 		"name": "Nunchaku",
@@ -216,7 +209,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 3,
 		"cooldown_per_level": -0.04,
 		"area_per_level": 0.15,
-		"disabled": true,
 	},
 	"dual_katana": {
 		"name": "Katana Dupla",
@@ -229,7 +221,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 4,
 		"cooldown_per_level": -0.07,
 		"area_per_level": 0.2,
-		"disabled": true,
 	},
 	"dual_pistol": {
 		"name": "Pistola Dupla",
@@ -305,7 +296,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 10,
 		"cooldown_per_level": -0.12,
 		"area_per_level": 0.3,
-		"disabled": true,
 	},
 	"elven_bow": {
 		"name": "Arco Elfico",
@@ -330,7 +320,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 6,
 		"cooldown_per_level": -0.1,
 		"area_per_level": 0.15,
-		"disabled": true,
 	},
 	"time_bomb": {
 		"name": "Bomba Relogio",
@@ -394,7 +383,6 @@ var weapons: Dictionary = {
 		"damage_per_level": 4,
 		"cooldown_per_level": -0.07,
 		"area_per_level": 0.3,
-		"disabled": true,
 	},
 	"blood_orb": {
 		"name": "Orbe de Sangue",

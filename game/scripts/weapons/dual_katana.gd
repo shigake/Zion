@@ -37,29 +37,40 @@ func _ready() -> void:
 	_trail_r.trail_color = Color(0.8, 0.9, 1.0, 0.6)
 	_trail_r.max_points = 10
 	slash_mesh_r.add_child(_trail_r)
-	# Billboard sprites
-	var _sprite_path = "res://assets/sprites/weapons/dual_katana.png"
-	if ResourceLoader.exists(_sprite_path):
-		slash_mesh_l.visible = false
-		var sprite_l = Sprite3D.new()
-		sprite_l.texture = load(_sprite_path)
-		sprite_l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite_l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite_l.pixel_size = 0.03
-		sprite_l.shaded = false
-		sprite_l.transparent = true
-		sprite_l.name = "WeaponSprite"
-		slash_area_l.add_child(sprite_l)
-		slash_mesh_r.visible = false
-		var sprite_r = Sprite3D.new()
-		sprite_r.texture = load(_sprite_path)
-		sprite_r.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sprite_r.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-		sprite_r.pixel_size = 0.03
-		sprite_r.shaded = false
-		sprite_r.transparent = true
-		sprite_r.name = "WeaponSprite"
-		slash_area_r.add_child(sprite_r)
+	# 3D models (preferred) or billboard sprite fallback
+	var _model_path = "res://assets/models/dual_katana.glb"
+	if ResourceLoader.exists(_model_path):
+		var model_l = load(_model_path).instantiate()
+		model_l.name = "WeaponModel"
+		model_l.scale = Vector3(0.25, 0.25, 0.25)
+		slash_area_l.add_child(model_l)
+		var model_r = load(_model_path).instantiate()
+		model_r.name = "WeaponModel"
+		model_r.scale = Vector3(0.25, 0.25, 0.25)
+		slash_area_r.add_child(model_r)
+	else:
+		var _sprite_path = "res://assets/sprites/weapons/dual_katana.png"
+		if ResourceLoader.exists(_sprite_path):
+			slash_mesh_l.visible = false
+			var sprite_l = Sprite3D.new()
+			sprite_l.texture = load(_sprite_path)
+			sprite_l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite_l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite_l.pixel_size = 0.03
+			sprite_l.shaded = false
+			sprite_l.transparent = true
+			sprite_l.name = "WeaponSprite"
+			slash_area_l.add_child(sprite_l)
+			slash_mesh_r.visible = false
+			var sprite_r = Sprite3D.new()
+			sprite_r.texture = load(_sprite_path)
+			sprite_r.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sprite_r.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			sprite_r.pixel_size = 0.03
+			sprite_r.shaded = false
+			sprite_r.transparent = true
+			sprite_r.name = "WeaponSprite"
+			slash_area_r.add_child(sprite_r)
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():

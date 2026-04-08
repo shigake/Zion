@@ -969,9 +969,8 @@ func _die() -> void:
 		# Throttle death particles at low FPS
 		var _fps = Engine.get_frames_per_second()
 		if _fps > 25 or randf() < 0.4:
-			# PRD 60: Elemental death colors
-			var death_color: Color = GameConstants.DAMAGE_COLORS.get(_last_damage_type, enemy_color)
-			ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.3, 0), death_color, 6 if _fps < 40 else 12)
+			# PRD 60: Elemental death effects — distinct particles per element
+			ParticleFactory.spawn_elemental_death(pos + Vector3(0, 0.3, 0), _last_damage_type, 6 if _fps < 40 else 12)
 			# Gold particles for elite enemies
 			if enemy_color == Color(1.0, 0.85, 0.2) or scale.x > 1.2:
 				ParticleFactory.spawn_death_particles(pos + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 8)

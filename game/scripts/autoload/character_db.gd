@@ -5,7 +5,7 @@ extends Node
 var characters: Dictionary = {
 	"amazona": {
 		"name": "Amazona",
-		"starting_weapon": "crossbow",
+		"starting_weapon": "lance",
 		"passive": "+15% velocidade + 10% dano com lancas",
 		"color": Color(0.85, 0.55, 0.2),
 		"speed_bonus": 0.15,
@@ -23,7 +23,7 @@ var characters: Dictionary = {
 	},
 	"lealith": {
 		"name": "Lealith",
-		"starting_weapon": "lightning_chain",
+		"starting_weapon": "shadow_claw",
 		"passive": "+25% velocidade, +15% dodge, -15% HP max",
 		"color": Color(0.15, 0.3, 0.85),
 		"speed_bonus": 0.25,
@@ -33,7 +33,7 @@ var characters: Dictionary = {
 	},
 	"ronin": {
 		"name": "Ronin",
-		"starting_weapon": "boomerang",
+		"starting_weapon": "katana",
 		"passive": "+20% critical hit, +10% dano",
 		"color": Color(0.2, 0.85, 0.3),
 		"speed_bonus": 0.0,
@@ -71,7 +71,7 @@ var characters: Dictionary = {
 	},
 	"ninja": {
 		"name": "Ninja",
-		"starting_weapon": "shuriken",
+		"starting_weapon": "katana",
 		"passive": "+20% velocidade, +10% dodge",
 		"color": Color(0.1, 0.1, 0.1),
 		"speed_bonus": 0.20,
@@ -105,7 +105,7 @@ var characters: Dictionary = {
 	},
 	"vampiro": {
 		"name": "Vampiro",
-		"starting_weapon": "blood_orb",
+		"starting_weapon": "whip",
 		"passive": "Lifesteal 3%",
 		"color": Color(0.5, 0.0, 0.1),
 		"speed_bonus": 0.0,
@@ -116,7 +116,7 @@ var characters: Dictionary = {
 	},
 	"gladiador": {
 		"name": "Gladiador",
-		"starting_weapon": "plasma_cannon",
+		"starting_weapon": "lance",
 		"passive": "+20% armadura",
 		"color": Color(0.8, 0.65, 0.2),
 		"speed_bonus": 0.0,
@@ -138,7 +138,7 @@ var characters: Dictionary = {
 	},
 	"mystery": {
 		"name": "???",
-		"starting_weapon": "ice_staff",
+		"starting_weapon": "katana",
 		"passive": "Todas as armas nivel 1",
 		"color": Color(0.5, 0.5, 0.5),
 		"speed_bonus": 0.0,
