@@ -7,6 +7,9 @@ var all_character_ids: Array[String] = []
 var current_index: int = 0
 var _confirmed_index: int = -1
 var _bob_tween: Tween = null
+var _glow_tween: Tween = null
+var _play_pulse_tween: Tween = null
+var _title_label: Label = null
 
 # -- UI refs --
 var _bg_gradient: ColorRect
@@ -30,6 +33,7 @@ var _back_btn: Button
 
 # Gold color constant
 const GOLD := Color(0.85, 0.72, 0.25)
+const GOLD_BRIGHT := Color(1.0, 0.88, 0.35)
 const GOLD_DARK := Color(0.55, 0.45, 0.12)
 const BG_COLOR := Color(0.03, 0.03, 0.06)
 
@@ -37,7 +41,7 @@ const BG_COLOR := Color(0.03, 0.03, 0.06)
 const GRID_COLS := 5
 const TILE_SIZE := Vector2(80, 90)
 const TILE_SPACING := 8
-const INFO_SPRITE_SIZE := 96.0
+const INFO_SPRITE_SIZE := 128.0
 
 func _ready() -> void:
 	get_tree().paused = false
@@ -46,6 +50,8 @@ func _ready() -> void:
 	_find_first_unlocked()
 	_build_ui()
 	_update_selection()
+	_animate_grid_entrance()
+	_start_play_button_pulse()
 	GamepadUI.notify_menu_opened()
 
 func _load_character_list() -> void:
@@ -163,13 +169,13 @@ func _build_top_bar(parent: VBoxContainer) -> void:
 	spacer_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(spacer_l)
 
-	# Title
-	var title := Label.new()
-	title.text = "ESCOLHA SEU HEROI"
-	title.add_theme_font_size_override("font_size", 22)
-	title.add_theme_color_override("font_color", Color(0.92, 0.88, 0.75))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	top_bar.add_child(title)
+	# Title — bigger and gold
+	_title_label = Label.new()
+	_title_label.text = "ESCOLHA SEU HEROI"
+	_title_label.add_theme_font_size_override("font_size", 28)
+	_title_label.add_theme_color_override("font_color", GOLD_BRIGHT)
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top_bar.add_child(_title_label)
 
 	# Spacer right (balance)
 	var spacer_r := Control.new()
@@ -197,11 +203,14 @@ func _build_character_grid() -> void:
 		btn.custom_minimum_size = TILE_SIZE
 		btn.clip_contents = true
 
-		# Normal style
+		# Normal style — with subtle depth shadow
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(0.06, 0.06, 0.10, 0.95)
 		style.set_corner_radius_all(8)
 		style.set_border_width_all(2)
+		style.shadow_color = Color(0, 0, 0, 0.25)
+		style.shadow_size = 3
+		style.shadow_offset = Vector2(0, 2)
 		if is_locked:
 			style.border_color = Color(0.12, 0.12, 0.18)
 		else:
@@ -341,16 +350,20 @@ func _start_teaser_glitch(sprite: TextureRect, name_lbl: Label, char_id: String)
 
 func _build_info_panel(parent: VBoxContainer) -> void:
 	_info_panel = PanelContainer.new()
-	_info_panel.custom_minimum_size = Vector2(0, 100)
+	_info_panel.custom_minimum_size = Vector2(0, 130)
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.04, 0.04, 0.07, 0.95)
-	panel_style.set_corner_radius_all(10)
+	panel_style.bg_color = Color(0.05, 0.04, 0.09, 0.95)
+	panel_style.set_corner_radius_all(12)
 	panel_style.set_border_width_all(1)
-	panel_style.border_color = Color(0.15, 0.15, 0.22, 0.6)
-	panel_style.content_margin_left = 20
-	panel_style.content_margin_right = 20
-	panel_style.content_margin_top = 12
-	panel_style.content_margin_bottom = 12
+	panel_style.border_color = Color(0.2, 0.18, 0.3, 0.5)
+	panel_style.content_margin_left = 24
+	panel_style.content_margin_right = 24
+	panel_style.content_margin_top = 14
+	panel_style.content_margin_bottom = 14
+	# Subtle gradient via shadow for depth
+	panel_style.shadow_color = Color(0.06, 0.04, 0.12, 0.4)
+	panel_style.shadow_size = 8
+	panel_style.shadow_offset = Vector2(0, 3)
 	_info_panel.add_theme_stylebox_override("panel", panel_style)
 	parent.add_child(_info_panel)
 
@@ -406,15 +419,15 @@ func _build_info_panel(parent: VBoxContainer) -> void:
 	weapon_row.add_child(_weapon_icon)
 
 	_weapon_label = Label.new()
-	_weapon_label.add_theme_font_size_override("font_size", 13)
-	_weapon_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.55))
+	_weapon_label.add_theme_font_size_override("font_size", 14)
+	_weapon_label.add_theme_color_override("font_color", GOLD_BRIGHT)
 	weapon_row.add_child(_weapon_label)
 
-	# Passive ability
+	# Passive ability — bigger and more prominent
 	_passive_label = Label.new()
 	_passive_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_passive_label.add_theme_font_size_override("font_size", 12)
-	_passive_label.add_theme_color_override("font_color", Color(0.6, 0.85, 0.5))
+	_passive_label.add_theme_font_size_override("font_size", 14)
+	_passive_label.add_theme_color_override("font_color", Color(0.5, 0.95, 0.4))
 	info_vbox.add_child(_passive_label)
 
 	# Element badge
@@ -440,28 +453,33 @@ func _build_action_buttons(parent: VBoxContainer) -> void:
 	btn_row.add_theme_constant_override("separation", 16)
 	btn_center.add_child(btn_row)
 
-	# -- JOGAR button (big, gold) --
+	# -- JOGAR button (big, gold, glowing) --
 	_start_btn = Button.new()
 	_start_btn.text = "JOGAR"
-	_start_btn.custom_minimum_size = Vector2(160, 44)
-	_start_btn.add_theme_font_size_override("font_size", 16)
-	_start_btn.add_theme_color_override("font_color", Color(0.12, 0.1, 0.05))
-	_start_btn.add_theme_color_override("font_hover_color", Color(0.05, 0.04, 0.02))
+	_start_btn.custom_minimum_size = Vector2(200, 52)
+	_start_btn.add_theme_font_size_override("font_size", 20)
+	_start_btn.add_theme_color_override("font_color", Color(0.1, 0.08, 0.02))
+	_start_btn.add_theme_color_override("font_hover_color", Color(0.05, 0.04, 0.01))
 
 	var gold_style := StyleBoxFlat.new()
-	gold_style.bg_color = GOLD
-	gold_style.set_corner_radius_all(8)
+	gold_style.bg_color = GOLD_BRIGHT
+	gold_style.set_corner_radius_all(10)
 	gold_style.set_border_width_all(2)
-	gold_style.border_color = GOLD.lightened(0.3)
-	gold_style.content_margin_left = 24
-	gold_style.content_margin_right = 24
-	gold_style.content_margin_top = 10
-	gold_style.content_margin_bottom = 10
+	gold_style.border_color = Color(1.0, 0.95, 0.6)
+	gold_style.content_margin_left = 32
+	gold_style.content_margin_right = 32
+	gold_style.content_margin_top = 12
+	gold_style.content_margin_bottom = 12
+	gold_style.shadow_color = Color(0.85, 0.72, 0.25, 0.35)
+	gold_style.shadow_size = 6
+	gold_style.shadow_offset = Vector2(0, 2)
 	_start_btn.add_theme_stylebox_override("normal", gold_style)
 
 	var gold_hover := gold_style.duplicate()
-	gold_hover.bg_color = GOLD.lightened(0.15)
+	gold_hover.bg_color = Color(1.0, 0.92, 0.45)
 	gold_hover.border_color = Color.WHITE
+	gold_hover.shadow_color = Color(1.0, 0.88, 0.35, 0.5)
+	gold_hover.shadow_size = 10
 	_start_btn.add_theme_stylebox_override("hover", gold_hover)
 	_start_btn.add_theme_stylebox_override("focus", gold_hover.duplicate())
 
@@ -636,6 +654,11 @@ func _update_selection() -> void:
 
 
 func _update_tile_highlights(selected_color: Color) -> void:
+	# Kill previous glow pulse tween
+	if _glow_tween:
+		_glow_tween.kill()
+		_glow_tween = null
+
 	for i in range(_char_buttons.size()):
 		var btn := _char_buttons[i]
 		var style := btn.get_theme_stylebox("normal") as StyleBoxFlat
@@ -648,22 +671,35 @@ func _update_tile_highlights(selected_color: Color) -> void:
 		var cc: Color = cdata.get("color", Color(0.5, 0.5, 0.5))
 
 		if i == current_index:
-			# Selected: gold border, brighter bg, scale hint
-			style.border_color = GOLD
+			# Selected: bright gold glow border, brighter bg, scale up
+			style.border_color = GOLD_BRIGHT
 			style.set_border_width_all(3)
 			style.bg_color = Color(
-				selected_color.r * 0.18,
-				selected_color.g * 0.18,
-				selected_color.b * 0.18, 0.98
+				selected_color.r * 0.2,
+				selected_color.g * 0.2,
+				selected_color.b * 0.2, 0.98
 			)
+			# Add subtle shadow glow for selected tile
+			style.shadow_color = Color(GOLD.r, GOLD.g, GOLD.b, 0.3)
+			style.shadow_size = 4
+			style.shadow_offset = Vector2(0, 0)
 			btn.pivot_offset = TILE_SIZE / 2.0
-			# Animate scale
+			# Animate scale to 1.1
 			var tw := create_tween()
-			tw.tween_property(btn, "scale", Vector2(1.08, 1.08), 0.12) \
+			tw.tween_property(btn, "scale", Vector2(1.1, 1.1), 0.15) \
 				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+			# Animated gold pulse on the selected tile border
+			if not AccessibilityManager.reduced_motion:
+				_glow_tween = create_tween().set_loops()
+				_glow_tween.tween_property(style, "border_color", GOLD_BRIGHT, 0.8) \
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+				_glow_tween.tween_property(style, "border_color", GOLD.darkened(0.15), 0.8) \
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		else:
 			# Not selected: restore
 			style.set_border_width_all(2)
+			style.shadow_size = 0
 			if clocked:
 				style.border_color = Color(0.12, 0.12, 0.18)
 			else:
@@ -692,6 +728,45 @@ func _start_bob_animation() -> void:
 	_bob_tween.tween_property(_info_sprite, "position:y", -5.0, 0.9) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_bob_tween.tween_property(_info_sprite, "position:y", 0.0, 0.9) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+# ===========================================================================
+#  ENTRANCE & PULSE ANIMATIONS
+# ===========================================================================
+
+## Grid cascade entrance — each tile fades in + scales from 0.8 with stagger
+func _animate_grid_entrance() -> void:
+	if AccessibilityManager.reduced_motion:
+		return
+	for i in range(_char_buttons.size()):
+		var btn := _char_buttons[i]
+		btn.modulate = Color(1, 1, 1, 0)
+		btn.scale = Vector2(0.8, 0.8)
+		btn.pivot_offset = TILE_SIZE / 2.0
+		var delay := i * 0.03
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(btn, "modulate:a", 1.0, 0.25) \
+			.set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2.ONE, 0.3) \
+			.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# After entrance completes, re-apply current selection scale
+	var total_delay := _char_buttons.size() * 0.03 + 0.3
+	get_tree().create_timer(total_delay).timeout.connect(func():
+		_update_selection()
+	)
+
+
+## Subtle pulse on the JOGAR button — scale oscillation
+func _start_play_button_pulse() -> void:
+	if AccessibilityManager.reduced_motion:
+		return
+	_start_btn.pivot_offset = _start_btn.custom_minimum_size / 2.0
+	_play_pulse_tween = create_tween().set_loops()
+	_play_pulse_tween.tween_property(_start_btn, "scale", Vector2(1.04, 1.04), 0.9) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_play_pulse_tween.tween_property(_start_btn, "scale", Vector2(1.0, 1.0), 0.9) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 

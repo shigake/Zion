@@ -8,17 +8,17 @@ var theme: Theme
 const BG_DARK := Color(0.08, 0.08, 0.12)
 const BG_PANEL := Color(0.12, 0.12, 0.18)
 const BG_BUTTON := Color(0.15, 0.15, 0.22)
-const BG_BUTTON_HOVER := Color(0.2, 0.2, 0.3)
-const BG_BUTTON_PRESSED := Color(0.1, 0.3, 0.5)
+const BG_BUTTON_HOVER := Color(0.22, 0.22, 0.32)
+const BG_BUTTON_PRESSED := Color(0.12, 0.32, 0.55)
 const BG_BUTTON_DISABLED := Color(0.1, 0.1, 0.13)
-const TEXT_PRIMARY := Color(0.95, 0.95, 0.95)
+const TEXT_PRIMARY := Color(1.0, 1.0, 1.0)
 const TEXT_SECONDARY := Color(0.7, 0.7, 0.75)
 const TEXT_DISABLED := Color(0.4, 0.4, 0.45)
-const ACCENT_BLUE := Color(0.3, 0.6, 1.0)
-const ACCENT_GOLD := Color(1.0, 0.85, 0.2)
-const ACCENT_RED := Color(1.0, 0.3, 0.3)
-const ACCENT_GREEN := Color(0.3, 0.9, 0.4)
-const BORDER_COLOR := Color(0.25, 0.25, 0.35)
+const ACCENT_BLUE := Color(0.25, 0.55, 1.0)
+const ACCENT_GOLD := Color(1.0, 0.85, 0.15)
+const ACCENT_RED := Color(1.0, 0.25, 0.25)
+const ACCENT_GREEN := Color(0.2, 0.95, 0.35)
+const BORDER_COLOR := Color(0.3, 0.3, 0.42)
 
 func _ready() -> void:
 	theme = Theme.new()
@@ -38,7 +38,7 @@ func _ready() -> void:
 
 func _setup_default_font() -> void:
 	# Use default font but set size
-	theme.set_default_font_size(18)
+	theme.set_default_font_size(20)
 
 func _setup_button_style() -> void:
 	# Normal
@@ -46,14 +46,16 @@ func _setup_button_style() -> void:
 	normal.bg_color = BG_BUTTON
 	normal.border_color = BORDER_COLOR
 	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(6)
+	normal.set_corner_radius_all(8)
 	normal.set_content_margin_all(12)
+	normal.content_margin_left = 16
+	normal.content_margin_right = 16
 	theme.set_stylebox("normal", "Button", normal)
 
 	# Hover
 	var hover = normal.duplicate()
 	hover.bg_color = BG_BUTTON_HOVER
-	hover.border_color = ACCENT_BLUE
+	hover.border_color = ACCENT_GOLD
 	theme.set_stylebox("hover", "Button", hover)
 
 	# Pressed
@@ -72,7 +74,7 @@ func _setup_button_style() -> void:
 	var focus = normal.duplicate()
 	focus.bg_color = Color(0.15, 0.25, 0.4)
 	focus.border_color = ACCENT_GOLD
-	focus.set_border_width_all(3)
+	focus.set_border_width_all(4)
 	theme.set_stylebox("focus", "Button", focus)
 
 	# Colors
@@ -87,13 +89,13 @@ func _setup_panel_style() -> void:
 	panel_style.bg_color = BG_PANEL
 	panel_style.border_color = BORDER_COLOR
 	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(8)
-	panel_style.set_content_margin_all(16)
+	panel_style.set_corner_radius_all(12)
+	panel_style.set_content_margin_all(20)
 	theme.set_stylebox("panel", "PanelContainer", panel_style)
 
 func _setup_label_style() -> void:
 	theme.set_color("font_color", "Label", TEXT_PRIMARY)
-	theme.set_font_size("font_size", "Label", 18)
+	theme.set_font_size("font_size", "Label", 20)
 
 func _setup_progress_bar_style() -> void:
 	# Background
@@ -122,12 +124,14 @@ func _setup_separator_style() -> void:
 func _setup_scroll_style() -> void:
 	var scroll_bg = StyleBoxFlat.new()
 	scroll_bg.bg_color = Color(0.1, 0.1, 0.15)
-	scroll_bg.set_corner_radius_all(3)
+	scroll_bg.set_corner_radius_all(5)
 	theme.set_stylebox("scroll", "VScrollBar", scroll_bg)
 
 	var grabber = StyleBoxFlat.new()
-	grabber.bg_color = Color(0.25, 0.25, 0.35)
-	grabber.set_corner_radius_all(3)
+	grabber.bg_color = Color(0.3, 0.3, 0.42)
+	grabber.set_corner_radius_all(5)
+	grabber.content_margin_left = 4
+	grabber.content_margin_right = 4
 	theme.set_stylebox("grabber", "VScrollBar", grabber)
 
 func _setup_check_button_style() -> void:
@@ -139,7 +143,7 @@ func _setup_option_button_style() -> void:
 	normal.bg_color = BG_BUTTON
 	normal.border_color = BORDER_COLOR
 	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(6)
+	normal.set_corner_radius_all(8)
 	normal.set_content_margin_all(8)
 	theme.set_stylebox("normal", "OptionButton", normal)
 	theme.set_color("font_color", "OptionButton", TEXT_PRIMARY)
@@ -195,5 +199,5 @@ func _setup_slider_style() -> void:
 func apply_font_scale(scale: float) -> void:
 	if not theme:
 		return
-	theme.set_default_font_size(int(18 * scale))
-	theme.set_font_size("font_size", "Label", int(18 * scale))
+	theme.set_default_font_size(int(20 * scale))
+	theme.set_font_size("font_size", "Label", int(20 * scale))

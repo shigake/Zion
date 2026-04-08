@@ -21,6 +21,11 @@ var _gold_line: ColorRect = null
 var _title_ref: Label = null
 var _separator_line: ColorRect = null
 var _original_panel_y: float = 0.0
+var _title_shadow: Label = null
+var _blur_layers: Array = []
+var _sparkle_particles: GPUParticles2D = null
+var _screen_vignette: ColorRect = null
+var _all_buttons: Array = []
 
 func _ready() -> void:
 	panel.visible = false
@@ -43,10 +48,13 @@ func _ready() -> void:
 
 	# ---- Apply dark+gold visual styling ----
 	_apply_overlay_style()
+	_apply_screen_vignette()
+	_apply_blur_layers()
 	_apply_panel_style()
 	_apply_title_style()
 	_apply_gold_line()
 	_apply_separator_style()
+	_apply_sparkle_particles()
 
 	# Aplica texto localizado nos botoes da cena
 	resume_btn.text = LocaleManager.tr_key("resume")
@@ -83,9 +91,16 @@ func _ready() -> void:
 	resume_btn.add_theme_font_size_override("font_size", 18)
 	menu_btn.add_theme_font_size_override("font_size", 18)
 
+	# Collect all buttons for cascade animation and hover effects
+	_all_buttons.clear()
+	for child in $Panel/VBox.get_children():
+		if child is Button:
+			_all_buttons.append(child)
+			_connect_hover_scale(child)
+
 # ---- Overlay: two layers (solid bg + central vignette) ----
 func _apply_overlay_style() -> void:
-	overlay.color = Color(0.0, 0.0, 0.0, 0.72)
+	overlay.color = Color(0.0, 0.0, 0.0, 0.0)  # Start transparent for fade-in
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_vignette = ColorRect.new()
@@ -104,33 +119,97 @@ func _apply_overlay_style() -> void:
 	if panel.get_index() >= 0:
 		move_child(_vignette, panel.get_index())
 
-# ---- Panel central: dark bg, golden border, shadow ----
+# ---- Screen vignette: darkening around edges ----
+func _apply_screen_vignette() -> void:
+	_screen_vignette = ColorRect.new()
+	_screen_vignette.name = "ScreenVignette"
+	_screen_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_screen_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_screen_vignette.visible = false
+	var shader_code := """
+shader_type canvas_item;
+uniform float intensity : hint_range(0.0, 1.0) = 0.45;
+void fragment() {
+	vec2 uv = UV;
+	float dist = distance(uv, vec2(0.5));
+	float vig = smoothstep(0.3, 0.85, dist);
+	COLOR = vec4(0.0, 0.0, 0.0, vig * intensity);
+}
+"""
+	var shader = Shader.new()
+	shader.code = shader_code
+	var mat = ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("intensity", 0.45)
+	_screen_vignette.material = mat
+	add_child(_screen_vignette)
+	# Keep behind panel
+	if panel.get_index() >= 0:
+		move_child(_screen_vignette, panel.get_index())
+
+# ---- Blur-like layers behind main panel ----
+func _apply_blur_layers() -> void:
+	_blur_layers.clear()
+	var offsets := [Vector2(0, 0), Vector2(-2, -2), Vector2(2, 2)]
+	var alphas := [0.12, 0.08, 0.08]
+	for i in range(offsets.size()):
+		var blur_panel = PanelContainer.new()
+		blur_panel.name = "BlurLayer%d" % i
+		blur_panel.set_anchors_preset(Control.PRESET_CENTER)
+		# Match main panel sizing with offsets
+		blur_panel.offset_left = panel.offset_left + offsets[i].x - 4
+		blur_panel.offset_right = panel.offset_right + offsets[i].x + 4
+		blur_panel.offset_top = panel.offset_top + offsets[i].y - 4
+		blur_panel.offset_bottom = panel.offset_bottom + offsets[i].y + 4
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.9, 0.75, 0.2, alphas[i])
+		style.corner_radius_top_left = 14
+		style.corner_radius_top_right = 14
+		style.corner_radius_bottom_left = 14
+		style.corner_radius_bottom_right = 14
+		style.border_width_left = 0
+		style.border_width_right = 0
+		style.border_width_top = 0
+		style.border_width_bottom = 0
+		blur_panel.add_theme_stylebox_override("panel", style)
+		blur_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		blur_panel.visible = false
+		add_child(blur_panel)
+		# Keep behind main panel
+		if panel.get_index() >= 0:
+			move_child(blur_panel, panel.get_index())
+		_blur_layers.append(blur_panel)
+
+# ---- Panel central: dark bg, golden border with glow, shadow ----
 func _apply_panel_style() -> void:
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.03, 0.03, 0.06, 0.97)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.border_color = Color(0.9, 0.8, 0.3)
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_color = Color(0.95, 0.85, 0.3)
 	style.corner_radius_top_left = 12
 	style.corner_radius_top_right = 12
 	style.corner_radius_bottom_left = 12
 	style.corner_radius_bottom_right = 12
-	style.shadow_color = Color(0.9, 0.75, 0.2, 0.18)
-	style.shadow_size = 12
+	style.shadow_color = Color(0.9, 0.75, 0.2, 0.35)
+	style.shadow_size = 18
 	style.content_margin_left = 20
 	style.content_margin_right = 20
 	style.content_margin_top = 16
 	style.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", style)
 
-# ---- Title: golden, localized ----
+# ---- Title: golden, localized, with shadow ----
 func _apply_title_style() -> void:
 	_title_ref = $Panel/VBox/Title
 	_title_ref.text = "PAUSA"
-	_title_ref.add_theme_font_size_override("font_size", 28)
-	_title_ref.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
+	_title_ref.add_theme_font_size_override("font_size", 36)
+	_title_ref.add_theme_color_override("font_color", Color(0.95, 0.88, 0.35))
+	_title_ref.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
+	_title_ref.add_theme_constant_override("shadow_offset_x", 2)
+	_title_ref.add_theme_constant_override("shadow_offset_y", 2)
 	_title_ref.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 # ---- Golden decorative line below title ----
@@ -195,29 +274,35 @@ func _apply_normal_button_style(btn: Button) -> void:
 
 func _apply_resume_button_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("normal", _make_button_stylebox(
-		Color(0.14, 0.12, 0.08), Color(0.85, 0.72, 0.22, 0.7)))
+		Color(0.55, 0.45, 0.08), Color(0.95, 0.85, 0.3, 0.9), 6))
 	btn.add_theme_stylebox_override("hover", _make_button_stylebox(
-		Color(0.20, 0.17, 0.10), Color(0.95, 0.82, 0.30, 0.95)))
+		Color(0.65, 0.55, 0.10), Color(1.0, 0.92, 0.4, 1.0), 6))
 	btn.add_theme_stylebox_override("pressed", _make_button_stylebox(
-		Color(0.20, 0.18, 0.28), Color(0.95, 0.85, 0.35, 0.9)))
+		Color(0.45, 0.38, 0.06), Color(0.95, 0.85, 0.35, 0.9), 6))
 	btn.add_theme_stylebox_override("focus", _make_button_stylebox(
-		Color(0.20, 0.17, 0.10), Color(0.95, 0.82, 0.30, 0.95)))
-	btn.add_theme_color_override("font_color", Color(0.82, 0.82, 0.88))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.55))
-	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.92, 0.55))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 0.92, 0.55))
+		Color(0.65, 0.55, 0.10), Color(1.0, 0.92, 0.4, 1.0), 6))
+	btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.9))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	btn.add_theme_color_override("font_pressed_color", Color(0.95, 0.9, 0.7))
+	btn.add_theme_color_override("font_focus_color", Color(1.0, 1.0, 1.0))
 	btn.add_theme_font_size_override("font_size", 18)
 	btn.custom_minimum_size = Vector2(0, 44)
 
 func _apply_quit_button_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("normal", _make_button_stylebox(
 		Color(0.08, 0.07, 0.08), Color(0.30, 0.22, 0.22, 0.6)))
-	btn.add_theme_stylebox_override("hover", _make_button_stylebox(
-		Color(0.14, 0.09, 0.09), Color(0.85, 0.45, 0.40, 0.8)))
+	var hover_style = _make_button_stylebox(
+		Color(0.16, 0.08, 0.08), Color(0.9, 0.4, 0.35, 0.9))
+	hover_style.shadow_color = Color(0.9, 0.25, 0.2, 0.3)
+	hover_style.shadow_size = 10
+	btn.add_theme_stylebox_override("hover", hover_style)
 	btn.add_theme_stylebox_override("pressed", _make_button_stylebox(
 		Color(0.20, 0.14, 0.14), Color(0.90, 0.50, 0.45, 0.9)))
-	btn.add_theme_stylebox_override("focus", _make_button_stylebox(
-		Color(0.14, 0.09, 0.09), Color(0.85, 0.45, 0.40, 0.8)))
+	var focus_style = _make_button_stylebox(
+		Color(0.16, 0.08, 0.08), Color(0.9, 0.4, 0.35, 0.9))
+	focus_style.shadow_color = Color(0.9, 0.25, 0.2, 0.3)
+	focus_style.shadow_size = 10
+	btn.add_theme_stylebox_override("focus", focus_style)
 	btn.add_theme_color_override("font_color", Color(0.82, 0.82, 0.88))
 	btn.add_theme_color_override("font_hover_color", Color(0.95, 0.60, 0.55))
 	btn.add_theme_color_override("font_pressed_color", Color(0.95, 0.60, 0.55))
@@ -324,19 +409,62 @@ func _pause() -> void:
 	# Gamepad: foco no Resume
 	_setup_pause_focus()
 	GamepadUI.notify_menu_opened()
+	# Refresh button list for cascade (options/quit may have been re-added)
+	_all_buttons.clear()
+	for child in $Panel/VBox.get_children():
+		if child is Button:
+			_all_buttons.append(child)
 	# Entry animation
 	_animate_panel_in()
 
 func _animate_panel_in() -> void:
 	_original_panel_y = panel.offset_top
+	# Panel slides in from top
 	panel.modulate.a = 0.0
-	panel.offset_top += 18
-	panel.offset_bottom += 18
+	panel.offset_top -= 60
+	panel.offset_bottom -= 60
+	# Overlay fades in from 0 to 0.72
+	overlay.color.a = 0.0
+	# Show blur layers and screen vignette
+	for bl in _blur_layers:
+		if is_instance_valid(bl):
+			bl.visible = true
+			bl.modulate.a = 0.0
+	if _screen_vignette:
+		_screen_vignette.visible = true
+		_screen_vignette.modulate.a = 0.0
+	# Show sparkle particles
+	if _sparkle_particles:
+		_sparkle_particles.visible = true
+		_sparkle_particles.emitting = true
+	# Hide buttons initially for cascade
+	for btn in _all_buttons:
+		if is_instance_valid(btn):
+			btn.modulate.a = 0.0
+			btn.position.y += 12
 	var tw = create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.set_parallel(true)
-	tw.tween_property(panel, "modulate:a", 1.0, 0.18)
-	tw.tween_property(panel, "offset_top", _original_panel_y, 0.18).set_ease(Tween.EASE_OUT)
-	tw.tween_property(panel, "offset_bottom", _original_panel_y + 280.0, 0.18).set_ease(Tween.EASE_OUT)
+	# Panel slide + fade (0.3s ease out)
+	tw.tween_property(panel, "modulate:a", 1.0, 0.3)
+	tw.tween_property(panel, "offset_top", _original_panel_y, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tw.tween_property(panel, "offset_bottom", _original_panel_y + 280.0, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	# Overlay fade in
+	tw.tween_property(overlay, "color:a", 0.72, 0.3)
+	# Blur layers fade in
+	for bl in _blur_layers:
+		if is_instance_valid(bl):
+			tw.tween_property(bl, "modulate:a", 1.0, 0.3)
+	# Screen vignette fade in
+	if _screen_vignette:
+		tw.tween_property(_screen_vignette, "modulate:a", 1.0, 0.3)
+	# Cascade buttons with staggered delay
+	for i in range(_all_buttons.size()):
+		var btn = _all_buttons[i]
+		if is_instance_valid(btn):
+			var delay = 0.1 + i * 0.08
+			tw.tween_property(btn, "modulate:a", 1.0, 0.2).set_delay(delay)
+			tw.tween_property(btn, "position:y", btn.position.y - 12, 0.2).set_delay(delay).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func _setup_pause_focus() -> void:
 	var buttons := []
@@ -367,18 +495,31 @@ func _on_resume() -> void:
 	var tw = create_tween()
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.set_parallel(true)
-	tw.tween_property(panel, "modulate:a", 0.0, 0.15)
-	tw.tween_property(overlay, "color:a", 0.0, 0.15)
+	tw.tween_property(panel, "modulate:a", 0.0, 0.2)
+	tw.tween_property(overlay, "color:a", 0.0, 0.2)
 	if _vignette:
-		tw.tween_property(_vignette, "color:a", 0.0, 0.15)
+		tw.tween_property(_vignette, "color:a", 0.0, 0.2)
+	for bl in _blur_layers:
+		if is_instance_valid(bl):
+			tw.tween_property(bl, "modulate:a", 0.0, 0.2)
+	if _screen_vignette:
+		tw.tween_property(_screen_vignette, "modulate:a", 0.0, 0.2)
 	tw.chain().tween_callback(func():
 		panel.visible = false
 		panel.modulate.a = 1.0
 		overlay.visible = false
-		overlay.color.a = 0.72
+		overlay.color.a = 0.0
 		if _vignette:
 			_vignette.visible = false
 			_vignette.color.a = 0.55
+		for bl2 in _blur_layers:
+			if is_instance_valid(bl2):
+				bl2.visible = false
+		if _screen_vignette:
+			_screen_vignette.visible = false
+		if _sparkle_particles:
+			_sparkle_particles.visible = false
+			_sparkle_particles.emitting = false
 		get_tree().paused = false
 		GameManager.paused = _was_gm_paused_before
 	)
@@ -549,6 +690,61 @@ func _add_stat_line(parent: Control, label_text: String, value_text: String) -> 
 	val.add_theme_color_override("font_color", Color(0.9, 0.9, 0.5))
 	hbox.add_child(val)
 	parent.add_child(hbox)
+
+# ---- Gold sparkle particles behind the panel ----
+func _apply_sparkle_particles() -> void:
+	_sparkle_particles = GPUParticles2D.new()
+	_sparkle_particles.name = "GoldSparkles"
+	_sparkle_particles.amount = 20
+	_sparkle_particles.lifetime = 2.5
+	_sparkle_particles.speed_scale = 0.6
+	_sparkle_particles.visibility_rect = Rect2(-200, -180, 400, 360)
+	_sparkle_particles.position = Vector2(640, 360)  # Center of 1280x720
+	_sparkle_particles.visible = false
+	_sparkle_particles.emitting = false
+	var mat = ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, -1, 0)
+	mat.spread = 180.0
+	mat.initial_velocity_min = 8.0
+	mat.initial_velocity_max = 20.0
+	mat.gravity = Vector3(0, 6, 0)
+	mat.scale_min = 1.5
+	mat.scale_max = 3.5
+	mat.color = Color(0.95, 0.85, 0.3, 0.6)
+	var color_ramp = GradientTexture1D.new()
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(0.95, 0.85, 0.3, 0.0))
+	gradient.add_point(0.15, Color(0.95, 0.85, 0.3, 0.6))
+	gradient.add_point(0.7, Color(0.95, 0.85, 0.3, 0.4))
+	gradient.set_color(gradient.get_point_count() - 1, Color(0.95, 0.85, 0.3, 0.0))
+	color_ramp.gradient = gradient
+	mat.color_ramp = color_ramp
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(160, 130, 0)
+	_sparkle_particles.process_material = mat
+	# Use a small white square as particle texture (1x1 stretched by scale)
+	var img = Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	_sparkle_particles.texture = ImageTexture.create_from_image(img)
+	add_child(_sparkle_particles)
+	# Keep behind the panel
+	if panel.get_index() >= 0:
+		move_child(_sparkle_particles, panel.get_index())
+
+# ---- Hover scale animation for buttons ----
+func _connect_hover_scale(btn: Button) -> void:
+	btn.mouse_entered.connect(func():
+		var tw = create_tween()
+		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(btn, "scale", Vector2(1.05, 1.05), 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	)
+	btn.mouse_exited.connect(func():
+		var tw = create_tween()
+		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.12).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	)
+	btn.pivot_offset = btn.size / 2.0
+	btn.resized.connect(func(): btn.pivot_offset = btn.size / 2.0)
 
 func _on_options() -> void:
 	AudioManager.play_sfx("menu_click")
