@@ -30,6 +30,9 @@ var _particle_drift: Array[float] = []  # lateral drift factor per particle
 var _particle_colors: Array[Color] = []  # original color per particle
 var _glow_rect: ColorRect = null
 var _glow_time: float = 0.0
+var _gradient_time: float = 0.0
+var _btn_hover_tweens: Dictionary = {}
+var _btn_gold_bars: Dictionary = {}
 
 
 # Title sparkles
@@ -188,6 +191,58 @@ func _setup_texture_background() -> void:
 		add_child(bg)
 		move_child(bg, 0)
 
+	# Animated gradient overlay that shifts between dark blue and dark purple
+	gradient_overlay.visible = true
+	gradient_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var grad_shader := Shader.new()
+	grad_shader.code = """
+shader_type canvas_item;
+
+uniform float time_val = 0.0;
+
+void fragment() {
+	float t = sin(time_val * 0.3) * 0.5 + 0.5;
+	vec3 dark_blue = vec3(0.02, 0.03, 0.12);
+	vec3 dark_purple = vec3(0.08, 0.02, 0.12);
+	vec3 col = mix(dark_blue, dark_purple, t);
+	// Vertical gradient: darker at top, slightly lighter at bottom
+	col += UV.y * 0.03;
+	COLOR = vec4(col, 0.65);
+}
+"""
+	var grad_mat := ShaderMaterial.new()
+	grad_mat.shader = grad_shader
+	grad_mat.set_shader_parameter("time_val", 0.0)
+	gradient_overlay.material = grad_mat
+
+	# Parallax star field: small white/gold dots
+	_setup_star_field()
+
+
+func _setup_star_field() -> void:
+	var star_container := Control.new()
+	star_container.name = "StarField"
+	star_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	star_container.anchor_right = 1.0
+	star_container.anchor_bottom = 1.0
+	star_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(star_container)
+	move_child(star_container, 2)
+	for i in range(50):
+		var star := ColorRect.new()
+		var star_size := randf_range(1.0, 2.5)
+		star.size = Vector2(star_size, star_size)
+		# Mix of white and gold stars
+		var is_gold := randf() < 0.3
+		if is_gold:
+			star.color = Color(1.0, 0.9, 0.5, randf_range(0.15, 0.4))
+		else:
+			star.color = Color(0.85, 0.85, 0.95, randf_range(0.1, 0.35))
+		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		star.position = Vector2(randf_range(0, 1280), randf_range(0, 720))
+		star_container.add_child(star)
+	# Gentle parallax drift handled in _process via star container
+
 
 func _style_title() -> void:
 	var scale := PlatformHelper.get_ui_scale()
@@ -214,15 +269,15 @@ func _style_title() -> void:
 		# Ensure subtitle is always AFTER the logo + spacer
 		parent.move_child(subtitle_label, idx + 2)
 	else:
-		# Fallback: styled text title with gold + glow
+		# Fallback: styled text title with gold + glow — BIG 96px
 		title_label.text = "ZION"
-		title_label.add_theme_font_size_override("font_size", int(72 * scale))
-		title_label.add_theme_color_override("font_color", COLOR_GOLD)
+		title_label.add_theme_font_size_override("font_size", int(96 * scale))
+		title_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.3))
 		title_label.add_theme_constant_override("shadow_offset_x", 0)
-		title_label.add_theme_constant_override("shadow_offset_y", 6)
-		title_label.add_theme_color_override("font_shadow_color", Color(0.5, 0.38, 0.0, 0.8))
-		title_label.add_theme_constant_override("outline_size", int(5 * scale))
-		title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.85, 0.3, 0.5))
+		title_label.add_theme_constant_override("shadow_offset_y", 8)
+		title_label.add_theme_color_override("font_shadow_color", Color(0.6, 0.42, 0.0, 0.9))
+		title_label.add_theme_constant_override("outline_size", int(7 * scale))
+		title_label.add_theme_color_override("font_outline_color", Color(1.0, 0.75, 0.15, 0.7))
 	# Store base position for floating animation
 	_title_base_y = title_label.position.y
 	# Subtitle
@@ -265,7 +320,7 @@ func _style_crystals() -> void:
 
 func _style_play_button() -> void:
 	var scale := PlatformHelper.get_ui_scale()
-	play_btn.custom_minimum_size = Vector2(300 * scale, 55 * scale)
+	play_btn.custom_minimum_size = Vector2(320 * scale, 60 * scale)
 	play_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	play_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 
@@ -291,7 +346,7 @@ func _style_secondary_buttons() -> void:
 
 func _style_secondary_button(btn: Button) -> void:
 	var scale := PlatformHelper.get_ui_scale()
-	btn.custom_minimum_size = Vector2(250 * scale, 45 * scale)
+	btn.custom_minimum_size = Vector2(270 * scale, 60 * scale)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 
@@ -377,8 +432,19 @@ func _apply_texture_button_style(btn: Button, normal_path: String, hover_path: S
 
 func _style_bottom_right() -> void:
 	var scale := PlatformHelper.get_ui_scale()
-	version_label.add_theme_font_size_override("font_size", int(11 * scale))
-	version_label.add_theme_color_override("font_color", COLOR_VERSION)
+	version_label.add_theme_font_size_override("font_size", int(12 * scale))
+	version_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.62))
+	# Pill background for version label
+	var pill := StyleBoxFlat.new()
+	pill.bg_color = Color(0.1, 0.1, 0.15, 0.6)
+	pill.set_corner_radius_all(8)
+	pill.content_margin_left = 10
+	pill.content_margin_right = 10
+	pill.content_margin_top = 3
+	pill.content_margin_bottom = 3
+	pill.border_color = Color(0.25, 0.25, 0.35, 0.4)
+	pill.set_border_width_all(1)
+	version_label.add_theme_stylebox_override("normal", pill)
 	credits_btn.add_theme_font_size_override("font_size", int(12 * scale))
 	credits_btn.add_theme_color_override("font_color", COLOR_CREDITS)
 	credits_btn.add_theme_color_override("font_hover_color", COLOR_GOLD)
@@ -463,48 +529,12 @@ func _setup_floating_particles() -> void:
 	add_child(container)
 	move_child(container, 6)
 
-	# Gold sparkles (background, slow)
-	for i in range(20):
-		var dot := ColorRect.new()
-		var dot_size := randf_range(1.5, 3.5)
-		dot.size = Vector2(dot_size, dot_size)
-		var col := Color(0.9, 0.8, 0.4, randf_range(0.05, 0.18))
-		dot.color = col
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var px := randf_range(0.0, 1280.0)
-		var py := randf_range(0.0, 740.0)
-		dot.position = Vector2(px, py)
-		container.add_child(dot)
-		_particles.append(dot)
-		_particle_speeds.append(randf_range(8.0, 20.0))
-		_particle_base_x.append(px)
-		_particle_drift.append(randf_range(-8.0, 8.0))
-		_particle_colors.append(col)
-
-	# Blue wisps (fewer, slightly larger, medium speed, lateral drift)
-	for i in range(10):
-		var dot := ColorRect.new()
-		var dot_size := randf_range(2.0, 4.5)
-		dot.size = Vector2(dot_size, dot_size)
-		var col := Color(0.3, 0.5, 0.9, randf_range(0.04, 0.12))
-		dot.color = col
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var px := randf_range(0.0, 1280.0)
-		var py := randf_range(0.0, 740.0)
-		dot.position = Vector2(px, py)
-		container.add_child(dot)
-		_particles.append(dot)
-		_particle_speeds.append(randf_range(12.0, 30.0))
-		_particle_base_x.append(px)
-		_particle_drift.append(randf_range(-20.0, 20.0))
-		_particle_colors.append(col)
-
-	# A few larger foreground gold sparkles (fast)
-	for i in range(5):
+	# Gold crystal sparkles (bigger, brighter)
+	for i in range(15):
 		var dot := ColorRect.new()
 		var dot_size := randf_range(2.5, 5.0)
 		dot.size = Vector2(dot_size, dot_size)
-		var col := Color(1.0, 0.9, 0.5, randf_range(0.06, 0.15))
+		var col := Color(1.0, 0.88, 0.35, randf_range(0.08, 0.25))
 		dot.color = col
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var px := randf_range(0.0, 1280.0)
@@ -512,7 +542,61 @@ func _setup_floating_particles() -> void:
 		dot.position = Vector2(px, py)
 		container.add_child(dot)
 		_particles.append(dot)
-		_particle_speeds.append(randf_range(22.0, 38.0))
+		_particle_speeds.append(randf_range(8.0, 18.0))
+		_particle_base_x.append(px)
+		_particle_drift.append(randf_range(-12.0, 12.0))
+		_particle_colors.append(col)
+
+	# Cyan crystal wisps (medium, gentle sway)
+	for i in range(8):
+		var dot := ColorRect.new()
+		var dot_size := randf_range(2.5, 5.5)
+		dot.size = Vector2(dot_size, dot_size)
+		var col := Color(0.3, 0.85, 0.95, randf_range(0.06, 0.18))
+		dot.color = col
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var px := randf_range(0.0, 1280.0)
+		var py := randf_range(0.0, 740.0)
+		dot.position = Vector2(px, py)
+		container.add_child(dot)
+		_particles.append(dot)
+		_particle_speeds.append(randf_range(10.0, 25.0))
+		_particle_base_x.append(px)
+		_particle_drift.append(randf_range(-18.0, 18.0))
+		_particle_colors.append(col)
+
+	# Purple crystal fragments (medium, swaying)
+	for i in range(7):
+		var dot := ColorRect.new()
+		var dot_size := randf_range(2.0, 5.0)
+		dot.size = Vector2(dot_size, dot_size)
+		var col := Color(0.7, 0.35, 0.9, randf_range(0.05, 0.16))
+		dot.color = col
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var px := randf_range(0.0, 1280.0)
+		var py := randf_range(0.0, 740.0)
+		dot.position = Vector2(px, py)
+		container.add_child(dot)
+		_particles.append(dot)
+		_particle_speeds.append(randf_range(12.0, 28.0))
+		_particle_base_x.append(px)
+		_particle_drift.append(randf_range(-22.0, 22.0))
+		_particle_colors.append(col)
+
+	# Large foreground gold sparkles (bright, fast)
+	for i in range(5):
+		var dot := ColorRect.new()
+		var dot_size := randf_range(3.5, 6.0)
+		dot.size = Vector2(dot_size, dot_size)
+		var col := Color(1.0, 0.92, 0.5, randf_range(0.08, 0.2))
+		dot.color = col
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var px := randf_range(0.0, 1280.0)
+		var py := randf_range(0.0, 740.0)
+		dot.position = Vector2(px, py)
+		container.add_child(dot)
+		_particles.append(dot)
+		_particle_speeds.append(randf_range(20.0, 35.0))
 		_particle_base_x.append(px)
 		_particle_drift.append(randf_range(-15.0, 15.0))
 		_particle_colors.append(col)
@@ -556,9 +640,43 @@ void fragment() {
 func _on_button_hover(btn: Button) -> void:
 	_hover_target = btn
 	_hover_glow.visible = true
+	# Hover scale animation
+	btn.pivot_offset = btn.size * 0.5
+	if _btn_hover_tweens.has(btn) and _btn_hover_tweens[btn] != null:
+		_btn_hover_tweens[btn].kill()
+	var tw := create_tween()
+	tw.tween_property(btn, "scale", Vector2(1.05, 1.05), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_btn_hover_tweens[btn] = tw
+	# Gold left-border accent
+	if not _btn_gold_bars.has(btn):
+		var bar := ColorRect.new()
+		bar.name = "GoldAccent"
+		bar.size = Vector2(4, btn.size.y)
+		bar.position = Vector2(-6, 0)
+		bar.color = Color(1.0, 0.85, 0.25, 0.0)
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(bar)
+		_btn_gold_bars[btn] = bar
+	var bar: ColorRect = _btn_gold_bars[btn]
+	bar.size.y = btn.size.y
+	var bar_tw := create_tween()
+	bar_tw.tween_property(bar, "color:a", 0.9, 0.15)
 
 
 func _on_button_unhover() -> void:
+	if _hover_target and is_instance_valid(_hover_target):
+		var btn := _hover_target
+		btn.pivot_offset = btn.size * 0.5
+		if _btn_hover_tweens.has(btn) and _btn_hover_tweens[btn] != null:
+			_btn_hover_tweens[btn].kill()
+		var tw := create_tween()
+		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		_btn_hover_tweens[btn] = tw
+		# Fade out gold bar
+		if _btn_gold_bars.has(btn):
+			var bar: ColorRect = _btn_gold_bars[btn]
+			var bar_tw := create_tween()
+			bar_tw.tween_property(bar, "color:a", 0.0, 0.15)
 	_hover_target = null
 
 
@@ -619,7 +737,7 @@ func _play_entrance_animations() -> void:
 	for i in range(button_nodes.size()):
 		var btn: Control = button_nodes[i]
 		var final_x := btn.position.x + 120
-		var delay := 0.2 + i * 0.08
+		var delay := 0.2 + i * 0.1
 		tween.tween_property(btn, "position:x", final_x, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK).set_delay(delay)
 		tween.tween_property(btn, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT).set_delay(delay)
 
@@ -637,7 +755,21 @@ func _play_entrance_animations() -> void:
 	tween.tween_property(bottom_right, "modulate:a", 1.0, 0.5).set_ease(Tween.EASE_OUT).set_delay(0.5)
 
 	tween.set_parallel(false)
-	tween.tween_callback(func(): _entrance_done = true)
+	tween.tween_callback(func():
+		_entrance_done = true
+		_start_title_pulse()
+	)
+
+
+func _start_title_pulse() -> void:
+	var title_parent = title_label.get_parent()
+	var logo_sprite = title_parent.get_node_or_null("LogoSprite") if title_parent else null
+	var title_node: Control = logo_sprite if logo_sprite else title_label
+	title_node.pivot_offset = title_node.size * 0.5
+	var pulse_tween := create_tween()
+	pulse_tween.set_loops()
+	pulse_tween.tween_property(title_node, "scale", Vector2(1.03, 1.03), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	pulse_tween.tween_property(title_node, "scale", Vector2(1.0, 1.0), 1.5).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 
 # ---------------------------------------------------------------------------
@@ -672,6 +804,11 @@ func _setup_gamepad_focus() -> void:
 
 func _process(delta: float) -> void:
 	_title_time += delta
+	_gradient_time += delta
+
+	# Animate gradient overlay shader
+	if gradient_overlay.material:
+		gradient_overlay.material.set_shader_parameter("time_val", _gradient_time)
 
 	# Title floating bob (subtle, ~3px amplitude)
 	title_label.position.y = _title_base_y + sin(_title_time * 1.8) * 3.0
@@ -692,13 +829,15 @@ func _process(delta: float) -> void:
 		var spr: TextureRect = _bg_char_sprites[i]
 		spr.position.y += sin(_title_time * (0.8 + i * 0.2) + float(i) * 1.5) * 0.15
 
-	# Update floating particles (gold + blue, with lateral drift)
+	# Update floating crystal particles (gold, cyan, purple — with gentle swaying)
 	for i in range(_particles.size()):
 		var p: ColorRect = _particles[i]
 		p.position.y -= _particle_speeds[i] * delta
-		p.position.x = _particle_base_x[i] + sin(_title_time * 0.6 + float(i)) * 12.0 + _particle_drift[i] * sin(_title_time * 0.4 + float(i) * 0.5)
-		# Subtle alpha pulse
-		p.color.a = _particle_colors[i].a * (0.7 + 0.3 * abs(sin(_title_time * 0.8 + float(i) * 0.3)))
+		# Gentle swaying motion with multiple sine waves for organic feel
+		var sway := sin(_title_time * 0.5 + float(i) * 0.7) * 18.0 + sin(_title_time * 0.3 + float(i) * 1.3) * 8.0
+		p.position.x = _particle_base_x[i] + sway + _particle_drift[i] * sin(_title_time * 0.4 + float(i) * 0.5)
+		# Pulsing alpha for twinkling effect
+		p.color.a = _particle_colors[i].a * (0.6 + 0.4 * abs(sin(_title_time * 0.9 + float(i) * 0.4)))
 		if p.position.y < -10.0:
 			p.position.y = 740.0
 			_particle_base_x[i] = randf_range(0.0, 1280.0)
