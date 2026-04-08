@@ -451,9 +451,9 @@ func _physics_process(delta: float) -> void:
 			if _anim_sprite.animation != "idle":
 				_anim_sprite.play("idle")
 
-	# Enhanced walk animation on sprite (bob + lean + squash-stretch + flip + idle breathing)
+	# Enhanced walk animation on sprite or 3D model (bob + lean + squash-stretch + flip + idle breathing)
 	var player_sprite = get_node_or_null("PlayerSprite")
-	if player_sprite and player_sprite is Sprite3D:
+	if player_sprite and (player_sprite is Sprite3D or player_sprite is Node3D):
 		var spd = velocity.length()
 		if spd > GameConstants.PLAYER_MOVEMENT_THRESHOLD:
 			# Advance walk phase based on actual speed for natural rhythm
@@ -469,11 +469,17 @@ func _physics_process(delta: float) -> void:
 				_landing_squash = GameConstants.WALK_LANDING_SQUASH  # Trigger subtle squash on landing
 			_prev_bob_y = bob_height
 
-			# Flip sprite to face movement direction (X axis)
-			if move_direction.x > 0.1:
-				player_sprite.flip_h = false
-			elif move_direction.x < -0.1:
-				player_sprite.flip_h = true
+			# Face movement direction
+			if player_sprite is Sprite3D:
+				if move_direction.x > 0.1:
+					player_sprite.flip_h = false
+				elif move_direction.x < -0.1:
+					player_sprite.flip_h = true
+			else:
+				# 3D model: rotate Y to face movement
+				if move_direction.length() > 0.1:
+					var target_angle = atan2(-move_direction.x, -move_direction.z)
+					player_sprite.rotation.y = lerp_angle(player_sprite.rotation.y, target_angle, delta * 10.0)
 
 			# Horizontal lean: tilt sprite slightly in movement direction
 			var lean_target = -move_direction.x * GameConstants.WALK_LEAN_FACTOR  # Lean into movement (radians)

@@ -572,13 +572,20 @@ func _physics_process(delta: float) -> void:
 			var _bob_amp = clampf(_move_spd * 0.006, 0.02, 0.06)  # Amplitude scales with speed
 			var phase = GameManager.game_time * _bob_freq + global_position.x
 			_walk_sprite.position.y = 0.65 + abs(sin(phase)) * _bob_amp
-			# Flip sprite toward player
+			# Face toward player
 			if target and is_instance_valid(target):
-				var dir_x = target.global_position.x - global_position.x
-				if dir_x > 0.3:
-					_walk_sprite.flip_h = false
-				elif dir_x < -0.3:
-					_walk_sprite.flip_h = true
+				if _walk_sprite is Sprite3D:
+					var dir_x = target.global_position.x - global_position.x
+					if dir_x > 0.3:
+						_walk_sprite.flip_h = false
+					elif dir_x < -0.3:
+						_walk_sprite.flip_h = true
+				else:
+					# 3D model: rotate Y toward player
+					var dir = target.global_position - global_position
+					if dir.length() > 0.5:
+						var target_angle = atan2(-dir.x, -dir.z)
+						_walk_sprite.rotation.y = lerp_angle(_walk_sprite.rotation.y, target_angle, 0.15)
 			# Lean toward movement direction (subtle tilt)
 			var _lean_target = 0.0
 			if abs(velocity.x) > 0.1:
