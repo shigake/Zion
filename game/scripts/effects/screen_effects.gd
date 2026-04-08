@@ -28,6 +28,9 @@ var KILL_STREAK_WINDOW: float = 2.0
 var KILL_STREAK_MIN: int = 5
 var _streak_messages: Array[String] = ["COMBO x%d!", "MASSACRE!", "UNSTOPPABLE!", "GODLIKE!"]
 
+# Cached mesh for boss spawn particles (lazy-initialized)
+var _boss_spawn_mesh: SphereMesh = null
+
 signal player_took_damage  # Emitted so HUD can react
 
 func _ready() -> void:
@@ -499,13 +502,11 @@ func _boss_spawn_particles() -> void:
 	var scene = get_tree().current_scene
 	if not scene:
 		return
-	for i in range(12):
-		var angle = float(i) / 12.0 * TAU
-		var pos = center + Vector3(cos(angle) * 3.0, 0.2, sin(angle) * 3.0)
-		var particle = MeshInstance3D.new()
-		var sphere = SphereMesh.new()
-		sphere.radius = 0.12
-		sphere.height = 0.24
+	# Lazy-init cached mesh+material (once)
+	if _boss_spawn_mesh == null:
+		_boss_spawn_mesh = SphereMesh.new()
+		_boss_spawn_mesh.radius = 0.12
+		_boss_spawn_mesh.height = 0.24
 		var mat = StandardMaterial3D.new()
 		mat.albedo_color = Color(1.0, 0.3, 0.1, 0.8)
 		mat.emission_enabled = true
@@ -513,8 +514,13 @@ func _boss_spawn_particles() -> void:
 		mat.emission_energy_multiplier = 6.0
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		sphere.surface_set_material(0, mat)
-		particle.mesh = sphere
+		_boss_spawn_mesh.surface_set_material(0, mat)
+
+	for i in range(12):
+		var angle = float(i) / 12.0 * TAU
+		var pos = center + Vector3(cos(angle) * 3.0, 0.2, sin(angle) * 3.0)
+		var particle = MeshInstance3D.new()
+		particle.mesh = _boss_spawn_mesh
 		scene.add_child(particle)
 		particle.global_position = center + Vector3(0, 0.2, 0)
 		# Expand outward in a ring

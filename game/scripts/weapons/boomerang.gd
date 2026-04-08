@@ -160,6 +160,51 @@ func _init() -> void:
 	_boomerang_ctrl_script = GDScript.new()
 	_boomerang_ctrl_script.source_code = """extends Node
 
+# Cached meshes and materials — created once and reused across all trail/burst particles
+var _burst_mesh: SphereMesh = null
+var _trail_mesh_out: SphereMesh = null
+var _trail_mesh_ret: SphereMesh = null
+
+func _ensure_cached_resources() -> void:
+	if _burst_mesh == null:
+		_burst_mesh = SphereMesh.new()
+		_burst_mesh.radius = 0.035
+		_burst_mesh.height = 0.07
+		var bm = StandardMaterial3D.new()
+		bm.albedo_color = Color(1.0, 0.9, 0.3, 0.7)
+		bm.emission_enabled = true
+		bm.emission = Color(1.0, 0.85, 0.4)
+		bm.emission_energy_multiplier = 6.0
+		bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_burst_mesh.surface_set_material(0, bm)
+
+	if _trail_mesh_out == null:
+		_trail_mesh_out = SphereMesh.new()
+		_trail_mesh_out.radius = 0.03
+		_trail_mesh_out.height = 0.06
+		var m_out = StandardMaterial3D.new()
+		m_out.albedo_color = Color(0.9, 0.8, 0.4, 0.6)
+		m_out.emission_enabled = true
+		m_out.emission = Color(0.9, 0.8, 0.4)
+		m_out.emission_energy_multiplier = 5.0
+		m_out.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m_out.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_trail_mesh_out.surface_set_material(0, m_out)
+
+	if _trail_mesh_ret == null:
+		_trail_mesh_ret = SphereMesh.new()
+		_trail_mesh_ret.radius = 0.03
+		_trail_mesh_ret.height = 0.06
+		var m_ret = StandardMaterial3D.new()
+		m_ret.albedo_color = Color(1.0, 0.6, 0.2, 0.7)
+		m_ret.emission_enabled = true
+		m_ret.emission = Color(1.0, 0.6, 0.2)
+		m_ret.emission_energy_multiplier = 5.0
+		m_ret.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m_ret.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_trail_mesh_ret.surface_set_material(0, m_ret)
+
 func _physics_process(delta: float) -> void:
 	var bullet = get_parent()
 	if not bullet or not is_instance_valid(bullet):
@@ -168,6 +213,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if not bullet.has_meta("boomerang_data"):
 		return
+
+	_ensure_cached_resources()
 
 	var data = bullet.get_meta("boomerang_data")
 	var player = data["player"]
@@ -191,18 +238,7 @@ func _physics_process(delta: float) -> void:
 				if scene2:
 					for k in range(5):
 						var burst = MeshInstance3D.new()
-						var bs = SphereMesh.new()
-						bs.radius = 0.035
-						bs.height = 0.07
-						var bm = StandardMaterial3D.new()
-						bm.albedo_color = Color(1.0, 0.9, 0.3, 0.7)
-						bm.emission_enabled = true
-						bm.emission = Color(1.0, 0.85, 0.4)
-						bm.emission_energy_multiplier = 6.0
-						bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-						bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-						bs.surface_set_material(0, bm)
-						burst.mesh = bs
+						burst.mesh = _burst_mesh
 						scene2.add_child(burst)
 						burst.global_position = bullet.global_position
 						var bdir = Vector3(randf_range(-1, 1), randf_range(0, 0.5), randf_range(-1, 1)).normalized()
@@ -244,19 +280,7 @@ func _physics_process(delta: float) -> void:
 		var scene = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
 		if scene:
 			var trail = MeshInstance3D.new()
-			var s = SphereMesh.new()
-			s.radius = 0.03
-			s.height = 0.06
-			var m = StandardMaterial3D.new()
-			var trail_color = Color(0.9, 0.8, 0.4, 0.6) if data["going_out"] else Color(1.0, 0.6, 0.2, 0.7)
-			m.albedo_color = trail_color
-			m.emission_enabled = true
-			m.emission = Color(trail_color.r, trail_color.g, trail_color.b)
-			m.emission_energy_multiplier = 5.0
-			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			s.surface_set_material(0, m)
-			trail.mesh = s
+			trail.mesh = _trail_mesh_out if data["going_out"] else _trail_mesh_ret
 			scene.add_child(trail)
 			trail.global_position = bullet.global_position
 			var fade_time = 0.3 if data["going_out"] else 0.2
