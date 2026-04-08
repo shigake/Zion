@@ -44,6 +44,7 @@ var _boss_aura_checked: bool = false
 static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk loads for the same sprite
 static var _sprite_cache_order: Array[String] = []  # Insertion order for bounded cache eviction
 static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
+static var _model_path_cache: Dictionary = {}  # "type_stage_model" -> resolved .glb path
 const SPRITE_CACHE_MAX := 64
 ## Shared projectile mesh/material — avoid creating new ones every ranged attack
 static var _shared_proj_mesh: SphereMesh = null
@@ -124,9 +125,60 @@ func get_bestiary_id() -> String:
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var is_boss := enemy_type.begins_with("Boss")
+	var stage = GameManager.selected_stage
+
+	# --- Try 3D model first (.glb) ---
+	var model_cache_key = "%s_%s_model" % [enemy_type, stage]
+	var model_path: String
+	if _model_path_cache.has(model_cache_key):
+		model_path = _model_path_cache[model_cache_key]
+	else:
+		model_path = _resolve_model_path(enemy_type, stage)
+		_model_path_cache[model_cache_key] = model_path
+
+	if not model_path.is_empty() and ResourceLoader.exists(model_path):
+		var model_scene = load(model_path)
+		if model_scene:
+			mesh.visible = false
+			for child in get_children():
+				if child is MeshInstance3D and child != mesh:
+					child.visible = false
+			var model: Node3D = model_scene.instantiate()
+			model.name = "EnemySprite"  # Same name so existing code finds it
+			var model_scale = 0.5 if is_boss else 0.35
+			model.scale = Vector3(model_scale, model_scale, model_scale)
+			model.position.y = 0.3
+			add_child(model)
+			_sprite_base_scale = model.scale
+			# Boss aura glow (3D sphere) + floating name label
+			if is_boss:
+				var aura_mesh = MeshInstance3D.new()
+				var sphere = SphereMesh.new()
+				sphere.radius = 1.2
+				sphere.height = 2.4
+				aura_mesh.mesh = sphere
+				var aura_mat = StandardMaterial3D.new()
+				aura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				aura_mat.albedo_color = Color(enemy_color.r, enemy_color.g, enemy_color.b, 0.15)
+				aura_mat.emission_enabled = true
+				aura_mat.emission = enemy_color
+				aura_mat.emission_energy_multiplier = 0.5
+				aura_mesh.material_override = aura_mat
+				aura_mesh.name = "BossAura"
+				aura_mesh.position = model.position
+				add_child(aura_mesh)
+				var label = Label3D.new()
+				label.text = name.replace("Boss", "").to_upper()
+				label.font_size = 24
+				label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				label.position = model.position + Vector3(0, 1.2, 0)
+				label.name = "BossLabel"
+				add_child(label)
+			return  # Don't create sprite — model is sufficient
+
+	# --- Fallback: billboard sprite ---
 	# Always create sprite nodes — MultiMesh will hide them when active but they need
 	# to exist for when MultiMesh deactivates or for visual correctness.
-	var stage = GameManager.selected_stage
 	var cache_key = "%s_%s" % [enemy_type, stage]
 	var sprite_path: String
 	# Use cached path resolution to avoid repeated ResourceLoader.exists() calls
@@ -222,6 +274,27 @@ static func _resolve_sprite_path(enemy_type: String, stage: String) -> String:
 	var fallback = "res://assets/sprites/enemies/slime.png"
 	if ResourceLoader.exists(fallback):
 		return fallback
+	return ""
+
+## Resolve 3D model (.glb) path — mirrors sprite path priority but in assets/models/
+static func _resolve_model_path(enemy_type: String, stage: String) -> String:
+	var snake_type = enemy_type.to_snake_case()
+	# Priority 1: themed model for this stage
+	if STAGE_ENEMY_SPRITES.has(stage):
+		var stage_map: Dictionary = STAGE_ENEMY_SPRITES[stage]
+		if stage_map.has(enemy_type):
+			var themed_name = stage_map[enemy_type]
+			var themed_path = "res://assets/models/enemies/%s/%s.glb" % [stage, themed_name]
+			if ResourceLoader.exists(themed_path):
+				return themed_path
+	# Priority 2: generic enemy model
+	var generic_path = "res://assets/models/enemies/%s.glb" % snake_type
+	if ResourceLoader.exists(generic_path):
+		return generic_path
+	# Priority 3: boss model
+	var boss_path = "res://assets/models/bosses/%s.glb" % snake_type
+	if ResourceLoader.exists(boss_path):
+		return boss_path
 	return ""
 
 func _apply_stage_behavior() -> void:
