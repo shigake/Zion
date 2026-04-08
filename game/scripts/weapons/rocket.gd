@@ -12,6 +12,12 @@ var _sprite: Sprite3D = null
 var _lifetime: float = 0.0
 const MAX_LIFETIME := 5.0  # Despawn after 5 seconds to prevent memory leak
 
+# Cached materials — lazy-initialized once, reused across explosions
+var _flash_mat: StandardMaterial3D = null
+var _fireball_mat: StandardMaterial3D = null
+var _shockwave_mat: StandardMaterial3D = null
+var _spark_mat: StandardMaterial3D = null
+
 var _direction_initialized: bool = false
 
 func _ready() -> void:
@@ -137,14 +143,15 @@ func _create_flash(parent: Node3D) -> void:
 	sphere.height = 1.0
 	mesh_inst.mesh = sphere
 
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 1)
-	mat.emission_enabled = true
-	mat.emission = Color(1, 1, 1, 1)
-	mat.emission_energy_multiplier = 16.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mesh_inst.set_surface_override_material(0, mat)
+	if not _flash_mat:
+		_flash_mat = StandardMaterial3D.new()
+		_flash_mat.albedo_color = Color(1, 1, 1, 1)
+		_flash_mat.emission_enabled = true
+		_flash_mat.emission = Color(1, 1, 1, 1)
+		_flash_mat.emission_energy_multiplier = 16.0
+		_flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mesh_inst.set_surface_override_material(0, _flash_mat)
 
 	mesh_inst.scale = Vector3(0.1, 0.1, 0.1)
 	parent.add_child(mesh_inst)
@@ -161,14 +168,16 @@ func _create_fireball(parent: Node3D) -> void:
 	sphere.height = 1.0
 	mesh_inst.mesh = sphere
 
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.4, 0.1, 0.8)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.4, 0.1, 1)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mesh_inst.set_surface_override_material(0, mat)
+	if not _fireball_mat:
+		_fireball_mat = StandardMaterial3D.new()
+		_fireball_mat.emission_enabled = true
+		_fireball_mat.emission = Color(1.0, 0.4, 0.1, 1)
+		_fireball_mat.emission_energy_multiplier = 3.0
+		_fireball_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_fireball_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	# Reset albedo for this explosion (tween fades it to 0)
+	_fireball_mat.albedo_color = Color(1.0, 0.4, 0.1, 0.8)
+	mesh_inst.set_surface_override_material(0, _fireball_mat)
 
 	var start_scale = 0.3
 	var end_scale = explosion_radius
@@ -178,7 +187,7 @@ func _create_fireball(parent: Node3D) -> void:
 	var tween = mesh_inst.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(mesh_inst, "scale", Vector3(end_scale, end_scale, end_scale), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_EXPO)
-	tween.tween_property(mat, "albedo_color", Color(1.0, 0.4, 0.1, 0.0), 0.4)
+	tween.tween_property(_fireball_mat, "albedo_color", Color(1.0, 0.4, 0.1, 0.0), 0.4)
 	tween.set_parallel(false)
 	tween.tween_callback(mesh_inst.queue_free)
 
@@ -190,15 +199,17 @@ func _create_shockwave(parent: Node3D) -> void:
 	torus.outer_radius = 0.5
 	mesh_inst.mesh = torus
 
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 0.3)
-	mat.emission_enabled = true
-	mat.emission = Color(1, 1, 1, 1)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.no_depth_test = true
-	mesh_inst.set_surface_override_material(0, mat)
+	if not _shockwave_mat:
+		_shockwave_mat = StandardMaterial3D.new()
+		_shockwave_mat.emission_enabled = true
+		_shockwave_mat.emission = Color(1, 1, 1, 1)
+		_shockwave_mat.emission_energy_multiplier = 3.0
+		_shockwave_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_shockwave_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_shockwave_mat.no_depth_test = true
+	# Reset albedo for this explosion (tween fades it to 0)
+	_shockwave_mat.albedo_color = Color(1, 1, 1, 0.3)
+	mesh_inst.set_surface_override_material(0, _shockwave_mat)
 
 	mesh_inst.scale = Vector3(0.1, 0.1, 0.1)
 	parent.add_child(mesh_inst)
@@ -207,7 +218,7 @@ func _create_shockwave(parent: Node3D) -> void:
 	var tween = mesh_inst.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(mesh_inst, "scale", Vector3(final_s, final_s * 0.3, final_s), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_EXPO)
-	tween.tween_property(mat, "albedo_color", Color(1, 1, 1, 0.0), 0.25)
+	tween.tween_property(_shockwave_mat, "albedo_color", Color(1, 1, 1, 0.0), 0.25)
 	tween.set_parallel(false)
 	tween.tween_callback(mesh_inst.queue_free)
 
@@ -265,13 +276,14 @@ func _create_spark_particles(parent: Node3D) -> void:
 	var draw_mesh = SphereMesh.new()
 	draw_mesh.radius = 0.03
 	draw_mesh.height = 0.06
-	var spark_mat = StandardMaterial3D.new()
-	spark_mat.albedo_color = Color(1.0, 0.6, 0.1, 1.0)
-	spark_mat.emission_enabled = true
-	spark_mat.emission = Color(1.0, 0.5, 0.0, 1)
-	spark_mat.emission_energy_multiplier = 8.0
-	spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	draw_mesh.material = spark_mat
+	if not _spark_mat:
+		_spark_mat = StandardMaterial3D.new()
+		_spark_mat.albedo_color = Color(1.0, 0.6, 0.1, 1.0)
+		_spark_mat.emission_enabled = true
+		_spark_mat.emission = Color(1.0, 0.5, 0.0, 1)
+		_spark_mat.emission_energy_multiplier = 8.0
+		_spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	draw_mesh.material = _spark_mat
 	particles.draw_pass_1 = draw_mesh
 
 	parent.add_child(particles)

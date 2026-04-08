@@ -6,6 +6,13 @@ var attack_timer: float = 0.0
 var chain_visuals: Array = []
 var _slash_tex: Texture2D = null
 
+# Cached materials — lazy-initialized once, reused across attacks
+var _glow_mat: StandardMaterial3D = null
+var _core_mat: StandardMaterial3D = null
+var _chain_flash_mat: StandardMaterial3D = null
+var _spark_burst_mat: StandardMaterial3D = null
+var _impact_flash_mat: StandardMaterial3D = null
+
 func _ready() -> void:
 	var path = "res://assets/sprites/effects/slashes/chain_whip_slash.png"
 	if ResourceLoader.exists(path):
@@ -189,15 +196,16 @@ func _draw_chain(from: Vector3, to: Vector3) -> void:
 	im_glow.surface_end()
 	glow_mesh.mesh = im_glow
 
-	var glow_mat = StandardMaterial3D.new()
-	glow_mat.albedo_color = Color(0.4, 0.7, 1.0, 0.4)
-	glow_mat.emission_enabled = true
-	glow_mat.emission = Color(0.5, 0.8, 1.0)
-	glow_mat.emission_energy_multiplier = 16.0
-	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glow_mat.no_depth_test = true
-	glow_mesh.material_override = glow_mat
+	if not _glow_mat:
+		_glow_mat = StandardMaterial3D.new()
+		_glow_mat.albedo_color = Color(0.4, 0.7, 1.0, 0.4)
+		_glow_mat.emission_enabled = true
+		_glow_mat.emission = Color(0.5, 0.8, 1.0)
+		_glow_mat.emission_energy_multiplier = 16.0
+		_glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_glow_mat.no_depth_test = true
+	glow_mesh.material_override = _glow_mat
 	container.add_child(glow_mesh)
 
 	# Core whip line (bright white-yellow electric)
@@ -211,15 +219,16 @@ func _draw_chain(from: Vector3, to: Vector3) -> void:
 	im.surface_end()
 	line_mesh.mesh = im
 
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.95, 0.8, 1.0)
-	mat.emission_enabled = true
-	mat.emission = Color(0.9, 0.85, 0.5)
-	mat.emission_energy_multiplier = 20.0
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	line_mesh.material_override = mat
+	if not _core_mat:
+		_core_mat = StandardMaterial3D.new()
+		_core_mat.albedo_color = Color(1.0, 0.95, 0.8, 1.0)
+		_core_mat.emission_enabled = true
+		_core_mat.emission = Color(0.9, 0.85, 0.5)
+		_core_mat.emission_energy_multiplier = 20.0
+		_core_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_core_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_core_mat.no_depth_test = true
+	line_mesh.material_override = _core_mat
 	container.add_child(line_mesh)
 
 	# Spark at hit point
@@ -227,15 +236,16 @@ func _draw_chain(from: Vector3, to: Vector3) -> void:
 	var flash_sphere = SphereMesh.new()
 	flash_sphere.radius = 0.2
 	flash_sphere.height = 0.4
-	var flash_mat = StandardMaterial3D.new()
-	flash_mat.albedo_color = Color(0.8, 0.9, 1.0, 0.5)
-	flash_mat.emission_enabled = true
-	flash_mat.emission = Color(0.7, 0.9, 1.0)
-	flash_mat.emission_energy_multiplier = 16.0
-	flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	flash_mat.no_depth_test = true
-	flash_sphere.material = flash_mat
+	if not _chain_flash_mat:
+		_chain_flash_mat = StandardMaterial3D.new()
+		_chain_flash_mat.albedo_color = Color(0.8, 0.9, 1.0, 0.5)
+		_chain_flash_mat.emission_enabled = true
+		_chain_flash_mat.emission = Color(0.7, 0.9, 1.0)
+		_chain_flash_mat.emission_energy_multiplier = 16.0
+		_chain_flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_chain_flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_chain_flash_mat.no_depth_test = true
+	flash_sphere.material = _chain_flash_mat
 	flash.mesh = flash_sphere
 	flash.position = to
 	container.add_child(flash)
@@ -256,14 +266,15 @@ func _spawn_electric_burst(pos: Vector3) -> void:
 		var sphere = SphereMesh.new()
 		sphere.radius = 0.04
 		sphere.height = 0.08
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.7, 0.9, 1.0, 0.8)
-		mat.emission_enabled = true
-		mat.emission = Color(0.6, 0.85, 1.0)
-		mat.emission_energy_multiplier = 18.0
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		sphere.surface_set_material(0, mat)
+		if not _spark_burst_mat:
+			_spark_burst_mat = StandardMaterial3D.new()
+			_spark_burst_mat.albedo_color = Color(0.7, 0.9, 1.0, 0.8)
+			_spark_burst_mat.emission_enabled = true
+			_spark_burst_mat.emission = Color(0.6, 0.85, 1.0)
+			_spark_burst_mat.emission_energy_multiplier = 18.0
+			_spark_burst_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			_spark_burst_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sphere.surface_set_material(0, _spark_burst_mat)
 		spark.mesh = sphere
 		scene.add_child(spark)
 		spark.global_position = pos
@@ -285,15 +296,16 @@ func _spawn_impact_flash(pos: Vector3) -> void:
 	var sphere = SphereMesh.new()
 	sphere.radius = 0.1
 	sphere.height = 0.2
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.9, 0.95, 1.0, 0.9)
-	mat.emission_enabled = true
-	mat.emission = Color(0.7, 0.9, 1.0)
-	mat.emission_energy_multiplier = 20.0
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	sphere.surface_set_material(0, mat)
+	if not _impact_flash_mat:
+		_impact_flash_mat = StandardMaterial3D.new()
+		_impact_flash_mat.albedo_color = Color(0.9, 0.95, 1.0, 0.9)
+		_impact_flash_mat.emission_enabled = true
+		_impact_flash_mat.emission = Color(0.7, 0.9, 1.0)
+		_impact_flash_mat.emission_energy_multiplier = 20.0
+		_impact_flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_impact_flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_impact_flash_mat.no_depth_test = true
+	sphere.surface_set_material(0, _impact_flash_mat)
 	flash.mesh = sphere
 	scene.add_child(flash)
 	flash.global_position = pos
