@@ -11,15 +11,15 @@ extends Area3D
 ## Maximum number of pickups (xp_gems + crystals) allowed at once.
 const MAX_PICKUPS := 200
 
-## Preloaded 3D model
-const _XP_MODEL := preload("res://assets/models/pickups/xp_gem.glb")
+## Preloaded texture - strong static reference prevents GC from unloading
+const _XP_TEXTURE := preload("res://assets/sprites/pickups/xp_gem.png")
 
 var being_attracted: bool = false
 var attract_target: Node3D = null
 var _frame_counter: int = 0
 
 @onready var mesh: MeshInstance3D = $Mesh
-var _model_instance: Node3D = null
+var _pickup_sprite: Sprite3D = null
 
 func _ready() -> void:
 	add_to_group("xp_gems")
@@ -27,23 +27,24 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	# Stagger frame offset so not all gems check on the same frame
 	_frame_counter = randi() % 10
-	# Hide primitive mesh and load 3D model
+	# Apply glow shader to XP gem mesh
 	if mesh:
-		mesh.visible = false
-	if _XP_MODEL:
-		var model = _XP_MODEL.instantiate()
-		model.name = "XPModel"
-		model.scale = Vector3(0.15, 0.15, 0.15)
-		add_child(model)
-		_model_instance = model
-		# Apply glow to all mesh nodes in the model tree
-		_apply_glow_recursive(model, Color(0.2, 0.6, 1.0), 3.5)
-
-func _apply_glow_recursive(node: Node, color: Color, intensity: float) -> void:
-	if node is MeshInstance3D:
-		node.material_override = VisualSetup.create_glow_material(color, intensity)
-	for child in node.get_children():
-		_apply_glow_recursive(child, color, intensity)
+		mesh.material_override = VisualSetup.create_glow_material(Color(0.2, 0.6, 1.0), 3.5)
+	# Billboard sprite (hides mesh if sprite texture exists)
+	if _XP_TEXTURE:
+		if mesh:
+			mesh.visible = false
+		var sprite = Sprite3D.new()
+		sprite.texture = _XP_TEXTURE
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		sprite.pixel_size = 0.025
+		sprite.shaded = false
+		sprite.transparent = true
+		sprite.modulate = Color(1.2, 1.2, 1.5)  # Slight blue-white boost
+		sprite.name = "PickupSprite"
+		add_child(sprite)
+		_pickup_sprite = sprite
 	# O(1) pickup cap via global counter
 	GameManager.active_pickup_count += 1
 	if GameManager.active_pickup_count > MAX_PICKUPS:
@@ -59,12 +60,11 @@ func _physics_process(delta: float) -> void:
 
 	_frame_counter += 1
 
-	# Bobbing + rotation - every 3 frames (20fps is visually smooth enough)
+	# Bobbing animation - every 3 frames (20fps is visually smooth enough)
 	if _frame_counter % 3 == 0:
 		var bob = sin(GameManager.game_time * 4.0 + global_position.x) * 0.1
-		if _model_instance:
-			_model_instance.position.y = bob
-			_model_instance.rotation.y += (1.0 / 20.0) * 3.0
+		if _pickup_sprite:
+			_pickup_sprite.position.y = bob
 		else:
 			position.y = 0.3 + bob
 
