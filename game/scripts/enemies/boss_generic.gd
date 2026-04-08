@@ -57,69 +57,71 @@ func _load_boss_sprite() -> void:
 	var node_snake = name.to_snake_case()
 	var node_no_prefix = node_snake.replace("boss_", "")
 
-	# --- Try 3D model first (.glb) — with safe loading ---
+	# --- 3D models disabled — using pixel art sprites instead ---
+	var USE_3D_MODELS := false
 	var model_paths_to_try = [
 		"res://assets/models/bosses/%s.glb" % node_no_prefix,   # cemetery_lich
 		"res://assets/models/bosses/%s.glb" % snake_name,        # death_reaper
 		"res://assets/models/bosses/%s.glb" % node_snake,        # boss_cemetery_lich
 	]
-	for model_path in model_paths_to_try:
-		var model_scene = EnemyBase3D._safe_load_model(model_path)
-		if model_scene:
-				# Remove existing sprite from enemy_base
-				var old_sprite = get_node_or_null("EnemySprite")
-				if old_sprite:
-					old_sprite.queue_free()
-				# Instantiate 3D model
-				var model_instance: Node3D = model_scene.instantiate()
-				model_instance.name = "EnemySprite"
-				model_instance.scale = Vector3(0.6, 0.6, 0.6)
-				model_instance.position.y = 0.3
-				# Only apply colored material if model has no textures
-				if not EnemyBase3D._model_has_texture(model_instance):
-					var boss_mat = StandardMaterial3D.new()
-					boss_mat.albedo_color = boss_color
-					boss_mat.roughness = 0.5
-					boss_mat.metallic = 0.3
-					boss_mat.emission_enabled = true
-					boss_mat.emission = boss_color
-					boss_mat.emission_energy_multiplier = 2.0
-					boss_mat.rim_enabled = true
-					boss_mat.rim = 0.6
-					boss_mat.rim_tint = 0.3
-					boss_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-					for c in model_instance.get_children():
-						if c is MeshInstance3D:
-							c.material_override = boss_mat
-						for gc in c.get_children():
-							if gc is MeshInstance3D:
-								gc.material_override = boss_mat
-				add_child(model_instance)
-				# Boss aura — translucent SphereMesh around model
-				var aura_mesh_inst = MeshInstance3D.new()
-				var sphere = SphereMesh.new()
-				sphere.radius = 1.2
-				sphere.height = 2.4
-				aura_mesh_inst.mesh = sphere
-				var aura_mat = StandardMaterial3D.new()
-				aura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-				aura_mat.albedo_color = Color(boss_color.r, boss_color.g, boss_color.b, 0.15)
-				aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-				aura_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-				aura_mesh_inst.material_override = aura_mat
-				aura_mesh_inst.name = "BossAura"
-				aura_mesh_inst.position.y = 0.8
-				add_child(aura_mesh_inst)
-				# Name label
-				var label = Label3D.new()
-				label.text = boss_name.to_upper()
-				label.font_size = 24
-				label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-				label.position = Vector3(0, 2.2, 0)
-				label.name = "BossLabel"
-				label.modulate = Color(boss_color.r, boss_color.g, boss_color.b, 0.9)
-				add_child(label)
-				return
+	if USE_3D_MODELS:
+		for model_path in model_paths_to_try:
+			var model_scene = EnemyBase3D._safe_load_model(model_path)
+			if model_scene:
+					# Remove existing sprite from enemy_base
+					var old_sprite = get_node_or_null("EnemySprite")
+					if old_sprite:
+						old_sprite.queue_free()
+					# Instantiate 3D model
+					var model_instance: Node3D = model_scene.instantiate()
+					model_instance.name = "EnemySprite"
+					model_instance.scale = Vector3(0.6, 0.6, 0.6)
+					model_instance.position.y = 0.3
+					# Only apply colored material if model has no textures
+					if not EnemyBase3D._model_has_texture(model_instance):
+						var boss_mat = StandardMaterial3D.new()
+						boss_mat.albedo_color = boss_color
+						boss_mat.roughness = 0.5
+						boss_mat.metallic = 0.3
+						boss_mat.emission_enabled = true
+						boss_mat.emission = boss_color
+						boss_mat.emission_energy_multiplier = 2.0
+						boss_mat.rim_enabled = true
+						boss_mat.rim = 0.6
+						boss_mat.rim_tint = 0.3
+						boss_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+						for c in model_instance.get_children():
+							if c is MeshInstance3D:
+								c.material_override = boss_mat
+							for gc in c.get_children():
+								if gc is MeshInstance3D:
+									gc.material_override = boss_mat
+					add_child(model_instance)
+					# Boss aura — translucent SphereMesh around model
+					var aura_mesh_inst = MeshInstance3D.new()
+					var sphere = SphereMesh.new()
+					sphere.radius = 1.2
+					sphere.height = 2.4
+					aura_mesh_inst.mesh = sphere
+					var aura_mat = StandardMaterial3D.new()
+					aura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+					aura_mat.albedo_color = Color(boss_color.r, boss_color.g, boss_color.b, 0.15)
+					aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					aura_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+					aura_mesh_inst.material_override = aura_mat
+					aura_mesh_inst.name = "BossAura"
+					aura_mesh_inst.position.y = 0.8
+					add_child(aura_mesh_inst)
+					# Name label
+					var label = Label3D.new()
+					label.text = boss_name.to_upper()
+					label.font_size = 24
+					label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+					label.position = Vector3(0, 2.2, 0)
+					label.name = "BossLabel"
+					label.modulate = Color(boss_color.r, boss_color.g, boss_color.b, 0.9)
+					add_child(label)
+					return
 
 	# --- Fallback: billboard sprite ---
 	var paths_to_try = [
@@ -146,6 +148,24 @@ func _load_boss_sprite() -> void:
 				sprite.name = "EnemySprite"
 				sprite.position.y = 0.65
 				add_child(sprite)
+				# Apply pixel art shader
+				var _pa = get_node_or_null("/root/PixelArtShader")
+				if _pa:
+					sprite.material_override = _pa.get_boss_material(tex, boss_color)
+				# Ground shadow circle (boss size)
+				var shadow = MeshInstance3D.new()
+				shadow.name = "GroundShadow"
+				var shadow_mesh = PlaneMesh.new()
+				shadow_mesh.size = Vector2(1.5, 1.5)
+				shadow.mesh = shadow_mesh
+				var shadow_mat = StandardMaterial3D.new()
+				shadow_mat.albedo_color = Color(0, 0, 0, 0.3)
+				shadow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				shadow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				shadow_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				shadow.material_override = shadow_mat
+				shadow.position = Vector3(0, 0.02, 0)
+				add_child(shadow)
 				# Boss aura
 				var aura = Sprite3D.new()
 				aura.texture = tex

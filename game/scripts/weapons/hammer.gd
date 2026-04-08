@@ -43,6 +43,13 @@ func _ready() -> void:
 			sprite.transparent = true
 			sprite.name = "WeaponSprite"
 			slam_area.add_child(sprite)
+			# Apply pixel art shader
+			var _pa = get_node_or_null("/root/PixelArtShader")
+			if _pa:
+				var _wdata = WeaponDB.get_weapon("hammer")
+				var _elem = _wdata.get("element", "physical") if _wdata else "physical"
+				var _ecols = {"fire": Color(1, 0.5, 0), "ice": Color(0.3, 0.5, 1), "electric": Color(0, 1, 1), "dark": Color(0.5, 0, 1), "poison": Color(0, 1, 0.3)}
+				sprite.material_override = _pa.get_enemy_material(sprite.texture, _ecols.get(_elem, Color.WHITE))
 	# Brief slam trail
 	_trail = preload("res://scripts/effects/weapon_trail.gd").new()
 	_trail.trail_color = Color(0.85, 0.55, 0.15, 0.85)

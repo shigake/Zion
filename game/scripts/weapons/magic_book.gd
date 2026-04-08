@@ -38,6 +38,13 @@ func _ready() -> void:
 			sprite.name = "WeaponSprite"
 			sprite.render_priority = 1  # Render on top of player
 			add_child(sprite)
+			# Apply pixel art shader
+			var _pa = get_node_or_null("/root/PixelArtShader")
+			if _pa:
+				var _wdata = WeaponDB.get_weapon("magic_book")
+				var _elem = _wdata.get("element", "physical") if _wdata else "physical"
+				var _ecols = {"fire": Color(1, 0.5, 0), "ice": Color(0.3, 0.5, 1), "electric": Color(0, 1, 1), "dark": Color(0.5, 0, 1), "poison": Color(0, 1, 0.3)}
+				sprite.material_override = _pa.get_enemy_material(sprite.texture, _ecols.get(_elem, Color.WHITE))
 			# Sprite segue a posicao do book_mesh no _process
 			sprite.set_meta("follows_book", true)
 	_setup_billboard_sprite()

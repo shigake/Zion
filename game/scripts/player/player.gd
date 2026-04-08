@@ -67,11 +67,12 @@ func _ready() -> void:
 	if not char_data.is_empty():
 		original_color = char_data.get("color", original_color)
 
-	# Character visual — try 3D model first, then sprite billboard, then procedural
+	# Character visual — 3D models disabled, using pixel art sprites instead
+	var USE_3D_MODELS := false
 	var char_id = GameManager.selected_character
 	var char_model_path = "res://assets/models/characters/%s.glb" % char_id
 	var char_sprite_path = "res://assets/sprites/characters/%s.png" % char_id
-	var _char_model_scene = EnemyBase3D._safe_load_model(char_model_path)
+	var _char_model_scene = EnemyBase3D._safe_load_model(char_model_path) if USE_3D_MODELS else null
 	if _char_model_scene:
 		# Priority 1: imported 3D model
 		mesh.visible = false
@@ -121,6 +122,24 @@ func _ready() -> void:
 		sprite.position.y = GameConstants.PLAYER_SPRITE_Y_OFFSET
 		add_child(sprite)
 		_sprite_base_scale = sprite.scale
+		# Apply pixel art shader
+		var _pa = get_node_or_null("/root/PixelArtShader")
+		if _pa:
+			sprite.material_override = _pa.get_player_material(sprite.texture, original_color)
+		# Ground shadow circle (player size)
+		var shadow = MeshInstance3D.new()
+		shadow.name = "GroundShadow"
+		var shadow_mesh = PlaneMesh.new()
+		shadow_mesh.size = Vector2(0.7, 0.7)
+		shadow.mesh = shadow_mesh
+		var shadow_mat = StandardMaterial3D.new()
+		shadow_mat.albedo_color = Color(0, 0, 0, 0.3)
+		shadow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		shadow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		shadow_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		shadow.material_override = shadow_mat
+		shadow.position = Vector3(0, 0.02, 0)
+		add_child(shadow)
 	else:
 		# Priority 3: modelo procedural
 		var model = ModelFactory.get_model_for_character(GameManager.selected_character)

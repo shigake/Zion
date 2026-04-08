@@ -172,8 +172,9 @@ func _apply_sprite() -> void:
 	var is_boss := enemy_type.begins_with("Boss")
 	var stage = GameManager.selected_stage
 
-	# --- Try 3D model first (.glb) — with performance guard ---
-	if _should_use_3d_model():
+	# --- 3D models disabled — using pixel art sprites instead ---
+	var USE_3D_MODELS := false
+	if USE_3D_MODELS and _should_use_3d_model():
 		var model_cache_key = "%s_%s_model" % [enemy_type, stage]
 		var model_path: String
 		if _model_path_cache.has(model_cache_key):
@@ -265,6 +266,27 @@ func _apply_sprite() -> void:
 	sprite.position.y = 0.65
 	add_child(sprite)
 	_sprite_base_scale = sprite.scale
+	# Apply pixel art shader
+	var _pa = get_node_or_null("/root/PixelArtShader")
+	if _pa:
+		if is_boss:
+			sprite.material_override = _pa.get_boss_material(tex, enemy_color)
+		else:
+			sprite.material_override = _pa.get_enemy_material(tex)
+	# Ground shadow circle
+	var shadow = MeshInstance3D.new()
+	shadow.name = "GroundShadow"
+	var shadow_mesh = PlaneMesh.new()
+	shadow_mesh.size = Vector2(1.5, 1.5) if is_boss else Vector2(0.8, 0.8)
+	shadow.mesh = shadow_mesh
+	var shadow_mat = StandardMaterial3D.new()
+	shadow_mat.albedo_color = Color(0, 0, 0, 0.3)
+	shadow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	shadow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	shadow_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	shadow.material_override = shadow_mat
+	shadow.position = Vector3(0, 0.02, 0)
+	add_child(shadow)
 	# Boss aura glow + floating name label
 	if is_boss:
 		var aura = Sprite3D.new()

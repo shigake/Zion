@@ -76,6 +76,15 @@ func _ready() -> void:
 			sprite_r.transparent = true
 			sprite_r.name = "WeaponSprite"
 			slash_area_r.add_child(sprite_r)
+			# Apply pixel art shader to both blades
+			var _pa = get_node_or_null("/root/PixelArtShader")
+			if _pa:
+				var _wdata = WeaponDB.get_weapon("dual_katana")
+				var _elem = _wdata.get("element", "physical") if _wdata else "physical"
+				var _ecols = {"fire": Color(1, 0.5, 0), "ice": Color(0.3, 0.5, 1), "electric": Color(0, 1, 1), "dark": Color(0.5, 0, 1), "poison": Color(0, 1, 0.3)}
+				var _mat = _pa.get_enemy_material(sprite_l.texture, _ecols.get(_elem, Color.WHITE))
+				sprite_l.material_override = _mat
+				sprite_r.material_override = _mat
 
 func _process(delta: float) -> void:
 	if not is_inside_tree():
