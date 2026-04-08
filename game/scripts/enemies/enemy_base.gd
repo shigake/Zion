@@ -122,6 +122,20 @@ func get_bestiary_id() -> String:
 			return mapping[base_type]  # e.g. "cemetery_zombie"
 	return base_type  # e.g. "Slime" or "BossNecromancer"
 
+## Check if a model has textures (Hyper3D models do, Hunyuan3D don't)
+static func _model_has_texture(node: Node) -> bool:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			var mi := child as MeshInstance3D
+			if mi.mesh:
+				for si in range(mi.mesh.get_surface_count()):
+					var mat = mi.mesh.surface_get_material(si)
+					if mat is StandardMaterial3D and mat.albedo_texture != null:
+						return true
+		if _model_has_texture(child):
+			return true
+	return false
+
 static func _apply_material_recursive(node: Node, mat: StandardMaterial3D) -> void:
 	for child in node.get_children():
 		if child is MeshInstance3D:
@@ -154,18 +168,20 @@ func _apply_sprite() -> void:
 			var model_scale = 0.5 if is_boss else 0.35
 			model.scale = Vector3(model_scale, model_scale, model_scale)
 			model.position.y = 0.3
-			# Apply colored material (Hunyuan3D models have no textures)
-			var enemy_mat = StandardMaterial3D.new()
-			enemy_mat.albedo_color = enemy_color if enemy_color != Color.WHITE else Color(0.7, 0.3, 0.3)
-			enemy_mat.roughness = 0.4
-			enemy_mat.metallic = 0.3
-			enemy_mat.emission_enabled = true
-			enemy_mat.emission = enemy_color if enemy_color != Color.WHITE else Color(0.5, 0.2, 0.2)
-			enemy_mat.emission_energy_multiplier = 1.0
-			enemy_mat.rim_enabled = true
-			enemy_mat.rim = 0.4
-			enemy_mat.rim_tint = 0.3
-			_apply_material_recursive(model, enemy_mat)
+			# Only apply colored material if model has no textures (Hunyuan3D)
+			# Hyper3D models already have textures — don't override
+			if not _model_has_texture(model):
+				var enemy_mat = StandardMaterial3D.new()
+				enemy_mat.albedo_color = enemy_color if enemy_color != Color.WHITE else Color(0.7, 0.3, 0.3)
+				enemy_mat.roughness = 0.4
+				enemy_mat.metallic = 0.3
+				enemy_mat.emission_enabled = true
+				enemy_mat.emission = enemy_color if enemy_color != Color.WHITE else Color(0.5, 0.2, 0.2)
+				enemy_mat.emission_energy_multiplier = 1.0
+				enemy_mat.rim_enabled = true
+				enemy_mat.rim = 0.4
+				enemy_mat.rim_tint = 0.3
+				_apply_material_recursive(model, enemy_mat)
 			add_child(model)
 			_sprite_base_scale = model.scale
 			if is_boss:
