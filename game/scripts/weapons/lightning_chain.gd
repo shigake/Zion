@@ -5,6 +5,16 @@ extends Node3D
 var attack_timer: float = 0.0
 var chain_visuals: Array = []
 
+func _ready() -> void:
+	# 3D lightning orb model (visual for the weapon)
+	var _model_path = "res://assets/models/lightning_orb.glb"
+	if ResourceLoader.exists(_model_path):
+		var model_scene = load(_model_path)
+		var model = model_scene.instantiate()
+		model.name = "WeaponModel"
+		model.scale = Vector3(0.25, 0.25, 0.25)
+		add_child(model)
+
 func _process(delta: float) -> void:
 	if not is_inside_tree():
 		return
