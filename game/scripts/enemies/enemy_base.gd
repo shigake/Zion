@@ -122,6 +122,12 @@ func get_bestiary_id() -> String:
 			return mapping[base_type]  # e.g. "cemetery_zombie"
 	return base_type  # e.g. "Slime" or "BossNecromancer"
 
+static func _apply_material_recursive(node: Node, mat: StandardMaterial3D) -> void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			child.material_override = mat
+		_apply_material_recursive(child, mat)
+
 func _apply_sprite() -> void:
 	var enemy_type = _get_base_enemy_type()
 	var is_boss := enemy_type.begins_with("Boss")
@@ -144,39 +150,31 @@ func _apply_sprite() -> void:
 				if child is MeshInstance3D and child != mesh:
 					child.visible = false
 			var model: Node3D = model_scene.instantiate()
-			model.name = "EnemySprite"  # Same name so existing code finds it
+			model.name = "EnemySprite"
 			var model_scale = 0.5 if is_boss else 0.35
 			model.scale = Vector3(model_scale, model_scale, model_scale)
 			model.position.y = 0.3
+			# Apply colored material (Hunyuan3D models have no textures)
+			var enemy_mat = StandardMaterial3D.new()
+			enemy_mat.albedo_color = enemy_color if enemy_color != Color.WHITE else Color(0.7, 0.3, 0.3)
+			enemy_mat.roughness = 0.6
+			enemy_mat.metallic = 0.2
+			enemy_mat.emission_enabled = true
+			enemy_mat.emission = enemy_color if enemy_color != Color.WHITE else Color(0.5, 0.2, 0.2)
+			enemy_mat.emission_energy_multiplier = 0.5
+			_apply_material_recursive(model, enemy_mat)
 			add_child(model)
 			_sprite_base_scale = model.scale
-			# Boss aura glow (3D sphere) + floating name label
 			if is_boss:
-				var aura_mesh = MeshInstance3D.new()
-				var sphere = SphereMesh.new()
-				sphere.radius = 1.2
-				sphere.height = 2.4
-				aura_mesh.mesh = sphere
-				var aura_mat = StandardMaterial3D.new()
-				aura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-				aura_mat.albedo_color = Color(enemy_color.r, enemy_color.g, enemy_color.b, 0.15)
-				aura_mat.emission_enabled = true
-				aura_mat.emission = enemy_color
-				aura_mat.emission_energy_multiplier = 0.5
-				aura_mesh.material_override = aura_mat
-				aura_mesh.name = "BossAura"
-				aura_mesh.position = model.position
-				add_child(aura_mesh)
 				var label = Label3D.new()
 				label.text = name.replace("Boss", "").to_upper()
 				label.font_size = 24
 				label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-				label.position = model.position + Vector3(0, 1.2, 0)
+				label.position = Vector3(0, 1.5, 0)
 				label.name = "BossLabel"
 				add_child(label)
-			return  # Don't create sprite — model is sufficient
+			return
 
-	# --- Fallback: billboard sprite ---
 	# Always create sprite nodes — MultiMesh will hide them when active but they need
 	# to exist for when MultiMesh deactivates or for visual correctness.
 	var cache_key = "%s_%s" % [enemy_type, stage]

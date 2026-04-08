@@ -76,6 +76,20 @@ func _load_boss_sprite() -> void:
 				model_instance.name = "EnemySprite"
 				model_instance.scale = Vector3(0.6, 0.6, 0.6)
 				model_instance.position.y = 0.3
+				# Apply boss-colored material (Hunyuan3D models have no textures)
+				var boss_mat = StandardMaterial3D.new()
+				boss_mat.albedo_color = boss_color
+				boss_mat.roughness = 0.5
+				boss_mat.metallic = 0.3
+				boss_mat.emission_enabled = true
+				boss_mat.emission = boss_color
+				boss_mat.emission_energy_multiplier = 1.0
+				for c in model_instance.get_children():
+					if c is MeshInstance3D:
+						c.material_override = boss_mat
+					for gc in c.get_children():
+						if gc is MeshInstance3D:
+							gc.material_override = boss_mat
 				add_child(model_instance)
 				# Boss aura — translucent SphereMesh around model
 				var aura_mesh_inst = MeshInstance3D.new()
