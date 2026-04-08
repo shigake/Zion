@@ -52,10 +52,58 @@ func _assign_stage_resistances() -> void:
 			resistances = {"fire": 1.3, "ice": 1.3}
 
 func _load_boss_sprite() -> void:
-	# Tenta varias variantes do nome para encontrar o sprite
+	# Tenta varias variantes do nome para encontrar modelo 3D ou sprite
 	var snake_name = boss_name.to_snake_case().replace(" ", "_")
 	var node_snake = name.to_snake_case()
 	var node_no_prefix = node_snake.replace("boss_", "")
+
+	# --- Try 3D model first (.glb) ---
+	var model_paths_to_try = [
+		"res://assets/models/bosses/%s.glb" % node_no_prefix,   # cemetery_lich
+		"res://assets/models/bosses/%s.glb" % snake_name,        # death_reaper
+		"res://assets/models/bosses/%s.glb" % node_snake,        # boss_cemetery_lich
+	]
+	for model_path in model_paths_to_try:
+		if ResourceLoader.exists(model_path):
+			var model_scene = load(model_path) as PackedScene
+			if model_scene:
+				# Remove existing sprite from enemy_base
+				var old_sprite = get_node_or_null("EnemySprite")
+				if old_sprite:
+					old_sprite.queue_free()
+				# Instantiate 3D model
+				var model_instance: Node3D = model_scene.instantiate()
+				model_instance.name = "EnemySprite"
+				model_instance.scale = Vector3(0.6, 0.6, 0.6)
+				model_instance.position.y = 0.3
+				add_child(model_instance)
+				# Boss aura — translucent SphereMesh around model
+				var aura_mesh_inst = MeshInstance3D.new()
+				var sphere = SphereMesh.new()
+				sphere.radius = 1.2
+				sphere.height = 2.4
+				aura_mesh_inst.mesh = sphere
+				var aura_mat = StandardMaterial3D.new()
+				aura_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				aura_mat.albedo_color = Color(boss_color.r, boss_color.g, boss_color.b, 0.15)
+				aura_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				aura_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				aura_mesh_inst.material_override = aura_mat
+				aura_mesh_inst.name = "BossAura"
+				aura_mesh_inst.position.y = 0.8
+				add_child(aura_mesh_inst)
+				# Name label
+				var label = Label3D.new()
+				label.text = boss_name.to_upper()
+				label.font_size = 24
+				label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				label.position = Vector3(0, 2.2, 0)
+				label.name = "BossLabel"
+				label.modulate = Color(boss_color.r, boss_color.g, boss_color.b, 0.9)
+				add_child(label)
+				return
+
+	# --- Fallback: billboard sprite ---
 	var paths_to_try = [
 		"res://assets/sprites/bosses/%s.png" % node_no_prefix,   # cemetery_reaper
 		"res://assets/sprites/bosses/%s.png" % snake_name,        # death_reaper
