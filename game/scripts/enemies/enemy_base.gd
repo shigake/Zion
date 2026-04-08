@@ -45,7 +45,10 @@ static var _sprite_cache: Dictionary = {}  # Performance: avoid repeated disk lo
 static var _sprite_cache_order: Array[String] = []  # Insertion order for bounded cache eviction
 static var _sprite_path_cache: Dictionary = {}  # "type_stage" -> resolved path (avoids ResourceLoader.exists)
 static var _model_path_cache: Dictionary = {}  # "type_stage_model" -> resolved .glb path
+static var _total_3d_enemies: int = 0  # Performance guard: cap active 3D model enemies
 const SPRITE_CACHE_MAX := 64
+const MAX_3D_ENEMIES := 50  # Above this, new enemies use sprites instead of 3D models
+const MIN_FPS_FOR_3D := 30  # Below this FPS, skip 3D models for new enemies
 ## Shared projectile mesh/material — avoid creating new ones every ranged attack
 static var _shared_proj_mesh: SphereMesh = null
 static var _shared_proj_mat: StandardMaterial3D = null
@@ -74,6 +77,10 @@ func _ready() -> void:
 
 ## Pool reuse: restaura estado para inimigos reutilizados do ObjectPool
 func _reset_for_reuse() -> void:
+	# Decrement 3D counter before re-applying sprite (which may increment again)
+	var _had_3d = get_node_or_null("EnemySprite") != null and not get_node_or_null("EnemySprite") is Sprite3D
+	if _had_3d:
+		_total_3d_enemies = maxi(_total_3d_enemies - 1, 0)
 	is_dead = false
 	hp = max_hp
 	_hit_count = 0
@@ -122,6 +129,24 @@ func get_bestiary_id() -> String:
 			return mapping[base_type]  # e.g. "cemetery_zombie"
 	return base_type  # e.g. "Slime" or "BossNecromancer"
 
+## Safe model loader — returns null on any failure instead of crashing
+static func _safe_load_model(path: String) -> PackedScene:
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return null
+	var scene = load(path)
+	if scene == null or not scene is PackedScene:
+		LogManager.warn("Enemy", "Failed to load 3D model: %s" % path)
+		return null
+	return scene
+
+## Performance guard — should we use 3D models for new enemies?
+static func _should_use_3d_model() -> bool:
+	if _total_3d_enemies >= MAX_3D_ENEMIES:
+		return false
+	if Engine.get_frames_per_second() > 0 and Engine.get_frames_per_second() < MIN_FPS_FOR_3D:
+		return false
+	return true
+
 ## Check if a model has textures (Hyper3D models do, Hunyuan3D don't)
 static func _model_has_texture(node: Node) -> bool:
 	for child in node.get_children():
@@ -147,17 +172,17 @@ func _apply_sprite() -> void:
 	var is_boss := enemy_type.begins_with("Boss")
 	var stage = GameManager.selected_stage
 
-	# --- Try 3D model first (.glb) ---
-	var model_cache_key = "%s_%s_model" % [enemy_type, stage]
-	var model_path: String
-	if _model_path_cache.has(model_cache_key):
-		model_path = _model_path_cache[model_cache_key]
-	else:
-		model_path = _resolve_model_path(enemy_type, stage)
-		_model_path_cache[model_cache_key] = model_path
+	# --- Try 3D model first (.glb) — with performance guard ---
+	if _should_use_3d_model():
+		var model_cache_key = "%s_%s_model" % [enemy_type, stage]
+		var model_path: String
+		if _model_path_cache.has(model_cache_key):
+			model_path = _model_path_cache[model_cache_key]
+		else:
+			model_path = _resolve_model_path(enemy_type, stage)
+			_model_path_cache[model_cache_key] = model_path
 
-	if not model_path.is_empty() and ResourceLoader.exists(model_path):
-		var model_scene = load(model_path)
+		var model_scene = _safe_load_model(model_path)
 		if model_scene:
 			mesh.visible = false
 			for child in get_children():
@@ -183,6 +208,7 @@ func _apply_sprite() -> void:
 				enemy_mat.rim_tint = 0.3
 				_apply_material_recursive(model, enemy_mat)
 			add_child(model)
+			_total_3d_enemies += 1
 			_sprite_base_scale = model.scale
 			if is_boss:
 				var label = Label3D.new()
@@ -951,6 +977,10 @@ func _die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	# Decrement 3D enemy counter if this enemy had a 3D model loaded
+	var _has_3d_model = get_node_or_null("EnemySprite") != null and not get_node_or_null("EnemySprite") is Sprite3D
+	if _has_3d_model:
+		_total_3d_enemies = maxi(_total_3d_enemies - 1, 0)
 	# Kill pending flash tween to prevent lambda-capture errors on freed nodes
 	if _flash_tween and _flash_tween.is_valid():
 		_flash_tween.kill()

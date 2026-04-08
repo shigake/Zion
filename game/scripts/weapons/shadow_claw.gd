@@ -39,8 +39,9 @@ func _ready() -> void:
 		_slash_tex = load(_slash_path)
 	# 3D model (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/shadow_claw.glb"
-	if ResourceLoader.exists(_model_path):
-		var model = load(_model_path).instantiate()
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model = _model_scene.instantiate()
 		model.name = "WeaponModel"
 		model.scale = Vector3(0.25, 0.25, 0.25)
 		slash_area.add_child(model)

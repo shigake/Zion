@@ -18,8 +18,9 @@ func _ready() -> void:
 	book_area.body_entered.connect(_on_body_entered)
 	# 3D model (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/magic_book.glb"
-	if ResourceLoader.exists(_model_path):
-		var model = load(_model_path).instantiate()
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model = _model_scene.instantiate()
 		model.name = "WeaponModel"
 		model.scale = Vector3(0.25, 0.25, 0.25)
 		book_area.add_child(model)

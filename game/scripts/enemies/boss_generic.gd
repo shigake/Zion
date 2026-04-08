@@ -57,16 +57,15 @@ func _load_boss_sprite() -> void:
 	var node_snake = name.to_snake_case()
 	var node_no_prefix = node_snake.replace("boss_", "")
 
-	# --- Try 3D model first (.glb) ---
+	# --- Try 3D model first (.glb) — with safe loading ---
 	var model_paths_to_try = [
 		"res://assets/models/bosses/%s.glb" % node_no_prefix,   # cemetery_lich
 		"res://assets/models/bosses/%s.glb" % snake_name,        # death_reaper
 		"res://assets/models/bosses/%s.glb" % node_snake,        # boss_cemetery_lich
 	]
 	for model_path in model_paths_to_try:
-		if ResourceLoader.exists(model_path):
-			var model_scene = load(model_path) as PackedScene
-			if model_scene:
+		var model_scene = EnemyBase3D._safe_load_model(model_path)
+		if model_scene:
 				# Remove existing sprite from enemy_base
 				var old_sprite = get_node_or_null("EnemySprite")
 				if old_sprite:

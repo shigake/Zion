@@ -39,12 +39,13 @@ func _ready() -> void:
 	slash_mesh_r.add_child(_trail_r)
 	# 3D models (preferred) or billboard sprite fallback
 	var _model_path = "res://assets/models/dual_katana.glb"
-	if ResourceLoader.exists(_model_path):
-		var model_l = load(_model_path).instantiate()
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model_l = _model_scene.instantiate()
 		model_l.name = "WeaponModel"
 		model_l.scale = Vector3(0.25, 0.25, 0.25)
 		slash_area_l.add_child(model_l)
-		var model_r = load(_model_path).instantiate()
+		var model_r = _model_scene.instantiate()
 		model_r.name = "WeaponModel"
 		model_r.scale = Vector3(0.25, 0.25, 0.25)
 		slash_area_r.add_child(model_r)

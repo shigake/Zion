@@ -139,14 +139,14 @@ func _apply_shuriken_mesh(bullet: Node) -> void:
 
 	# --- 3D Model (priority) ---
 	var _model_path = "res://assets/models/shuriken.glb"
-	if ResourceLoader.exists(_model_path):
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
 		# Check if already has model (reused from pool)
 		var existing_spin = bullet.get_node_or_null("ShurikenModelSpin")
 		if existing_spin:
 			existing_spin.visible = true
 			return
-		var model_scene = load(_model_path)
-		var model: Node3D = model_scene.instantiate()
+		var model: Node3D = _model_scene.instantiate()
 		model.name = "ShurikenModel"
 		model.scale = Vector3(0.15, 0.15, 0.15)
 		# Wrap model in spin node so it rotates

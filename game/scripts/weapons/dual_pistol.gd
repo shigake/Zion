@@ -9,9 +9,9 @@ var alternate_side: bool = false  # Alterna esquerda/direita
 func _ready() -> void:
 	# --- 3D Model (priority) ---
 	var _model_path = "res://assets/models/dual_pistol.glb"
-	if ResourceLoader.exists(_model_path):
-		var model_scene = load(_model_path)
-		var model: Node3D = model_scene.instantiate()
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
+		var model: Node3D = _model_scene.instantiate()
 		model.name = "WeaponModel"
 		model.scale = Vector3(0.2, 0.2, 0.2)
 		add_child(model)

@@ -71,12 +71,11 @@ func _ready() -> void:
 	var char_id = GameManager.selected_character
 	var char_model_path = "res://assets/models/characters/%s.glb" % char_id
 	var char_sprite_path = "res://assets/sprites/characters/%s.png" % char_id
-	if ResourceLoader.exists(char_model_path):
+	var _char_model_scene = EnemyBase3D._safe_load_model(char_model_path)
+	if _char_model_scene:
 		# Priority 1: imported 3D model
-		var model_scene = load(char_model_path)
-		if model_scene:
-			mesh.visible = false
-			var char_model = model_scene.instantiate()
+		mesh.visible = false
+		var char_model = _char_model_scene.instantiate()
 			char_model.name = "PlayerSprite"
 			char_model.scale = Vector3(0.45, 0.45, 0.45)
 			char_model.position.y = 0.25

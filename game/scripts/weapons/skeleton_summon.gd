@@ -18,9 +18,9 @@ func _ready() -> void:
 
 func _apply_skeleton_model() -> void:
 	var model_path = "res://assets/models/skeleton_minion.glb"
-	if ResourceLoader.exists(model_path):
-		var scene: PackedScene = load(model_path)
-		var model: Node3D = scene.instantiate()
+	var _skel_scene = EnemyBase3D._safe_load_model(model_path)
+	if _skel_scene:
+		var model: Node3D = _skel_scene.instantiate()
 		model.name = "SummonModel"
 		model.scale = Vector3(0.4, 0.4, 0.4)
 		model.position.y = 0.0

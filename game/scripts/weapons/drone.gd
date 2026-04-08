@@ -15,10 +15,10 @@ var projectile_scene: PackedScene = preload("res://scenes/weapons/bullet.tscn")
 func _ready() -> void:
 	# --- 3D Model (priority) ---
 	var _model_path = "res://assets/models/combat_drone.glb"
-	if ResourceLoader.exists(_model_path):
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
 		drone_mesh.visible = false
-		var model_scene = load(_model_path)
-		var model: Node3D = model_scene.instantiate()
+		var model: Node3D = _model_scene.instantiate()
 		model.name = "WeaponModel"
 		model.scale = Vector3(0.3, 0.3, 0.3)
 		drone_area.add_child(model)

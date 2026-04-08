@@ -123,14 +123,14 @@ func _apply_boomerang_visual(bullet: Node) -> void:
 
 	# --- 3D Model (priority) ---
 	var _model_path = "res://assets/models/boomerang.glb"
-	if ResourceLoader.exists(_model_path):
+	var _model_scene = EnemyBase3D._safe_load_model(_model_path)
+	if _model_scene:
 		# Check if already has model (reused from pool)
 		var existing_model = bullet.get_node_or_null("BoomerangModel")
 		if existing_model:
 			existing_model.visible = true
 			return
-		var model_scene = load(_model_path)
-		var model: Node3D = model_scene.instantiate()
+		var model: Node3D = _model_scene.instantiate()
 		model.name = "BoomerangModel"
 		model.scale = Vector3(0.25, 0.25, 0.25)
 		bullet.add_child(model)

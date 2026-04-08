@@ -207,9 +207,9 @@ func _build_axe_model() -> void:
 	axe_mesh.mesh = null  # Clear any default mesh
 
 	var model_path = "res://assets/models/viking_axe.glb"
-	if ResourceLoader.exists(model_path):
-		var scene: PackedScene = load(model_path)
-		var model: Node3D = scene.instantiate()
+	var _axe_scene = EnemyBase3D._safe_load_model(model_path)
+	if _axe_scene:
+		var model: Node3D = _axe_scene.instantiate()
 		model.name = "AxeModel"
 		model.scale = Vector3(0.3, 0.3, 0.3)
 		axe_mesh.add_child(model)
