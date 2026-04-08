@@ -5,6 +5,15 @@ extends Node3D
 var attack_timer: float = 0.0
 var chain_visuals: Array = []
 
+# Cached materials/meshes — reused across all bolts to avoid per-cast allocations
+var _glow_mat: StandardMaterial3D = null
+var _core_mat: StandardMaterial3D = null
+var _outer_mat: StandardMaterial3D = null
+var _spark_mesh: SphereMesh = null
+var _spark_mat: StandardMaterial3D = null
+var _spark_proc_mat: ParticleProcessMaterial = null
+var _flash_sphere: SphereMesh = null
+
 func _ready() -> void:
 	# 3D lightning orb model (visual for the weapon)
 	var _model_path = "res://assets/models/lightning_orb.glb"
@@ -170,15 +179,16 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 		im_glow.surface_end()
 	glow_mesh.mesh = im_glow
 
-	var glow_mat = StandardMaterial3D.new()
-	glow_mat.albedo_color = Color(0.3, 0.6, 1.0, 0.3)
-	glow_mat.emission_enabled = true
-	glow_mat.emission = Color(0.4, 0.7, 1.0)
-	glow_mat.emission_energy_multiplier = 18.0
-	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glow_mat.no_depth_test = true
-	glow_mesh.material_override = glow_mat
+	if _glow_mat == null:
+		_glow_mat = StandardMaterial3D.new()
+		_glow_mat.albedo_color = Color(0.3, 0.6, 1.0, 0.3)
+		_glow_mat.emission_enabled = true
+		_glow_mat.emission = Color(0.4, 0.7, 1.0)
+		_glow_mat.emission_energy_multiplier = 18.0
+		_glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_glow_mat.no_depth_test = true
+	glow_mesh.material_override = _glow_mat
 	container.add_child(glow_mesh)
 
 	# -- Main bolt core (bright white-blue, high emission) --
@@ -192,15 +202,16 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	im.surface_end()
 	line_mesh.mesh = im
 
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.9, 0.95, 1.0, 1.0)
-	mat.emission_enabled = true
-	mat.emission = Color(0.85, 0.93, 1.0)
-	mat.emission_energy_multiplier = 24.0
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.no_depth_test = true
-	line_mesh.material_override = mat
+	if _core_mat == null:
+		_core_mat = StandardMaterial3D.new()
+		_core_mat.albedo_color = Color(0.9, 0.95, 1.0, 1.0)
+		_core_mat.emission_enabled = true
+		_core_mat.emission = Color(0.85, 0.93, 1.0)
+		_core_mat.emission_energy_multiplier = 24.0
+		_core_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_core_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_core_mat.no_depth_test = true
+	line_mesh.material_override = _core_mat
 	container.add_child(line_mesh)
 
 	# -- Secondary branch bolt (offset fork, vivid blue) --
@@ -224,34 +235,36 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	im2.surface_end()
 	branch_mesh.mesh = im2
 
-	var mat2 = StandardMaterial3D.new()
-	mat2.albedo_color = Color(0.5, 0.8, 1.0, 0.7)
-	mat2.emission_enabled = true
-	mat2.emission = Color(0.5, 0.8, 1.0)
-	mat2.emission_energy_multiplier = 16.0
-	mat2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat2.no_depth_test = true
-	branch_mesh.material_override = mat2
+	if _outer_mat == null:
+		_outer_mat = StandardMaterial3D.new()
+		_outer_mat.albedo_color = Color(0.5, 0.8, 1.0, 0.7)
+		_outer_mat.emission_enabled = true
+		_outer_mat.emission = Color(0.5, 0.8, 1.0)
+		_outer_mat.emission_energy_multiplier = 16.0
+		_outer_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_outer_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_outer_mat.no_depth_test = true
+	branch_mesh.material_override = _outer_mat
 	container.add_child(branch_mesh)
 
 	# -- Impact flash sphere (bright emissive bloom at hit point) --
 	var flash = MeshInstance3D.new()
-	var flash_sphere = SphereMesh.new()
-	flash_sphere.radius = 0.25
-	flash_sphere.height = 0.5
-	flash_sphere.radial_segments = 8
-	flash_sphere.rings = 4
-	var flash_mat = StandardMaterial3D.new()
-	flash_mat.albedo_color = Color(0.7, 0.9, 1.0, 0.6)
-	flash_mat.emission_enabled = true
-	flash_mat.emission = Color(0.8, 0.95, 1.0)
-	flash_mat.emission_energy_multiplier = 28.0
-	flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	flash_mat.no_depth_test = true
-	flash_sphere.material = flash_mat
-	flash.mesh = flash_sphere
+	if _flash_sphere == null:
+		_flash_sphere = SphereMesh.new()
+		_flash_sphere.radius = 0.25
+		_flash_sphere.height = 0.5
+		_flash_sphere.radial_segments = 8
+		_flash_sphere.rings = 4
+		var flash_mat = StandardMaterial3D.new()
+		flash_mat.albedo_color = Color(0.7, 0.9, 1.0, 0.6)
+		flash_mat.emission_enabled = true
+		flash_mat.emission = Color(0.8, 0.95, 1.0)
+		flash_mat.emission_energy_multiplier = 28.0
+		flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		flash_mat.no_depth_test = true
+		_flash_sphere.material = flash_mat
+	flash.mesh = _flash_sphere
 	flash.position = to
 	container.add_child(flash)
 
@@ -263,28 +276,31 @@ func _draw_lightning(from: Vector3, to: Vector3) -> void:
 	sparks.emitting = true
 	sparks.position = to
 
-	var spark_mat = ParticleProcessMaterial.new()
-	spark_mat.direction = Vector3(0, 1, 0)
-	spark_mat.spread = 180.0
-	spark_mat.initial_velocity_min = 2.5
-	spark_mat.initial_velocity_max = 5.0
-	spark_mat.gravity = Vector3(0, -6, 0)
-	spark_mat.scale_min = 0.6
-	spark_mat.scale_max = 1.4
-	spark_mat.color = Color(0.8, 0.95, 1.0)
-	sparks.process_material = spark_mat
+	if _spark_proc_mat == null:
+		_spark_proc_mat = ParticleProcessMaterial.new()
+		_spark_proc_mat.direction = Vector3(0, 1, 0)
+		_spark_proc_mat.spread = 180.0
+		_spark_proc_mat.initial_velocity_min = 2.5
+		_spark_proc_mat.initial_velocity_max = 5.0
+		_spark_proc_mat.gravity = Vector3(0, -6, 0)
+		_spark_proc_mat.scale_min = 0.6
+		_spark_proc_mat.scale_max = 1.4
+		_spark_proc_mat.color = Color(0.8, 0.95, 1.0)
+	sparks.process_material = _spark_proc_mat
 
-	var spark_sphere = SphereMesh.new()
-	spark_sphere.radius = 0.03
-	spark_sphere.height = 0.06
-	var spark_mesh_mat = StandardMaterial3D.new()
-	spark_mesh_mat.albedo_color = Color(0.9, 0.97, 1.0)
-	spark_mesh_mat.emission_enabled = true
-	spark_mesh_mat.emission = Color(0.8, 0.95, 1.0)
-	spark_mesh_mat.emission_energy_multiplier = 22.0
-	spark_mesh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	spark_sphere.material = spark_mesh_mat
-	sparks.draw_pass_1 = spark_sphere
+	if _spark_mesh == null:
+		_spark_mesh = SphereMesh.new()
+		_spark_mesh.radius = 0.03
+		_spark_mesh.height = 0.06
+		if _spark_mat == null:
+			_spark_mat = StandardMaterial3D.new()
+			_spark_mat.albedo_color = Color(0.9, 0.97, 1.0)
+			_spark_mat.emission_enabled = true
+			_spark_mat.emission = Color(0.8, 0.95, 1.0)
+			_spark_mat.emission_energy_multiplier = 22.0
+			_spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_spark_mesh.material = _spark_mat
+	sparks.draw_pass_1 = _spark_mesh
 	container.add_child(sparks)
 
 	get_tree().current_scene.call_deferred("add_child", container)
