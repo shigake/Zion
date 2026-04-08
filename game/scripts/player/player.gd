@@ -67,11 +67,23 @@ func _ready() -> void:
 	if not char_data.is_empty():
 		original_color = char_data.get("color", original_color)
 
-	# Sprite billboard do personagem — static sprite with walk bob
+	# Character visual — try 3D model first, then sprite billboard, then procedural
 	var char_id = GameManager.selected_character
+	var char_model_path = "res://assets/models/characters/%s.glb" % char_id
 	var char_sprite_path = "res://assets/sprites/characters/%s.png" % char_id
-	if ResourceLoader.exists(char_sprite_path):
-		# Fallback: static Sprite3D
+	if ResourceLoader.exists(char_model_path):
+		# Priority 1: imported 3D model
+		var model_scene = load(char_model_path)
+		if model_scene:
+			mesh.visible = false
+			var char_model = model_scene.instantiate()
+			char_model.name = "PlayerSprite"
+			char_model.scale = Vector3(0.45, 0.45, 0.45)
+			char_model.position.y = 0.25
+			add_child(char_model)
+			_sprite_base_scale = char_model.scale
+	elif ResourceLoader.exists(char_sprite_path):
+		# Priority 2: static Sprite3D billboard
 		mesh.visible = false
 		var sprite = Sprite3D.new()
 		sprite.texture = load(char_sprite_path)
@@ -85,7 +97,7 @@ func _ready() -> void:
 		add_child(sprite)
 		_sprite_base_scale = sprite.scale
 	else:
-		# Fallback: modelo procedural
+		# Priority 3: modelo procedural
 		var model = ModelFactory.get_model_for_character(GameManager.selected_character)
 		if model.get_child_count() > 0:
 			mesh.visible = false
