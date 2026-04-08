@@ -147,6 +147,7 @@ func _load_boss_sprite() -> void:
 				sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 				sprite.name = "EnemySprite"
 				sprite.position.y = 0.65
+				sprite.scale = Vector3(1.0, GameConstants.SPRITE_VERTICAL_STRETCH, 1.0)
 				add_child(sprite)
 				# Apply pixel art shader
 				var _pa = get_node_or_null("/root/PixelArtShader")
@@ -177,6 +178,7 @@ func _load_boss_sprite() -> void:
 				aura.modulate = Color(boss_color.r, boss_color.g, boss_color.b, 0.3)
 				aura.name = "BossAura"
 				aura.position.y = 0.65
+				aura.scale = Vector3(1.0, GameConstants.SPRITE_VERTICAL_STRETCH, 1.0)
 				add_child(aura)
 				# Name label
 				var label = Label3D.new()

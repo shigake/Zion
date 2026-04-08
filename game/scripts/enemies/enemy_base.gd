@@ -264,6 +264,7 @@ func _apply_sprite() -> void:
 	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 	sprite.name = "EnemySprite"
 	sprite.position.y = 0.65
+	sprite.scale = Vector3(1.0, GameConstants.SPRITE_VERTICAL_STRETCH, 1.0)
 	add_child(sprite)
 	_sprite_base_scale = sprite.scale
 	# Apply pixel art shader
@@ -299,6 +300,7 @@ func _apply_sprite() -> void:
 		aura.modulate = Color(enemy_color.r, enemy_color.g, enemy_color.b, 0.3)
 		aura.name = "BossAura"
 		aura.position = sprite.position
+		aura.scale = Vector3(1.0, GameConstants.SPRITE_VERTICAL_STRETCH, 1.0)
 		add_child(aura)
 		var label = Label3D.new()
 		label.text = name.replace("Boss", "").to_upper()

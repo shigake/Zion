@@ -94,6 +94,7 @@ func _ready() -> void:
 		sprite.transparent = true
 		sprite.name = "PlayerSprite"
 		sprite.position.y = GameConstants.PLAYER_SPRITE_Y_OFFSET
+		sprite.scale = Vector3(1.0, GameConstants.SPRITE_VERTICAL_STRETCH, 1.0)
 		add_child(sprite)
 		_sprite_base_scale = sprite.scale
 		# Apply pixel art shader

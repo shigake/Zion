@@ -218,6 +218,7 @@ const PLAYER_HURT_COOLDOWN := 0.35
 const PLAYER_HURT_FLASH_DURATION := 0.12
 const PLAYER_SPRITE_PIXEL_SIZE := 0.07
 const PLAYER_SPRITE_Y_OFFSET := 0.65
+const SPRITE_VERTICAL_STRETCH := 1.25  # Estica sprites na vertical para nao parecerem esmagados
 const PLAYER_FOOTSTEP_INTERVAL := 0.3
 const PLAYER_DUST_INTERVAL := 0.2
 const PLAYER_DUST_MIN_FPS := 40
