@@ -31,6 +31,14 @@ var _collect_draw_pass: SphereMesh
 var _levelup_draw_pass: SphereMesh
 var _explosion_draw_pass: SphereMesh
 
+# Reusable array for _process() cleanup (avoids per-frame allocation)
+var _to_return: Array = []
+
+# Cached material for level-up ring (always same properties)
+var _levelup_ring_mat: StandardMaterial3D
+# Cached torus mesh for level-up ring
+var _levelup_ring_torus: TorusMesh
+
 func _ready() -> void:
 	_create_shared_meshes()
 	_init_particle_pool()
@@ -119,6 +127,24 @@ func _create_shared_meshes() -> void:
 	explosion_mat.emission_energy_multiplier = 4.0
 	_explosion_draw_pass.surface_set_material(0, explosion_mat)
 
+	# Level-up ring material (cached — always same golden glow)
+	_levelup_ring_mat = StandardMaterial3D.new()
+	_levelup_ring_mat.albedo_color = Color(1.0, 0.85, 0.2, 0.8)
+	_levelup_ring_mat.emission_enabled = true
+	_levelup_ring_mat.emission = Color(1.0, 0.85, 0.2)
+	_levelup_ring_mat.emission_energy_multiplier = 4.0
+	_levelup_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_levelup_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_levelup_ring_mat.no_depth_test = true
+
+	# Level-up ring torus mesh (cached)
+	_levelup_ring_torus = TorusMesh.new()
+	_levelup_ring_torus.inner_radius = 0.3
+	_levelup_ring_torus.outer_radius = 0.5
+	_levelup_ring_torus.rings = 16
+	_levelup_ring_torus.ring_segments = 24
+	_levelup_ring_torus.surface_set_material(0, _levelup_ring_mat)
+
 func _init_particle_pool() -> void:
 	for i in PARTICLE_POOL_SIZE:
 		var p = _create_particle_node()
@@ -185,14 +211,14 @@ func _process(_delta: float) -> void:
 	if _active_particles.is_empty():
 		return
 	var now := Time.get_ticks_msec() / 1000.0
-	var to_return: Array = []
+	_to_return.clear()
 	for p in _active_particles:
 		if not is_instance_valid(p):
-			to_return.append(p)
+			_to_return.append(p)
 			continue
 		if now >= _active_particles[p]:
-			to_return.append(p)
-	for p in to_return:
+			_to_return.append(p)
+	for p in _to_return:
 		if is_instance_valid(p):
 			_return_particle(p)
 		else:
@@ -440,21 +466,10 @@ func _spawn_level_up_ring(pos: Vector3) -> void:
 	if not scene:
 		return
 	var ring = MeshInstance3D.new()
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.3
-	torus.outer_radius = 0.5
-	torus.rings = 16
-	torus.ring_segments = 24
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.85, 0.2, 0.8)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.85, 0.2)
-	mat.emission_energy_multiplier = 4.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.no_depth_test = true
-	torus.surface_set_material(0, mat)
-	ring.mesh = torus
+	# Duplicate cached material so each ring can fade independently
+	var mat = _levelup_ring_mat.duplicate() as StandardMaterial3D
+	ring.mesh = _levelup_ring_torus
+	ring.material_override = mat
 	scene.add_child(ring)
 	ring.global_position = pos + Vector3(0, 0.1, 0)
 	ring.rotation_degrees.x = 90.0  # Lay flat on the ground

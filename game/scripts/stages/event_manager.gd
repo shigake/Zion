@@ -29,6 +29,17 @@ var _meteor_spawns_remaining: int = 0
 var _meteor_spawn_timer: float = 0.0
 var _meteor_spawn_interval: float = 0.0
 
+# Cached materials for meteor/crater (lazy-initialized to avoid allocation per meteor)
+var _meteor_fallback_mat: StandardMaterial3D  # fallback sphere material
+var _crater_rim_mat: StandardMaterial3D       # dark rim (duplicated per crater for fade tween)
+var _crater_scorch_mat: StandardMaterial3D    # scorched ground (duplicated per crater for fade tween)
+var _crater_fire_draw_mat: StandardMaterial3D # fire billboard (shared, never tweened)
+var _crater_ember_draw_mat: StandardMaterial3D # ember billboard (shared, never tweened)
+var _crater_fire_mesh: SphereMesh             # fire draw pass mesh (shared)
+var _crater_ember_mesh: SphereMesh            # ember draw pass mesh (shared)
+var _crater_torus_mesh: TorusMesh             # rim mesh (shared)
+var _crater_disc_mesh: CylinderMesh           # scorch disc mesh (shared)
+
 # Fever mode state
 var _recent_kills: Array[float] = []  # timestamps of recent kills
 var _fever_active: bool = false
@@ -77,6 +88,72 @@ func _ready() -> void:
 		rng.randomize()
 	next_random_event_time = rng.randf_range(GameConstants.EVENT_FIRST_RANDOM_MIN, GameConstants.EVENT_FIRST_RANDOM_MAX)
 	GameManager.enemy_killed.connect(_on_enemy_killed)
+	_init_crater_materials()
+
+func _init_crater_materials() -> void:
+	# Meteor fallback material (orange glowing sphere)
+	_meteor_fallback_mat = StandardMaterial3D.new()
+	_meteor_fallback_mat.albedo_color = Color(1.0, 0.3, 0.0)
+	_meteor_fallback_mat.emission_enabled = true
+	_meteor_fallback_mat.emission = Color(1.0, 0.5, 0.0)
+	_meteor_fallback_mat.emission_energy_multiplier = 3.0
+
+	# Crater rim material (dark scorched — duplicated per crater for fade tween)
+	_crater_rim_mat = StandardMaterial3D.new()
+	_crater_rim_mat.albedo_color = Color(0.15, 0.08, 0.02)
+	_crater_rim_mat.roughness = 1.0
+	_crater_rim_mat.metallic = 0.0
+
+	# Crater scorch material (dark disc — duplicated per crater for fade tween)
+	_crater_scorch_mat = StandardMaterial3D.new()
+	_crater_scorch_mat.albedo_color = Color(0.08, 0.04, 0.01)
+	_crater_scorch_mat.roughness = 1.0
+	_crater_scorch_mat.emission_enabled = true
+	_crater_scorch_mat.emission = Color(0.3, 0.08, 0.0)
+	_crater_scorch_mat.emission_energy_multiplier = 0.5
+
+	# Fire draw pass material (shared — never tweened)
+	_crater_fire_draw_mat = StandardMaterial3D.new()
+	_crater_fire_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_crater_fire_draw_mat.albedo_color = Color(1.0, 0.7, 0.2, 0.9)
+	_crater_fire_draw_mat.emission_enabled = true
+	_crater_fire_draw_mat.emission = Color(1.0, 0.4, 0.05)
+	_crater_fire_draw_mat.emission_energy_multiplier = 4.0
+	_crater_fire_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	_crater_fire_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+	# Ember draw pass material (shared — never tweened)
+	_crater_ember_draw_mat = StandardMaterial3D.new()
+	_crater_ember_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_crater_ember_draw_mat.albedo_color = Color(1.0, 0.8, 0.3, 1.0)
+	_crater_ember_draw_mat.emission_enabled = true
+	_crater_ember_draw_mat.emission = Color(1.0, 0.6, 0.1)
+	_crater_ember_draw_mat.emission_energy_multiplier = 5.0
+	_crater_ember_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	_crater_ember_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+	# Shared meshes for crater
+	_crater_fire_mesh = SphereMesh.new()
+	_crater_fire_mesh.radius = 0.15
+	_crater_fire_mesh.height = 0.3
+	_crater_fire_mesh.surface_set_material(0, _crater_fire_draw_mat)
+
+	_crater_ember_mesh = SphereMesh.new()
+	_crater_ember_mesh.radius = 0.04
+	_crater_ember_mesh.height = 0.08
+	_crater_ember_mesh.surface_set_material(0, _crater_ember_draw_mat)
+
+	_crater_torus_mesh = TorusMesh.new()
+	_crater_torus_mesh.inner_radius = 0.8
+	_crater_torus_mesh.outer_radius = 1.6
+	_crater_torus_mesh.rings = 16
+	_crater_torus_mesh.ring_segments = 12
+
+	_crater_disc_mesh = CylinderMesh.new()
+	_crater_disc_mesh.top_radius = 1.0
+	_crater_disc_mesh.bottom_radius = 1.0
+	_crater_disc_mesh.height = 0.05
+	_crater_disc_mesh.radial_segments = 16
 
 func _process(delta: float) -> void:
 	if GameManager.paused or GameManager.is_game_over:
@@ -1036,12 +1113,7 @@ func _spawn_single_meteor() -> void:
 		sphere_mesh.radius = 0.5
 		sphere_mesh.height = 1.0
 		mesh_instance.mesh = sphere_mesh
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.3, 0.0)
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.5, 0.0)
-		mat.emission_energy_multiplier = 3.0
-		mesh_instance.material_override = mat
+		mesh_instance.material_override = _meteor_fallback_mat
 		meteor.add_child(mesh_instance)
 
 	# Start position (above target)
@@ -1093,16 +1165,8 @@ func _spawn_meteor_crater(pos: Vector3) -> void:
 
 	# --- Crater ring (torus-like rim using dark scorched ring) ---
 	var rim = MeshInstance3D.new()
-	var torus_mesh = TorusMesh.new()
-	torus_mesh.inner_radius = 0.8
-	torus_mesh.outer_radius = 1.6
-	torus_mesh.rings = 16
-	torus_mesh.ring_segments = 12
-	rim.mesh = torus_mesh
-	var rim_mat = StandardMaterial3D.new()
-	rim_mat.albedo_color = Color(0.15, 0.08, 0.02)
-	rim_mat.roughness = 1.0
-	rim_mat.metallic = 0.0
+	rim.mesh = _crater_torus_mesh
+	var rim_mat = _crater_rim_mat.duplicate() as StandardMaterial3D
 	rim.material_override = rim_mat
 	rim.position = Vector3(0, 0.02, 0)
 	rim.rotation_degrees.x = 90.0
@@ -1110,18 +1174,8 @@ func _spawn_meteor_crater(pos: Vector3) -> void:
 
 	# --- Scorched ground (dark disc inside crater) ---
 	var scorch = MeshInstance3D.new()
-	var disc_mesh = CylinderMesh.new()
-	disc_mesh.top_radius = 1.0
-	disc_mesh.bottom_radius = 1.0
-	disc_mesh.height = 0.05
-	disc_mesh.radial_segments = 16
-	scorch.mesh = disc_mesh
-	var scorch_mat = StandardMaterial3D.new()
-	scorch_mat.albedo_color = Color(0.08, 0.04, 0.01)
-	scorch_mat.roughness = 1.0
-	scorch_mat.emission_enabled = true
-	scorch_mat.emission = Color(0.3, 0.08, 0.0)
-	scorch_mat.emission_energy_multiplier = 0.5
+	scorch.mesh = _crater_disc_mesh
+	var scorch_mat = _crater_scorch_mat.duplicate() as StandardMaterial3D
 	scorch.material_override = scorch_mat
 	scorch.position = Vector3(0, -0.05, 0)
 	crater_root.add_child(scorch)
@@ -1161,20 +1215,8 @@ func _spawn_meteor_crater(pos: Vector3) -> void:
 
 	fire.process_material = fire_mat
 
-	# Fire draw pass (small sphere billboard)
-	var fire_mesh = SphereMesh.new()
-	fire_mesh.radius = 0.15
-	fire_mesh.height = 0.3
-	var fire_draw_mat = StandardMaterial3D.new()
-	fire_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	fire_draw_mat.albedo_color = Color(1.0, 0.7, 0.2, 0.9)
-	fire_draw_mat.emission_enabled = true
-	fire_draw_mat.emission = Color(1.0, 0.4, 0.05)
-	fire_draw_mat.emission_energy_multiplier = 4.0
-	fire_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	fire_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	fire_mesh.surface_set_material(0, fire_draw_mat)
-	fire.draw_pass_1 = fire_mesh
+	# Fire draw pass (cached sphere billboard mesh)
+	fire.draw_pass_1 = _crater_fire_mesh
 
 	fire.position = Vector3(0, 0.1, 0)
 	crater_root.add_child(fire)
@@ -1200,19 +1242,8 @@ func _spawn_meteor_crater(pos: Vector3) -> void:
 	ember_mat.color = Color(1.0, 0.6, 0.1, 0.8)
 	embers.process_material = ember_mat
 
-	var ember_mesh = SphereMesh.new()
-	ember_mesh.radius = 0.04
-	ember_mesh.height = 0.08
-	var ember_draw_mat = StandardMaterial3D.new()
-	ember_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ember_draw_mat.albedo_color = Color(1.0, 0.8, 0.3, 1.0)
-	ember_draw_mat.emission_enabled = true
-	ember_draw_mat.emission = Color(1.0, 0.6, 0.1)
-	ember_draw_mat.emission_energy_multiplier = 5.0
-	ember_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	ember_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	ember_mesh.surface_set_material(0, ember_draw_mat)
-	embers.draw_pass_1 = ember_mesh
+	# Ember draw pass (cached sphere billboard mesh)
+	embers.draw_pass_1 = _crater_ember_mesh
 
 	embers.position = Vector3(0, 0.15, 0)
 	crater_root.add_child(embers)
