@@ -157,11 +157,14 @@ func _apply_sprite() -> void:
 			# Apply colored material (Hunyuan3D models have no textures)
 			var enemy_mat = StandardMaterial3D.new()
 			enemy_mat.albedo_color = enemy_color if enemy_color != Color.WHITE else Color(0.7, 0.3, 0.3)
-			enemy_mat.roughness = 0.6
-			enemy_mat.metallic = 0.2
+			enemy_mat.roughness = 0.4
+			enemy_mat.metallic = 0.3
 			enemy_mat.emission_enabled = true
 			enemy_mat.emission = enemy_color if enemy_color != Color.WHITE else Color(0.5, 0.2, 0.2)
-			enemy_mat.emission_energy_multiplier = 0.5
+			enemy_mat.emission_energy_multiplier = 1.0
+			enemy_mat.rim_enabled = true
+			enemy_mat.rim = 0.4
+			enemy_mat.rim_tint = 0.3
 			_apply_material_recursive(model, enemy_mat)
 			add_child(model)
 			_sprite_base_scale = model.scale

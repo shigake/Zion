@@ -83,11 +83,14 @@ func _ready() -> void:
 			# Apply character-colored material (Hunyuan3D models have no textures)
 			var char_mat = StandardMaterial3D.new()
 			char_mat.albedo_color = original_color
-			char_mat.roughness = 0.5
+			char_mat.roughness = 0.3
 			char_mat.metallic = 0.2
 			char_mat.emission_enabled = true
 			char_mat.emission = original_color
-			char_mat.emission_energy_multiplier = 0.8
+			char_mat.emission_energy_multiplier = 1.2
+			char_mat.rim_enabled = true
+			char_mat.rim = 0.5
+			char_mat.rim_tint = 0.3
 			for c in char_model.get_children():
 				if c is MeshInstance3D:
 					c.material_override = char_mat

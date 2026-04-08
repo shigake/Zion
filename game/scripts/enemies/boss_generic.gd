@@ -83,7 +83,11 @@ func _load_boss_sprite() -> void:
 				boss_mat.metallic = 0.3
 				boss_mat.emission_enabled = true
 				boss_mat.emission = boss_color
-				boss_mat.emission_energy_multiplier = 1.0
+				boss_mat.emission_energy_multiplier = 2.0
+				boss_mat.rim_enabled = true
+				boss_mat.rim = 0.6
+				boss_mat.rim_tint = 0.3
+				boss_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 				for c in model_instance.get_children():
 					if c is MeshInstance3D:
 						c.material_override = boss_mat
