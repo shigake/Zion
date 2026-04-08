@@ -73,11 +73,13 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Homing: ajusta direcao em direcao ao alvo
-	if target and is_instance_valid(target):
+	if target and is_instance_valid(target) and target.is_inside_tree():
 		var to_target = (target.global_position - global_position).normalized()
 		to_target.y = 0
 		direction = direction.lerp(to_target, homing_strength * delta).normalized()
 
+	if not is_inside_tree():
+		return
 	global_position += direction * speed * delta
 	_update_sprite_rotation()
 	# Performance: confia nos signals body_entered + area_entered.
