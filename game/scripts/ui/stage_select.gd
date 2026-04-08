@@ -551,7 +551,12 @@ func _on_play() -> void:
 		GameManager.current_seed = seed_text
 	else:
 		GameManager.current_seed = ""
-	LoadingScreen.transition_to("res://scenes/ui/relic_select.tscn")
+	# Skip relic select — go straight to game (normal mode)
+	GameManager.selected_relic = ""
+	GameManager.game_mode = "normal"
+	GameManager.run_time_limit = GameConstants.RUN_TIME_NORMAL
+	var scene = GameConstants.STAGE_SCENE_PATHS.get(GameManager.selected_stage, "res://scenes/stages/stage_cemetery.tscn")
+	LoadingScreen.load_stage(scene)
 
 func _on_back() -> void:
 	AudioManager.play_sfx("menu_click")
