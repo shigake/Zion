@@ -74,14 +74,14 @@ func _ready() -> void:
 	var char_sprite_path = "res://assets/sprites/characters/%s.png" % char_id
 	var _char_model_scene = EnemyBase3D._safe_load_model(char_model_path) if USE_3D_MODELS else null
 	if _char_model_scene:
-		# Priority 1: imported 3D model
+		# Priority 1: imported 3D model (disabled)
 		mesh.visible = false
 		var char_model = _char_model_scene.instantiate()
 		char_model.name = "PlayerSprite"
 		char_model.scale = Vector3(0.45, 0.45, 0.45)
 		char_model.position.y = 0.25
 		add_child(char_model)
-			_sprite_base_scale = char_model.scale
+		_sprite_base_scale = char_model.scale
 	elif ResourceLoader.exists(char_sprite_path):
 		# Priority 2: static Sprite3D billboard
 		mesh.visible = false

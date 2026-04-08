@@ -773,17 +773,14 @@ func _update_tile_highlights(selected_color: Color) -> void:
 
 
 func _load_info_sprite(char_id: String) -> void:
-	var model_path := "res://assets/models/characters/%s.glb" % char_id
-	if ResourceLoader.exists(model_path):
-		_show_3d_preview(model_path)
+	# Always use 2D sprite preview (3D models disabled)
+	_hide_3d_preview()
+	var sprite_path := "res://assets/sprites/characters/%s.png" % char_id
+	if ResourceLoader.exists(sprite_path):
+		_info_sprite.texture = load(sprite_path)
 	else:
-		_hide_3d_preview()
-		var sprite_path := "res://assets/sprites/characters/%s.png" % char_id
-		if ResourceLoader.exists(sprite_path):
-			_info_sprite.texture = load(sprite_path)
-		else:
-			_info_sprite.texture = null
-		_start_bob_animation()
+		_info_sprite.texture = null
+	_start_bob_animation()
 
 
 func _show_3d_preview(model_path: String) -> void:
