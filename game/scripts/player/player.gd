@@ -68,39 +68,46 @@ func _ready() -> void:
 		original_color = char_data.get("color", original_color)
 
 	# Character visual — 3D models disabled, using pixel art sprites instead
+	var USE_3D_MODELS := false
 	var char_id = GameManager.selected_character
+	var char_model_path = "res://assets/models/characters/%s.glb" % char_id
 	var char_sprite_path = "res://assets/sprites/characters/%s.png" % char_id
+	var _char_model_scene = EnemyBase3D._safe_load_model(char_model_path) if USE_3D_MODELS else null
+	if _char_model_scene:
 		# Priority 1: imported 3D model
 		mesh.visible = false
-		char_model.name = "PlayerSprite"
-		# Only apply colored material if model has no textures (Hyper3D has textures)
-		var _has_tex = false
-		for c in char_model.get_children():
-			if c is MeshInstance3D and c.mesh:
-				for si in range(c.mesh.get_surface_count()):
-					var m = c.mesh.surface_get_material(si)
-					if m is StandardMaterial3D and m.albedo_texture != null:
-						_has_tex = true
-						break
-		if not _has_tex:
-			var char_mat = StandardMaterial3D.new()
-			char_mat.albedo_color = original_color
-			char_mat.roughness = 0.3
-			char_mat.metallic = 0.2
-			char_mat.emission_enabled = true
-			char_mat.emission = original_color
-			char_mat.emission_energy_multiplier = 1.2
-			char_mat.rim_enabled = true
-			char_mat.rim = 0.5
-			char_mat.rim_tint = 0.3
+		var char_model = _char_model_scene.instantiate()
+			char_model.name = "PlayerSprite"
+			char_model.scale = Vector3(0.45, 0.45, 0.45)
+			char_model.position.y = 0.25
+			# Only apply colored material if model has no textures (Hyper3D has textures)
+			var _has_tex = false
 			for c in char_model.get_children():
-				if c is MeshInstance3D:
-					c.material_override = char_mat
-				for gc in c.get_children():
-					if gc is MeshInstance3D:
-						gc.material_override = char_mat
-		add_child(char_model)
-		_sprite_base_scale = char_model.scale
+				if c is MeshInstance3D and c.mesh:
+					for si in range(c.mesh.get_surface_count()):
+						var m = c.mesh.surface_get_material(si)
+						if m is StandardMaterial3D and m.albedo_texture != null:
+							_has_tex = true
+							break
+			if not _has_tex:
+				var char_mat = StandardMaterial3D.new()
+				char_mat.albedo_color = original_color
+				char_mat.roughness = 0.3
+				char_mat.metallic = 0.2
+				char_mat.emission_enabled = true
+				char_mat.emission = original_color
+				char_mat.emission_energy_multiplier = 1.2
+				char_mat.rim_enabled = true
+				char_mat.rim = 0.5
+				char_mat.rim_tint = 0.3
+				for c in char_model.get_children():
+					if c is MeshInstance3D:
+						c.material_override = char_mat
+					for gc in c.get_children():
+						if gc is MeshInstance3D:
+							gc.material_override = char_mat
+			add_child(char_model)
+			_sprite_base_scale = char_model.scale
 	elif ResourceLoader.exists(char_sprite_path):
 		# Priority 2: static Sprite3D billboard
 		mesh.visible = false
@@ -138,6 +145,8 @@ func _ready() -> void:
 		var model = ModelFactory.get_model_for_character(GameManager.selected_character)
 		if model.get_child_count() > 0:
 			mesh.visible = false
+			model.name = "ProceduralModel"
+			add_child(model)
 			ModelFactory.apply_model_materials(model, original_color)
 		else:
 			VisualSetup.apply_cel_shader_to_mesh(mesh, original_color)
