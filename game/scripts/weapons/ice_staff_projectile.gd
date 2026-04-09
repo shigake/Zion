@@ -35,8 +35,10 @@ static var _shared_back_cone: CylinderMesh = null
 static var _shared_ice_mat: StandardMaterial3D = null
 
 func _ready() -> void:
-	body_entered.connect(_on_body_entered)
-	area_entered.connect(_on_area_entered)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
 	_setup_crystal_model()
 
 func _ensure_shared_meshes() -> void:
