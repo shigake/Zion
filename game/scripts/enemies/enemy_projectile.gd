@@ -19,6 +19,9 @@ var _sprite: Sprite3D = null
 var _col_shape: CollisionShape3D = null
 var _initialized: bool = false
 
+## Cache de texturas por cor — evita recriar Image + ImageTexture a cada spawn
+static var _texture_cache: Dictionary = {}  # Color -> ImageTexture
+
 func _ready() -> void:
 	# Colisao: layer 5 (EnemyAttacks), mask 1 (Players)
 	collision_layer = 16  # Layer 5
@@ -39,9 +42,10 @@ func _ready() -> void:
 	# Velocidade inicial na direcao configurada
 	_velocity = direction.normalized() * speed
 
-func _setup_visuals() -> void:
-	_sprite = Sprite3D.new()
-	# Create a small circle dot texture
+func _get_cached_texture(color: Color) -> ImageTexture:
+	## Retorna textura cacheada por cor — evita recriar Image a cada spawn
+	if _texture_cache.has(color):
+		return _texture_cache[color]
 	var size = 8
 	var img = Image.create(size, size, false, Image.FORMAT_RGBA8)
 	for x in range(size):
@@ -49,8 +53,14 @@ func _setup_visuals() -> void:
 			var dx = x - size / 2
 			var dy = y - size / 2
 			if dx * dx + dy * dy < 12:
-				img.set_pixel(x, y, projectile_color)
-	_sprite.texture = ImageTexture.create_from_image(img)
+				img.set_pixel(x, y, color)
+	var tex = ImageTexture.create_from_image(img)
+	_texture_cache[color] = tex
+	return tex
+
+func _setup_visuals() -> void:
+	_sprite = Sprite3D.new()
+	_sprite.texture = _get_cached_texture(projectile_color)
 	_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_sprite.pixel_size = projectile_radius * 0.25
 	_sprite.shaded = false
@@ -66,16 +76,7 @@ func _setup_visuals() -> void:
 
 func _update_visuals() -> void:
 	if _sprite:
-		# Regenerate texture with new color
-		var size = 8
-		var img = Image.create(size, size, false, Image.FORMAT_RGBA8)
-		for x in range(size):
-			for y in range(size):
-				var dx = x - size / 2
-				var dy = y - size / 2
-				if dx * dx + dy * dy < 12:
-					img.set_pixel(x, y, projectile_color)
-		_sprite.texture = ImageTexture.create_from_image(img)
+		_sprite.texture = _get_cached_texture(projectile_color)
 		_sprite.pixel_size = projectile_radius * 0.25
 
 func _physics_process(delta: float) -> void:

@@ -172,7 +172,7 @@ func _apply_sprite() -> void:
 	var is_boss := enemy_type.begins_with("Boss")
 	var stage = GameManager.selected_stage
 
-	# --- 3D models disabled — using pixel art sprites instead ---
+	# --- 3D models disabled — sprites are more stable for now ---
 	var USE_3D_MODELS := false
 	if USE_3D_MODELS and _should_use_3d_model():
 		var model_cache_key = "%s_%s_model" % [enemy_type, stage]
@@ -587,6 +587,25 @@ func _physics_process(delta: float) -> void:
 
 	_frame_counter += 1
 
+	# --- Performance LOD: inimigos distantes processam menos frequentemente ---
+	# Isso reduz drasticamente o custo de CPU com muitos inimigos na tela.
+	var _dist_sq_to_target := INF
+	if target and is_instance_valid(target):
+		_dist_sq_to_target = global_position.distance_squared_to(target.global_position)
+	var _is_far := _dist_sq_to_target > 225.0  # > 15 unidades
+	var _is_medium := _dist_sq_to_target > 100.0  # > 10 unidades
+	# FPS-adaptive: pula mais frames quando FPS esta baixo
+	var _fps := Engine.get_frames_per_second()
+	var _skip_interval := 1  # Processar todo frame (perto)
+	if _is_far:
+		_skip_interval = 4 if _fps < 45 else 3  # Longe: a cada 3-4 frames
+	elif _is_medium:
+		_skip_interval = 3 if _fps < 45 else 2  # Medio: a cada 2-3 frames
+	elif _fps < 35:
+		_skip_interval = 2  # Perto mas FPS critico: a cada 2 frames
+	# Stagger por instancia para distribuir carga entre frames
+	var _should_process := (_frame_counter + get_index()) % _skip_interval == 0
+
 	# Boss aura pulse (every 3rd frame, cached reference)
 	if _frame_counter % 3 == 0:
 		if not _boss_aura_checked:
@@ -595,19 +614,21 @@ func _physics_process(delta: float) -> void:
 		if _cached_boss_aura:
 			_cached_boss_aura.modulate.a = 0.2 + sin(Time.get_ticks_msec() * 0.004) * 0.15
 
-	# Knockback decay
+	# Knockback decay — sempre processar (feedback imediato)
 	if knockback_velocity.length() > 0.1:
 		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, 8.0 * delta)
 		velocity = knockback_velocity
 		move_and_slide()
 		return
 
-	_find_target()
+	# Target finding — a cada 2 frames para distantes, todo frame para proximos
+	if _should_process or not _is_medium:
+		_find_target()
 
 	# --- Stage behavior processing (every other frame for non-critical behaviors) ---
 	if _behavior != "" and target and is_instance_valid(target):
 		var is_critical_behavior = _behavior == "charge" or _behavior == "teleport" or _is_charging
-		if is_critical_behavior or _frame_counter % 2 == 0:
+		if is_critical_behavior or (_should_process and _frame_counter % 2 == 0):
 			_process_stage_behavior(delta)
 
 	if target and is_instance_valid(target):
@@ -624,8 +645,9 @@ func _physics_process(delta: float) -> void:
 			effective_speed *= 1.15
 		# Mutation: speed demons
 		effective_speed *= MutationManager.get_enemy_speed_modifier()
-		# Separacao: repulsao de inimigos proximos (every 3rd frame, cache result)
-		if _frame_counter % 3 == 0:
+		# Separacao: repulsao de inimigos proximos (LOD-aware: distantes com menos frequencia)
+		var _sep_interval := 3 if not _is_far else 6
+		if _frame_counter % _sep_interval == 0:
 			_cached_separation = _get_separation_vector()
 		var final_dir = (direction * effective_speed + _cached_separation).normalized()
 		velocity = final_dir * effective_speed
@@ -633,50 +655,52 @@ func _physics_process(delta: float) -> void:
 		if _behavior == "flying":
 			velocity.y = sin(GameManager.game_time * 3.0 + global_position.x) * 2.0
 		move_and_slide()
-		# Walk bob on sprite (speed-proportional bob + lean + flip + squash-stretch)
-		var _walk_sprite = _get_cached_sprite()
-		if _walk_sprite and _walk_sprite.visible:
-			var _move_spd = velocity.length()
-			var _bob_freq = 6.0 + _move_spd * 0.5  # Faster enemies bob faster
-			var _bob_amp = clampf(_move_spd * 0.006, 0.02, 0.06)  # Amplitude scales with speed
-			var phase = GameManager.game_time * _bob_freq + global_position.x
-			_walk_sprite.position.y = 0.65 + abs(sin(phase)) * _bob_amp
-			# Face toward player
-			if target and is_instance_valid(target):
-				if _walk_sprite is Sprite3D:
-					var dir_x = target.global_position.x - global_position.x
-					if dir_x > 0.3:
-						_walk_sprite.flip_h = false
-					elif dir_x < -0.3:
-						_walk_sprite.flip_h = true
-				else:
-					# 3D model: rotate Y toward player
-					var dir = target.global_position - global_position
-					if dir.length() > 0.5:
-						var target_angle = atan2(-dir.x, -dir.z)
-						_walk_sprite.rotation.y = lerp_angle(_walk_sprite.rotation.y, target_angle, 0.15)
-			# Lean toward movement direction (subtle tilt)
-			var _lean_target = 0.0
-			if abs(velocity.x) > 0.1:
-				_lean_target = -sign(velocity.x) * clampf(abs(velocity.x) * 0.01, 0.0, 0.05)
-			_walk_sprite.rotation.z = lerp(_walk_sprite.rotation.z, _lean_target, 0.15)
-			# Subtle squash-stretch
-			var walk_phase = sin(phase)
-			_walk_sprite.scale = Vector3(
-				_sprite_base_scale.x * (1.0 - abs(walk_phase) * 0.025),
-				_sprite_base_scale.y * (1.0 + abs(walk_phase) * 0.035),
-				_sprite_base_scale.z
-			)
+		# Walk bob on sprite — pular animacao visual para inimigos distantes (nao visivel de longe)
+		if not _is_far:
+			var _walk_sprite = _get_cached_sprite()
+			if _walk_sprite and _walk_sprite.visible:
+				var _move_spd = velocity.length()
+				var _bob_freq = 6.0 + _move_spd * 0.5  # Faster enemies bob faster
+				var _bob_amp = clampf(_move_spd * 0.006, 0.02, 0.06)  # Amplitude scales with speed
+				var phase = GameManager.game_time * _bob_freq + global_position.x
+				_walk_sprite.position.y = 0.65 + abs(sin(phase)) * _bob_amp
+				# Face toward player
+				if target and is_instance_valid(target):
+					if _walk_sprite is Sprite3D:
+						var dir_x = target.global_position.x - global_position.x
+						if dir_x > 0.3:
+							_walk_sprite.flip_h = false
+						elif dir_x < -0.3:
+							_walk_sprite.flip_h = true
+					else:
+						# 3D model: rotate Y toward player
+						var dir = target.global_position - global_position
+						if dir.length() > 0.5:
+							var target_angle = atan2(-dir.x, -dir.z)
+							_walk_sprite.rotation.y = lerp_angle(_walk_sprite.rotation.y, target_angle, 0.15)
+				# Lean toward movement direction (subtle tilt)
+				var _lean_target = 0.0
+				if abs(velocity.x) > 0.1:
+					_lean_target = -sign(velocity.x) * clampf(abs(velocity.x) * 0.01, 0.0, 0.05)
+				_walk_sprite.rotation.z = lerp(_walk_sprite.rotation.z, _lean_target, 0.15)
+				# Subtle squash-stretch
+				var walk_phase = sin(phase)
+				_walk_sprite.scale = Vector3(
+					_sprite_base_scale.x * (1.0 - abs(walk_phase) * 0.025),
+					_sprite_base_scale.y * (1.0 + abs(walk_phase) * 0.035),
+					_sprite_base_scale.z
+				)
 		if _animator:
 			_animator.set_walking(true)
 	else:
-		# Idle bob + reset scale + return lean to neutral
-		var _idle_sprite = _get_cached_sprite()
-		if _idle_sprite and _idle_sprite.visible:
-			_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 2.5 + global_position.z) * 0.015
-			_idle_sprite.position.x = 0.0
-			_idle_sprite.rotation.z = lerp(_idle_sprite.rotation.z, 0.0, 0.1)
-			_idle_sprite.scale = _sprite_base_scale
+		# Idle bob + reset scale + return lean to neutral (skip for far enemies)
+		if not _is_far:
+			var _idle_sprite = _get_cached_sprite()
+			if _idle_sprite and _idle_sprite.visible:
+				_idle_sprite.position.y = 0.65 + sin(GameManager.game_time * 2.5 + global_position.z) * 0.015
+				_idle_sprite.position.x = 0.0
+				_idle_sprite.rotation.z = lerp(_idle_sprite.rotation.z, 0.0, 0.1)
+				_idle_sprite.scale = _sprite_base_scale
 		if _animator:
 			_animator.set_walking(false)
 
@@ -902,7 +926,9 @@ func take_damage(amount: int, damage_type: String = "physical") -> void:
 	if fps < 25:
 		show_dmg_number = is_crit  # Only show crits at very low FPS
 	elif fps < 35:
-		show_dmg_number = is_crit or randf() < 0.3  # 30% chance at low FPS
+		show_dmg_number = is_crit or randf() < 0.2  # 20% chance at low FPS
+	elif fps < 50:
+		show_dmg_number = is_crit or randf() < 0.5  # 50% chance at medium FPS
 	if show_dmg_number:
 		var dmg_color: Color
 		if is_crit:

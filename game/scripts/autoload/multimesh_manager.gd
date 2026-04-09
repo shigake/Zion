@@ -7,8 +7,8 @@ extends Node
 ## Above THRESHOLD: MultiMesh with shared sprite texture (performance mode).
 
 # --- Enemy MultiMesh ---
-const THRESHOLD := 300  # Switch to multimesh only with massive hordes (individual sprites preferred)
-const HYSTERESIS := 100  # Prevent flickering near threshold
+const THRESHOLD := 80  # Switch to multimesh earlier for better batching (fewer draw calls)
+const HYSTERESIS := 30  # Prevent flickering near threshold
 const _FALLBACK_ENEMY_TEXTURE := preload("res://assets/sprites/enemies/slime.png")
 const _PICKUP_TEXTURE := preload("res://assets/sprites/pickups/xp_gem.png")
 
@@ -19,8 +19,8 @@ var _billboard_material: StandardMaterial3D = null
 var _fallback_texture: Texture2D = null
 
 # --- Pickup MultiMesh ---
-const PICKUP_THRESHOLD := 200  # Individual sprites preferred — only use multimesh for extreme counts
-const PICKUP_HYSTERESIS := 50
+const PICKUP_THRESHOLD := 100  # Use multimesh earlier for pickups too
+const PICKUP_HYSTERESIS := 30
 
 var _pickup_mm_instance: MultiMeshInstance3D = null
 var _pickup_mm: MultiMesh = null

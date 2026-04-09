@@ -16,22 +16,22 @@ class_name EnemyCuller
 ##   add_child(culler)
 
 # ---- Constantes ----
-## Distancia ao quadrado para dormir inimigos (32^2 = 1024)
-const SLEEP_DIST_SQ := 1024.0
+## Distancia ao quadrado para dormir inimigos (25^2 = 625)
+const SLEEP_DIST_SQ := 625.0
 
-## Distancia ao quadrado para despawnar inimigos (45^2 = 2025)
-const DESPAWN_DIST_SQ := 2025.0
+## Distancia ao quadrado para despawnar inimigos (35^2 = 1225)
+const DESPAWN_DIST_SQ := 1225.0
 
-## Distancia ao quadrado para acordar inimigos dormindo (28^2 = 784)
+## Distancia ao quadrado para acordar inimigos dormindo (22^2 = 484)
 ## Um pouco menor que SLEEP para criar histerese e evitar oscilacao
-const WAKE_DIST_SQ := 784.0
+const WAKE_DIST_SQ := 484.0
 
 ## Maximo de inimigos processados por frame
 const BATCH_SIZE := 200
 
 ## Intervalo base entre checagens (segundos) — adaptativo com FPS
-const CHECK_INTERVAL_BASE := 0.25
-const CHECK_INTERVAL_FAST := 0.2  # Usado quando FPS < 30
+const CHECK_INTERVAL_BASE := 0.2
+const CHECK_INTERVAL_FAST := 0.1  # Usado quando FPS < 45 (mais agressivo)
 
 # ---- Estado ----
 var _timer: float = 0.0
@@ -62,7 +62,7 @@ func _process(delta: float) -> void:
 	_timer += delta
 	var check_interval := CHECK_INTERVAL_BASE
 	# Cull mais agressivamente quando FPS esta baixo
-	if Engine.get_frames_per_second() < 30:
+	if Engine.get_frames_per_second() < 45:
 		check_interval = CHECK_INTERVAL_FAST
 	if _timer < check_interval:
 		return
