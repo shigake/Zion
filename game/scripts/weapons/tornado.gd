@@ -99,7 +99,7 @@ class TornadoInstance extends Area3D:
 			_mesh = tornado_scene.instantiate() as Node3D
 			# Scale to match area
 			var vortex_scale = area_radius * 0.5
-			_mesh.scale = Vector3(vortex_scale, 1.0, vortex_scale)
+			_mesh.scale = Vector3(vortex_scale, -1.0, vortex_scale)  # Y negativo = inverte (largo em cima, funil embaixo)
 			# Apply vibrant ice material — semi-transparent glowing spiral
 			var mat1 = StandardMaterial3D.new()
 			mat1.albedo_color = Color(0.2, 0.9, 1.0, 0.6)
@@ -120,8 +120,8 @@ class TornadoInstance extends Area3D:
 			# Fallback: original cone mesh
 			_mesh = MeshInstance3D.new()
 			var cone1 = CylinderMesh.new()
-			cone1.top_radius = 0.08
-			cone1.bottom_radius = area_radius * 0.6
+			cone1.top_radius = area_radius * 0.6  # Largo em cima (base da nuvem)
+			cone1.bottom_radius = 0.08  # Estreito embaixo (funil do tornado)
 			cone1.height = 2.2
 			cone1.radial_segments = 10
 			_mesh.mesh = cone1
@@ -139,8 +139,8 @@ class TornadoInstance extends Area3D:
 		# Layer 2: Inner glow cone (kept for volumetric fill)
 		_ribbon_mesh = MeshInstance3D.new()
 		var cone2 = CylinderMesh.new()
-		cone2.top_radius = 0.06
-		cone2.bottom_radius = area_radius * 0.25
+		cone2.top_radius = area_radius * 0.25  # Largo em cima
+		cone2.bottom_radius = 0.06  # Estreito embaixo
 		cone2.height = 1.8
 		cone2.radial_segments = 8
 		_ribbon_mesh.mesh = cone2

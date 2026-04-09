@@ -79,8 +79,9 @@ func _update_sprite_rotation() -> void:
 	if not _sprite:
 		return
 	# Com rotation.x = -PI/2, o eixo +X da imagem mapeia para +X do mundo.
-	# atan2(-z, x) da o angulo correto a partir do eixo +X no plano XZ.
-	var angle = atan2(-direction.z, direction.x)
+	# O sprite tem a ponta fina apontando para -X (esquerda), entao somamos PI
+	# para que a ponta aponte na direcao de viagem.
+	var angle = atan2(-direction.z, direction.x) + PI
 	_sprite.rotation.z = angle
 
 ## Alinha o no 3D inteiro na direcao de viagem (para mesh 3D em vez de sprite).

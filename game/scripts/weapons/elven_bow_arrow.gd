@@ -61,7 +61,8 @@ func _setup_billboard_sprite() -> void:
 func _update_sprite_rotation() -> void:
 	if not _sprite:
 		return
-	var angle = atan2(-direction.z, direction.x)
+	# Sprite tem ponta fina em -X, soma PI pra apontar na direcao de viagem
+	var angle = atan2(-direction.z, direction.x) + PI
 	_sprite.rotation.z = angle
 
 func _physics_process(delta: float) -> void:
