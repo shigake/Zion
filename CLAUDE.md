@@ -104,13 +104,13 @@ Zion/
 │   ├── prd_52_lanca_3d.md               # PRD 52: Lanca modelo 3D sem pixel art — concluido
 │   ├── prd_53_cajado_gelo_3d.md         # PRD 53: Cajado de Gelo projetil 3D sem pixel art — concluido
 │   ├── prd_54_machado_3d.md             # PRD 54: Machado Viking modelo 3D completo sem sprite — concluido
-│   ├── prd_55_damage_direction_indicator.md  # PRD 55: indicador de dano direcional — pendente
-│   ├── prd_56_contextual_mini_tutorial.md   # PRD 56: mini-tutorial contextual — pendente
-│   ├── prd_57_next_evolution_panel.md       # PRD 57: painel proxima evolucao no HUD — pendente
-│   ├── prd_58_synergy_visual_feedback.md    # PRD 58: feedback visual sinergia in-world — pendente
-│   ├── prd_59_post_run_stats_expanded.md    # PRD 59: stats pos-run expandidas — pendente
-│   ├── prd_60_elemental_death_effects.md    # PRD 60: efeitos de morte elementais — pendente
-│   ├── prd_61_endless_mode.md               # PRD 61: modo endless (fenda infinita) — pendente
+│   ├── prd_55_damage_direction_indicator.md  # PRD 55: indicador de dano direcional — concluido
+│   ├── prd_56_contextual_mini_tutorial.md   # PRD 56: mini-tutorial contextual — concluido
+│   ├── prd_57_next_evolution_panel.md       # PRD 57: painel proxima evolucao no HUD — concluido
+│   ├── prd_58_synergy_visual_feedback.md    # PRD 58: feedback visual sinergia in-world — concluido
+│   ├── prd_59_post_run_stats_expanded.md    # PRD 59: stats pos-run expandidas — concluido
+│   ├── prd_60_elemental_death_effects.md    # PRD 60: efeitos de morte elementais — concluido
+│   ├── prd_61_endless_mode.md               # PRD 61: modo endless (fenda infinita) — concluido
 │   └── adr/                             # 14 Architecture Decision Records (ADR-001 a ADR-014)
 ├── server/                      # Servidor de telemetria (Node.js)
 │   ├── index.js                 # Express + SQLite (API REST + dashboard web)
@@ -251,9 +251,9 @@ All UI text uses sentence case (primeira letra maiuscula, resto minusculo). Prop
 
 ## Current Phase
 
-**Versao atual: v4.0.0** — Major release publicada. Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~98%. FASE B (gameplay) ~98%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~98% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~95% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 845 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 66 PRDs (54 concluidos + 5 extras + 7 pendentes), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD, crateras 3D com fogo nos meteoros — todos implementados.
+**Versao atual: v4.6.7** — Major release publicada. Core game completo com camada narrativa implementada. 15 Fragmentados, 32 armas, 453+ sprites, 51 SFX, 16 musicas. FASE A (visual) ~100%. FASE B (gameplay) ~100%. FASE C (polish) ~100% — PRD 28 concluido (sinergias visuais, audio dinamico, acessibilidade real, stats pos-run expandidas, seeds compartilhaveis, tutorial avancado). FASE D (audio) ~100% — 51 SFX, 16 musicas chiptune, musica dinamica por fenda + boss + intensificacao temporal, audio ducking 5 buses (PRD 38). FASE E (infra) ~95% — CI/CD dual-platform (Windows+Linux), Steam integration (codigo pronto, falta plugin), refatoracao concluida (GameConstants 845 linhas), 9 suites de testes automatizados (150 combos, stress, evolution, events, etc.), 66 PRDs (61 concluidos + 5 extras), 14 ADRs documentados. Credits: carrossel de herois com baloes de fala. Bestiario, arvore de evolucao, dialogos de bosses, tracker de achievements, icones de sinergia no HUD, crateras 3D com fogo nos meteoros — todos implementados. PRDs 55-61 concluidos: indicador dano direcional, mini-tutorial contextual, painel evolucao HUD, feedback visual sinergia, stats pos-run expandidas, efeitos morte elementais, modo endless.
 
-**PRDs pendentes** (7): PRD 55 (indicador dano direcional), PRD 56 (mini-tutorial contextual), PRD 57 (painel proxima evolucao), PRD 58 (feedback visual sinergia), PRD 59 (stats pos-run expandidas), PRD 60 (efeitos morte elementais), PRD 61 (modo endless).
+**Todos os 61 PRDs concluidos.** Sem PRDs pendentes.
 
 Ver `docs/story.md` para narrativa e `docs/adr/` para decisoes arquiteturais (ADR-001 a ADR-014).
 
@@ -278,7 +278,7 @@ Resultados salvos em `user://test_results/`. Notificacao automatica no Discord.
 
 ## Remaining Work
 
-- **PRDs pendentes**: 7 PRDs abertos (55-61) — indicador direcional, mini-tutorial, evolucao HUD, sinergia visual, stats pos-run, morte elemental, modo endless
+- **PRDs**: todos 61 PRDs concluidos
 - **QA**: rodar suite `combo` (150 combos, ~2.5h), teste multiplayer LAN manual
 - **Steam**: instalar plugin GodotSteam GDExtension (codigo 100% pronto)
 - **Distribuicao**: testar .exe em maquina limpa, pagina Itch.io, trailer 30s
