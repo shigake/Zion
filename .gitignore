@@ -4,3 +4,22 @@ server/telemetry.db
 server/telemetry.db-shm
 server/telemetry.db-wal
 .claude/worktrees/
+
+# Dependencias (nao versionar)
+node_modules/
+
+# Segredos e credenciais (NUNCA versionar)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
+secrets.json
+*.secret
