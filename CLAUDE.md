@@ -209,7 +209,7 @@ Nota: LodManager e PerfMonitor existem em scripts/autoload/ mas NAO estao regist
 - **Enemies**: 11 genericos + 6 especiais + 40 tematicos (4 por fenda)
 - **Items**: 19 artefatos dimensionais
 - **Evolutions**: 12 ressonancias cristalinas
-- **Relics**: 7 artefatos ancestrais de Zion
+- **Relics**: 9 artefatos ancestrais de Zion
 - **Events**: 10 anomalias dimensionais
 - **Achievements**: 13 marcos da restauracao
 - **Shop upgrades**: 12 restauracoes permanentes
