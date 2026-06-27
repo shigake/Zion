@@ -38,6 +38,11 @@ var relics: Dictionary = {
 		"description": "Baus dropam 2x itens",
 		"effect": "double_chest",
 	},
+	"mercury_boots": {
+		"name": "Botas de Mercurio",
+		"description": "+15% de velocidade de movimento",
+		"effect": "speed_boost",
+	},
 }
 
 func get_relic(id: String) -> Dictionary:
