@@ -43,6 +43,11 @@ var relics: Dictionary = {
 		"description": "+15% de velocidade de movimento",
 		"effect": "speed_boost",
 	},
+	"glass_heart": {
+		"name": "Coracao de Vidro",
+		"description": "+30% de dano, mas -30% de HP inicial",
+		"effect": "glass_cannon",
+	},
 }
 
 func get_relic(id: String) -> Dictionary:

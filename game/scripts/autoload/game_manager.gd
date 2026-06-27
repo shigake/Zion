@@ -946,6 +946,10 @@ func _apply_relic() -> void:
 			master_key_active = true  # Doubles XP gem and crystal drops from enemies
 		"speed_boost":
 			perm_speed_mult += 0.15  # Botas de Mercurio: +15% velocidade
+		"glass_cannon":
+			perm_damage_mult *= 1.3  # Coracao de Vidro: +30% dano...
+			player_max_hp = int(player_max_hp * 0.7)  # ...mas -30% HP
+			player_hp = player_max_hp
 
 func get_effective_damage_mult() -> float:
 	var mult = perm_damage_mult
