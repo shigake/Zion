@@ -22,6 +22,8 @@ var achievements: Dictionary = {
 	"quest_master": {"name": "Quest Master", "description": "Complete 5 quests numa run"},
 	"boss_slayer": {"name": "Boss Slayer", "description": "Derrote 2 bosses numa run"},
 	"completionist": {"name": "Completionist", "description": "Complete todas as 10 fendas"},
+	"marathon": {"name": "Maratonista", "description": "Sobreviva 30 minutos numa run"},
+	"dedicated": {"name": "Dedicado", "description": "Complete 100 runs no total"},
 }
 
 # Run-specific tracking
@@ -110,6 +112,14 @@ func check_achievements() -> void:
 				break
 		if all_done:
 			_unlock("completionist")
+
+	# Maratonista: survive 30 minutes in one run
+	if "marathon" not in unlocked and GameManager.game_time >= 1800.0:
+		_unlock("marathon")
+
+	# Dedicado: 100 total runs across all sessions
+	if "dedicated" not in unlocked and SaveManager.data.get("total_runs", 0) >= 100:
+		_unlock("dedicated")
 
 	# I Am The Storm: 3 electric-type evolved weapons
 	if "storm" not in unlocked:
@@ -229,6 +239,12 @@ func get_progress(id: String) -> Dictionary:
 		"first_walk":
 			current = mini(int(GameManager.game_time), 300)
 			target = 300
+		"marathon":
+			current = mini(int(GameManager.game_time), 1800)
+			target = 1800
+		"dedicated":
+			current = mini(SaveManager.data.get("total_runs", 0), 100)
+			target = 100
 		"speedrunner":
 			if GameManager.is_victory:
 				current = 1
