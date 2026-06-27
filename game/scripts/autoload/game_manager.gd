@@ -944,6 +944,8 @@ func _apply_relic() -> void:
 			xp_mult += 0.15  # Compass also gives +15% XP
 		"double_chest":
 			master_key_active = true  # Doubles XP gem and crystal drops from enemies
+		"speed_boost":
+			perm_speed_mult += 0.15  # Botas de Mercurio: +15% velocidade
 
 func get_effective_damage_mult() -> float:
 	var mult = perm_damage_mult
